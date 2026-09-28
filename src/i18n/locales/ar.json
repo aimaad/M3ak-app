@@ -6,11 +6,87 @@
     "french": "Français",
     "arabic": "العربية",
     "restartRequired": "أعد تشغيل التطبيق لتفعيل تغيير اللغة.",
-    "comingSoon": "قريباً"
+    "comingSoon": "قريباً",
+    "cancel": "إلغاء",
+    "back": "رجوع"
   },
-  "home": {
-    "welcome": "مرحباً بك في معاك",
-    "subtitle": "المراحل القادمة غادي تضيف تسيير الأسطول، الفحص بالكاميرا والمساعد الذكي.",
-    "step0Done": "المرحلة 0 كملات: أساسيات المشروع"
+  "auth": {
+    "title": "تسجيل الدخول",
+    "subtitle": "دخل بحساب الوكالة ديالك",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة السر",
+    "signIn": "دخول",
+    "signingIn": "كنعالجو الدخول…",
+    "signOut": "خروج",
+    "noAccountHint": "ماعندكش حساب بعد؟ شوف supabase/README.md باش تصاوب الحساب ديالك.",
+    "invalidCredentials": "البريد الإلكتروني أو كلمة السر خاطئة.",
+    "genericError": "وقعت مشكلة. عاود المحاولة.",
+    "configMissingTitle": "الإعدادات ناقصة",
+    "configMissingBody": "ملف .env مازال ماتصاوبش. نسخ .env.example ل .env وعمر المفاتيح ديال مشروع Supabase (شوف supabase/README.md)."
+  },
+  "agency": {
+    "notLinkedTitle": "خاص إعداد إضافي",
+    "notLinkedBody": "الحساب ديالك مازال ماترتبطش بأي وكالة. تبع خطوة « ربط الحساب بوكالة الديمو » فـ supabase/README.md، من بعد رجع هنا.",
+    "loading": "كنحملو الوكالة ديالك…"
+  },
+  "flotte": {
+    "title": "الأسطول ديالي",
+    "subtitle_one": "دبر السيارة ديالك",
+    "subtitle_other": "دبر {{count}} ديال السيارات",
+    "searchPlaceholder": "رقم الترقيم، الماركة، الموديل…",
+    "addVehicle": "زيد سيارة",
+    "empty": "ماكاينة حتى سيارة توافق البحث.",
+    "loading": "كنحملو الأسطول…",
+    "loadError": "تعذر تحميل الأسطول. تأكد من الاتصال.",
+    "details": "التفاصيل",
+    "perDay": "درهم/اليوم",
+    "km": "كم",
+    "status": {
+      "tous": "الكل",
+      "disponible": "متوفرة",
+      "en_location": "فـ الكراء",
+      "maintenance": "الصيانة",
+      "a_inspecter": "خاصها فحص"
+    }
+  },
+  "vehicle": {
+    "detailsTitle": "بطاقة السيارة",
+    "edit": "عدّل",
+    "infoSection": "المعلومات",
+    "historySection": "التاريخ",
+    "historyPlaceholder": "قريباً: الكراءات والفحوصات ديال هاد السيارة غادي يبانو هنا.",
+    "documentsSection": "الوثائق",
+    "documentsPlaceholder": "قريباً: البطاقة الرمادية، التأمين، الزيارة التقنية.",
+    "notFound": "السيارة ماكايناش.",
+    "fields": {
+      "marque": "الماركة",
+      "modele": "الموديل",
+      "immatriculation": "رقم الترقيم",
+      "annee": "السنة",
+      "carburant": "نوع الوقود",
+      "kilometrage": "الكيلومتراج",
+      "prixJour": "الثمن / اليوم (درهم)",
+      "statut": "الحالة"
+    },
+    "fuel": {
+      "essence": "بنزين",
+      "diesel": "ديزل",
+      "hybride": "هيبريد",
+      "electrique": "كهربائية"
+    },
+    "form": {
+      "newTitle": "زيادة سيارة",
+      "editTitle": "تعديل السيارة",
+      "save": "حفظ",
+      "saving": "كنسجلو…",
+      "createError": "تعذرت زيادة هاد السيارة.",
+      "updateError": "تعذر حفظ التعديلات.",
+      "errors": {
+        "required": "هاد الحقل خاصو يتعمر.",
+        "invalid_number": "دخل رقم صحيح.",
+        "invalid_year": "دخل سنة صحيحة.",
+        "invalid_price": "دخل ثمن كبر من 0."
+      }
+    }
   }
 }

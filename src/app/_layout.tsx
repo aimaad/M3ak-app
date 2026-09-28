@@ -13,6 +13,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { SessionProvider } from '@/features/auth/session-context';
+
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
@@ -38,9 +40,11 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }} />
-      </ThemeProvider>
+      <SessionProvider>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </ThemeProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

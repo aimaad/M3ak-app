@@ -6,11 +6,87 @@
     "french": "Français",
     "arabic": "العربية",
     "restartRequired": "Redémarrez l'application pour appliquer le changement de langue.",
-    "comingSoon": "Bientôt disponible"
+    "comingSoon": "Bientôt disponible",
+    "cancel": "Annuler",
+    "back": "Retour"
   },
-  "home": {
-    "welcome": "Bienvenue sur M3ak",
-    "subtitle": "Les prochaines étapes ajouteront la gestion de la flotte, l'inspection par caméra et l'assistant IA.",
-    "step0Done": "Étape 0 terminée : fondations du projet"
+  "auth": {
+    "title": "Connexion",
+    "subtitle": "Connectez-vous avec le compte de votre agence",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "signingIn": "Connexion en cours…",
+    "signOut": "Déconnexion",
+    "noAccountHint": "Pas encore de compte ? Voir supabase/README.md pour créer votre accès.",
+    "invalidCredentials": "E-mail ou mot de passe incorrect.",
+    "genericError": "Une erreur est survenue. Réessayez.",
+    "configMissingTitle": "Configuration manquante",
+    "configMissingBody": "Le fichier .env n'est pas encore configuré. Copiez .env.example en .env et renseignez les clés de votre projet Supabase (voir supabase/README.md)."
+  },
+  "agency": {
+    "notLinkedTitle": "Configuration requise",
+    "notLinkedBody": "Votre compte n'est relié à aucune agence pour l'instant. Suivez l'étape « Relier votre compte à l'agence de démo » dans supabase/README.md, puis revenez ici.",
+    "loading": "Chargement de votre agence…"
+  },
+  "flotte": {
+    "title": "Ma Flotte",
+    "subtitle_one": "Gérez votre véhicule",
+    "subtitle_other": "Gérez vos {{count}} véhicules",
+    "searchPlaceholder": "Immatriculation, marque, modèle…",
+    "addVehicle": "Ajouter véhicule",
+    "empty": "Aucun véhicule ne correspond à votre recherche.",
+    "loading": "Chargement de la flotte…",
+    "loadError": "Impossible de charger la flotte. Vérifiez votre connexion.",
+    "details": "Détails",
+    "perDay": "MAD/jour",
+    "km": "km",
+    "status": {
+      "tous": "Tous",
+      "disponible": "Disponible",
+      "en_location": "En location",
+      "maintenance": "Maintenance",
+      "a_inspecter": "À inspecter"
+    }
+  },
+  "vehicle": {
+    "detailsTitle": "Fiche véhicule",
+    "edit": "Modifier",
+    "infoSection": "Informations",
+    "historySection": "Historique",
+    "historyPlaceholder": "Bientôt disponible : les locations et inspections de ce véhicule s'afficheront ici.",
+    "documentsSection": "Documents",
+    "documentsPlaceholder": "Bientôt disponible : carte grise, assurance, visite technique.",
+    "notFound": "Véhicule introuvable.",
+    "fields": {
+      "marque": "Marque",
+      "modele": "Modèle",
+      "immatriculation": "Immatriculation",
+      "annee": "Année",
+      "carburant": "Carburant",
+      "kilometrage": "Kilométrage",
+      "prixJour": "Prix / jour (MAD)",
+      "statut": "Statut"
+    },
+    "fuel": {
+      "essence": "Essence",
+      "diesel": "Diesel",
+      "hybride": "Hybride",
+      "electrique": "Électrique"
+    },
+    "form": {
+      "newTitle": "Ajouter un véhicule",
+      "editTitle": "Modifier le véhicule",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "createError": "Impossible d'ajouter ce véhicule.",
+      "updateError": "Impossible d'enregistrer les modifications.",
+      "errors": {
+        "required": "Ce champ est obligatoire.",
+        "invalid_number": "Entrez un nombre valide.",
+        "invalid_year": "Entrez une année valide.",
+        "invalid_price": "Entrez un prix supérieur à 0."
+      }
+    }
   }
 }
