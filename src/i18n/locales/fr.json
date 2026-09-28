@@ -1,0 +1,16 @@
+{
+  "common": {
+    "appName": "M3ak",
+    "tagline": "L'application intelligente pour votre agence de location",
+    "language": "Langue",
+    "french": "Français",
+    "arabic": "العربية",
+    "restartRequired": "Redémarrez l'application pour appliquer le changement de langue.",
+    "comingSoon": "Bientôt disponible"
+  },
+  "home": {
+    "welcome": "Bienvenue sur M3ak",
+    "subtitle": "Les prochaines étapes ajouteront la gestion de la flotte, l'inspection par caméra et l'assistant IA.",
+    "step0Done": "Étape 0 terminée : fondations du projet"
+  }
+}
