@@ -3,10 +3,10 @@
 Chaque étape doit se terminer par une version testable sur téléphone (Expo Go). Cocher `[x]` quand c'est fait.
 
 ## Étape 0 — Fondations
-- [ ] Projet Expo + TypeScript + Expo Router, lint, tests
-- [ ] Thème M3ak (bleu `#1f5eff`, cyan `#38e1ff`, jaune `#ffd43b`, fond clair `#f4f6fb`), police Cairo, RTL
-- [ ] i18n fr / ar
-- [ ] Projet Supabase, schéma initial + RLS, données de démo (une agence à Casablanca, ~15 voitures)
+- [x] Projet Expo + TypeScript + Expo Router, lint, tests
+- [x] Thème M3ak (bleu `#1f5eff`, cyan `#38e1ff`, jaune `#ffd43b`, fond clair `#f4f6fb`), police Cairo, RTL
+- [x] i18n fr / ar
+- [x] Schéma Supabase + RLS + données de démo prêts (`supabase/`) — reste à créer le projet Supabase et exécuter le SQL (voir `supabase/README.md`)
 - [ ] Authentification (email/téléphone), création d'agence, invitation d'employés, rôles
 
 ## Étape 1 — Flotte (MVP gestion)
