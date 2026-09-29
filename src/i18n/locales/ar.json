@@ -88,5 +88,126 @@
         "invalid_price": "دخل ثمن كبر من 0."
       }
     }
+  },
+  "clients": {
+    "title": "الزبناء",
+    "subtitle_one": "عندك زبون واحد",
+    "subtitle_other": "عندك {{count}} ديال الزبناء",
+    "searchPlaceholder": "الاسم، الهاتف، CIN…",
+    "addClient": "زيد زبون",
+    "empty": "ماكاين حتى زبون يوافق البحث.",
+    "loading": "كنحملو الزبناء…",
+    "loadError": "تعذر تحميل الزبناء. تأكد من الاتصال."
+  },
+  "customer": {
+    "detailsTitle": "بطاقة الزبون",
+    "edit": "عدّل",
+    "infoSection": "المعلومات",
+    "documentsSection": "الوثائق",
+    "noDocuments": "ماكاين حتى وثيقة مزادة.",
+    "notFound": "الزبون ماكايناش.",
+    "fields": {
+      "nomComplet": "الاسم الكامل",
+      "telephone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "cin": "CIN / جواز السفر",
+      "permis": "رقم رخصة السياقة"
+    },
+    "documents": {
+      "cin": "تصويرة ديال CIN",
+      "permis": "تصويرة ديال رخصة السياقة",
+      "camera": "الكاميرا",
+      "gallery": "المعرض"
+    },
+    "form": {
+      "newTitle": "زيادة زبون",
+      "editTitle": "تعديل الزبون",
+      "save": "حفظ",
+      "saving": "كنسجلو…",
+      "createError": "تعذرت زيادة هاد الزبون.",
+      "updateError": "تعذر حفظ التعديلات.",
+      "uploadError": "تسجل الزبون، ولكن تعذر إرسال تصويرة. عاود المحاولة من بطاقة الزبون.",
+      "errors": {
+        "required": "هاد الحقل خاصو يتعمر.",
+        "invalid_phone": "دخل رقم هاتف مغربي صحيح (مثلاً +212 6XX XX XX XX).",
+        "invalid_email": "دخل بريد إلكتروني صحيح."
+      }
+    }
+  },
+  "locations": {
+    "title": "الكراءات",
+    "subtitle_one": "كراء واحد",
+    "subtitle_other": "{{count}} ديال الكراءات",
+    "addRental": "كراء جديد",
+    "empty": "ماكاين حتى كراء بهاد الحالة.",
+    "loading": "كنحملو الكراءات…",
+    "loadError": "تعذر تحميل الكراءات.",
+    "unknownVehicle": "السيارة تمسحات",
+    "unknownCustomer": "الزبون تمسح",
+    "notFound": "الكراء ماكايناش.",
+    "detailsTitle": "تفاصيل الكراء",
+    "period": "المدة",
+    "vehicle": "السيارة",
+    "customer": "الزبون",
+    "prixTotal": "الثمن الكامل (درهم)",
+    "cautionSection": "الكوسيون",
+    "cautionBlocked": "الكوسيون المحجوز",
+    "cautionRetained": "المبلغ المقتطع",
+    "cautionReturned": "المبلغ المرجع",
+    "cautionResolveLabel": "المبلغ اللي غادي يتقطع (درهم)",
+    "cautionResolveAction": "أكد الإرجاع",
+    "paymentsSection": "الأداءات",
+    "noPayments": "ماكاين حتى أداء مسجل.",
+    "addPayment": "زيد أداء",
+    "paymentAmount": "المبلغ (درهم)",
+    "paymentMethod": "طريقة الأداء",
+    "paymentMethods": {
+      "especes": "نقدا",
+      "carte": "بطاقة",
+      "virement": "تحويل",
+      "cheque": "شيك"
+    },
+    "startAction": "بدا الكراء",
+    "completeAction": "سالا الكراء",
+    "cancelAction": "لغي الحجز",
+    "status": {
+      "tous": "الكل",
+      "reservee": "محجوزة",
+      "en_cours": "جارية",
+      "terminee": "سالات",
+      "annulee": "ملغية"
+    },
+    "form": {
+      "newTitle": "كراء جديد",
+      "vehiclePlaceholder": "اختار سيارة",
+      "vehicleSearch": "الماركة، الموديل، رقم الترقيم…",
+      "customerPlaceholder": "اختار زبون",
+      "customerSearch": "الاسم، الهاتف…",
+      "save": "صاوب الحجز",
+      "saving": "كنصاوبو…",
+      "createError": "تعذر صواب هاد الحجز.",
+      "errors": {
+        "required": "هاد الحقل خاصو يتعمر.",
+        "invalid_date_range": "خاص تاريخ النهاية يكون من بعد تاريخ البداية.",
+        "conflict": "هاد السيارة محجوزة ديجا فجزء من هاد المدة.",
+        "invalid_number": "دخل رقم صحيح."
+      }
+    },
+    "depart": {
+      "title": "خروج السيارة",
+      "kilometrage": "الكيلومتراج عند الخروج",
+      "carburant": "الوقود عند الخروج (%)",
+      "save": "بدا",
+      "saving": "كنبداو…",
+      "error": "تعذر بدا هاد الكراء."
+    },
+    "retour": {
+      "title": "رجوع السيارة",
+      "kilometrage": "الكيلومتراج عند الرجوع",
+      "carburant": "الوقود عند الرجوع (%)",
+      "save": "سالي",
+      "saving": "كنسجلو…",
+      "error": "تعذر تسجيل هاد الرجوع."
+    }
   }
 }

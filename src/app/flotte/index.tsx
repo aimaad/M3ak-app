@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
+import { SectionTabs } from '@/components/section-tabs';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextField } from '@/components/text-field';
@@ -79,6 +80,8 @@ export default function FlotteScreen() {
             </Pressable>
           }
         />
+
+        <SectionTabs current="flotte" />
 
         <View className="px-6 pb-4">
           <TextField

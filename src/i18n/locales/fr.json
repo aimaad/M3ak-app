@@ -88,5 +88,126 @@
         "invalid_price": "Entrez un prix supérieur à 0."
       }
     }
+  },
+  "clients": {
+    "title": "Clients",
+    "subtitle_one": "Vous avez 1 client",
+    "subtitle_other": "Vous avez {{count}} clients",
+    "searchPlaceholder": "Nom, téléphone, CIN…",
+    "addClient": "Ajouter client",
+    "empty": "Aucun client ne correspond à votre recherche.",
+    "loading": "Chargement des clients…",
+    "loadError": "Impossible de charger les clients. Vérifiez votre connexion."
+  },
+  "customer": {
+    "detailsTitle": "Fiche client",
+    "edit": "Modifier",
+    "infoSection": "Informations",
+    "documentsSection": "Documents",
+    "noDocuments": "Aucun document ajouté.",
+    "notFound": "Client introuvable.",
+    "fields": {
+      "nomComplet": "Nom complet",
+      "telephone": "Téléphone",
+      "email": "E-mail",
+      "cin": "CIN / Passeport",
+      "permis": "N° de permis"
+    },
+    "documents": {
+      "cin": "Photo de la CIN",
+      "permis": "Photo du permis",
+      "camera": "Caméra",
+      "gallery": "Galerie"
+    },
+    "form": {
+      "newTitle": "Ajouter un client",
+      "editTitle": "Modifier le client",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "createError": "Impossible d'ajouter ce client.",
+      "updateError": "Impossible d'enregistrer les modifications.",
+      "uploadError": "Le client a été enregistré, mais l'envoi d'une photo a échoué. Réessayez depuis la fiche client.",
+      "errors": {
+        "required": "Ce champ est obligatoire.",
+        "invalid_phone": "Entrez un numéro marocain valide (ex. +212 6XX XX XX XX).",
+        "invalid_email": "Entrez une adresse e-mail valide."
+      }
+    }
+  },
+  "locations": {
+    "title": "Locations",
+    "subtitle_one": "1 location",
+    "subtitle_other": "{{count}} locations",
+    "addRental": "Nouvelle location",
+    "empty": "Aucune location pour ce statut.",
+    "loading": "Chargement des locations…",
+    "loadError": "Impossible de charger les locations.",
+    "unknownVehicle": "Véhicule supprimé",
+    "unknownCustomer": "Client supprimé",
+    "notFound": "Location introuvable.",
+    "detailsTitle": "Détail de la location",
+    "period": "Période",
+    "vehicle": "Véhicule",
+    "customer": "Client",
+    "prixTotal": "Prix total (MAD)",
+    "cautionSection": "Caution",
+    "cautionBlocked": "Caution bloquée",
+    "cautionRetained": "Montant retenu",
+    "cautionReturned": "Montant restitué",
+    "cautionResolveLabel": "Montant à retenir (MAD)",
+    "cautionResolveAction": "Valider la restitution",
+    "paymentsSection": "Paiements",
+    "noPayments": "Aucun paiement enregistré.",
+    "addPayment": "Ajouter un paiement",
+    "paymentAmount": "Montant (MAD)",
+    "paymentMethod": "Méthode",
+    "paymentMethods": {
+      "especes": "Espèces",
+      "carte": "Carte",
+      "virement": "Virement",
+      "cheque": "Chèque"
+    },
+    "startAction": "Démarrer la location",
+    "completeAction": "Terminer la location",
+    "cancelAction": "Annuler la réservation",
+    "status": {
+      "tous": "Toutes",
+      "reservee": "Réservée",
+      "en_cours": "En cours",
+      "terminee": "Terminée",
+      "annulee": "Annulée"
+    },
+    "form": {
+      "newTitle": "Nouvelle location",
+      "vehiclePlaceholder": "Choisir un véhicule",
+      "vehicleSearch": "Marque, modèle, immatriculation…",
+      "customerPlaceholder": "Choisir un client",
+      "customerSearch": "Nom, téléphone…",
+      "save": "Créer la réservation",
+      "saving": "Création…",
+      "createError": "Impossible de créer cette réservation.",
+      "errors": {
+        "required": "Ce champ est obligatoire.",
+        "invalid_date_range": "La date de fin doit être après la date de début.",
+        "conflict": "Ce véhicule est déjà réservé sur une partie de cette période.",
+        "invalid_number": "Entrez un nombre valide."
+      }
+    },
+    "depart": {
+      "title": "Départ du véhicule",
+      "kilometrage": "Kilométrage au départ",
+      "carburant": "Carburant au départ (%)",
+      "save": "Démarrer",
+      "saving": "Démarrage…",
+      "error": "Impossible de démarrer cette location."
+    },
+    "retour": {
+      "title": "Retour du véhicule",
+      "kilometrage": "Kilométrage au retour",
+      "carburant": "Carburant au retour (%)",
+      "save": "Terminer",
+      "saving": "Enregistrement…",
+      "error": "Impossible d'enregistrer ce retour."
+    }
   }
 }

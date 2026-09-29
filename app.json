@@ -33,6 +33,13 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "M3ak a besoin d'accéder à vos photos pour ajouter les documents client (CIN, permis).",
+          "cameraPermission": "M3ak a besoin de la caméra pour photographier les documents client (CIN, permis)."
+        }
       ]
     ],
     "experiments": {

@@ -1,0 +1,28 @@
+import { Pressable, View } from 'react-native';
+
+import { ThemedText } from '@/components/themed-text';
+import { useLanguage } from '@/i18n/use-language';
+
+import type { Customer } from './types';
+
+export function CustomerCard({ customer, onPress }: { customer: Customer; onPress: () => void }) {
+  const { t } = useLanguage();
+
+  return (
+    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+      <ThemedText type="smallBold">{customer.nomComplet}</ThemedText>
+      <View className="flex-row flex-wrap gap-x-4 gap-y-1">
+        {customer.telephone ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {customer.telephone}
+          </ThemedText>
+        ) : null}
+        {customer.cinOuPasseport ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('customer.fields.cin')} : {customer.cinOuPasseport}
+          </ThemedText>
+        ) : null}
+      </View>
+    </Pressable>
+  );
+}

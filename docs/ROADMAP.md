@@ -15,9 +15,9 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Ajout / modification de véhicule
 
 ## Étape 2 — Clients, réservations et locations
-- [ ] Clients (CIN, permis, téléphone, documents photo)
-- [ ] Calendrier de disponibilité, réservation, départ, retour
-- [ ] Contrat PDF, caution (bloquée / retenue / restituée), paiements
+- [x] Clients (CIN, permis, téléphone, documents photo)
+- [x] Calendrier de disponibilité, réservation, départ, retour
+- [x] Caution (bloquée / partiellement retenue / retenue / restituée), paiements — le **contrat PDF** reste à faire (nécessite les Edge Functions Supabase, prévu comme un pas à part)
 
 ## Étape 3 — Inspection par caméra IA ⭐
 - [ ] Guide de capture par angle (`design/03_inspection_camera.png`), fonctionnement hors ligne

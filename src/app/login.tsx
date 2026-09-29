@@ -29,8 +29,10 @@ export default function LoginScreen() {
     setIsSubmitting(true);
     try {
       await signInWithEmail(email.trim(), password);
-    } catch {
-      setError(t('auth.invalidCredentials'));
+    } catch (err) {
+      console.error('Échec de connexion Supabase :', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`${t('auth.invalidCredentials')} (${message})`);
     } finally {
       setIsSubmitting(false);
     }
