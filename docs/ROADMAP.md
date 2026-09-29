@@ -20,9 +20,9 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Caution (bloquée / partiellement retenue / retenue / restituée), paiements — le **contrat PDF** reste à faire (nécessite les Edge Functions Supabase, prévu comme un pas à part)
 
 ## Étape 3 — Inspection par caméra IA ⭐
-- [ ] Guide de capture par angle (`design/03_inspection_camera.png`), fonctionnement hors ligne
-- [ ] Inspection de départ et de retour liées à la location
-- [ ] Edge Function d'analyse IA → dommages structurés, validation par l'employé
+- [x] Guide de capture par angle (`design/03_inspection_camera.png`), fonctionnement hors ligne
+- [x] Inspection de départ et de retour liées à la location
+- [ ] Edge Function d'analyse IA → dommages structurés, validation par l'employé (nécessite un compte API Anthropic)
 - [ ] Rapport comparatif avant/après (`design/04_rapport_inspection.png`), retenue sur caution, PDF, partage WhatsApp
 
 ## Étape 4 — Tableau de bord et maintenance

@@ -209,5 +209,34 @@
       "saving": "كنسجلو…",
       "error": "تعذر تسجيل هاد الرجوع."
     }
+  },
+  "inspection": {
+    "section": "الفحص",
+    "done": "كمل",
+    "todo": "باقي",
+    "title": {
+      "depart": "فحص الخروج",
+      "retour": "فحص الرجوع"
+    },
+    "progress": "{{done}}/{{total}} زوايا مصورة",
+    "starting": "كنحضرو الفحص…",
+    "angleRequired": "الزاوية المطلوبة : {{angle}}",
+    "pendingUpload": "{{count}} تصويرة فالانتظار باش يتصيفطو — دوز باش تعاود",
+    "finish": "سالي الفحص",
+    "permissionRequired": "معاك محتاج الكاميرا باش يدير فحص السيارة.",
+    "grantPermission": "سمح بالكاميرا",
+    "angles": {
+      "avant": "الأمام",
+      "arriere": "الخلف",
+      "lateral_gauche": "الجانب الأيسر",
+      "lateral_droit": "الجانب الأيمن",
+      "jante_avant_gauche": "الجنط الأمامي الأيسر",
+      "jante_avant_droit": "الجنط الأمامي الأيمن",
+      "jante_arriere_gauche": "الجنط الخلفي الأيسر",
+      "jante_arriere_droit": "الجنط الخلفي الأيمن",
+      "interieur": "الداخل",
+      "tableau_de_bord": "لوحة القيادة",
+      "autre": "آخر"
+    }
   }
 }

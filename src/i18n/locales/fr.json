@@ -209,5 +209,34 @@
       "saving": "Enregistrement…",
       "error": "Impossible d'enregistrer ce retour."
     }
+  },
+  "inspection": {
+    "section": "Inspection",
+    "done": "Terminée",
+    "todo": "À faire",
+    "title": {
+      "depart": "Inspection de départ",
+      "retour": "Inspection de retour"
+    },
+    "progress": "{{done}}/{{total}} angles capturés",
+    "starting": "Préparation de l'inspection…",
+    "angleRequired": "Angle requis : {{angle}}",
+    "pendingUpload": "{{count}} photo(s) en attente d'envoi — appuyez pour réessayer",
+    "finish": "Terminer l'inspection",
+    "permissionRequired": "M3ak a besoin d'accéder à la caméra pour l'inspection du véhicule.",
+    "grantPermission": "Autoriser la caméra",
+    "angles": {
+      "avant": "Avant",
+      "arriere": "Arrière",
+      "lateral_gauche": "Côté gauche",
+      "lateral_droit": "Côté droit",
+      "jante_avant_gauche": "Jante avant gauche",
+      "jante_avant_droit": "Jante avant droite",
+      "jante_arriere_gauche": "Jante arrière gauche",
+      "jante_arriere_droit": "Jante arrière droite",
+      "interieur": "Intérieur",
+      "tableau_de_bord": "Tableau de bord",
+      "autre": "Autre"
+    }
   }
 }

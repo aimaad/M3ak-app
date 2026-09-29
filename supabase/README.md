@@ -8,6 +8,10 @@ agence ne voie **que ses propres données**.
 - `migrations/0002_rls_policies.sql` — activation RLS + règles de sécurité par agence
 - `migrations/0003_client_documents_storage.sql` — bucket de stockage pour les photos
   de documents clients (CIN, permis), protégé par agence
+- `migrations/0004_inspection_photos_storage.sql` — bucket de stockage pour les photos
+  d'inspection (départ/retour), protégé par agence
+- `migrations/0005_inspection_photos_unique_angle.sql` — une seule photo par angle et
+  par inspection (une reprise remplace la précédente)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -28,7 +32,9 @@ agence ne voie **que ses propres données**.
    **"Run without RLS"**, c'est le fichier suivant qui s'en charge.)
 3. Copiez-collez le contenu de `migrations/0002_rls_policies.sql`, cliquez **Run**.
 4. Copiez-collez le contenu de `migrations/0003_client_documents_storage.sql`, cliquez **Run**.
-5. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+5. Copiez-collez le contenu de `migrations/0004_inspection_photos_storage.sql`, cliquez **Run**.
+6. Copiez-collez le contenu de `migrations/0005_inspection_photos_unique_angle.sql`, cliquez **Run**.
+7. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 

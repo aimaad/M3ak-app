@@ -8,6 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useCustomer } from '@/features/customers/hooks';
 import { DepositResolveForm } from '@/features/deposits/deposit-resolve-form';
 import { useDeposit } from '@/features/deposits/hooks';
+import { useInspectionForRental } from '@/features/inspections/hooks';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import { usePaymentsForRental } from '@/features/payments/hooks';
 import { useCancelRental, useRental } from '@/features/rentals/hooks';
@@ -38,6 +39,8 @@ export default function LocationDetailScreen() {
   const { data: customer } = useCustomer(rental?.customerId);
   const { data: deposit } = useDeposit(rental?.id);
   const { data: payments = [] } = usePaymentsForRental(rental?.id);
+  const { data: inspectionDepart } = useInspectionForRental(rental?.id, 'depart');
+  const { data: inspectionRetour } = useInspectionForRental(rental?.id, 'retour');
   const cancelRental = useCancelRental();
 
   async function handleCancel() {
@@ -97,6 +100,40 @@ export default function LocationDetailScreen() {
                 {rental.prixTotal != null ? `${rental.prixTotal.toLocaleString('fr-FR')} MAD` : '—'}
               </ThemedText>
             </View>
+          </View>
+
+          <View className="gap-2">
+            <ThemedText type="smallBold">{t('inspection.section')}</ThemedText>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: '/locations/[id]/inspection-depart',
+                  params: { id: rental.id },
+                })
+              }
+              className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+            >
+              <ThemedText type="small">{t('inspection.title.depart')}</ThemedText>
+              <ThemedText type="small" themeColor={inspectionDepart?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionDepart?.statut === 'terminee' ? { color: '#15803d' } : undefined}>
+                {inspectionDepart?.statut === 'terminee' ? t('inspection.done') : t('inspection.todo')}
+              </ThemedText>
+            </Pressable>
+            {rental.statut === 'en_cours' || rental.statut === 'terminee' ? (
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: '/locations/[id]/inspection-retour',
+                    params: { id: rental.id },
+                  })
+                }
+                className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+              >
+                <ThemedText type="small">{t('inspection.title.retour')}</ThemedText>
+                <ThemedText type="small" themeColor={inspectionRetour?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionRetour?.statut === 'terminee' ? { color: '#15803d' } : undefined}>
+                  {inspectionRetour?.statut === 'terminee' ? t('inspection.done') : t('inspection.todo')}
+                </ThemedText>
+              </Pressable>
+            ) : null}
           </View>
 
           {rental.statut === 'reservee' ? (
