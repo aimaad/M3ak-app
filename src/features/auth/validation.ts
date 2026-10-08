@@ -41,10 +41,14 @@ export function isSignupFormValid(errors: SignupFormErrors): boolean {
   return Object.keys(errors).length === 0;
 }
 
-const OTP_PATTERN = /^\d{6}$/;
+// La longueur du code OTP envoyé par Supabase n'est pas garantie à 6 chiffres
+// (observé : 8 chiffres avec certaines configurations) — on reste permissif ici,
+// la vraie validation a lieu côté serveur via verifyOtp.
+const OTP_PATTERN = /^\d{4,10}$/;
+const MAX_OTP_LENGTH = 10;
 
 export function normalizeOtpCode(raw: string): string {
-  return raw.replace(/\D/g, '').slice(0, 6);
+  return raw.replace(/\D/g, '').slice(0, MAX_OTP_LENGTH);
 }
 
 export function isValidOtpCode(code: string): boolean {

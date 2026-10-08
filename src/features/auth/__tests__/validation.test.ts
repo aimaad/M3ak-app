@@ -42,20 +42,22 @@ describe('validateSignupForm', () => {
 });
 
 describe('normalizeOtpCode', () => {
-  it('ne garde que les chiffres, limités à 6', () => {
+  it('ne garde que les chiffres, limités à 10 (la longueur réelle varie selon Supabase)', () => {
     expect(normalizeOtpCode('12 34-56')).toBe('123456');
-    expect(normalizeOtpCode('1234567890')).toBe('123456');
+    expect(normalizeOtpCode('72776389')).toBe('72776389');
+    expect(normalizeOtpCode('123456789012')).toBe('1234567890');
     expect(normalizeOtpCode('abc123')).toBe('123');
   });
 });
 
 describe('isValidOtpCode', () => {
-  it('valide un code à exactement 6 chiffres', () => {
+  it('valide un code de 4 à 10 chiffres (6 ou 8 selon la config Supabase)', () => {
     expect(isValidOtpCode('123456')).toBe(true);
+    expect(isValidOtpCode('72776389')).toBe(true);
   });
 
-  it('rejette un code incomplet ou non numérique', () => {
-    expect(isValidOtpCode('12345')).toBe(false);
+  it('rejette un code trop court ou non numérique', () => {
+    expect(isValidOtpCode('123')).toBe(false);
     expect(isValidOtpCode('12345a')).toBe(false);
     expect(isValidOtpCode('')).toBe(false);
   });
