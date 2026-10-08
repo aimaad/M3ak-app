@@ -7,9 +7,15 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { signUpWithEmail } from '@/features/auth/api';
+import { resendSignupCode, signUpWithEmail, verifySignupCode } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
-import { isSignupFormValid, validateSignupForm, type SignupFormValues } from '@/features/auth/validation';
+import {
+  isSignupFormValid,
+  isValidOtpCode,
+  normalizeOtpCode,
+  validateSignupForm,
+  type SignupFormValues,
+} from '@/features/auth/validation';
 import { useLanguage } from '@/i18n/use-language';
 
 const EMPTY_VALUES: SignupFormValues = { email: '', password: '', confirmPassword: '' };
@@ -21,7 +27,12 @@ export default function SignupScreen() {
   const [touched, setTouched] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [confirmationNeeded, setConfirmationNeeded] = useState(false);
+
+  const [awaitingCode, setAwaitingCode] = useState(false);
+  const [code, setCode] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [resendMessage, setResendMessage] = useState<string | null>(null);
 
   const errors = validateSignupForm(values);
 
@@ -40,7 +51,7 @@ export default function SignupScreen() {
       if (hasSession) {
         router.replace('/onboarding');
       } else {
-        setConfirmationNeeded(true);
+        setAwaitingCode(true);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -50,25 +61,79 @@ export default function SignupScreen() {
     }
   }
 
+  async function handleVerify() {
+    setVerifyError(null);
+    if (!isValidOtpCode(code)) {
+      setVerifyError(t('auth.invalidCode'));
+      return;
+    }
+
+    setIsVerifying(true);
+    try {
+      await verifySignupCode(values.email.trim(), code);
+      router.replace('/onboarding');
+    } catch {
+      setVerifyError(t('auth.invalidCode'));
+    } finally {
+      setIsVerifying(false);
+    }
+  }
+
+  async function handleResend() {
+    setResendMessage(null);
+    try {
+      await resendSignupCode(values.email.trim());
+      setResendMessage(t('auth.codeResent'));
+    } catch {
+      setVerifyError(t('auth.genericError'));
+    }
+  }
+
   if (session) {
     return <Redirect href="/accueil" />;
   }
 
-  if (confirmationNeeded) {
+  if (awaitingCode) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1 items-center justify-center gap-4 px-8" edges={['top', 'left', 'right']}>
-          <ThemedText type="subtitle" className="text-center font-cairo-semibold">
-            {t('auth.confirmEmailTitle')}
-          </ThemedText>
-          <ThemedText type="default" themeColor="textSecondary" className="text-center">
-            {t('auth.confirmEmailBody')}
-          </ThemedText>
-          <Pressable onPress={() => router.replace('/login')} className="mt-2 rounded-2xl bg-[#1f5eff] px-5 py-3">
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {t('auth.backToLogin')}
-            </ThemedText>
-          </Pressable>
+        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+          <ScreenHeader title={t('auth.confirmEmailTitle')} subtitle={t('auth.confirmEmailBody')} />
+
+          <View className="gap-4 px-6">
+            <TextField
+              label={t('auth.code')}
+              value={code}
+              onChangeText={(v) => setCode(normalizeOtpCode(v))}
+              keyboardType="number-pad"
+              placeholder="123456"
+              error={verifyError ?? undefined}
+            />
+
+            {resendMessage ? (
+              <ThemedText type="small" themeColor="primary">
+                {resendMessage}
+              </ThemedText>
+            ) : null}
+
+            <Pressable
+              onPress={handleVerify}
+              disabled={isVerifying}
+              className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
+                isVerifying ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
+              }`}
+            >
+              {isVerifying ? <ActivityIndicator color="#ffffff" /> : null}
+              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+                {isVerifying ? t('auth.verifying') : t('auth.verify')}
+              </ThemedText>
+            </Pressable>
+
+            <Pressable onPress={handleResend} className="items-center py-2">
+              <ThemedText type="small" themeColor="primary">
+                {t('auth.resendCode')}
+              </ThemedText>
+            </Pressable>
+          </View>
         </SafeAreaView>
       </ThemedView>
     );

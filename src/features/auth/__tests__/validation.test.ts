@@ -1,4 +1,10 @@
-import { isSignupFormValid, validateSignupForm, type SignupFormValues } from '../validation';
+import {
+  isSignupFormValid,
+  isValidOtpCode,
+  normalizeOtpCode,
+  validateSignupForm,
+  type SignupFormValues,
+} from '../validation';
 
 function makeValues(overrides: Partial<SignupFormValues> = {}): SignupFormValues {
   return {
@@ -32,5 +38,25 @@ describe('validateSignupForm', () => {
     expect(validateSignupForm(makeValues({ confirmPassword: 'autrechose' })).confirmPassword).toBe(
       'mismatch'
     );
+  });
+});
+
+describe('normalizeOtpCode', () => {
+  it('ne garde que les chiffres, limités à 6', () => {
+    expect(normalizeOtpCode('12 34-56')).toBe('123456');
+    expect(normalizeOtpCode('1234567890')).toBe('123456');
+    expect(normalizeOtpCode('abc123')).toBe('123');
+  });
+});
+
+describe('isValidOtpCode', () => {
+  it('valide un code à exactement 6 chiffres', () => {
+    expect(isValidOtpCode('123456')).toBe(true);
+  });
+
+  it('rejette un code incomplet ou non numérique', () => {
+    expect(isValidOtpCode('12345')).toBe(false);
+    expect(isValidOtpCode('12345a')).toBe(false);
+    expect(isValidOtpCode('')).toBe(false);
   });
 });

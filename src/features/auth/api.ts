@@ -16,3 +16,13 @@ export async function signOut(): Promise<void> {
   const { error } = await getSupabase().auth.signOut();
   if (error) throw error;
 }
+
+export async function verifySignupCode(email: string, code: string): Promise<void> {
+  const { error } = await getSupabase().auth.verifyOtp({ email, token: code, type: 'signup' });
+  if (error) throw error;
+}
+
+export async function resendSignupCode(email: string): Promise<void> {
+  const { error } = await getSupabase().auth.resend({ type: 'signup', email });
+  if (error) throw error;
+}

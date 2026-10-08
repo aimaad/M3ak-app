@@ -40,3 +40,13 @@ export function validateSignupForm(values: SignupFormValues): SignupFormErrors {
 export function isSignupFormValid(errors: SignupFormErrors): boolean {
   return Object.keys(errors).length === 0;
 }
+
+const OTP_PATTERN = /^\d{6}$/;
+
+export function normalizeOtpCode(raw: string): string {
+  return raw.replace(/\D/g, '').slice(0, 6);
+}
+
+export function isValidOtpCode(code: string): boolean {
+  return OTP_PATTERN.test(code);
+}
