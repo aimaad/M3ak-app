@@ -1,4 +1,4 @@
-import { Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -114,9 +114,11 @@ export default function LoginScreen() {
               </ThemedText>
             </Pressable>
 
-            <ThemedText type="small" themeColor="textSecondary" className="text-center">
-              {t('auth.noAccountHint')}
-            </ThemedText>
+            <Pressable onPress={() => router.push('/signup')} className="items-center py-2">
+              <ThemedText type="small" themeColor="primary">
+                {t('auth.noAccountHint')}
+              </ThemedText>
+            </Pressable>
           </View>
         </View>
       </SafeAreaView>

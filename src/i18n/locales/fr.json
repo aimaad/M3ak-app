@@ -15,19 +15,70 @@
     "subtitle": "Connectez-vous avec le compte de votre agence",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
     "signIn": "Se connecter",
     "signingIn": "Connexion en cours…",
+    "signUp": "Créer mon compte",
+    "signingUp": "Création en cours…",
+    "signUpTitle": "Créer un compte",
+    "signUpSubtitle": "Pour créer ou rejoindre une agence",
     "signOut": "Déconnexion",
-    "noAccountHint": "Pas encore de compte ? Voir supabase/README.md pour créer votre accès.",
+    "noAccountHint": "Pas de compte ? Créer un compte",
+    "backToLogin": "Retour à la connexion",
     "invalidCredentials": "E-mail ou mot de passe incorrect.",
     "genericError": "Une erreur est survenue. Réessayez.",
     "configMissingTitle": "Configuration manquante",
-    "configMissingBody": "Le fichier .env n'est pas encore configuré. Copiez .env.example en .env et renseignez les clés de votre projet Supabase (voir supabase/README.md)."
+    "configMissingBody": "Le fichier .env n'est pas encore configuré. Copiez .env.example en .env et renseignez les clés de votre projet Supabase (voir supabase/README.md).",
+    "confirmEmailTitle": "Vérifiez votre e-mail",
+    "confirmEmailBody": "Un e-mail de confirmation vous a été envoyé. Cliquez sur le lien qu'il contient, puis revenez vous connecter.",
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "invalid_email": "Entrez une adresse e-mail valide.",
+      "too_short": "6 caractères minimum.",
+      "mismatch": "Les mots de passe ne correspondent pas."
+    }
   },
   "agency": {
-    "notLinkedTitle": "Configuration requise",
-    "notLinkedBody": "Votre compte n'est relié à aucune agence pour l'instant. Suivez l'étape « Relier votre compte à l'agence de démo » dans supabase/README.md, puis revenez ici.",
     "loading": "Chargement de votre agence…"
+  },
+  "onboarding": {
+    "title": "Bienvenue",
+    "subtitle": "Créez votre agence ou rejoignez-en une avec un code",
+    "createTab": "Créer une agence",
+    "joinTab": "Rejoindre",
+    "ownerName": "Votre nom",
+    "agencyName": "Nom de l'agence",
+    "agencyCity": "Ville",
+    "createAction": "Créer mon agence",
+    "createError": "Impossible de créer l'agence. Réessayez.",
+    "inviteCode": "Code d'invitation",
+    "joinAction": "Rejoindre l'agence",
+    "joinError": "Code invalide, expiré, ou déjà utilisé.",
+    "errors": {
+      "required": "Remplissez les champs obligatoires."
+    }
+  },
+  "equipe": {
+    "title": "Équipe",
+    "subtitle": "Membres et invitations de votre agence",
+    "membersSection": "Membres",
+    "unnamedMember": "Membre",
+    "inviteSection": "Inviter",
+    "inviteAs": "Inviter un {{role}}",
+    "inviteError": "Impossible de créer l'invitation. Réessayez.",
+    "pendingInvites": "Invitations en cours",
+    "inviteActive": "En attente",
+    "inviteUsed": "Utilisée",
+    "inviteExpired": "Expirée",
+    "inviteCreatedTitle": "Code créé : {{code}}",
+    "inviteMessage": "Rejoignez l'agence {{agency}} sur M3ak ! Ouvrez l'app, créez un compte, puis entrez ce code d'invitation : {{code}}",
+    "copyCode": "Copier le code",
+    "shareWhatsapp": "Partager sur WhatsApp",
+    "roles": {
+      "owner": "Propriétaire",
+      "manager": "Responsable",
+      "employee": "Employé"
+    }
   },
   "flotte": {
     "title": "Ma Flotte",

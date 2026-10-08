@@ -12,6 +12,8 @@ agence ne voie **que ses propres données**.
   d'inspection (départ/retour), protégé par agence
 - `migrations/0005_inspection_photos_unique_angle.sql` — une seule photo par angle et
   par inspection (une reprise remplace la précédente)
+- `migrations/0006_agency_invites.sql` — invitations d'employés par code (table +
+  fonction `redeem_invite`)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -34,7 +36,8 @@ agence ne voie **que ses propres données**.
 4. Copiez-collez le contenu de `migrations/0003_client_documents_storage.sql`, cliquez **Run**.
 5. Copiez-collez le contenu de `migrations/0004_inspection_photos_storage.sql`, cliquez **Run**.
 6. Copiez-collez le contenu de `migrations/0005_inspection_photos_unique_angle.sql`, cliquez **Run**.
-7. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+7. Copiez-collez le contenu de `migrations/0006_agency_invites.sql`, cliquez **Run**.
+8. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -52,13 +55,23 @@ nouvelles clés "Publishable/Secret") :
 Ne copiez **jamais** la clé `service_role` dans l'app mobile : elle donne un accès total
 à la base et doit rester uniquement dans les Edge Functions côté serveur.
 
-## 4. Créer votre compte et le relier à l'agence de démo
+## 4. Créer votre compte
 
-1. **Authentication → Users → Add user → Create new user** : entrez un e-mail et un
-   mot de passe, cochez **Auto Confirm User** si la case existe.
-2. Reliez ce compte à l'agence de démo. Dans le **SQL Editor** (le SQL Editor exécute
-   vos requêtes en tant qu'administrateur, pas en tant que l'utilisateur connecté —
-   `auth.uid()` n'y fonctionne donc pas ; on sélectionne l'utilisateur par e-mail) :
+Depuis l'app, écran de connexion → **"Pas de compte ? Créer un compte"** → e-mail +
+mot de passe. Si la confirmation par e-mail est activée sur votre projet Supabase
+(**Authentication → Providers → Email**), vous recevrez un e-mail à confirmer avant de
+pouvoir vous connecter ; sinon vous êtes connecté immédiatement.
+
+Une fois connecté sans agence, l'app propose de **créer votre propre agence** ou de la
+**rejoindre avec un code d'invitation** (généré par un propriétaire/responsable depuis
+l'écran "Équipe" de l'app). Tout se passe dans l'app, plus besoin de SQL pour ça.
+
+### Alternative : relier votre compte à l'agence de démo (pour tester avec les données déjà créées)
+
+Si vous voulez voir les 15 véhicules de démo plutôt que de créer une agence vide,
+reliez votre compte à l'agence de démo manuellement. Dans le **SQL Editor** (il exécute
+vos requêtes en tant qu'administrateur, pas en tant que l'utilisateur connecté —
+`auth.uid()` n'y fonctionne donc pas ; on sélectionne l'utilisateur par e-mail) :
 
 ```sql
 insert into public.agency_members (agency_id, user_id, role, nom_complet)
@@ -70,10 +83,6 @@ select
 from auth.users
 where email = 'votre-email@exemple.com';  -- remplacez par le vôtre
 ```
-
-Sans cette étape, la RLS empêchera votre compte de voir les véhicules de démo — c'est
-le comportement attendu (chaque agence est isolée). Connectez-vous ensuite dans l'app
-avec cet e-mail et ce mot de passe.
 
 ## Alternative : Supabase CLI (optionnel, pour les développeurs)
 

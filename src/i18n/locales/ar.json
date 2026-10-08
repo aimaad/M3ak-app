@@ -15,19 +15,70 @@
     "subtitle": "دخل بحساب الوكالة ديالك",
     "email": "البريد الإلكتروني",
     "password": "كلمة السر",
+    "confirmPassword": "أكد كلمة السر",
     "signIn": "دخول",
     "signingIn": "كنعالجو الدخول…",
+    "signUp": "صاوب الحساب ديالي",
+    "signingUp": "كنصاوبو…",
+    "signUpTitle": "صاوب حساب",
+    "signUpSubtitle": "باش تصاوب أو تنضم لوكالة",
     "signOut": "خروج",
-    "noAccountHint": "ماعندكش حساب بعد؟ شوف supabase/README.md باش تصاوب الحساب ديالك.",
+    "noAccountHint": "ماعندكش حساب؟ صاوب حساب",
+    "backToLogin": "رجوع لتسجيل الدخول",
     "invalidCredentials": "البريد الإلكتروني أو كلمة السر خاطئة.",
     "genericError": "وقعت مشكلة. عاود المحاولة.",
     "configMissingTitle": "الإعدادات ناقصة",
-    "configMissingBody": "ملف .env مازال ماتصاوبش. نسخ .env.example ل .env وعمر المفاتيح ديال مشروع Supabase (شوف supabase/README.md)."
+    "configMissingBody": "ملف .env مازال ماتصاوبش. نسخ .env.example ل .env وعمر المفاتيح ديال مشروع Supabase (شوف supabase/README.md).",
+    "confirmEmailTitle": "تحقق من البريد الإلكتروني ديالك",
+    "confirmEmailBody": "صيفطنالك بريد إلكتروني للتأكيد. دوز على الرابط اللي فيه، من بعد رجع دخل.",
+    "errors": {
+      "required": "هاد الحقل خاصو يتعمر.",
+      "invalid_email": "دخل بريد إلكتروني صحيح.",
+      "too_short": "6 أحرف على الأقل.",
+      "mismatch": "كلمات السر ماكيتوافقوش."
+    }
   },
   "agency": {
-    "notLinkedTitle": "خاص إعداد إضافي",
-    "notLinkedBody": "الحساب ديالك مازال ماترتبطش بأي وكالة. تبع خطوة « ربط الحساب بوكالة الديمو » فـ supabase/README.md، من بعد رجع هنا.",
     "loading": "كنحملو الوكالة ديالك…"
+  },
+  "onboarding": {
+    "title": "مرحباً بيك",
+    "subtitle": "صاوب الوكالة ديالك أو انضم لوحدة بكود",
+    "createTab": "صاوب وكالة",
+    "joinTab": "انضم",
+    "ownerName": "الاسم ديالك",
+    "agencyName": "اسم الوكالة",
+    "agencyCity": "المدينة",
+    "createAction": "صاوب الوكالة ديالي",
+    "createError": "تعذر صواب الوكالة. عاود المحاولة.",
+    "inviteCode": "كود الدعوة",
+    "joinAction": "انضم للوكالة",
+    "joinError": "الكود خاطئ، فات وقتو، أو تستعمل من قبل.",
+    "errors": {
+      "required": "عمر الحقول المطلوبة."
+    }
+  },
+  "equipe": {
+    "title": "الفريق",
+    "subtitle": "أعضاء ودعوات الوكالة ديالك",
+    "membersSection": "الأعضاء",
+    "unnamedMember": "عضو",
+    "inviteSection": "دعوة",
+    "inviteAs": "دعوة {{role}}",
+    "inviteError": "تعذر صواب الدعوة. عاود المحاولة.",
+    "pendingInvites": "الدعوات الجارية",
+    "inviteActive": "فالانتظار",
+    "inviteUsed": "تستعملات",
+    "inviteExpired": "فاتها الوقت",
+    "inviteCreatedTitle": "الكود تصاوب : {{code}}",
+    "inviteMessage": "انضم لوكالة {{agency}} فتطبيق M3ak! حل التطبيق، صاوب حساب، من بعد دخل هاد كود الدعوة : {{code}}",
+    "copyCode": "نسخ الكود",
+    "shareWhatsapp": "شارك فـ WhatsApp",
+    "roles": {
+      "owner": "المالك",
+      "manager": "المسؤول",
+      "employee": "الموظف"
+    }
   },
   "flotte": {
     "title": "الأسطول ديالي",

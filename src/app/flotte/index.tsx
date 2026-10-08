@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -47,23 +47,7 @@ export default function FlotteScreen() {
   }
 
   if (!agencyQuery.data) {
-    return (
-      <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1 items-center justify-center gap-3 px-8">
-          <ThemedText type="subtitle" className="text-center font-cairo-semibold">
-            {t('agency.notLinkedTitle')}
-          </ThemedText>
-          <ThemedText type="default" themeColor="textSecondary" className="text-center">
-            {t('agency.notLinkedBody')}
-          </ThemedText>
-          <Pressable onPress={() => signOut()} className="mt-4 rounded-2xl bg-[#101423] px-5 py-3">
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {t('auth.signOut')}
-            </ThemedText>
-          </Pressable>
-        </SafeAreaView>
-      </ThemedView>
-    );
+    return <Redirect href="/onboarding" />;
   }
 
   return (

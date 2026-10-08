@@ -7,7 +7,7 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Thème M3ak (bleu `#1f5eff`, cyan `#38e1ff`, jaune `#ffd43b`, fond clair `#f4f6fb`), police Cairo, RTL
 - [x] i18n fr / ar
 - [x] Schéma Supabase + RLS + données de démo prêts (`supabase/`) — reste à créer le projet Supabase et exécuter le SQL (voir `supabase/README.md`)
-- [ ] Authentification (email/téléphone), création d'agence, invitation d'employés, rôles — connexion par e-mail faite (`login.tsx`) ; téléphone, création d'agence dans l'app et invitations restent à faire
+- [x] Authentification par e-mail, création d'agence et invitation d'employés par code, rôles (owner/manager/employee) — l'authentification par téléphone reste à faire (pas prioritaire pour l'instant)
 
 ## Étape 1 — Flotte (MVP gestion)
 - [x] Liste des véhicules avec filtres (disponible, en location, maintenance, à inspecter) — voir `design/02_flotte.png`

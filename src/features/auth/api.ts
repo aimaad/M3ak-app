@@ -5,6 +5,13 @@ export async function signInWithEmail(email: string, password: string): Promise<
   if (error) throw error;
 }
 
+/** @returns true si une session a été ouverte immédiatement (confirmation e-mail désactivée) */
+export async function signUpWithEmail(email: string, password: string): Promise<boolean> {
+  const { data, error } = await getSupabase().auth.signUp({ email, password });
+  if (error) throw error;
+  return !!data.session;
+}
+
 export async function signOut(): Promise<void> {
   const { error } = await getSupabase().auth.signOut();
   if (error) throw error;
