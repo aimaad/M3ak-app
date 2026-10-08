@@ -26,8 +26,8 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [ ] Rapport comparatif avant/après (`design/04_rapport_inspection.png`), retenue sur caution, PDF, partage WhatsApp
 
 ## Étape 4 — Tableau de bord et maintenance
-- [ ] Accueil (`design/01_dashboard.png`) : disponibles, en location, en atelier, à inspecter, revenus, taux d'utilisation
-- [ ] Échéances de maintenance (vidange, assurance, visite technique, freins) + notifications push
+- [x] Accueil (`design/01_dashboard.png`) : disponibles, en location, en atelier, à inspecter, revenus, taux d'utilisation
+- [x] Échéances de maintenance (vidange, assurance, visite technique, freins) — les **notifications push** restent à faire (nécessitent pg_cron + Edge Function, regroupées avec le reste du travail serveur repoussé)
 
 ## Étape 5 — Chat M3ak ⭐
 - [ ] Écran de chat, Edge Function avec outils sur les données de l'agence

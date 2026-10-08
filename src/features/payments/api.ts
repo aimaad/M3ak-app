@@ -24,6 +24,13 @@ function fromRow(row: PaymentRow): Payment {
   };
 }
 
+export async function listAllPayments(): Promise<Payment[]> {
+  const { data, error } = await getSupabase().from('payments').select('*');
+
+  if (error) throw error;
+  return (data as PaymentRow[]).map(fromRow);
+}
+
 export async function listPaymentsForRental(rentalId: string): Promise<Payment[]> {
   const { data, error } = await getSupabase()
     .from('payments')

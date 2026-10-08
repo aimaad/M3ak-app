@@ -39,5 +39,5 @@ export default function Index() {
     );
   }
 
-  return <Redirect href={session ? '/flotte' : '/login'} />;
+  return <Redirect href={session ? '/accueil' : '/login'} />;
 }

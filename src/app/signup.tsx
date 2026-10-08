@@ -51,7 +51,7 @@ export default function SignupScreen() {
   }
 
   if (session) {
-    return <Redirect href="/flotte" />;
+    return <Redirect href="/accueil" />;
   }
 
   if (confirmationNeeded) {

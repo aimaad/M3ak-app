@@ -5,6 +5,7 @@ export const INVITABLE_ROLES: AgencyRole[] = ['manager', 'employee'];
 export type AgencyMembership = {
   agencyId: string;
   role: AgencyRole;
+  memberName: string | null;
   agencyName: string;
   agencyCity: string | null;
 };

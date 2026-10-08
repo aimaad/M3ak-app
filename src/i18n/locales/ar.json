@@ -289,5 +289,56 @@
       "tableau_de_bord": "لوحة القيادة",
       "autre": "آخر"
     }
+  },
+  "accueil": {
+    "title": "الرئيسية",
+    "greeting": "مرحباً {{name}}",
+    "defaultName": "👋",
+    "fleetTotal": "مجموع الأسطول",
+    "fleetTotalCount_one": "سيارة واحدة مسجلة",
+    "fleetTotalCount_other": "{{count}} ديال السيارات مسجلة",
+    "utilizationRate": "معدل الاستعمال",
+    "revenueThisMonth": "رقم المعاملات (الشهر)",
+    "maintenanceSection": "آجال الصيانة",
+    "maintenanceEmpty": "ماكاين حتى أجل قريب.",
+    "seeAll": "شوف الكل"
+  },
+  "maintenance": {
+    "title": "الصيانة",
+    "empty": "ماكاين حتى أجل مسجل.",
+    "addAction": "زيد أجل",
+    "markDone": "علّم كديرت",
+    "done": "ديرت",
+    "urgency": {
+      "a_venir": "جاي",
+      "due": "قريب",
+      "en_retard": "متأخر"
+    },
+    "types": {
+      "vidange": "فيدانج",
+      "assurance": "التأمين",
+      "visite_technique": "الزيارة التقنية",
+      "freins": "الفرامل",
+      "pneus": "الكَوانيش",
+      "autre": "آخر"
+    },
+    "form": {
+      "newTitle": "أجل جديد",
+      "vehiclePlaceholder": "اختار سيارة",
+      "vehicleSearch": "الماركة، الموديل، رقم الترقيم…",
+      "type": "نوع الصيانة",
+      "echeanceDate": "تاريخ الأجل (سنة-شهر-يوم)",
+      "echeanceKm": "الكيلومتراج ديال الأجل",
+      "notes": "ملاحظات",
+      "save": "حفظ",
+      "saving": "كنسجلو…",
+      "createError": "تعذرت زيادة هاد الأجل.",
+      "errors": {
+        "required": "اختار سيارة.",
+        "invalid_date": "الصيغة المطلوبة : سنة-شهر-يوم.",
+        "invalid_number": "دخل رقم صحيح.",
+        "need_one": "دخل تاريخ أو كيلومتراج ديال الأجل."
+      }
+    }
   }
 }

@@ -4,13 +4,14 @@ import { Pressable, ScrollView } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
-export type SectionKey = 'flotte' | 'clients' | 'locations' | 'equipe';
+export type SectionKey = 'accueil' | 'flotte' | 'clients' | 'locations' | 'equipe';
 
 const SECTIONS: {
   key: SectionKey;
-  href: '/flotte' | '/clients' | '/locations' | '/equipe';
+  href: '/accueil' | '/flotte' | '/clients' | '/locations' | '/equipe';
   labelKey: string;
 }[] = [
+  { key: 'accueil', href: '/accueil', labelKey: 'accueil.title' },
   { key: 'flotte', href: '/flotte', labelKey: 'flotte.title' },
   { key: 'clients', href: '/clients', labelKey: 'clients.title' },
   { key: 'locations', href: '/locations', labelKey: 'locations.title' },

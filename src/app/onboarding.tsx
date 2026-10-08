@@ -34,7 +34,7 @@ export default function OnboardingScreen() {
     }
     try {
       await createAgency.mutateAsync({ nom: nom.trim(), ville: ville.trim() || null, ownerName: ownerName.trim() });
-      router.replace('/flotte');
+      router.replace('/accueil');
     } catch {
       setError(t('onboarding.createError'));
     }
@@ -48,14 +48,14 @@ export default function OnboardingScreen() {
     }
     try {
       await redeemInvite.mutateAsync(code.trim().toUpperCase());
-      router.replace('/flotte');
+      router.replace('/accueil');
     } catch {
       setError(t('onboarding.joinError'));
     }
   }
 
   if (agencyQuery.data) {
-    return <Redirect href="/flotte" />;
+    return <Redirect href="/accueil" />;
   }
 
   return (

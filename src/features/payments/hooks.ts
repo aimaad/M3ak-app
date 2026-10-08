@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { createPayment, listPaymentsForRental } from './api';
+import { createPayment, listAllPayments, listPaymentsForRental } from './api';
 import type { PaymentInput } from './types';
 
 const paymentsKey = (rentalId: string) => ['payments', rentalId] as const;
@@ -11,6 +11,10 @@ export function usePaymentsForRental(rentalId: string | undefined) {
     queryFn: () => listPaymentsForRental(rentalId as string),
     enabled: !!rentalId,
   });
+}
+
+export function useAllPayments() {
+  return useQuery({ queryKey: ['payments', 'all'], queryFn: listAllPayments });
 }
 
 export function useCreatePayment() {

@@ -39,7 +39,7 @@ export default function LoginScreen() {
   }
 
   if (session) {
-    return <Redirect href="/flotte" />;
+    return <Redirect href="/accueil" />;
   }
 
   return (

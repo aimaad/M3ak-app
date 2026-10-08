@@ -289,5 +289,56 @@
       "tableau_de_bord": "Tableau de bord",
       "autre": "Autre"
     }
+  },
+  "accueil": {
+    "title": "Accueil",
+    "greeting": "Bonjour {{name}}",
+    "defaultName": "👋",
+    "fleetTotal": "Parc total",
+    "fleetTotalCount_one": "{{count}} véhicule enregistré",
+    "fleetTotalCount_other": "{{count}} véhicules enregistrés",
+    "utilizationRate": "Taux d'utilisation",
+    "revenueThisMonth": "Chiffre d'affaires (mois)",
+    "maintenanceSection": "Échéances de maintenance",
+    "maintenanceEmpty": "Aucune échéance à venir.",
+    "seeAll": "Voir tout"
+  },
+  "maintenance": {
+    "title": "Maintenance",
+    "empty": "Aucune échéance enregistrée.",
+    "addAction": "Ajouter une échéance",
+    "markDone": "Marquer comme effectuée",
+    "done": "Effectuée",
+    "urgency": {
+      "a_venir": "À venir",
+      "due": "Bientôt",
+      "en_retard": "En retard"
+    },
+    "types": {
+      "vidange": "Vidange",
+      "assurance": "Assurance",
+      "visite_technique": "Visite technique",
+      "freins": "Freins",
+      "pneus": "Pneus",
+      "autre": "Autre"
+    },
+    "form": {
+      "newTitle": "Nouvelle échéance",
+      "vehiclePlaceholder": "Choisir un véhicule",
+      "vehicleSearch": "Marque, modèle, immatriculation…",
+      "type": "Type d'entretien",
+      "echeanceDate": "Date d'échéance (AAAA-MM-JJ)",
+      "echeanceKm": "Kilométrage d'échéance",
+      "notes": "Notes",
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "createError": "Impossible d'ajouter cette échéance.",
+      "errors": {
+        "required": "Choisissez un véhicule.",
+        "invalid_date": "Format attendu : AAAA-MM-JJ.",
+        "invalid_number": "Entrez un nombre valide.",
+        "need_one": "Renseignez une date ou un kilométrage d'échéance."
+      }
+    }
   }
 }

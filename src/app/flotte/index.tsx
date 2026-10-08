@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,12 @@ import { ThemedView } from '@/components/themed-view';
 import { TextField } from '@/components/text-field';
 import { signOut } from '@/features/auth/api';
 import { useMyAgency } from '@/features/agency/hooks';
-import { countByStatus, filterVehicles, type StatusFilter } from '@/features/vehicles/filters';
+import {
+  countByStatus,
+  filterVehicles,
+  STATUS_FILTERS,
+  type StatusFilter,
+} from '@/features/vehicles/filters';
 import { useVehicles } from '@/features/vehicles/hooks';
 import { StatusFilterChips } from '@/features/vehicles/status-filter-chips';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
@@ -25,8 +30,11 @@ export default function FlotteScreen() {
   const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
   const agencyQuery = useMyAgency();
   const vehiclesQuery = useVehicles();
+  const { statut: initialStatut } = useLocalSearchParams<{ statut?: string }>();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('tous');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(() =>
+    STATUS_FILTERS.includes(initialStatut as StatusFilter) ? (initialStatut as StatusFilter) : 'tous'
+  );
 
   const vehicles = vehiclesQuery.data ?? EMPTY_VEHICLES;
   const counts = useMemo(() => countByStatus(vehicles), [vehicles]);

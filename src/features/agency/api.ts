@@ -6,6 +6,7 @@ import type { AgencyInvite, AgencyMember, AgencyMembership, AgencyRole } from '.
 type AgencyMembersRow = {
   agency_id: string;
   role: AgencyRole;
+  nom_complet: string | null;
   agency: { nom: string; ville: string | null } | { nom: string; ville: string | null }[] | null;
 };
 
@@ -17,7 +18,7 @@ export async function getMyAgencyMembership(): Promise<AgencyMembership | null> 
 
   const { data, error } = await supabase
     .from('agency_members')
-    .select('agency_id, role, agency:agencies(nom, ville)')
+    .select('agency_id, role, nom_complet, agency:agencies(nom, ville)')
     .eq('user_id', userId)
     .limit(1)
     .maybeSingle<AgencyMembersRow>();
@@ -30,6 +31,7 @@ export async function getMyAgencyMembership(): Promise<AgencyMembership | null> 
   return {
     agencyId: data.agency_id,
     role: data.role,
+    memberName: data.nom_complet,
     agencyName: agency?.nom ?? '',
     agencyCity: agency?.ville ?? null,
   };
@@ -60,7 +62,13 @@ export async function createAgency(
   });
   if (memberError) throw memberError;
 
-  return { agencyId: agency.id, role: 'owner', agencyName: agency.nom, agencyCity: agency.ville };
+  return {
+    agencyId: agency.id,
+    role: 'owner',
+    memberName: ownerName,
+    agencyName: agency.nom,
+    agencyCity: agency.ville,
+  };
 }
 
 export async function redeemInvite(code: string): Promise<AgencyRole> {
