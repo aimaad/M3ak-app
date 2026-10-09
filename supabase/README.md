@@ -21,6 +21,10 @@ agence ne voie **que ses propres données**.
 - `migrations/0009_agency_details_and_member_safety.sql` — informations complètes de
   l'agence (raison sociale, e-mail, téléphone, adresse, logo…), protection contre la
   suppression du dernier propriétaire, et bucket de stockage pour le logo
+- `migrations/0010_fix_role_escalation.sql` — corrige une faille de sécurité : un
+  responsable (manager) pouvait s'attribuer le rôle propriétaire (owner), ou l'attribuer
+  à un complice, via une invitation ou un ajout de membre avec `role: 'owner'` (voir
+  `scripts/rls-security-audit.mjs`)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -48,7 +52,8 @@ agence ne voie **que ses propres données**.
 9. Copiez-collez le contenu de `migrations/0008_vehicle_documents.sql`, cliquez **Run**.
 10. Copiez-collez le contenu de `migrations/0009_agency_details_and_member_safety.sql`,
     cliquez **Run**.
-11. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+11. Copiez-collez le contenu de `migrations/0010_fix_role_escalation.sql`, cliquez **Run**.
+12. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -108,3 +113,21 @@ npx supabase db push
 `db push` applique les fichiers de `migrations/` dans l'ordre. `seed.sql` n'est utilisé
 automatiquement que par `supabase db reset` (base locale) ; sur un projet distant,
 exécutez-le manuellement via le SQL Editor comme à l'étape 2.
+
+## Audit de sécurité automatisé (RLS)
+
+`scripts/rls-security-audit.mjs` vérifie par de vrais appels HTTP (comptes et agences
+jetables) que les règles de sécurité fonctionnent : isolation entre agences, contrôle des
+rôles côté serveur, protection du dernier propriétaire, invitations. À lancer uniquement
+contre une instance **locale** (jamais contre le projet de production) :
+
+```bash
+npx supabase start   # nécessite Docker Desktop démarré
+npx supabase status  # pour récupérer l'URL et les clés locales (ANON_KEY, SERVICE_ROLE_KEY)
+SUPA_URL="http://127.0.0.1:54321" SUPA_ANON="<anon key locale>" SUPA_SERVICE="<service_role key locale>" \
+  node scripts/rls-security-audit.mjs
+```
+
+Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
+avant de reporter la correction sur le projet de production (via le SQL Editor, comme à
+l'étape 2).
