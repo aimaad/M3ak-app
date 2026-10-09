@@ -225,6 +225,31 @@ async function main() {
     managerDirectInsertErr?.message ?? `AUCUNE ERREUR — ${(managerDirectInsertOwner ?? []).length} ligne(s) insérée(s) !`
   );
 
+  // --- Cas légitime : l'owner gère réellement ses membres (chemin positif) ---
+  const { data: ownerChangesRole, error: ownerChangesRoleErr } = await ownerA.client
+    .from('agency_members')
+    .update({ role: 'employee' })
+    .eq('agency_id', agencyA.id)
+    .eq('user_id', managerA.id)
+    .select();
+  record(
+    "4/11. Owner peut changer le rôle d'un membre de sa propre agence",
+    !ownerChangesRoleErr && (ownerChangesRole ?? []).length === 1 && ownerChangesRole[0].role === 'employee',
+    ownerChangesRoleErr?.message ?? `lignes modifiées: ${(ownerChangesRole ?? []).length}`
+  );
+
+  const { data: ownerRemovesMember, error: ownerRemovesErr } = await ownerA.client
+    .from('agency_members')
+    .delete()
+    .eq('agency_id', agencyA.id)
+    .eq('user_id', employeeA.id)
+    .select();
+  record(
+    '4/11. Owner peut retirer un membre de sa propre agence',
+    !ownerRemovesErr && (ownerRemovesMember ?? []).length === 1,
+    ownerRemovesErr?.message ?? `lignes supprimées: ${(ownerRemovesMember ?? []).length}`
+  );
+
   // --- #8 Protection du dernier owner ---
   const { error: lastOwnerDeleteErr } = await ownerB.client
     .from('agency_members')
