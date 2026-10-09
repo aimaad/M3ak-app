@@ -45,21 +45,9 @@ export async function createAgency(
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Non connecté');
 
-  const { data: sessionResult } = await supabase.auth.getSession();
-  const session = sessionResult.session;
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  console.log('createAgency — diagnostic session :', {
-    userId,
-    userRole: session?.user?.role,
-    tokenStart: session?.access_token?.slice(0, 15),
-    expiresAt: session?.expires_at,
-    nowSeconds,
-    isExpired: session?.expires_at ? session.expires_at < nowSeconds : 'inconnu',
-  });
-
   const { data: agency, error: agencyError } = await supabase
     .from('agencies')
-    .insert({ nom, ville })
+    .insert({ nom, ville, created_by: userId })
     .select()
     .single();
   if (agencyError) throw agencyError;
