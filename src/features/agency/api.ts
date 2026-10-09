@@ -47,6 +47,16 @@ export async function createAgency(
   const userId = userResult.user?.id;
   if (!userId) throw new Error('Non connecté');
 
+  const { data: sessionResult } = await supabase.auth.getSession();
+  console.log(
+    'createAgency — session présente ?',
+    !!sessionResult.session,
+    '— expire le',
+    sessionResult.session?.expires_at
+      ? new Date(sessionResult.session.expires_at * 1000).toISOString()
+      : 'inconnu'
+  );
+
   const { data: agency, error: agencyError } = await supabase
     .from('agencies')
     .insert({ nom, ville })
