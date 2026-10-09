@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase';
+import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
 import { generateInviteCode, inviteExpiryDate } from './invite-code';
 import type { AgencyInvite, AgencyMember, AgencyMembership, AgencyRole } from './types';
@@ -12,8 +12,7 @@ type AgencyMembersRow = {
 
 export async function getMyAgencyMembership(): Promise<AgencyMembership | null> {
   const supabase = getSupabase();
-  const { data: userResult } = await supabase.auth.getUser();
-  const userId = userResult.user?.id;
+  const userId = await getCurrentUserId();
   if (!userId) return null;
 
   const { data, error } = await supabase
@@ -43,19 +42,8 @@ export async function createAgency(
   ownerName: string
 ): Promise<AgencyMembership> {
   const supabase = getSupabase();
-  const { data: userResult } = await supabase.auth.getUser();
-  const userId = userResult.user?.id;
+  const userId = await getCurrentUserId();
   if (!userId) throw new Error('Non connecté');
-
-  const { data: sessionResult } = await supabase.auth.getSession();
-  console.log(
-    'createAgency — session présente ?',
-    !!sessionResult.session,
-    '— expire le',
-    sessionResult.session?.expires_at
-      ? new Date(sessionResult.session.expires_at * 1000).toISOString()
-      : 'inconnu'
-  );
 
   const { data: agency, error: agencyError } = await supabase
     .from('agencies')
@@ -123,7 +111,7 @@ export async function listAgencyInvites(agencyId: string): Promise<AgencyInvite[
 
 export async function createAgencyInvite(agencyId: string, role: AgencyRole): Promise<AgencyInvite> {
   const supabase = getSupabase();
-  const { data: userResult } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from('agency_invites')
@@ -131,7 +119,7 @@ export async function createAgencyInvite(agencyId: string, role: AgencyRole): Pr
       agency_id: agencyId,
       code: generateInviteCode(),
       role,
-      created_by: userResult.user?.id ?? null,
+      created_by: userId,
       expires_at: inviteExpiryDate().toISOString(),
     })
     .select()

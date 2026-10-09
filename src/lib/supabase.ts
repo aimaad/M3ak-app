@@ -31,3 +31,14 @@ export function getSupabase(): SupabaseClient {
 
   return client;
 }
+
+/**
+ * Identifiant de l'utilisateur connecté, lu depuis la session locale (déjà
+ * rafraîchie automatiquement par le client). Préférer à `auth.getUser()`,
+ * qui revalide via un appel réseau séparé et peut échouer ponctuellement
+ * sur mobile alors que la session est bien valide.
+ */
+export async function getCurrentUserId(): Promise<string | null> {
+  const { data } = await getSupabase().auth.getSession();
+  return data.session?.user.id ?? null;
+}

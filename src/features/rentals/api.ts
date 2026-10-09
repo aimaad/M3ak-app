@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase';
+import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
 import type { DepartInput, Rental, RentalInput, RetourInput } from './types';
 
@@ -68,7 +68,7 @@ export async function getRental(id: string): Promise<Rental | null> {
 
 export async function createRental(agencyId: string, input: RentalInput): Promise<Rental> {
   const supabase = getSupabase();
-  const { data: userResult } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from('rentals')
@@ -80,7 +80,7 @@ export async function createRental(agencyId: string, input: RentalInput): Promis
       date_fin_prevue: input.dateFinPrevue,
       prix_total: input.prixTotal,
       caution_montant: input.cautionMontant,
-      created_by: userResult.user?.id ?? null,
+      created_by: userId,
     })
     .select()
     .single();

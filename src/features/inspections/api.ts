@@ -1,4 +1,4 @@
-import { getSupabase } from '@/lib/supabase';
+import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
 import type { Inspection, InspectionPhoto, InspectionType, PhotoAngle } from './types';
 
@@ -72,7 +72,7 @@ export async function createInspection(
   type: InspectionType
 ): Promise<Inspection> {
   const supabase = getSupabase();
-  const { data: userResult } = await supabase.auth.getUser();
+  const userId = await getCurrentUserId();
 
   const { data, error } = await supabase
     .from('inspections')
@@ -81,7 +81,7 @@ export async function createInspection(
       rental_id: rentalId,
       vehicle_id: vehicleId,
       type,
-      employee_id: userResult.user?.id ?? null,
+      employee_id: userId,
     })
     .select()
     .single();
