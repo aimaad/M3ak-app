@@ -8,12 +8,34 @@ import {
   useFonts,
 } from '@expo-google-fonts/cairo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
+import type { ReactNode } from 'react';
 
-import { SessionProvider } from '@/features/auth/session-context';
+import { SessionProvider, useSession } from '@/features/auth/session-context';
+
+const PUBLIC_SEGMENTS = new Set(['login', 'signup']);
+
+/**
+ * Renvoie vers /login dès que la session disparaît (déconnexion, expiration),
+ * quel que soit l'écran affiché au moment où ça arrive.
+ */
+function AuthGate({ children }: { children: ReactNode }) {
+  const { session, isLoading, configError } = useSession();
+  const segments = useSegments();
+
+  useEffect(() => {
+    if (isLoading || configError) return;
+    const onPublicScreen = PUBLIC_SEGMENTS.has(segments[0] ?? '');
+    if (!session && !onPublicScreen) {
+      router.replace('/login');
+    }
+  }, [session, isLoading, configError, segments]);
+
+  return children;
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -42,7 +64,9 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack screenOptions={{ headerShown: false }} />
+          <AuthGate>
+            <Stack screenOptions={{ headerShown: false }} />
+          </AuthGate>
         </ThemeProvider>
       </SessionProvider>
     </QueryClientProvider>
