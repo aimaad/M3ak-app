@@ -25,6 +25,10 @@ agence ne voie **que ses propres données**.
   responsable (manager) pouvait s'attribuer le rôle propriétaire (owner), ou l'attribuer
   à un complice, via une invitation ou un ajout de membre avec `role: 'owner'` (voir
   `scripts/rls-security-audit.mjs`)
+- `migrations/0011_vehicle_fleet_module.sql` — module complet de gestion du parc :
+  catégorie, couleur, transmission, nombre de places, niveau de carburant, tarifs
+  semaine/mois, description, photos (galerie), échéances de documents, archivage
+  (réservé owner/manager) et nouveaux statuts `en_preparation`/`indisponible`
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -53,7 +57,8 @@ agence ne voie **que ses propres données**.
 10. Copiez-collez le contenu de `migrations/0009_agency_details_and_member_safety.sql`,
     cliquez **Run**.
 11. Copiez-collez le contenu de `migrations/0010_fix_role_escalation.sql`, cliquez **Run**.
-12. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+12. Copiez-collez le contenu de `migrations/0011_vehicle_fleet_module.sql`, cliquez **Run**.
+13. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -127,6 +132,11 @@ npx supabase status  # pour récupérer l'URL et les clés locales (ANON_KEY, SE
 SUPA_URL="http://127.0.0.1:54321" SUPA_ANON="<anon key locale>" SUPA_SERVICE="<service_role key locale>" \
   node scripts/rls-security-audit.mjs
 ```
+
+`scripts/vehicle-rls-audit.mjs` fait la même chose pour le module Flotte : création et
+persistance d'un véhicule, immatriculation en double, permissions (employee ne peut pas
+archiver), isolation des véhicules et des documents entre deux agences. Même usage, en
+remplaçant le nom du script.
 
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à

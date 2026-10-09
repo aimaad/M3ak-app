@@ -138,18 +138,53 @@
       "disponible": "متوفرة",
       "en_location": "فـ الكراء",
       "maintenance": "الصيانة",
-      "a_inspecter": "خاصها فحص"
+      "a_inspecter": "خاصها فحص",
+      "en_preparation": "التحضير",
+      "indisponible": "ماشي متوفرة"
+    },
+    "kpi": {
+      "total": "عدد السيارات",
+      "disponible": "متوفرة",
+      "immobilise": "متوقفة",
+      "docsExpirant": "وثائق قريب تسالا"
+    },
+    "hideFilters": "خبي الفلاتر",
+    "moreFilters": "فلاتر أكثر",
+    "showArchived": "شوف المؤرشفة",
+    "showingArchived": "السيارات المؤرشفة",
+    "filterByBrand": "الماركة",
+    "allBrands": "الكل",
+    "sortBy": "رتب حسب",
+    "sort": {
+      "recent": "الأحدث",
+      "marque": "الماركة",
+      "immatriculation": "رقم الترقيم",
+      "prixJour": "الثمن / اليوم",
+      "kilometrage": "الكيلومتراج"
     }
   },
   "vehicle": {
     "detailsTitle": "بطاقة السيارة",
     "edit": "عدّل",
     "infoSection": "المعلومات",
-    "historySection": "التاريخ",
-    "historyPlaceholder": "قريباً: الكراءات والفحوصات ديال هاد السيارة غادي يبانو هنا.",
+    "historySection": "التاريخ والتطورات الجاية",
+    "historyPlaceholder": "قريباً: الحجوزات، عقود الكراء، الفحوصات، التدخلات والمردودية ديال هاد السيارة غادي يبانو هنا.",
     "documentsSection": "الوثائق",
     "noDocuments": "ماكاين حتى وثيقة مزادة.",
+    "noPhotos": "ماكاين حتى تصويرة مزادة.",
     "notFound": "السيارة ماكايناش.",
+    "archivedBadge": "مؤرشفة",
+    "archive": "أرشف هاد السيارة",
+    "reactivate": "رجع فعّل هاد السيارة",
+    "archiveConfirmTitle": "أرشف هاد السيارة؟",
+    "archiveConfirmBody": "غادي ما تبقى تبان فاللائحة النشيطة، ولكن المعطيات ديالها غادي تبقى محفوظة. تقدر ترجع فعلها فأي وقت.",
+    "archiveError": "تعذر تبديل الأرشفة ديال هاد السيارة.",
+    "photoDeleteError": "تعذر حيد هاد التصويرة.",
+    "documentExpiryPlaceholder": "تاريخ الصلاحية (سنة-شهر-نهار)، ماشي واجب",
+    "documentExpiry": "تسالا نهار {{date}}",
+    "photosHint": "تصاور السيارة",
+    "existingPhotosHint": "{{count}} تصويرة محفوظة من قبل.",
+    "statusLockedHint": "الحالة « {{status}} » كتدبرها تلقائياً وحدة الكراءات.",
     "documents": {
       "carte_grise": "البطاقة الرمادية",
       "assurance": "التأمين",
@@ -160,9 +195,19 @@
       "modele": "الموديل",
       "immatriculation": "رقم الترقيم",
       "annee": "السنة",
+      "couleur": "اللون",
+      "categorie": "الفئة",
+      "transmission": "ناقل الحركة",
       "carburant": "نوع الوقود",
       "kilometrage": "الكيلومتراج",
+      "niveauCarburant": "مستوى الوقود الحالي (%)",
+      "niveauCarburantPlaceholder": "مثلاً 75",
+      "nombrePlaces": "عدد البقاعد",
       "prixJour": "الثمن / اليوم (درهم)",
+      "prixSemaine": "الثمن / الجمعة (درهم)",
+      "prixMois": "الثمن / الشهر (درهم)",
+      "optionalPlaceholder": "ماشي واجب",
+      "description": "وصف / ملاحظات داخلية",
       "statut": "الحالة"
     },
     "fuel": {
@@ -171,6 +216,27 @@
       "hybride": "هيبريد",
       "electrique": "كهربائية"
     },
+    "category": {
+      "economique": "اقتصادية",
+      "compacte": "صغيرة",
+      "berline": "برلين",
+      "suv": "SUV",
+      "utilitaire": "نفعية",
+      "minibus": "ميني-بوس",
+      "luxe": "فاخرة"
+    },
+    "transmission": {
+      "manuelle": "عادية",
+      "automatique": "أوتوماتيكية"
+    },
+    "sections": {
+      "general": "معلومات عامة",
+      "caracteristiques": "الخصائص",
+      "tarification": "التسعير",
+      "photos": "التصاور",
+      "documents": "الوثائق",
+      "operationnel": "معلومات تشغيلية"
+    },
     "form": {
       "newTitle": "زيادة سيارة",
       "editTitle": "تعديل السيارة",
@@ -178,12 +244,15 @@
       "saving": "كنسجلو…",
       "createError": "تعذرت زيادة هاد السيارة.",
       "updateError": "تعذر حفظ التعديلات.",
-      "uploadError": "تسجلات السيارة، ولكن تعذر إرسال وثيقة. عاود المحاولة من بطاقة السيارة.",
+      "duplicatePlateError": "هاد رقم الترقيم مستعمل من قبل سيارة أخرى فالوكالة ديالك.",
+      "uploadError": "تسجلات السيارة، ولكن تعذر إرسال وثيقة أو تصويرة. عاود المحاولة من بطاقة السيارة.",
       "errors": {
         "required": "هاد الحقل خاصو يتعمر.",
         "invalid_number": "دخل رقم صحيح.",
         "invalid_year": "دخل سنة صحيحة.",
-        "invalid_price": "دخل ثمن كبر من 0."
+        "invalid_price": "دخل ثمن كبر من 0.",
+        "invalid_seats": "دخل عدد بقاعد بين 1 و 9.",
+        "invalid_fuel_level": "دخل نسبة بين 0 و 100."
       }
     }
   },

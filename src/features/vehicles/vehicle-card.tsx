@@ -1,13 +1,17 @@
-import { Pressable, View } from 'react-native';
+import { Image, Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
+import { VEHICLE_PHOTOS_BUCKET } from './api';
 import { VehicleStatusBadge } from './vehicle-status-badge';
 import type { Vehicle } from './types';
 
 export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: () => void }) {
   const { t } = useLanguage();
+  const firstPhoto = vehicle.photos[0]?.path;
+  const { data: photoUrl } = useSignedUrl(VEHICLE_PHOTOS_BUCKET, firstPhoto);
 
   return (
     <Pressable
@@ -23,14 +27,25 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
             {vehicle.immatriculation}
           </ThemedText>
         </View>
-        <VehicleStatusBadge status={vehicle.statut} />
+        <View className="items-end gap-1">
+          <VehicleStatusBadge status={vehicle.statut} />
+          {vehicle.archivedAt ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('vehicle.archivedBadge')}
+            </ThemedText>
+          ) : null}
+        </View>
       </View>
 
-      <View className="h-28 items-center justify-center rounded-2xl bg-[#f4f6fb]">
-        <ThemedText type="small" themeColor="textSecondary">
-          {vehicle.marque} {vehicle.modele}
-        </ThemedText>
-      </View>
+      {photoUrl ? (
+        <Image source={{ uri: photoUrl }} className="h-28 w-full rounded-2xl" resizeMode="cover" />
+      ) : (
+        <View className="h-28 items-center justify-center rounded-2xl bg-[#f4f6fb]">
+          <ThemedText type="small" themeColor="textSecondary">
+            {vehicle.marque} {vehicle.modele}
+          </ThemedText>
+        </View>
+      )}
 
       <View className="flex-row justify-between">
         <View className="gap-0.5">

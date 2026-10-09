@@ -25,6 +25,6 @@ describe('mergeDocuments', () => {
 
 describe('findDocument', () => {
   it("renvoie undefined si le type n'existe pas", () => {
-    expect(findDocument<TestDoc['type']>([], 'cin')).toBeUndefined();
+    expect(findDocument([] as TestDoc[], 'cin')).toBeUndefined();
   });
 });

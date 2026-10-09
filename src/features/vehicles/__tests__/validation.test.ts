@@ -1,4 +1,10 @@
-import { isFormValid, toVehicleInput, validateVehicleForm, type VehicleFormValues } from '../validation';
+import {
+  isDuplicatePlateError,
+  isFormValid,
+  toVehicleInput,
+  validateVehicleForm,
+  type VehicleFormValues,
+} from '../validation';
 
 function makeValues(overrides: Partial<VehicleFormValues> = {}): VehicleFormValues {
   return {
@@ -6,9 +12,17 @@ function makeValues(overrides: Partial<VehicleFormValues> = {}): VehicleFormValu
     modele: 'Logan',
     immatriculation: '8921-أ-14',
     annee: '2022',
+    categorie: 'economique',
+    couleur: 'Blanc',
+    nombrePlaces: '5',
+    transmission: 'manuelle',
     carburant: 'diesel',
     kilometrage: '32000',
+    niveauCarburant: '80',
     prixJour: '250',
+    prixSemaine: '1500',
+    prixMois: '5000',
+    description: '',
     statut: 'disponible',
     ...overrides,
   };
@@ -17,6 +31,13 @@ function makeValues(overrides: Partial<VehicleFormValues> = {}): VehicleFormValu
 describe('validateVehicleForm', () => {
   it("n'a aucune erreur pour des valeurs valides", () => {
     const errors = validateVehicleForm(makeValues());
+    expect(isFormValid(errors)).toBe(true);
+  });
+
+  it("n'a aucune erreur si les champs optionnels sont vides", () => {
+    const errors = validateVehicleForm(
+      makeValues({ couleur: '', nombrePlaces: '', niveauCarburant: '', prixSemaine: '', prixMois: '', description: '' })
+    );
     expect(isFormValid(errors)).toBe(true);
   });
 
@@ -42,6 +63,22 @@ describe('validateVehicleForm', () => {
     expect(validateVehicleForm(makeValues({ prixJour: '0' })).prixJour).toBe('invalid_price');
     expect(validateVehicleForm(makeValues({ prixJour: '-10' })).prixJour).toBe('invalid_price');
   });
+
+  it('rejette un prix semaine/mois négatif ou nul', () => {
+    expect(validateVehicleForm(makeValues({ prixSemaine: '0' })).prixSemaine).toBe('invalid_price');
+    expect(validateVehicleForm(makeValues({ prixMois: '-10' })).prixMois).toBe('invalid_price');
+  });
+
+  it('rejette un nombre de places hors de 1 à 9', () => {
+    expect(validateVehicleForm(makeValues({ nombrePlaces: '0' })).nombrePlaces).toBe('invalid_seats');
+    expect(validateVehicleForm(makeValues({ nombrePlaces: '15' })).nombrePlaces).toBe('invalid_seats');
+    expect(validateVehicleForm(makeValues({ nombrePlaces: '2.5' })).nombrePlaces).toBe('invalid_seats');
+  });
+
+  it('rejette un niveau de carburant hors de 0 à 100', () => {
+    expect(validateVehicleForm(makeValues({ niveauCarburant: '-1' })).niveauCarburant).toBe('invalid_fuel_level');
+    expect(validateVehicleForm(makeValues({ niveauCarburant: '101' })).niveauCarburant).toBe('invalid_fuel_level');
+  });
 });
 
 describe('toVehicleInput', () => {
@@ -55,5 +92,29 @@ describe('toVehicleInput', () => {
 
   it('convertit une année vide en null', () => {
     expect(toVehicleInput(makeValues({ annee: '' })).annee).toBeNull();
+  });
+
+  it('convertit les champs optionnels vides en null', () => {
+    const input = toVehicleInput(
+      makeValues({ couleur: '', nombrePlaces: '', niveauCarburant: '', prixSemaine: '', prixMois: '', description: '' })
+    );
+    expect(input.couleur).toBeNull();
+    expect(input.nombrePlaces).toBeNull();
+    expect(input.niveauCarburant).toBeNull();
+    expect(input.prixSemaine).toBeNull();
+    expect(input.prixMois).toBeNull();
+    expect(input.description).toBeNull();
+  });
+});
+
+describe('isDuplicatePlateError', () => {
+  it('reconnaît une violation de contrainte unique Postgres (23505)', () => {
+    expect(isDuplicatePlateError({ code: '23505', message: 'duplicate key value' })).toBe(true);
+  });
+
+  it('ignore les autres erreurs', () => {
+    expect(isDuplicatePlateError({ code: '42501', message: 'rls' })).toBe(false);
+    expect(isDuplicatePlateError(new Error('boom'))).toBe(false);
+    expect(isDuplicatePlateError(null)).toBe(false);
   });
 });

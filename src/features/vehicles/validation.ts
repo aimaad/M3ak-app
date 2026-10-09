@@ -1,23 +1,57 @@
-import type { FuelType, VehicleStatus } from './types';
+import type { FuelType, VehicleCategory, VehicleStatus, VehicleTransmission } from './types';
 
 export type VehicleFormValues = {
   marque: string;
   modele: string;
   immatriculation: string;
   annee: string;
+  categorie: VehicleCategory | null;
+  couleur: string;
+  nombrePlaces: string;
+  transmission: VehicleTransmission | null;
   carburant: FuelType;
   kilometrage: string;
+  niveauCarburant: string;
   prixJour: string;
+  prixSemaine: string;
+  prixMois: string;
+  description: string;
   statut: VehicleStatus;
 };
 
-export type VehicleFormErrorCode = 'required' | 'invalid_number' | 'invalid_year' | 'invalid_price';
+export type VehicleFormErrorCode =
+  | 'required'
+  | 'invalid_number'
+  | 'invalid_year'
+  | 'invalid_price'
+  | 'invalid_seats'
+  | 'invalid_fuel_level';
 
 export type VehicleFormErrors = Partial<
-  Record<'marque' | 'modele' | 'immatriculation' | 'annee' | 'kilometrage' | 'prixJour', VehicleFormErrorCode>
+  Record<
+    | 'marque'
+    | 'modele'
+    | 'immatriculation'
+    | 'annee'
+    | 'kilometrage'
+    | 'prixJour'
+    | 'prixSemaine'
+    | 'prixMois'
+    | 'nombrePlaces'
+    | 'niveauCarburant',
+    VehicleFormErrorCode
+  >
 >;
 
 const MIN_YEAR = 1990;
+
+function parseOptionalPositiveNumber(value: string): number | null | 'invalid' {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const n = Number(trimmed);
+  if (!Number.isFinite(n) || n <= 0) return 'invalid';
+  return n;
+}
 
 export function validateVehicleForm(values: VehicleFormValues): VehicleFormErrors {
   const errors: VehicleFormErrors = {};
@@ -44,11 +78,38 @@ export function validateVehicleForm(values: VehicleFormValues): VehicleFormError
     errors.prixJour = 'invalid_price';
   }
 
+  if (parseOptionalPositiveNumber(values.prixSemaine) === 'invalid') errors.prixSemaine = 'invalid_price';
+  if (parseOptionalPositiveNumber(values.prixMois) === 'invalid') errors.prixMois = 'invalid_price';
+
+  if (values.nombrePlaces.trim()) {
+    const places = Number(values.nombrePlaces);
+    if (!Number.isInteger(places) || places < 1 || places > 9) {
+      errors.nombrePlaces = 'invalid_seats';
+    }
+  }
+
+  if (values.niveauCarburant.trim()) {
+    const niveau = Number(values.niveauCarburant);
+    if (!Number.isInteger(niveau) || niveau < 0 || niveau > 100) {
+      errors.niveauCarburant = 'invalid_fuel_level';
+    }
+  }
+
   return errors;
 }
 
 export function isFormValid(errors: VehicleFormErrors): boolean {
   return Object.keys(errors).length === 0;
+}
+
+function emptyToNull(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
+function optionalNumber(value: string): number | null {
+  const result = parseOptionalPositiveNumber(value);
+  return result === 'invalid' ? null : result;
 }
 
 export function toVehicleInput(values: VehicleFormValues) {
@@ -57,9 +118,29 @@ export function toVehicleInput(values: VehicleFormValues) {
     modele: values.modele.trim(),
     immatriculation: values.immatriculation.trim(),
     annee: values.annee.trim() ? Number(values.annee) : null,
+    categorie: values.categorie,
+    couleur: emptyToNull(values.couleur),
+    nombrePlaces: values.nombrePlaces.trim() ? Number(values.nombrePlaces) : null,
+    transmission: values.transmission,
     carburant: values.carburant,
     kilometrage: Number(values.kilometrage),
+    niveauCarburant: values.niveauCarburant.trim() ? Number(values.niveauCarburant) : null,
     prixJour: Number(values.prixJour),
+    prixSemaine: optionalNumber(values.prixSemaine),
+    prixMois: optionalNumber(values.prixMois),
+    description: emptyToNull(values.description),
     statut: values.statut,
   };
+}
+
+/** Code d'erreur Postgres pour une violation de contrainte unique (ex. immatriculation en double). */
+const POSTGRES_UNIQUE_VIOLATION = '23505';
+
+export function isDuplicatePlateError(error: unknown): boolean {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'code' in error &&
+    (error as { code?: unknown }).code === POSTGRES_UNIQUE_VIOLATION
+  );
 }

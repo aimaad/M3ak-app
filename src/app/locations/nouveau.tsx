@@ -16,7 +16,7 @@ import { bookedDates, hasBookingConflict } from '@/features/rentals/availability
 import { DateRangeCalendar, type DateRangeValue } from '@/features/rentals/date-range-calendar';
 import { useCreateRental, useVehicleRentals } from '@/features/rentals/hooks';
 import { isRentalFormValid, validateRentalForm } from '@/features/rentals/validation';
-import { filterVehicles } from '@/features/vehicles/filters';
+import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/filters';
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -99,7 +99,9 @@ export default function NouvelleLocationScreen() {
             getId={(v) => v.id}
             getLabel={(v) => `${v.marque} ${v.modele}`}
             getSubLabel={(v) => v.immatriculation}
-            filterItems={(items, query) => filterVehicles(items, 'tous', query)}
+            filterItems={(items, query) =>
+              filterVehicles(items, { ...DEFAULT_VEHICLE_FILTERS, query })
+            }
             onSelect={(v) => {
               setVehicle(v);
               setRange({ start: null, end: null });

@@ -1,10 +1,7 @@
-type TypedDocument<T extends string> = { type: T; path: string; uploadedAt: string };
+type TypedDocument = { type: string; path: string; uploadedAt: string };
 
 /** Un seul document par type : le plus récent remplace le précédent. */
-export function mergeDocuments<T extends string>(
-  existing: TypedDocument<T>[],
-  incoming: TypedDocument<T>[]
-): TypedDocument<T>[] {
+export function mergeDocuments<D extends TypedDocument>(existing: D[], incoming: D[]): D[] {
   const byType = new Map(existing.map((doc) => [doc.type, doc]));
   for (const doc of incoming) {
     byType.set(doc.type, doc);
@@ -12,9 +9,6 @@ export function mergeDocuments<T extends string>(
   return Array.from(byType.values());
 }
 
-export function findDocument<T extends string>(
-  documents: TypedDocument<T>[],
-  type: T
-): TypedDocument<T> | undefined {
+export function findDocument<D extends TypedDocument>(documents: D[], type: D['type']): D | undefined {
   return documents.find((doc) => doc.type === type);
 }

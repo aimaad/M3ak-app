@@ -7,9 +7,10 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
 import { mergeDocuments } from '@/features/storage/documents';
-import { uploadVehicleDocument } from '@/features/vehicles/api';
-import { useCreateVehicle, useUpdateVehicleDocuments } from '@/features/vehicles/hooks';
+import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
+import { useCreateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos } from '@/features/vehicles/hooks';
 import type { PendingVehicleDocument, VehicleInput } from '@/features/vehicles/types';
+import { isDuplicatePlateError } from '@/features/vehicles/validation';
 import { VehicleForm } from '@/features/vehicles/vehicle-form';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -18,10 +19,15 @@ export default function NouveauVehiculeScreen() {
   const agencyQuery = useMyAgency();
   const createVehicle = useCreateVehicle();
   const updateDocuments = useUpdateVehicleDocuments();
+  const updatePhotos = useUpdateVehiclePhotos();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(input: VehicleInput, pendingDocuments: PendingVehicleDocument[]) {
+  async function handleSubmit(
+    input: VehicleInput,
+    pendingDocuments: PendingVehicleDocument[],
+    pendingPhotos: string[]
+  ) {
     if (!agencyQuery.data) return;
     setSubmitError(null);
     setIsSubmitting(true);
@@ -33,7 +39,7 @@ export default function NouveauVehiculeScreen() {
         try {
           const uploaded = await Promise.all(
             pendingDocuments.map((doc) =>
-              uploadVehicleDocument(agencyQuery.data!.agencyId, vehicle.id, doc.type, doc.localUri)
+              uploadVehicleDocument(agencyQuery.data!.agencyId, vehicle.id, doc.type, doc.localUri, doc.expiresAt)
             )
           );
           await updateDocuments.mutateAsync({
@@ -47,9 +53,22 @@ export default function NouveauVehiculeScreen() {
         }
       }
 
+      if (pendingPhotos.length > 0) {
+        try {
+          const uploaded = await Promise.all(
+            pendingPhotos.map((uri) => uploadVehiclePhoto(agencyQuery.data!.agencyId, vehicle.id, uri))
+          );
+          await updatePhotos.mutateAsync({ id: vehicle.id, photos: [...vehicle.photos, ...uploaded] });
+        } catch {
+          Alert.alert(t('common.appName'), t('vehicle.form.uploadError'));
+          router.replace(`/flotte/${vehicle.id}`);
+          return;
+        }
+      }
+
       router.replace(`/flotte/${vehicle.id}`);
-    } catch {
-      setSubmitError(t('vehicle.form.createError'));
+    } catch (error) {
+      setSubmitError(isDuplicatePlateError(error) ? t('vehicle.form.duplicatePlateError') : t('vehicle.form.createError'));
     } finally {
       setIsSubmitting(false);
     }

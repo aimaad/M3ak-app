@@ -138,18 +138,53 @@
       "disponible": "Disponible",
       "en_location": "En location",
       "maintenance": "Maintenance",
-      "a_inspecter": "À inspecter"
+      "a_inspecter": "À inspecter",
+      "en_preparation": "En préparation",
+      "indisponible": "Indisponible"
+    },
+    "kpi": {
+      "total": "Total véhicules",
+      "disponible": "Disponibles",
+      "immobilise": "Immobilisés",
+      "docsExpirant": "Docs bientôt expirés"
+    },
+    "hideFilters": "Masquer les filtres",
+    "moreFilters": "Plus de filtres",
+    "showArchived": "Voir les archivés",
+    "showingArchived": "Véhicules archivés",
+    "filterByBrand": "Marque",
+    "allBrands": "Toutes",
+    "sortBy": "Trier par",
+    "sort": {
+      "recent": "Plus récents",
+      "marque": "Marque",
+      "immatriculation": "Immatriculation",
+      "prixJour": "Prix / jour",
+      "kilometrage": "Kilométrage"
     }
   },
   "vehicle": {
     "detailsTitle": "Fiche véhicule",
     "edit": "Modifier",
     "infoSection": "Informations",
-    "historySection": "Historique",
-    "historyPlaceholder": "Bientôt disponible : les locations et inspections de ce véhicule s'afficheront ici.",
+    "historySection": "Historique et évolutions à venir",
+    "historyPlaceholder": "Bientôt disponible : réservations, contrats de location, inspections, interventions et rentabilité de ce véhicule s'afficheront ici.",
     "documentsSection": "Documents",
     "noDocuments": "Aucun document ajouté.",
+    "noPhotos": "Aucune photo ajoutée.",
     "notFound": "Véhicule introuvable.",
+    "archivedBadge": "Archivé",
+    "archive": "Archiver ce véhicule",
+    "reactivate": "Réactiver ce véhicule",
+    "archiveConfirmTitle": "Archiver ce véhicule ?",
+    "archiveConfirmBody": "Il n'apparaîtra plus dans la liste active, mais ses données restent conservées. Vous pourrez le réactiver à tout moment.",
+    "archiveError": "Impossible de modifier l'archivage de ce véhicule.",
+    "photoDeleteError": "Impossible de supprimer cette photo.",
+    "documentExpiryPlaceholder": "Date d'expiration (AAAA-MM-JJ), facultatif",
+    "documentExpiry": "Expire le {{date}}",
+    "photosHint": "Photos du véhicule",
+    "existingPhotosHint": "{{count}} photo(s) déjà enregistrée(s).",
+    "statusLockedHint": "Statut « {{status}} » géré automatiquement par le module locations.",
     "documents": {
       "carte_grise": "Carte grise",
       "assurance": "Assurance",
@@ -160,9 +195,19 @@
       "modele": "Modèle",
       "immatriculation": "Immatriculation",
       "annee": "Année",
+      "couleur": "Couleur",
+      "categorie": "Catégorie",
+      "transmission": "Transmission",
       "carburant": "Carburant",
       "kilometrage": "Kilométrage",
+      "niveauCarburant": "Niveau de carburant actuel (%)",
+      "niveauCarburantPlaceholder": "Ex. 75",
+      "nombrePlaces": "Nombre de places",
       "prixJour": "Prix / jour (MAD)",
+      "prixSemaine": "Prix / semaine (MAD)",
+      "prixMois": "Prix / mois (MAD)",
+      "optionalPlaceholder": "Facultatif",
+      "description": "Description / notes internes",
       "statut": "Statut"
     },
     "fuel": {
@@ -171,6 +216,27 @@
       "hybride": "Hybride",
       "electrique": "Électrique"
     },
+    "category": {
+      "economique": "Économique",
+      "compacte": "Compacte",
+      "berline": "Berline",
+      "suv": "SUV",
+      "utilitaire": "Utilitaire",
+      "minibus": "Minibus",
+      "luxe": "Luxe"
+    },
+    "transmission": {
+      "manuelle": "Manuelle",
+      "automatique": "Automatique"
+    },
+    "sections": {
+      "general": "Informations générales",
+      "caracteristiques": "Caractéristiques",
+      "tarification": "Tarification",
+      "photos": "Photos",
+      "documents": "Documents",
+      "operationnel": "Informations opérationnelles"
+    },
     "form": {
       "newTitle": "Ajouter un véhicule",
       "editTitle": "Modifier le véhicule",
@@ -178,12 +244,15 @@
       "saving": "Enregistrement…",
       "createError": "Impossible d'ajouter ce véhicule.",
       "updateError": "Impossible d'enregistrer les modifications.",
-      "uploadError": "Le véhicule a été enregistré, mais l'envoi d'un document a échoué. Réessayez depuis la fiche véhicule.",
+      "duplicatePlateError": "Cette immatriculation est déjà utilisée par un autre véhicule de votre agence.",
+      "uploadError": "Le véhicule a été enregistré, mais l'envoi d'un document ou d'une photo a échoué. Réessayez depuis la fiche véhicule.",
       "errors": {
         "required": "Ce champ est obligatoire.",
         "invalid_number": "Entrez un nombre valide.",
         "invalid_year": "Entrez une année valide.",
-        "invalid_price": "Entrez un prix supérieur à 0."
+        "invalid_price": "Entrez un prix supérieur à 0.",
+        "invalid_seats": "Entrez un nombre de places entre 1 et 9.",
+        "invalid_fuel_level": "Entrez un pourcentage entre 0 et 100."
       }
     }
   },
