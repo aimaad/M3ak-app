@@ -33,14 +33,16 @@ agence ne voie **que ses propres données**.
   prénom/nom, coordonnées complètes, type particulier/entreprise (raison sociale, ICE),
   langue préférée, notes internes, échéances de documents, archivage (réservé
   owner/manager), et table `drivers` (conducteurs supplémentaires rattachés à un client)
-- `migrations/0013_rentals_booking_system.sql` — module complet de réservations :
-  numéro lisible auto-généré, conducteur principal/lieux/notes, nouveaux statuts
-  (en attente de confirmation / confirmée), **contrainte d'exclusion PostgreSQL**
-  empêchant tout double-chevauchement de réservation même en cas de demandes
-  simultanées (`btree_gist`), prix calculé et figé côté serveur à partir des tarifs
-  réels du véhicule (jamais depuis une valeur envoyée par le client), transitions de
-  statut validées côté serveur, et vérification qu'un véhicule/client/conducteur
-  référencé appartient bien à la même entreprise
+- `migrations/0013_rentals_status_enum.sql` — ajoute les deux nouveaux statuts de
+  réservation (en attente de confirmation / confirmée). **À exécuter séparément**
+  (clic "Run" à part) de 0014 ci-dessous — voir l'explication dans ce fichier.
+- `migrations/0014_rentals_booking_system.sql` — module complet de réservations :
+  numéro lisible auto-généré, conducteur principal/lieux/notes, **contrainte
+  d'exclusion PostgreSQL** empêchant tout double-chevauchement de réservation même
+  en cas de demandes simultanées (`btree_gist`), prix calculé et figé côté serveur
+  à partir des tarifs réels du véhicule (jamais depuis une valeur envoyée par le
+  client), transitions de statut validées côté serveur, et vérification qu'un
+  véhicule/client/conducteur référencé appartient bien à la même entreprise
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -71,10 +73,14 @@ agence ne voie **que ses propres données**.
 11. Copiez-collez le contenu de `migrations/0010_fix_role_escalation.sql`, cliquez **Run**.
 12. Copiez-collez le contenu de `migrations/0011_vehicle_fleet_module.sql`, cliquez **Run**.
 13. Copiez-collez le contenu de `migrations/0012_customers_and_drivers.sql`, cliquez **Run**.
-14. Copiez-collez le contenu de `migrations/0013_rentals_booking_system.sql`, cliquez **Run**.
+14. Copiez-collez le contenu de `migrations/0013_rentals_status_enum.sql`, cliquez **Run**,
+    et **attendez que ça se termine avant de passer à l'étape suivante** (sinon l'étape 15
+    échoue avec une erreur Postgres 55P04 — les deux doivent être deux clics "Run" séparés,
+    jamais collés puis lancés ensemble).
+15. Copiez-collez le contenu de `migrations/0014_rentals_booking_system.sql`, cliquez **Run**.
     (Active l'extension `btree_gist` — standard et déjà disponible sur Supabase, aucune
     configuration supplémentaire n'est nécessaire.)
-15. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+16. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 

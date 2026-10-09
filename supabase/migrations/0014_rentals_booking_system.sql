@@ -1,5 +1,10 @@
 -- M3ak — Étape 4 : réservations, disponibilité et tarification.
 --
+-- ⚠️ Exécutez d'abord 0013_rentals_status_enum.sql séparément (clic "Run" à
+-- part) avant ce fichier — voir l'explication dans ce fichier-là. Si les
+-- deux sont collés et lancés ensemble, l'étape "rentals_no_overlap"
+-- ci-dessous échoue avec une erreur Postgres 55P04.
+--
 -- Choix documentés :
 -- - "reservee" (ancien statut unique) est conservé pour les données déjà
 --   créées, mais plus jamais attribué : toute nouvelle réservation démarre
@@ -21,10 +26,6 @@
 create extension if not exists btree_gist;
 
 create type public.rental_payment_status as enum ('non_paye', 'acompte_verse', 'paye_integralement');
-
--- Nouveaux statuts, en plus de reservee / en_cours / terminee / annulee déjà utilisés.
-alter type public.rental_status add value if not exists 'en_attente_confirmation';
-alter type public.rental_status add value if not exists 'confirmee';
 
 -- ==================================================================
 -- Enrichissement de la réservation
