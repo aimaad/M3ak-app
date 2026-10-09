@@ -12,6 +12,8 @@ export function filterRentalsByStatus(rentals: Rental[], statusFilter: RentalSta
 export function countRentalsByStatus(rentals: Rental[]): Record<RentalStatusFilter, number> {
   const counts: Record<RentalStatusFilter, number> = {
     tous: rentals.length,
+    en_attente_confirmation: 0,
+    confirmee: 0,
     reservee: 0,
     en_cours: 0,
     terminee: 0,

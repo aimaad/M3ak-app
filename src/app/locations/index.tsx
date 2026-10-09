@@ -50,7 +50,17 @@ export default function LocationsScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t('locations.title')} subtitle={t('locations.subtitle', { count: rentals.length })} />
+        <ScreenHeader
+          title={t('locations.title')}
+          subtitle={t('locations.subtitle', { count: rentals.length })}
+          right={
+            <Pressable onPress={() => router.push('/locations/calendrier')} hitSlop={8}>
+              <ThemedText type="small" themeColor="primary">
+                {t('locations.calendar.title')}
+              </ThemedText>
+            </Pressable>
+          }
+        />
 
         <View className="pb-4">
           <RentalStatusFilterChips value={statusFilter} onChange={setStatusFilter} counts={counts} />

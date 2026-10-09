@@ -2,12 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   cancelRental,
+  checkVehicleAvailability,
   completeRental,
+  confirmRental,
   createRental,
   getRental,
   listRentals,
   listRentalsForVehicle,
   startRental,
+  updateRentalDates,
 } from './api';
 import type { DepartInput, RentalInput, RetourInput } from './types';
 
@@ -55,6 +58,37 @@ export function useCreateRental() {
   });
 }
 
+export function useUpdateRentalDates() {
+  const invalidate = useInvalidateRentals();
+
+  return useMutation({
+    mutationFn: ({
+      id,
+      dateDebutPrevue,
+      dateFinPrevue,
+      fraisSupplementaires,
+      remiseMontant,
+    }: {
+      id: string;
+      vehicleId: string;
+      dateDebutPrevue: string;
+      dateFinPrevue: string;
+      fraisSupplementaires: number;
+      remiseMontant: number;
+    }) => updateRentalDates(id, dateDebutPrevue, dateFinPrevue, fraisSupplementaires, remiseMontant),
+    onSuccess: (rental) => invalidate(rental),
+  });
+}
+
+export function useConfirmRental() {
+  const invalidate = useInvalidateRentals();
+
+  return useMutation({
+    mutationFn: (id: string) => confirmRental(id),
+    onSuccess: (rental) => invalidate(rental),
+  });
+}
+
 export function useStartRental() {
   const invalidate = useInvalidateRentals();
 
@@ -81,5 +115,18 @@ export function useCancelRental() {
   return useMutation({
     mutationFn: (id: string) => cancelRental(id),
     onSuccess: (rental) => invalidate(rental),
+  });
+}
+
+export function useCheckAvailability(
+  vehicleId: string | undefined,
+  startISO: string | null,
+  endISO: string | null,
+  excludeRentalId?: string
+) {
+  return useQuery({
+    queryKey: ['rental-availability', vehicleId, startISO, endISO, excludeRentalId],
+    queryFn: () => checkVehicleAvailability(vehicleId as string, startISO as string, endISO as string, excludeRentalId),
+    enabled: !!vehicleId && !!startISO && !!endISO,
   });
 }

@@ -46,6 +46,19 @@ describe('hasBookingConflict', () => {
       hasBookingConflict(existing, { start: '2026-03-12', end: '2026-03-13' }, 'self')
     ).toBe(false);
   });
+
+  it('autorise deux réservations successives qui se touchent sans se chevaucher', () => {
+    const existing = [makeRental({ dateDebutPrevue: '2026-03-10T09:00:00Z', dateFinPrevue: '2026-03-15T18:00:00Z' })];
+    // le retour de la première a lieu exactement quand débute la seconde : pas de chevauchement
+    expect(
+      hasBookingConflict(existing, { start: '2026-03-15T18:00:00Z', end: '2026-03-20T09:00:00Z' })
+    ).toBe(false);
+  });
+
+  it('ne bloque pas la disponibilité pour une réservation en attente de confirmation', () => {
+    const existing = [makeRental({ statut: 'en_attente_confirmation' })];
+    expect(hasBookingConflict(existing, { start: '2026-03-12', end: '2026-03-13' })).toBe(false);
+  });
 });
 
 describe('bookedDates', () => {

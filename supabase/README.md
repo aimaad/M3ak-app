@@ -33,6 +33,14 @@ agence ne voie **que ses propres données**.
   prénom/nom, coordonnées complètes, type particulier/entreprise (raison sociale, ICE),
   langue préférée, notes internes, échéances de documents, archivage (réservé
   owner/manager), et table `drivers` (conducteurs supplémentaires rattachés à un client)
+- `migrations/0013_rentals_booking_system.sql` — module complet de réservations :
+  numéro lisible auto-généré, conducteur principal/lieux/notes, nouveaux statuts
+  (en attente de confirmation / confirmée), **contrainte d'exclusion PostgreSQL**
+  empêchant tout double-chevauchement de réservation même en cas de demandes
+  simultanées (`btree_gist`), prix calculé et figé côté serveur à partir des tarifs
+  réels du véhicule (jamais depuis une valeur envoyée par le client), transitions de
+  statut validées côté serveur, et vérification qu'un véhicule/client/conducteur
+  référencé appartient bien à la même entreprise
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -63,7 +71,10 @@ agence ne voie **que ses propres données**.
 11. Copiez-collez le contenu de `migrations/0010_fix_role_escalation.sql`, cliquez **Run**.
 12. Copiez-collez le contenu de `migrations/0011_vehicle_fleet_module.sql`, cliquez **Run**.
 13. Copiez-collez le contenu de `migrations/0012_customers_and_drivers.sql`, cliquez **Run**.
-14. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+14. Copiez-collez le contenu de `migrations/0013_rentals_booking_system.sql`, cliquez **Run**.
+    (Active l'extension `btree_gist` — standard et déjà disponible sur Supabase, aucune
+    configuration supplémentaire n'est nécessaire.)
+15. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -148,6 +159,14 @@ Conducteurs : création et persistance d'un client, mise à jour automatique de
 `updated_at`, permissions (employee ne peut pas archiver un client ni supprimer un
 conducteur ou un document), isolation complète entre deux agences (clients,
 conducteurs, documents).
+
+`scripts/rental-rls-audit.mjs` fait la même chose pour le module Réservations : numéro
+auto-généré et persistance réelle, prix calculé et figé côté serveur (le client ne
+peut pas imposer un montant, un changement de tarif ne modifie pas une réservation
+existante), **deux requêtes vraiment simultanées pour le même véhicule — une seule
+doit réussir** (test de la protection anti-double-réservation), transitions de statut
+invalides rejetées, interdiction de référencer un véhicule/client d'une autre
+entreprise, isolation complète entre deux agences.
 
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à

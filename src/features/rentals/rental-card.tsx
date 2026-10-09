@@ -9,7 +9,7 @@ import { RentalStatusBadge } from './rental-status-badge';
 import type { Rental } from './types';
 
 function formatDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
 }
 
 export function RentalCard({
@@ -33,7 +33,7 @@ export function RentalCard({
             {vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')}
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            {customer?.nomComplet ?? t('locations.unknownCustomer')}
+            {rental.numero} · {customer?.nomComplet ?? t('locations.unknownCustomer')}
           </ThemedText>
         </View>
         <RentalStatusBadge status={rental.statut} />

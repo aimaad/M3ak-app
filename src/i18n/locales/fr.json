@@ -372,6 +372,33 @@
     "vehicle": "Véhicule",
     "customer": "Client",
     "prixTotal": "Prix total (MAD)",
+    "driver": "Conducteur principal",
+    "driverIsCustomer": "Le client est le conducteur principal.",
+    "driverIsOther": "Un conducteur différent du client a été sélectionné.",
+    "heureDepart": "Heure de départ",
+    "heureRetour": "Heure de retour",
+    "lieuDepart": "Lieu de prise en charge",
+    "lieuRetour": "Lieu de retour",
+    "fraisSupplementaires": "Frais supplémentaires (MAD)",
+    "remiseMontant": "Remise (MAD)",
+    "acomptePrevu": "Acompte prévu (MAD)",
+    "acomptePaye": "Acompte payé (MAD)",
+    "soldeRestant": "Solde restant",
+    "notes": "Notes internes",
+    "confirmAction": "Confirmer la réservation",
+    "confirmError": "Impossible de confirmer cette réservation.",
+    "cancelReasonPlaceholder": "Motif (facultatif)",
+    "priceBreakdown": {
+      "duree_one": "1 jour",
+      "duree_other": "{{count}} jours",
+      "sousTotal": "Sous-total",
+      "total": "Total"
+    },
+    "paymentStatus": {
+      "non_paye": "Non payé",
+      "acompte_verse": "Acompte versé",
+      "paye_integralement": "Payé intégralement"
+    },
     "cautionSection": "Caution",
     "cautionBlocked": "Caution bloquée",
     "cautionRetained": "Montant retenu",
@@ -394,19 +421,25 @@
     "cancelAction": "Annuler la réservation",
     "status": {
       "tous": "Toutes",
-      "reservee": "Réservée",
+      "en_attente_confirmation": "En attente",
+      "confirmee": "Confirmée",
+      "reservee": "Confirmée",
       "en_cours": "En cours",
       "terminee": "Terminée",
       "annulee": "Annulée"
     },
     "form": {
-      "newTitle": "Nouvelle location",
+      "newTitle": "Nouvelle réservation",
       "vehiclePlaceholder": "Choisir un véhicule",
       "vehicleSearch": "Marque, modèle, immatriculation…",
       "customerPlaceholder": "Choisir un client",
       "customerSearch": "Nom, téléphone…",
+      "driverPlaceholder": "Le client est le conducteur (ou choisissez un conducteur enregistré)",
+      "driverSearch": "Nom du conducteur…",
       "save": "Créer la réservation",
       "saving": "Création…",
+      "saveAsPending": "Enregistrer en attente",
+      "saveAsConfirmed": "Confirmer la réservation",
       "createError": "Impossible de créer cette réservation.",
       "errors": {
         "required": "Ce champ est obligatoire.",
@@ -430,6 +463,15 @@
       "save": "Terminer",
       "saving": "Enregistrement…",
       "error": "Impossible d'enregistrer ce retour."
+    },
+    "calendar": {
+      "title": "Calendrier",
+      "today": "Aujourd'hui",
+      "empty": "Aucune réservation ce jour-là.",
+      "filterByStatus": "Statut",
+      "filterByVehicle": "Véhicule",
+      "allVehicles": "Tous les véhicules",
+      "viewList": "Vue liste"
     }
   },
   "inspection": {

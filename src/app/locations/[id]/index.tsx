@@ -11,13 +11,13 @@ import { useDeposit } from '@/features/deposits/hooks';
 import { useInspectionForRental } from '@/features/inspections/hooks';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import { usePaymentsForRental } from '@/features/payments/hooks';
-import { useCancelRental, useRental } from '@/features/rentals/hooks';
+import { useCancelRental, useConfirmRental, useRental } from '@/features/rentals/hooks';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
-function formatDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -42,6 +42,12 @@ export default function LocationDetailScreen() {
   const { data: inspectionDepart } = useInspectionForRental(rental?.id, 'depart');
   const { data: inspectionRetour } = useInspectionForRental(rental?.id, 'retour');
   const cancelRental = useCancelRental();
+  const confirmRental = useConfirmRental();
+
+  const canStart = rental?.statut === 'confirmee' || rental?.statut === 'reservee';
+  const canConfirm = rental?.statut === 'en_attente_confirmation';
+  const canCancel = rental?.statut === 'en_attente_confirmation' || rental?.statut === 'confirmee' || rental?.statut === 'reservee';
+  const soldeRestant = rental ? Math.max(0, (rental.prixTotal ?? 0) - rental.acomptePaye) : 0;
 
   async function handleCancel() {
     if (!rental) return;
@@ -53,6 +59,13 @@ export default function LocationDetailScreen() {
         onPress: () => cancelRental.mutate(rental.id),
       },
     ]);
+  }
+
+  function handleConfirm() {
+    if (!rental) return;
+    confirmRental.mutate(rental.id, {
+      onError: () => Alert.alert(t('common.appName'), t('locations.confirmError')),
+    });
   }
 
   if (isLoading || !rental) {
@@ -83,15 +96,22 @@ export default function LocationDetailScreen() {
         />
 
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
-          <RentalStatusBadge status={rental.statut} />
+          <View className="flex-row items-center justify-between">
+            <RentalStatusBadge status={rental.statut} />
+            <ThemedText type="small" themeColor="textSecondary">
+              {rental.numero}
+            </ThemedText>
+          </View>
 
           <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
             <InfoRow label={t('locations.vehicle')} value={vehicle ? vehicle.immatriculation : '—'} />
             <InfoRow label={t('locations.customer')} value={customer?.nomComplet ?? '—'} />
             <InfoRow
               label={t('locations.period')}
-              value={`${formatDate(rental.dateDebutPrevue)} → ${formatDate(rental.dateFinPrevue)}`}
+              value={`${formatDateTime(rental.dateDebutPrevue)} → ${formatDateTime(rental.dateFinPrevue)}`}
             />
+            {rental.lieuDepart ? <InfoRow label={t('locations.lieuDepart')} value={rental.lieuDepart} /> : null}
+            {rental.lieuRetour ? <InfoRow label={t('locations.lieuRetour')} value={rental.lieuRetour} /> : null}
             <View className="flex-row items-center justify-between py-3">
               <ThemedText type="default" themeColor="textSecondary">
                 {t('locations.prixTotal')}
@@ -100,7 +120,24 @@ export default function LocationDetailScreen() {
                 {rental.prixTotal != null ? `${rental.prixTotal.toLocaleString('fr-FR')} MAD` : '—'}
               </ThemedText>
             </View>
+            <InfoRow label={t('locations.soldeRestant')} value={`${soldeRestant.toLocaleString('fr-FR')} MAD`} />
           </View>
+
+          {canConfirm ? (
+            <Pressable
+              onPress={handleConfirm}
+              disabled={confirmRental.isPending}
+              className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4"
+            >
+              {confirmRental.isPending ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+                  {t('locations.confirmAction')}
+                </ThemedText>
+              )}
+            </Pressable>
+          ) : null}
 
           <View className="gap-2">
             <ThemedText type="smallBold">{t('inspection.section')}</ThemedText>
@@ -136,7 +173,7 @@ export default function LocationDetailScreen() {
             ) : null}
           </View>
 
-          {rental.statut === 'reservee' ? (
+          {canStart ? (
             <View className="gap-2">
               <Pressable
                 onPress={() =>
@@ -151,15 +188,18 @@ export default function LocationDetailScreen() {
                   {t('locations.startAction')}
                 </ThemedText>
               </Pressable>
-              <Pressable
-                onPress={handleCancel}
-                className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
-              >
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
-                  {t('locations.cancelAction')}
-                </ThemedText>
-              </Pressable>
             </View>
+          ) : null}
+
+          {canCancel ? (
+            <Pressable
+              onPress={handleCancel}
+              className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+            >
+              <ThemedText type="small" style={{ color: '#dc2626' }}>
+                {t('locations.cancelAction')}
+              </ThemedText>
+            </Pressable>
           ) : null}
 
           {rental.statut === 'en_cours' ? (
@@ -206,6 +246,15 @@ export default function LocationDetailScreen() {
               </>
             ) : null}
           </View>
+
+          {rental.notes ? (
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('locations.notes')}</ThemedText>
+              <View className="rounded-3xl border border-[#e1e5f0] bg-white p-4">
+                <ThemedText type="default">{rental.notes}</ThemedText>
+              </View>
+            </View>
+          ) : null}
 
           <View className="gap-3">
             <ThemedText type="smallBold">{t('locations.paymentsSection')}</ThemedText>

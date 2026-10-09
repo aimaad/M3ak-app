@@ -1,4 +1,5 @@
-import { ACTIVE_RENTAL_STATUSES, type RentalStatus } from './types';
+import { BLOCKING_RENTAL_STATUSES } from './status-transitions';
+import type { RentalStatus } from './types';
 
 export type DateRange = { start: string; end: string };
 
@@ -9,15 +10,24 @@ export type RentalForAvailability = {
   statut: RentalStatus;
 };
 
-function isActive(statut: RentalStatus): boolean {
-  return (ACTIVE_RENTAL_STATUSES as RentalStatus[]).includes(statut);
+function isBlocking(statut: RentalStatus): boolean {
+  return BLOCKING_RENTAL_STATUSES.includes(statut);
 }
 
 function rangesOverlap(a: DateRange, b: DateRange): boolean {
-  return a.start <= b.end && b.start <= a.end;
+  return a.start < b.end && b.start < a.end;
 }
 
-/** true si la période proposée chevauche une location active existante du véhicule. */
+/**
+ * true si la période proposée chevauche une réservation qui bloque
+ * réellement la disponibilité (confirmée, en cours, ou l'ancien statut
+ * "reservee"). Les brouillons / en attente de confirmation ne bloquent pas
+ * la disponibilité — voir BLOCKING_RENTAL_STATUSES dans status-transitions.ts
+ * pour la justification de ce choix. La protection définitive contre les
+ * accès concurrents est assurée côté base par une contrainte d'exclusion
+ * (voir migrations/0013_rentals_booking_system.sql) : cette fonction ne sert
+ * qu'à donner un retour immédiat dans l'interface.
+ */
 export function hasBookingConflict(
   existingRentals: RentalForAvailability[],
   range: DateRange,
@@ -25,7 +35,7 @@ export function hasBookingConflict(
 ): boolean {
   return existingRentals.some((rental) => {
     if (rental.id === excludeRentalId) return false;
-    if (!isActive(rental.statut)) return false;
+    if (!isBlocking(rental.statut)) return false;
     return rangesOverlap(
       { start: rental.dateDebutPrevue, end: rental.dateFinPrevue },
       range
@@ -35,8 +45,8 @@ export function hasBookingConflict(
 
 function eachDate(start: string, end: string): string[] {
   const dates: string[] = [];
-  const cursor = new Date(`${start}T00:00:00Z`);
-  const endDate = new Date(`${end}T00:00:00Z`);
+  const cursor = new Date(`${start.slice(0, 10)}T00:00:00Z`);
+  const endDate = new Date(`${end.slice(0, 10)}T00:00:00Z`);
   while (cursor <= endDate) {
     dates.push(cursor.toISOString().slice(0, 10));
     cursor.setUTCDate(cursor.getUTCDate() + 1);
@@ -44,11 +54,11 @@ function eachDate(start: string, end: string): string[] {
   return dates;
 }
 
-/** Liste (YYYY-MM-DD) de tous les jours occupés par des locations actives, pour affichage calendrier. */
+/** Liste (YYYY-MM-DD) de tous les jours occupés par des réservations bloquantes, pour affichage calendrier. */
 export function bookedDates(existingRentals: RentalForAvailability[]): string[] {
   const dates = new Set<string>();
   for (const rental of existingRentals) {
-    if (!isActive(rental.statut)) continue;
+    if (!isBlocking(rental.statut)) continue;
     for (const date of eachDate(rental.dateDebutPrevue, rental.dateFinPrevue)) {
       dates.add(date);
     }

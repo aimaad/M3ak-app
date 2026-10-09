@@ -372,6 +372,33 @@
     "vehicle": "السيارة",
     "customer": "الزبون",
     "prixTotal": "الثمن الكامل (درهم)",
+    "driver": "السائق الرئيسي",
+    "driverIsCustomer": "الزبون هو السائق الرئيسي.",
+    "driverIsOther": "تم اختيار سائق مختلف عن الزبون.",
+    "heureDepart": "ساعة الخروج",
+    "heureRetour": "ساعة الرجوع",
+    "lieuDepart": "مكان التسليم",
+    "lieuRetour": "مكان الرجوع",
+    "fraisSupplementaires": "رسوم إضافية (درهم)",
+    "remiseMontant": "تخفيض (درهم)",
+    "acomptePrevu": "التسبيق المتوقع (درهم)",
+    "acomptePaye": "التسبيق المدفوع (درهم)",
+    "soldeRestant": "الباقي",
+    "notes": "ملاحظات داخلية",
+    "confirmAction": "أكد الحجز",
+    "confirmError": "تعذر تأكيد هاد الحجز.",
+    "cancelReasonPlaceholder": "السبب (ماشي واجب)",
+    "priceBreakdown": {
+      "duree_one": "نهار واحد",
+      "duree_other": "{{count}} ديال النهار",
+      "sousTotal": "المجموع الفرعي",
+      "total": "المجموع"
+    },
+    "paymentStatus": {
+      "non_paye": "ماخاصوش يتخلص",
+      "acompte_verse": "التسبيق تخلص",
+      "paye_integralement": "تخلص كامل"
+    },
     "cautionSection": "الكوسيون",
     "cautionBlocked": "الكوسيون المحجوز",
     "cautionRetained": "المبلغ المقتطع",
@@ -394,19 +421,25 @@
     "cancelAction": "لغي الحجز",
     "status": {
       "tous": "الكل",
-      "reservee": "محجوزة",
+      "en_attente_confirmation": "فالانتظار",
+      "confirmee": "مؤكدة",
+      "reservee": "مؤكدة",
       "en_cours": "جارية",
       "terminee": "سالات",
       "annulee": "ملغية"
     },
     "form": {
-      "newTitle": "كراء جديد",
+      "newTitle": "حجز جديد",
       "vehiclePlaceholder": "اختار سيارة",
       "vehicleSearch": "الماركة، الموديل، رقم الترقيم…",
       "customerPlaceholder": "اختار زبون",
       "customerSearch": "الاسم، الهاتف…",
+      "driverPlaceholder": "الزبون هو السائق (أو اختار سائق مسجل)",
+      "driverSearch": "اسم السائق…",
       "save": "صاوب الحجز",
       "saving": "كنصاوبو…",
+      "saveAsPending": "سجل فالانتظار",
+      "saveAsConfirmed": "أكد الحجز",
       "createError": "تعذر صواب هاد الحجز.",
       "errors": {
         "required": "هاد الحقل خاصو يتعمر.",
@@ -430,6 +463,15 @@
       "save": "سالي",
       "saving": "كنسجلو…",
       "error": "تعذر تسجيل هاد الرجوع."
+    },
+    "calendar": {
+      "title": "الروزنامة",
+      "today": "اليوم",
+      "empty": "ماكاين حتى حجز هاد النهار.",
+      "filterByStatus": "الحالة",
+      "filterByVehicle": "السيارة",
+      "allVehicles": "جميع السيارات",
+      "viewList": "لائحة"
     }
   },
   "inspection": {

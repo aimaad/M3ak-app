@@ -1,10 +1,16 @@
 export type RentalFormValues = {
   vehicleId: string;
   customerId: string;
+  driverId: string | null;
   dateDebutPrevue: string;
   dateFinPrevue: string;
-  prixTotal: string;
+  lieuDepart: string;
+  lieuRetour: string;
+  fraisSupplementaires: string;
+  remiseMontant: string;
+  acomptePrevu: string;
   cautionMontant: string;
+  notes: string;
 };
 
 export type RentalFormErrorCode =
@@ -14,7 +20,10 @@ export type RentalFormErrorCode =
   | 'conflict';
 
 export type RentalFormErrors = Partial<
-  Record<'vehicleId' | 'customerId' | 'dates' | 'prixTotal' | 'cautionMontant', RentalFormErrorCode>
+  Record<
+    'vehicleId' | 'customerId' | 'dates' | 'fraisSupplementaires' | 'remiseMontant' | 'acomptePrevu' | 'cautionMontant',
+    RentalFormErrorCode
+  >
 >;
 
 export function validateRentalForm(values: RentalFormValues, hasConflict: boolean): RentalFormErrors {
@@ -25,16 +34,20 @@ export function validateRentalForm(values: RentalFormValues, hasConflict: boolea
 
   if (!values.dateDebutPrevue || !values.dateFinPrevue) {
     errors.dates = 'required';
-  } else if (values.dateFinPrevue < values.dateDebutPrevue) {
+  } else if (values.dateFinPrevue <= values.dateDebutPrevue) {
     errors.dates = 'invalid_date_range';
   } else if (hasConflict) {
     errors.dates = 'conflict';
   }
 
-  if (values.prixTotal.trim()) {
-    const prix = Number(values.prixTotal);
-    if (!Number.isFinite(prix) || prix < 0) errors.prixTotal = 'invalid_number';
-  }
+  const frais = Number(values.fraisSupplementaires || '0');
+  if (!Number.isFinite(frais) || frais < 0) errors.fraisSupplementaires = 'invalid_number';
+
+  const remise = Number(values.remiseMontant || '0');
+  if (!Number.isFinite(remise) || remise < 0) errors.remiseMontant = 'invalid_number';
+
+  const acompte = Number(values.acomptePrevu || '0');
+  if (!Number.isFinite(acompte) || acompte < 0) errors.acomptePrevu = 'invalid_number';
 
   const caution = Number(values.cautionMontant);
   if (values.cautionMontant.trim() === '' || !Number.isFinite(caution) || caution < 0) {
