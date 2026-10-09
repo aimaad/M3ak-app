@@ -29,6 +29,10 @@ agence ne voie **que ses propres données**.
   catégorie, couleur, transmission, nombre de places, niveau de carburant, tarifs
   semaine/mois, description, photos (galerie), échéances de documents, archivage
   (réservé owner/manager) et nouveaux statuts `en_preparation`/`indisponible`
+- `migrations/0012_customers_and_drivers.sql` — module complet de gestion des clients :
+  prénom/nom, coordonnées complètes, type particulier/entreprise (raison sociale, ICE),
+  langue préférée, notes internes, échéances de documents, archivage (réservé
+  owner/manager), et table `drivers` (conducteurs supplémentaires rattachés à un client)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -58,7 +62,8 @@ agence ne voie **que ses propres données**.
     cliquez **Run**.
 11. Copiez-collez le contenu de `migrations/0010_fix_role_escalation.sql`, cliquez **Run**.
 12. Copiez-collez le contenu de `migrations/0011_vehicle_fleet_module.sql`, cliquez **Run**.
-13. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+13. Copiez-collez le contenu de `migrations/0012_customers_and_drivers.sql`, cliquez **Run**.
+14. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -137,6 +142,12 @@ SUPA_URL="http://127.0.0.1:54321" SUPA_ANON="<anon key locale>" SUPA_SERVICE="<s
 persistance d'un véhicule, immatriculation en double, permissions (employee ne peut pas
 archiver), isolation des véhicules et des documents entre deux agences. Même usage, en
 remplaçant le nom du script.
+
+`scripts/customer-rls-audit.mjs` fait la même chose pour le module Clients &
+Conducteurs : création et persistance d'un client, mise à jour automatique de
+`updated_at`, permissions (employee ne peut pas archiver un client ni supprimer un
+conducteur ou un document), isolation complète entre deux agences (clients,
+conducteurs, documents).
 
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à

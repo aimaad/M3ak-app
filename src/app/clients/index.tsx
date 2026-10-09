@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
@@ -9,34 +9,112 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CustomerCard } from '@/features/customers/customer-card';
+import {
+  countActive,
+  countArchived,
+  countExpiringSoonDocuments,
+  DEFAULT_CUSTOMER_FILTERS,
+  filterCustomers,
+  type CustomerFilters,
+} from '@/features/customers/filters';
 import { useCustomers } from '@/features/customers/hooks';
-import { searchCustomers } from '@/features/customers/search';
-import type { Customer } from '@/features/customers/types';
+import { CUSTOMER_TYPES } from '@/features/customers/types';
+import type { Customer, CustomerType } from '@/features/customers/types';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
 const EMPTY_CUSTOMERS: Customer[] = [];
 
+function KpiTile({ label, value }: { label: string; value: number }) {
+  return (
+    <View className="min-w-[130px] gap-1 rounded-3xl border border-[#e1e5f0] bg-white px-4 py-3">
+      <ThemedText type="title" themeColor="primary">
+        {value}
+      </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {label}
+      </ThemedText>
+    </View>
+  );
+}
+
 export default function ClientsScreen() {
   const { t, language } = useLanguage();
   const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
   const customersQuery = useCustomers();
-  const [search, setSearch] = useState('');
+  const [filters, setFilters] = useState<CustomerFilters>(DEFAULT_CUSTOMER_FILTERS);
+  const [showFilters, setShowFilters] = useState(false);
 
   const customers = customersQuery.data ?? EMPTY_CUSTOMERS;
-  const filtered = useMemo(() => searchCustomers(customers, search), [customers, search]);
+  const active = useMemo(() => countActive(customers), [customers]);
+  const archived = useMemo(() => countArchived(customers), [customers]);
+  const expiringDocs = useMemo(() => countExpiringSoonDocuments(customers), [customers]);
+  const filtered = useMemo(() => filterCustomers(customers, filters), [customers, filters]);
 
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader
-          title={t('clients.title')}
-          subtitle={t('clients.subtitle', { count: customers.length })}
-        />
+        <ScreenHeader title={t('clients.title')} subtitle={t('clients.subtitle', { count: active })} />
 
-        <View className="px-6 pb-4">
-          <TextField placeholder={t('clients.searchPlaceholder')} value={search} onChangeText={setSearch} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
+          <KpiTile label={t('clients.kpi.active')} value={active} />
+          <KpiTile label={t('clients.kpi.archived')} value={archived} />
+          <KpiTile label={t('clients.kpi.docsExpirant')} value={expiringDocs} />
+        </ScrollView>
+
+        <View className="px-6 pb-3">
+          <TextField
+            placeholder={t('clients.searchPlaceholder')}
+            value={filters.query}
+            onChangeText={(v) => setFilters((prev) => ({ ...prev, query: v }))}
+          />
         </View>
+
+        <View className="flex-row items-center justify-between px-6 pb-4">
+          <Pressable onPress={() => setShowFilters((prev) => !prev)}>
+            <ThemedText type="small" themeColor="primary">
+              {showFilters ? t('flotte.hideFilters') : t('flotte.moreFilters')}
+            </ThemedText>
+          </Pressable>
+          <Pressable onPress={() => setFilters((prev) => ({ ...prev, includeArchived: !prev.includeArchived }))}>
+            <ThemedText type="small" themeColor={filters.includeArchived ? 'primary' : 'textSecondary'}>
+              {filters.includeArchived ? t('flotte.showingArchived') : t('flotte.showArchived')}
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        {showFilters ? (
+          <View className="gap-1.5 px-6 pb-4">
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('customer.sections.type')}
+            </ThemedText>
+            <View className="flex-row flex-wrap gap-2">
+              <Pressable
+                onPress={() => setFilters((prev) => ({ ...prev, typeClient: 'tous' }))}
+                className={`rounded-full border px-4 py-2 ${
+                  filters.typeClient === 'tous' ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'
+                }`}
+              >
+                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : '#101423' }}>
+                  {t('flotte.status.tous')}
+                </ThemedText>
+              </Pressable>
+              {CUSTOMER_TYPES.map((type: CustomerType) => (
+                <Pressable
+                  key={type}
+                  onPress={() => setFilters((prev) => ({ ...prev, typeClient: type }))}
+                  className={`rounded-full border px-4 py-2 ${
+                    filters.typeClient === type ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'
+                  }`}
+                >
+                  <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : '#101423' }}>
+                    {t(`customer.type.${type}`)}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        ) : null}
 
         {customersQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">

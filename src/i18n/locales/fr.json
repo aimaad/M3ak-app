@@ -260,11 +260,16 @@
     "title": "Clients",
     "subtitle_one": "Vous avez 1 client",
     "subtitle_other": "Vous avez {{count}} clients",
-    "searchPlaceholder": "Nom, téléphone, CIN…",
+    "searchPlaceholder": "Nom, téléphone, e-mail, CIN…",
     "addClient": "Ajouter client",
     "empty": "Aucun client ne correspond à votre recherche.",
     "loading": "Chargement des clients…",
-    "loadError": "Impossible de charger les clients. Vérifiez votre connexion."
+    "loadError": "Impossible de charger les clients. Vérifiez votre connexion.",
+    "kpi": {
+      "active": "Clients actifs",
+      "archived": "Archivés",
+      "docsExpirant": "Docs bientôt expirés"
+    }
   },
   "customer": {
     "detailsTitle": "Fiche client",
@@ -273,16 +278,67 @@
     "documentsSection": "Documents",
     "noDocuments": "Aucun document ajouté.",
     "notFound": "Client introuvable.",
+    "historySection": "Historique et évolutions à venir",
+    "historyPlaceholder": "Bientôt disponible : réservations, locations, contrats, paiements et incidents de ce client s'afficheront ici.",
+    "archivedBadge": "Archivé",
+    "archive": "Archiver ce client",
+    "reactivate": "Réactiver ce client",
+    "archiveConfirmTitle": "Archiver ce client ?",
+    "archiveConfirmBody": "Il n'apparaîtra plus dans la liste active, mais son historique reste conservé. Vous pourrez le réactiver à tout moment.",
+    "archiveError": "Impossible de modifier l'archivage de ce client.",
+    "duplicateWarning": "{{count}} client(s) avec un téléphone ou un document similaire, dont « {{name}} ». Vérifiez avant de continuer.",
+    "documentReferencePlaceholder": "Référence / numéro, facultatif",
+    "documentExpiryPlaceholder": "Date d'expiration (AAAA-MM-JJ), facultatif",
+    "documentReference": "Référence : {{reference}}",
+    "noDrivers": "Aucun conducteur supplémentaire.",
+    "addDriver": "Ajouter un conducteur",
+    "removeDriver": "Retirer",
+    "removeDriverConfirmTitle": "Retirer ce conducteur ?",
+    "driverAddError": "Impossible d'ajouter ce conducteur.",
+    "driverRemoveError": "Impossible de retirer ce conducteur.",
+    "driversAfterCreateHint": "Les conducteurs supplémentaires se gèrent depuis la fiche du client, une fois celui-ci enregistré.",
     "fields": {
       "nomComplet": "Nom complet",
+      "prenom": "Prénom",
+      "nom": "Nom",
       "telephone": "Téléphone",
+      "telephoneSecondaire": "Téléphone secondaire",
       "email": "E-mail",
+      "adresse": "Adresse",
+      "ville": "Ville",
+      "pays": "Pays",
+      "dateNaissance": "Date de naissance",
+      "datePlaceholder": "AAAA-MM-JJ, facultatif",
+      "languePreferee": "Langue de communication préférée",
+      "raisonSociale": "Raison sociale",
+      "ice": "ICE",
+      "notes": "Notes internes",
       "cin": "CIN / Passeport",
-      "permis": "N° de permis"
+      "permis": "N° de permis",
+      "optionalPlaceholder": "Facultatif"
     },
     "documents": {
       "cin": "Photo de la CIN",
-      "permis": "Photo du permis"
+      "permis": "Photo du permis",
+      "passeport": "Photo du passeport",
+      "autre": "Autre justificatif"
+    },
+    "type": {
+      "particulier": "Particulier",
+      "entreprise": "Entreprise"
+    },
+    "language": {
+      "fr": "Français",
+      "ar": "Arabe",
+      "darija": "Darija"
+    },
+    "sections": {
+      "general": "Informations générales",
+      "coordonnees": "Coordonnées",
+      "type": "Type de client",
+      "documents": "Documents",
+      "conducteurs": "Conducteurs associés",
+      "notes": "Notes internes"
     },
     "form": {
       "newTitle": "Ajouter un client",
@@ -295,7 +351,8 @@
       "errors": {
         "required": "Ce champ est obligatoire.",
         "invalid_phone": "Entrez un numéro marocain valide (ex. +212 6XX XX XX XX).",
-        "invalid_email": "Entrez une adresse e-mail valide."
+        "invalid_email": "Entrez une adresse e-mail valide.",
+        "invalid_date": "Entrez une date valide (AAAA-MM-JJ)."
       }
     }
   },

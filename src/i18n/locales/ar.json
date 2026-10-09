@@ -260,11 +260,16 @@
     "title": "الزبناء",
     "subtitle_one": "عندك زبون واحد",
     "subtitle_other": "عندك {{count}} ديال الزبناء",
-    "searchPlaceholder": "الاسم، الهاتف، CIN…",
+    "searchPlaceholder": "الاسم، الهاتف، البريد، CIN…",
     "addClient": "زيد زبون",
     "empty": "ماكاين حتى زبون يوافق البحث.",
     "loading": "كنحملو الزبناء…",
-    "loadError": "تعذر تحميل الزبناء. تأكد من الاتصال."
+    "loadError": "تعذر تحميل الزبناء. تأكد من الاتصال.",
+    "kpi": {
+      "active": "الزبناء النشيطين",
+      "archived": "مؤرشفين",
+      "docsExpirant": "وثائق قريب تسالا"
+    }
   },
   "customer": {
     "detailsTitle": "بطاقة الزبون",
@@ -273,16 +278,67 @@
     "documentsSection": "الوثائق",
     "noDocuments": "ماكاين حتى وثيقة مزادة.",
     "notFound": "الزبون ماكايناش.",
+    "historySection": "التاريخ والتطورات الجاية",
+    "historyPlaceholder": "قريباً: الحجوزات، الكراءات، العقود، الخلاصات والحوادث ديال هاد الزبون غادي يبانو هنا.",
+    "archivedBadge": "مؤرشف",
+    "archive": "أرشف هاد الزبون",
+    "reactivate": "رجع فعّل هاد الزبون",
+    "archiveConfirmTitle": "أرشف هاد الزبون؟",
+    "archiveConfirmBody": "غادي ما يبقى يبان فاللائحة النشيطة، ولكن التاريخ ديالو غادي يبقى محفوظ. تقدر ترجع فعلو فأي وقت.",
+    "archiveError": "تعذر تبديل الأرشفة ديال هاد الزبون.",
+    "duplicateWarning": "{{count}} زبون عندو هاتف أو وثيقة مشابهة، من بينهم « {{name}} ». تأكد قبل ما تكمل.",
+    "documentReferencePlaceholder": "المرجع / الرقم، ماشي واجب",
+    "documentExpiryPlaceholder": "تاريخ الصلاحية (سنة-شهر-نهار)، ماشي واجب",
+    "documentReference": "المرجع : {{reference}}",
+    "noDrivers": "ماكاين حتى سائق إضافي.",
+    "addDriver": "زيد سائق",
+    "removeDriver": "حيد",
+    "removeDriverConfirmTitle": "حيد هاد السائق؟",
+    "driverAddError": "تعذر زيادة هاد السائق.",
+    "driverRemoveError": "تعذر حيد هاد السائق.",
+    "driversAfterCreateHint": "السائقين الإضافيين كتدبرهم من بطاقة الزبون، من بعد ما يتسجل.",
     "fields": {
       "nomComplet": "الاسم الكامل",
+      "prenom": "الاسم الشخصي",
+      "nom": "الاسم العائلي",
       "telephone": "الهاتف",
+      "telephoneSecondaire": "هاتف إضافي",
       "email": "البريد الإلكتروني",
+      "adresse": "العنوان",
+      "ville": "المدينة",
+      "pays": "البلد",
+      "dateNaissance": "تاريخ الولادة",
+      "datePlaceholder": "سنة-شهر-نهار، ماشي واجب",
+      "languePreferee": "اللغة المفضلة للتواصل",
+      "raisonSociale": "التسمية الاجتماعية",
+      "ice": "ICE",
+      "notes": "ملاحظات داخلية",
       "cin": "CIN / جواز السفر",
-      "permis": "رقم رخصة السياقة"
+      "permis": "رقم رخصة السياقة",
+      "optionalPlaceholder": "ماشي واجب"
     },
     "documents": {
       "cin": "تصويرة ديال CIN",
-      "permis": "تصويرة ديال رخصة السياقة"
+      "permis": "تصويرة ديال رخصة السياقة",
+      "passeport": "تصويرة ديال جواز السفر",
+      "autre": "وثيقة أخرى"
+    },
+    "type": {
+      "particulier": "خاص",
+      "entreprise": "مقاولة"
+    },
+    "language": {
+      "fr": "الفرنسية",
+      "ar": "العربية",
+      "darija": "الدارجة"
+    },
+    "sections": {
+      "general": "معلومات عامة",
+      "coordonnees": "معلومات التواصل",
+      "type": "نوع الزبون",
+      "documents": "الوثائق",
+      "conducteurs": "السائقين المرتبطين",
+      "notes": "ملاحظات داخلية"
     },
     "form": {
       "newTitle": "زيادة زبون",
@@ -295,7 +351,8 @@
       "errors": {
         "required": "هاد الحقل خاصو يتعمر.",
         "invalid_phone": "دخل رقم هاتف مغربي صحيح (مثلاً +212 6XX XX XX XX).",
-        "invalid_email": "دخل بريد إلكتروني صحيح."
+        "invalid_email": "دخل بريد إلكتروني صحيح.",
+        "invalid_date": "دخل تاريخ صحيح (سنة-شهر-نهار)."
       }
     }
   },

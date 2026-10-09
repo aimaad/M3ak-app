@@ -1,17 +1,29 @@
-import type { CustomerInput } from './types';
+import type { CustomerInput, CustomerType, PreferredLanguage } from './types';
 
 export type CustomerFormValues = {
   nomComplet: string;
+  prenom: string;
+  nom: string;
   cinOuPasseport: string;
   numeroPermis: string;
   telephone: string;
+  telephoneSecondaire: string;
   email: string;
+  adresse: string;
+  ville: string;
+  pays: string;
+  dateNaissance: string;
+  languePreferee: PreferredLanguage | null;
+  typeClient: CustomerType;
+  raisonSociale: string;
+  ice: string;
+  notes: string;
 };
 
-export type CustomerFormErrorCode = 'required' | 'invalid_phone' | 'invalid_email';
+export type CustomerFormErrorCode = 'required' | 'invalid_phone' | 'invalid_email' | 'invalid_date';
 
 export type CustomerFormErrors = Partial<
-  Record<'nomComplet' | 'telephone' | 'email', CustomerFormErrorCode>
+  Record<'nomComplet' | 'telephone' | 'email' | 'dateNaissance' | 'raisonSociale', CustomerFormErrorCode>
 >;
 
 // Formats marocains courants : +212 6XXXXXXXX / 0[5-7]XXXXXXXX
@@ -41,6 +53,14 @@ export function validateCustomerForm(values: CustomerFormValues): CustomerFormEr
     errors.email = 'invalid_email';
   }
 
+  if (values.dateNaissance.trim() && Number.isNaN(Date.parse(values.dateNaissance.trim()))) {
+    errors.dateNaissance = 'invalid_date';
+  }
+
+  if (values.typeClient === 'entreprise' && !values.raisonSociale.trim()) {
+    errors.raisonSociale = 'required';
+  }
+
   return errors;
 }
 
@@ -48,12 +68,29 @@ export function isFormValid(errors: CustomerFormErrors): boolean {
   return Object.keys(errors).length === 0;
 }
 
+function emptyToNull(value: string): string | null {
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+}
+
 export function toCustomerInput(values: CustomerFormValues): CustomerInput {
   return {
     nomComplet: values.nomComplet.trim(),
-    cinOuPasseport: values.cinOuPasseport.trim() || null,
-    numeroPermis: values.numeroPermis.trim() || null,
+    prenom: emptyToNull(values.prenom),
+    nom: emptyToNull(values.nom),
+    cinOuPasseport: emptyToNull(values.cinOuPasseport),
+    numeroPermis: emptyToNull(values.numeroPermis),
     telephone: normalizePhone(values.telephone),
-    email: values.email.trim() || null,
+    telephoneSecondaire: emptyToNull(values.telephoneSecondaire),
+    email: emptyToNull(values.email),
+    adresse: emptyToNull(values.adresse),
+    ville: emptyToNull(values.ville),
+    pays: values.pays.trim() || 'Maroc',
+    dateNaissance: emptyToNull(values.dateNaissance),
+    languePreferee: values.languePreferee,
+    typeClient: values.typeClient,
+    raisonSociale: values.typeClient === 'entreprise' ? emptyToNull(values.raisonSociale) : null,
+    ice: values.typeClient === 'entreprise' ? emptyToNull(values.ice) : null,
+    notes: emptyToNull(values.notes),
   };
 }

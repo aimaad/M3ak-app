@@ -8,7 +8,11 @@ export function searchCustomers(customers: Customer[], query: string): Customer[
     return (
       customer.nomComplet.toLowerCase().includes(normalized) ||
       (customer.telephone?.toLowerCase().includes(normalized) ?? false) ||
-      (customer.cinOuPasseport?.toLowerCase().includes(normalized) ?? false)
+      (customer.telephoneSecondaire?.toLowerCase().includes(normalized) ?? false) ||
+      (customer.email?.toLowerCase().includes(normalized) ?? false) ||
+      (customer.cinOuPasseport?.toLowerCase().includes(normalized) ?? false) ||
+      (customer.raisonSociale?.toLowerCase().includes(normalized) ?? false) ||
+      customer.documents.some((doc) => doc.reference?.toLowerCase().includes(normalized))
     );
   });
 }

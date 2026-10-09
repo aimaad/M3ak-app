@@ -113,7 +113,7 @@ export default function NouvelleLocationScreen() {
             label={t('locations.customer')}
             placeholder={t('locations.form.customerPlaceholder')}
             searchPlaceholder={t('locations.form.customerSearch')}
-            items={customersQuery.data ?? []}
+            items={(customersQuery.data ?? []).filter((c) => !c.archivedAt)}
             selectedItem={customer}
             getId={(c) => c.id}
             getLabel={(c) => c.nomComplet}

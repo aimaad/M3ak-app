@@ -9,13 +9,14 @@ import { useMyAgency } from '@/features/agency/hooks';
 import { CustomerForm } from '@/features/customers/customer-form';
 import { uploadCustomerDocument } from '@/features/customers/api';
 import { mergeDocuments } from '@/features/storage/documents';
-import { useCreateCustomer, useUpdateCustomerDocuments } from '@/features/customers/hooks';
+import { useCreateCustomer, useCustomers, useUpdateCustomerDocuments } from '@/features/customers/hooks';
 import type { CustomerInput, PendingDocument } from '@/features/customers/types';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function NouveauClientScreen() {
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
+  const customersQuery = useCustomers();
   const createCustomer = useCreateCustomer();
   const updateDocuments = useUpdateCustomerDocuments();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -33,7 +34,11 @@ export default function NouveauClientScreen() {
         try {
           const uploaded = await Promise.all(
             pendingDocuments.map((doc) =>
-              uploadCustomerDocument(agencyQuery.data!.agencyId, customer.id, doc.type, doc.localUri)
+              uploadCustomerDocument(agencyQuery.data!.agencyId, customer.id, doc.type, doc.localUri, {
+                reference: doc.reference,
+                dateDelivrance: doc.dateDelivrance,
+                expiresAt: doc.expiresAt,
+              })
             )
           );
           await updateDocuments.mutateAsync({
@@ -60,6 +65,7 @@ export default function NouveauClientScreen() {
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('customer.form.newTitle')} showBack />
         <CustomerForm
+          allCustomers={customersQuery.data ?? []}
           submitLabel={t('customer.form.save')}
           submittingLabel={t('customer.form.saving')}
           isSubmitting={isSubmitting}

@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { uploadCustomerDocument } from '@/features/customers/api';
 import { CustomerForm } from '@/features/customers/customer-form';
 import { mergeDocuments } from '@/features/storage/documents';
-import { useCustomer, useUpdateCustomer, useUpdateCustomerDocuments } from '@/features/customers/hooks';
+import { useCustomer, useCustomers, useUpdateCustomer, useUpdateCustomerDocuments } from '@/features/customers/hooks';
 import type { CustomerInput, PendingDocument } from '@/features/customers/types';
 import type { CustomerFormValues } from '@/features/customers/validation';
 import { useLanguage } from '@/i18n/use-language';
@@ -18,6 +18,7 @@ export default function ModifierClientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
   const { data: customer, isLoading } = useCustomer(id);
+  const customersQuery = useCustomers();
   const updateCustomer = useUpdateCustomer();
   const updateDocuments = useUpdateCustomerDocuments();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -35,7 +36,11 @@ export default function ModifierClientScreen() {
         try {
           const uploaded = await Promise.all(
             pendingDocuments.map((doc) =>
-              uploadCustomerDocument(customer.agencyId, customer.id, doc.type, doc.localUri)
+              uploadCustomerDocument(customer.agencyId, customer.id, doc.type, doc.localUri, {
+                reference: doc.reference,
+                dateDelivrance: doc.dateDelivrance,
+                expiresAt: doc.expiresAt,
+              })
             )
           );
           await updateDocuments.mutateAsync({
@@ -58,10 +63,22 @@ export default function ModifierClientScreen() {
   const initialValues: CustomerFormValues | undefined = customer
     ? {
         nomComplet: customer.nomComplet,
+        prenom: customer.prenom ?? '',
+        nom: customer.nom ?? '',
         cinOuPasseport: customer.cinOuPasseport ?? '',
         numeroPermis: customer.numeroPermis ?? '',
         telephone: customer.telephone ?? '',
+        telephoneSecondaire: customer.telephoneSecondaire ?? '',
         email: customer.email ?? '',
+        adresse: customer.adresse ?? '',
+        ville: customer.ville ?? '',
+        pays: customer.pays,
+        dateNaissance: customer.dateNaissance ?? '',
+        languePreferee: customer.languePreferee,
+        typeClient: customer.typeClient,
+        raisonSociale: customer.raisonSociale ?? '',
+        ice: customer.ice ?? '',
+        notes: customer.notes ?? '',
       }
     : undefined;
 
@@ -84,6 +101,8 @@ export default function ModifierClientScreen() {
             key={customer.id}
             initialValues={initialValues}
             existingDocuments={customer.documents}
+            existingCustomerId={customer.id}
+            allCustomers={customersQuery.data ?? []}
             submitLabel={t('customer.form.save')}
             submittingLabel={t('customer.form.saving')}
             isSubmitting={isSubmitting}
