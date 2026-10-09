@@ -35,8 +35,10 @@ export default function OnboardingScreen() {
     try {
       await createAgency.mutateAsync({ nom: nom.trim(), ville: ville.trim() || null, ownerName: ownerName.trim() });
       router.replace('/accueil');
-    } catch {
-      setError(t('onboarding.createError'));
+    } catch (err) {
+      console.error('Échec de création d\'agence :', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`${t('onboarding.createError')} (${message})`);
     }
   }
 
@@ -49,8 +51,10 @@ export default function OnboardingScreen() {
     try {
       await redeemInvite.mutateAsync(code.trim().toUpperCase());
       router.replace('/accueil');
-    } catch {
-      setError(t('onboarding.joinError'));
+    } catch (err) {
+      console.error('Échec pour rejoindre une agence :', err);
+      const message = err instanceof Error ? err.message : String(err);
+      setError(`${t('onboarding.joinError')} (${message})`);
     }
   }
 
