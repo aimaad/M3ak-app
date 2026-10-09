@@ -14,6 +14,13 @@ agence ne voie **que ses propres données**.
   par inspection (une reprise remplace la précédente)
 - `migrations/0006_agency_invites.sql` — invitations d'employés par code (table +
   fonction `redeem_invite`)
+- `migrations/0007_agencies_created_by.sql` — colonne `created_by` sur `agencies` +
+  correction de la règle de sécurité qui empêchait la création d'une agence
+- `migrations/0008_vehicle_documents.sql` — colonne `documents` (carte grise, assurance,
+  visite technique) sur `vehicles` + bucket de stockage associé
+- `migrations/0009_agency_details_and_member_safety.sql` — informations complètes de
+  l'agence (raison sociale, e-mail, téléphone, adresse, logo…), protection contre la
+  suppression du dernier propriétaire, et bucket de stockage pour le logo
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -37,7 +44,11 @@ agence ne voie **que ses propres données**.
 5. Copiez-collez le contenu de `migrations/0004_inspection_photos_storage.sql`, cliquez **Run**.
 6. Copiez-collez le contenu de `migrations/0005_inspection_photos_unique_angle.sql`, cliquez **Run**.
 7. Copiez-collez le contenu de `migrations/0006_agency_invites.sql`, cliquez **Run**.
-8. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+8. Copiez-collez le contenu de `migrations/0007_agencies_created_by.sql`, cliquez **Run**.
+9. Copiez-collez le contenu de `migrations/0008_vehicle_documents.sql`, cliquez **Run**.
+10. Copiez-collez le contenu de `migrations/0009_agency_details_and_member_safety.sql`,
+    cliquez **Run**.
+11. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 

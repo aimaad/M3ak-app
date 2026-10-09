@@ -26,3 +26,28 @@ export type AgencyInvite = {
   usedAt: string | null;
   createdAt: string;
 };
+
+export type AgencyDetails = {
+  id: string;
+  nom: string;
+  raisonSociale: string | null;
+  email: string | null;
+  telephone: string | null;
+  adresse: string | null;
+  ville: string | null;
+  pays: string;
+  devise: string;
+  logoUrl: string | null;
+  createdAt: string;
+};
+
+export type AgencyDetailsInput = {
+  nom: string;
+  raisonSociale: string | null;
+  email: string | null;
+  telephone: string | null;
+  adresse: string | null;
+  ville: string | null;
+  pays: string;
+  devise: string;
+};

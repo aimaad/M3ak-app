@@ -1,7 +1,47 @@
+import { uploadFile } from '@/features/storage/api';
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
 import { generateInviteCode, inviteExpiryDate } from './invite-code';
-import type { AgencyInvite, AgencyMember, AgencyMembership, AgencyRole } from './types';
+import type {
+  AgencyDetails,
+  AgencyDetailsInput,
+  AgencyInvite,
+  AgencyMember,
+  AgencyMembership,
+  AgencyRole,
+} from './types';
+
+export const AGENCY_ASSETS_BUCKET = 'agency-assets';
+
+type AgencyRow = {
+  id: string;
+  nom: string;
+  raison_sociale: string | null;
+  email: string | null;
+  telephone: string | null;
+  adresse: string | null;
+  ville: string | null;
+  pays: string;
+  devise: string;
+  logo_url: string | null;
+  created_at: string;
+};
+
+function agencyFromRow(row: AgencyRow): AgencyDetails {
+  return {
+    id: row.id,
+    nom: row.nom,
+    raisonSociale: row.raison_sociale,
+    email: row.email,
+    telephone: row.telephone,
+    adresse: row.adresse,
+    ville: row.ville,
+    pays: row.pays,
+    devise: row.devise,
+    logoUrl: row.logo_url,
+    createdAt: row.created_at,
+  };
+}
 
 type AgencyMembersRow = {
   agency_id: string;
@@ -135,4 +175,69 @@ export async function createAgencyInvite(agencyId: string, role: AgencyRole): Pr
     usedAt: data.used_at,
     createdAt: data.created_at,
   };
+}
+
+export async function getAgencyDetails(agencyId: string): Promise<AgencyDetails> {
+  const { data, error } = await getSupabase().from('agencies').select('*').eq('id', agencyId).single();
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+export async function updateAgencyDetails(
+  agencyId: string,
+  input: AgencyDetailsInput
+): Promise<AgencyDetails> {
+  const { data, error } = await getSupabase()
+    .from('agencies')
+    .update({
+      nom: input.nom,
+      raison_sociale: input.raisonSociale,
+      email: input.email,
+      telephone: input.telephone,
+      adresse: input.adresse,
+      ville: input.ville,
+      pays: input.pays,
+      devise: input.devise,
+    })
+    .eq('id', agencyId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+export async function uploadAgencyLogo(agencyId: string, localUri: string): Promise<AgencyDetails> {
+  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
+  const path = `${agencyId}/logo.${extension}`;
+
+  await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, contentType);
+
+  const { data, error } = await getSupabase()
+    .from('agencies')
+    .update({ logo_url: path })
+    .eq('id', agencyId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+export async function updateMemberRole(memberId: string, role: AgencyRole): Promise<AgencyMember> {
+  const { data, error } = await getSupabase()
+    .from('agency_members')
+    .update({ role })
+    .eq('id', memberId)
+    .select('id, user_id, role, nom_complet')
+    .single();
+
+  if (error) throw error;
+  return { id: data.id, userId: data.user_id, role: data.role, nomComplet: data.nom_complet };
+}
+
+export async function removeMember(memberId: string): Promise<void> {
+  const { error } = await getSupabase().from('agency_members').delete().eq('id', memberId);
+  if (error) throw error;
 }

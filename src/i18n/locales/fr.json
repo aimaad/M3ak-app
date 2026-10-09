@@ -86,6 +86,39 @@
       "owner": "Propriétaire",
       "manager": "Responsable",
       "employee": "Employé"
+    },
+    "manageMember": "Gérer ce membre",
+    "changeRole": "Changer le rôle",
+    "removeMember": "Retirer de l'agence",
+    "removeConfirmTitle": "Retirer {{name}} ?",
+    "removeError": "Impossible de retirer ce membre.",
+    "lastOwnerError": "Impossible : il doit rester au moins un propriétaire.",
+    "roleUpdateError": "Impossible de changer ce rôle.",
+    "myCompany": "Mon entreprise"
+  },
+  "entreprise": {
+    "title": "Mon entreprise",
+    "subtitle": "Informations de votre agence",
+    "logoChange": "Changer le logo",
+    "fields": {
+      "nom": "Nom commercial",
+      "raisonSociale": "Raison sociale",
+      "email": "E-mail professionnel",
+      "telephone": "Téléphone",
+      "adresse": "Adresse",
+      "ville": "Ville",
+      "pays": "Pays",
+      "devise": "Devise"
+    },
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "saveSuccess": "Informations enregistrées.",
+    "saveError": "Impossible d'enregistrer. Réessayez.",
+    "logoError": "Impossible d'envoyer le logo. Réessayez.",
+    "readOnlyHint": "Seul le propriétaire peut modifier ces informations.",
+    "errors": {
+      "required": "Ce champ est obligatoire.",
+      "invalid_email": "Entrez une adresse e-mail valide."
     }
   },
   "flotte": {

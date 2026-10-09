@@ -86,6 +86,39 @@
       "owner": "المالك",
       "manager": "المسؤول",
       "employee": "الموظف"
+    },
+    "manageMember": "تدبير هاد العضو",
+    "changeRole": "بدل الدور",
+    "removeMember": "حيد من الوكالة",
+    "removeConfirmTitle": "حيد {{name}} ؟",
+    "removeError": "تعذر حيد هاد العضو.",
+    "lastOwnerError": "ماكيمكنش : خاص يبقى على الأقل مالك واحد.",
+    "roleUpdateError": "تعذر بدل هاد الدور.",
+    "myCompany": "الوكالة ديالي"
+  },
+  "entreprise": {
+    "title": "الوكالة ديالي",
+    "subtitle": "معلومات الوكالة ديالك",
+    "logoChange": "بدل اللوغو",
+    "fields": {
+      "nom": "الاسم التجاري",
+      "raisonSociale": "التسمية القانونية",
+      "email": "البريد الإلكتروني المهني",
+      "telephone": "الهاتف",
+      "adresse": "العنوان",
+      "ville": "المدينة",
+      "pays": "البلد",
+      "devise": "العملة"
+    },
+    "save": "حفظ",
+    "saving": "كنسجلو…",
+    "saveSuccess": "تسجلات المعلومات.",
+    "saveError": "تعذر الحفظ. عاود المحاولة.",
+    "logoError": "تعذر إرسال اللوغو. عاود المحاولة.",
+    "readOnlyHint": "غير المالك يقدر يبدل هاد المعلومات.",
+    "errors": {
+      "required": "هاد الحقل خاصو يتعمر.",
+      "invalid_email": "دخل بريد إلكتروني صحيح."
     }
   },
   "flotte": {
