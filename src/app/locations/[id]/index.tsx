@@ -5,6 +5,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { useContractForRental } from '@/features/contracts/hooks';
+import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import { useCustomer } from '@/features/customers/hooks';
 import { DepositResolveForm } from '@/features/deposits/deposit-resolve-form';
 import { useDeposit } from '@/features/deposits/hooks';
@@ -41,10 +43,13 @@ export default function LocationDetailScreen() {
   const { data: payments = [] } = usePaymentsForRental(rental?.id);
   const { data: inspectionDepart } = useInspectionForRental(rental?.id, 'depart');
   const { data: inspectionRetour } = useInspectionForRental(rental?.id, 'retour');
+  const { data: contract } = useContractForRental(rental?.id);
   const cancelRental = useCancelRental();
   const confirmRental = useConfirmRental();
 
-  const canStart = rental?.statut === 'confirmee' || rental?.statut === 'reservee';
+  const rentalConfirmed = rental?.statut === 'confirmee' || rental?.statut === 'reservee';
+  const canCreateContract = rentalConfirmed && !contract;
+  const canStart = rentalConfirmed && contract?.statut === 'signe';
   const canConfirm = rental?.statut === 'en_attente_confirmation';
   const canCancel = rental?.statut === 'en_attente_confirmation' || rental?.statut === 'confirmee' || rental?.statut === 'reservee';
   const soldeRestant = rental ? Math.max(0, (rental.prixTotal ?? 0) - rental.acomptePaye) : 0;
@@ -138,6 +143,32 @@ export default function LocationDetailScreen() {
               )}
             </Pressable>
           ) : null}
+
+          <View className="gap-2">
+            <ThemedText type="smallBold">{t('contract.section')}</ThemedText>
+            {contract ? (
+              <Pressable
+                onPress={() => router.push(`/contrats/${contract.id}`)}
+                className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+              >
+                <ThemedText type="small">{contract.numero}</ThemedText>
+                <ContractStatusBadge status={contract.statut} />
+              </Pressable>
+            ) : canCreateContract ? (
+              <Pressable
+                onPress={() => router.push(`/contrats/nouveau?rentalId=${rental.id}`)}
+                className="items-center rounded-2xl border border-[#1f5eff] px-4 py-3"
+              >
+                <ThemedText type="smallBold" themeColor="primary">
+                  {t('contract.createAction')}
+                </ThemedText>
+              </Pressable>
+            ) : (
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('contract.unavailableHint')}
+              </ThemedText>
+            )}
+          </View>
 
           <View className="gap-2">
             <ThemedText type="smallBold">{t('inspection.section')}</ThemedText>

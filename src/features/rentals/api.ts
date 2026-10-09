@@ -1,6 +1,6 @@
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
-import type { DepartInput, Rental, RentalInput, RetourInput } from './types';
+import type { Rental, RentalInput } from './types';
 
 type RentalRow = {
   id: string;
@@ -228,58 +228,6 @@ export async function confirmRental(id: string): Promise<Rental> {
     if (isExclusionViolation(error)) throw new Error(RENTAL_CONFLICT_ERROR);
     throw error;
   }
-  return fromRow(data as RentalRow);
-}
-
-export async function startRental(id: string, vehicleId: string, input: DepartInput): Promise<Rental> {
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
-    .from('rentals')
-    .update({
-      statut: 'en_cours',
-      date_depart_reel: new Date().toISOString(),
-      km_depart: input.kmDepart,
-      carburant_depart: input.carburantDepart,
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  const { error: vehicleError } = await supabase
-    .from('vehicles')
-    .update({ statut: 'en_location', kilometrage: input.kmDepart })
-    .eq('id', vehicleId);
-  if (vehicleError) throw vehicleError;
-
-  return fromRow(data as RentalRow);
-}
-
-export async function completeRental(id: string, vehicleId: string, input: RetourInput): Promise<Rental> {
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
-    .from('rentals')
-    .update({
-      statut: 'terminee',
-      date_retour_reel: new Date().toISOString(),
-      km_retour: input.kmRetour,
-      carburant_retour: input.carburantRetour,
-    })
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) throw error;
-
-  const { error: vehicleError } = await supabase
-    .from('vehicles')
-    .update({ statut: 'a_inspecter', kilometrage: input.kmRetour })
-    .eq('id', vehicleId);
-  if (vehicleError) throw vehicleError;
-
   return fromRow(data as RentalRow);
 }
 

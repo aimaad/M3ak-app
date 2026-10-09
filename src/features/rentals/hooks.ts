@@ -3,16 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   cancelRental,
   checkVehicleAvailability,
-  completeRental,
   confirmRental,
   createRental,
   getRental,
   listRentals,
   listRentalsForVehicle,
-  startRental,
   updateRentalDates,
 } from './api';
-import type { DepartInput, RentalInput, RetourInput } from './types';
+import type { RentalInput } from './types';
 
 const rentalsKey = ['rentals'] as const;
 const rentalKey = (id: string) => ['rentals', id] as const;
@@ -85,26 +83,6 @@ export function useConfirmRental() {
 
   return useMutation({
     mutationFn: (id: string) => confirmRental(id),
-    onSuccess: (rental) => invalidate(rental),
-  });
-}
-
-export function useStartRental() {
-  const invalidate = useInvalidateRentals();
-
-  return useMutation({
-    mutationFn: ({ id, vehicleId, input }: { id: string; vehicleId: string; input: DepartInput }) =>
-      startRental(id, vehicleId, input),
-    onSuccess: (rental) => invalidate(rental),
-  });
-}
-
-export function useCompleteRental() {
-  const invalidate = useInvalidateRentals();
-
-  return useMutation({
-    mutationFn: ({ id, vehicleId, input }: { id: string; vehicleId: string; input: RetourInput }) =>
-      completeRental(id, vehicleId, input),
     onSuccess: (rental) => invalidate(rental),
   });
 }

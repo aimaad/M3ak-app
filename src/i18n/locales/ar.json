@@ -474,6 +474,75 @@
       "viewList": "لائحة"
     }
   },
+  "contract": {
+    "section": "العقد",
+    "createAction": "صاوب العقد",
+    "unavailableHint": "خاص العقد يصاوب ومن بعد يتوقع قبل ما تبدا الكراء.",
+    "detailsTitle": "العقد",
+    "notFound": "العقد ماكايناش.",
+    "listTitle": "العقود",
+    "listSubtitle_one": "عقد واحد",
+    "listSubtitle_other": "{{count}} ديال العقود",
+    "searchPlaceholder": "المرجع، الزبون، رقم الترقيم…",
+    "loadError": "تعذر تحميل العقود.",
+    "empty": "ماكاين حتى عقد يوافق البحث.",
+    "driverLabel": "السائق : {{name}}",
+    "markReadyAction": "علم بأنه جاهز للتوقيع",
+    "signAction": "وقع العقد",
+    "signConfirmTitle": "أكد التوقيع",
+    "signConfirmBody": "واجد بأن التوقيع (ورقي أو يدوي) تم فعلاً مع الزبون؟ هاد الإجراء غادي يسجل بالتاريخ والوقت وينسب ليك.",
+    "signError": "تعذر توقيع هاد العقد.",
+    "signedOn": "توقع نهار {{date}}",
+    "cancelAction": "لغي العقد",
+    "generatePdf": "صاوب PDF",
+    "regeneratePdf": "رجع صاوب PDF",
+    "pdfError": "تعذر صواب PDF.",
+    "status": {
+      "preparation": "فالتحضير",
+      "pret_a_signer": "جاهز للتوقيع",
+      "signe": "موقع",
+      "en_cours": "جاري",
+      "cloture": "مسدود",
+      "annule": "ملغي"
+    },
+    "condition": {
+      "bon": "حالة مزيانة",
+      "moyen": "حالة متوسطة",
+      "mauvais": "حالة خايبة"
+    },
+    "accessory": {
+      "roue_secours": "الروة ديال السكور",
+      "triangle_gilet": "المثلث + الصدرية",
+      "cric": "الكريك",
+      "extincteur": "مطفأة الحريق",
+      "autoradio_gps": "الراديو / GPS",
+      "chargeur": "الشارجور",
+      "carte_grise_vehicule": "البطاقة الرمادية",
+      "assurance_vehicule": "شهادة التأمين"
+    },
+    "fields": {
+      "conditionsParticulieres": "شروط خاصة",
+      "notes": "ملاحظات",
+      "etatGeneral": "الحالة العامة ديال السيارة",
+      "accessoires": "التجهيزات المسلمة",
+      "accessoiresManquants": "التجهيزات الناقصة",
+      "observations": "ملاحظات",
+      "fraisProposes": "الرسوم المقترحة عند الرجوع"
+    },
+    "feeRetard": "تأخير {{minutes}} دقيقة ← {{amount}} درهم مقترحين",
+    "feeCarburant": "وقود ناقص ← {{amount}} درهم مقترحين",
+    "fraisJustificationPlaceholder": "التبرير، ماشي واجب",
+    "applyFeesLabel": "طبق {{amount}} درهم ديال الرسوم على الحجز",
+    "form": {
+      "newTitle": "صاوب العقد",
+      "save": "صاوب العقد",
+      "saving": "كنصاوبو…",
+      "createError": "تعذر صواب هاد العقد.",
+      "errors": {
+        "required": "هاد الحقل خاصو يتعمر."
+      }
+    }
+  },
   "inspection": {
     "section": "الفحص",
     "done": "كمل",

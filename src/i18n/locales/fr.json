@@ -474,6 +474,75 @@
       "viewList": "Vue liste"
     }
   },
+  "contract": {
+    "section": "Contrat",
+    "createAction": "Créer le contrat",
+    "unavailableHint": "Le contrat doit être créé puis signé avant de pouvoir démarrer la location.",
+    "detailsTitle": "Contrat",
+    "notFound": "Contrat introuvable.",
+    "listTitle": "Contrats",
+    "listSubtitle_one": "1 contrat",
+    "listSubtitle_other": "{{count}} contrats",
+    "searchPlaceholder": "Référence, client, immatriculation…",
+    "loadError": "Impossible de charger les contrats.",
+    "empty": "Aucun contrat ne correspond à votre recherche.",
+    "driverLabel": "conducteur : {{name}}",
+    "markReadyAction": "Marquer prêt à signer",
+    "signAction": "Signer le contrat",
+    "signConfirmTitle": "Confirmer la signature",
+    "signConfirmBody": "Confirmez-vous qu'une signature (papier ou manuelle) a réellement eu lieu avec le client ? Cette action est horodatée et vous sera attribuée.",
+    "signError": "Impossible de signer ce contrat.",
+    "signedOn": "Signé le {{date}}",
+    "cancelAction": "Annuler le contrat",
+    "generatePdf": "Générer le PDF",
+    "regeneratePdf": "Régénérer le PDF",
+    "pdfError": "Impossible de générer le PDF.",
+    "status": {
+      "preparation": "En préparation",
+      "pret_a_signer": "Prêt à signer",
+      "signe": "Signé",
+      "en_cours": "En cours",
+      "cloture": "Clôturé",
+      "annule": "Annulé"
+    },
+    "condition": {
+      "bon": "Bon état",
+      "moyen": "État moyen",
+      "mauvais": "Mauvais état"
+    },
+    "accessory": {
+      "roue_secours": "Roue de secours",
+      "triangle_gilet": "Triangle + gilet",
+      "cric": "Cric",
+      "extincteur": "Extincteur",
+      "autoradio_gps": "Autoradio / GPS",
+      "chargeur": "Chargeur",
+      "carte_grise_vehicule": "Carte grise",
+      "assurance_vehicule": "Attestation d'assurance"
+    },
+    "fields": {
+      "conditionsParticulieres": "Conditions particulières",
+      "notes": "Notes",
+      "etatGeneral": "État général du véhicule",
+      "accessoires": "Accessoires remis",
+      "accessoiresManquants": "Accessoires manquants",
+      "observations": "Observations",
+      "fraisProposes": "Frais proposés au retour"
+    },
+    "feeRetard": "Retard de {{minutes}} min → {{amount}} MAD proposés",
+    "feeCarburant": "Carburant manquant → {{amount}} MAD proposés",
+    "fraisJustificationPlaceholder": "Justification, facultatif",
+    "applyFeesLabel": "Appliquer {{amount}} MAD de frais à la réservation",
+    "form": {
+      "newTitle": "Créer le contrat",
+      "save": "Créer le contrat",
+      "saving": "Création…",
+      "createError": "Impossible de créer ce contrat.",
+      "errors": {
+        "required": "Ce champ est obligatoire."
+      }
+    }
+  },
   "inspection": {
     "section": "Inspection",
     "done": "Terminée",

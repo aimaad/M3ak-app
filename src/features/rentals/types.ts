@@ -82,13 +82,3 @@ export type RentalInput = {
    * migration 0013), jamais à partir d'une valeur envoyée par le client. */
   statutInitial: 'en_attente_confirmation' | 'confirmee';
 };
-
-export type DepartInput = {
-  kmDepart: number;
-  carburantDepart: number;
-};
-
-export type RetourInput = {
-  kmRetour: number;
-  carburantRetour: number;
-};

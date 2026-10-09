@@ -43,6 +43,16 @@ agence ne voie **que ses propres données**.
   à partir des tarifs réels du véhicule (jamais depuis une valeur envoyée par le
   client), transitions de statut validées côté serveur, et vérification qu'un
   véhicule/client/conducteur référencé appartient bien à la même entreprise
+- `migrations/0015_contracts.sql` — module complet de contrats : référence lisible
+  auto-générée, instantané des données au moment de la création (client, véhicule,
+  prix, caution — jamais réécrit par une modification ultérieure), cycle de vie
+  (préparation → prêt à signer → signé → en cours → clôturé, annulé possible avant
+  le départ), signature manuelle documentée (jamais automatique, toujours horodatée
+  et attribuée), un seul contrat actif par réservation, et deux fonctions RPC
+  (`start_rental_with_contract` / `complete_rental_with_contract`) qui rendent le
+  départ et le retour **atomiques** (réservation + véhicule + contrat mis à jour
+  ensemble, ou rien du tout) avec protection explicite contre un double départ ou
+  un double retour, et sans jamais écraser un véhicule déjà en maintenance
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -80,7 +90,8 @@ agence ne voie **que ses propres données**.
 15. Copiez-collez le contenu de `migrations/0014_rentals_booking_system.sql`, cliquez **Run**.
     (Active l'extension `btree_gist` — standard et déjà disponible sur Supabase, aucune
     configuration supplémentaire n'est nécessaire.)
-16. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+16. Copiez-collez le contenu de `migrations/0015_contracts.sql`, cliquez **Run**.
+17. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -173,6 +184,14 @@ existante), **deux requêtes vraiment simultanées pour le même véhicule — u
 doit réussir** (test de la protection anti-double-réservation), transitions de statut
 invalides rejetées, interdiction de référencer un véhicule/client d'une autre
 entreprise, isolation complète entre deux agences.
+
+`scripts/contract-rls-audit.mjs` fait la même chose pour le module Contrats :
+instantané figé à la création, un seul contrat actif par réservation, signature
+refusée sans preuve même en forçant le statut, saut d'étape refusé même avec une
+preuve de signature valide, **départ et retour atomiques** (réservation + véhicule
++ contrat ensemble via RPC), double départ/retour refusé, véhicule déjà en
+maintenance jamais écrasé au retour, isolation des contrats et des PDF entre deux
+agences.
 
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à

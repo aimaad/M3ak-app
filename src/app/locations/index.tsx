@@ -54,11 +54,18 @@ export default function LocationsScreen() {
           title={t('locations.title')}
           subtitle={t('locations.subtitle', { count: rentals.length })}
           right={
-            <Pressable onPress={() => router.push('/locations/calendrier')} hitSlop={8}>
-              <ThemedText type="small" themeColor="primary">
-                {t('locations.calendar.title')}
-              </ThemedText>
-            </Pressable>
+            <View className="flex-row items-center gap-3">
+              <Pressable onPress={() => router.push('/contrats')} hitSlop={8}>
+                <ThemedText type="small" themeColor="primary">
+                  {t('contract.listTitle')}
+                </ThemedText>
+              </Pressable>
+              <Pressable onPress={() => router.push('/locations/calendrier')} hitSlop={8}>
+                <ThemedText type="small" themeColor="primary">
+                  {t('locations.calendar.title')}
+                </ThemedText>
+              </Pressable>
+            </View>
           }
         />
 
