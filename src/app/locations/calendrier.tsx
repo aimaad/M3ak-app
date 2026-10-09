@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { Agenda, type AgendaEntry, type AgendaSchedule } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -17,6 +17,12 @@ import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
 
+// Pas de texte traduit à l'intérieur : "name" n'est utilisé que comme clé
+// stable par react-native-calendars. L'affichage réel (marque/modèle/
+// client traduits) se construit dans renderItem, pas ici — sinon la
+// référence de "items" change à chaque rendu (la fonction t() de
+// react-i18next n'est pas stable) et Agenda boucle indéfiniment
+// ("Maximum update depth exceeded").
 type RentalEntry = AgendaEntry & { rental: Rental };
 
 function toDateKey(iso: string): string {
@@ -67,21 +73,12 @@ export default function CalendrierScreen() {
     const schedule: Record<string, RentalEntry[]> = {};
     for (const rental of filteredRentals) {
       for (const day of eachDayInRange(rental.dateDebutPrevue, rental.dateFinPrevue)) {
-        const vehicle = vehiclesById.get(rental.vehicleId);
-        const customer = customersById.get(rental.customerId);
-        const entry: RentalEntry = {
-          name: `${vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')} · ${
-            customer?.nomComplet ?? t('locations.unknownCustomer')
-          }`,
-          height: 72,
-          day,
-          rental,
-        };
+        const entry: RentalEntry = { name: rental.numero, height: 72, day, rental };
         schedule[day] = [...(schedule[day] ?? []), entry];
       }
     }
     return schedule;
-  }, [filteredRentals, vehiclesById, customersById, t]);
+  }, [filteredRentals]);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, object> = {};
@@ -92,6 +89,43 @@ export default function CalendrierScreen() {
   }, [items]);
 
   const isLoading = rentalsQuery.isLoading || vehiclesQuery.isLoading || customersQuery.isLoading;
+
+  const renderItem = useCallback(
+    (item: AgendaEntry) => {
+      const entry = item as RentalEntry;
+      const vehicle = vehiclesById.get(entry.rental.vehicleId);
+      const customer = customersById.get(entry.rental.customerId);
+      const label = `${vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')} · ${
+        customer?.nomComplet ?? t('locations.unknownCustomer')
+      }`;
+      return (
+        <Pressable
+          onPress={() => router.push(`/locations/${entry.rental.id}`)}
+          className="mx-4 mt-2 gap-1 rounded-2xl border border-[#e1e5f0] bg-white p-3"
+        >
+          <View className="flex-row items-center justify-between">
+            <ThemedText type="smallBold">{label}</ThemedText>
+            <RentalStatusBadge status={entry.rental.statut} />
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            {entry.rental.numero}
+          </ThemedText>
+        </Pressable>
+      );
+    },
+    [vehiclesById, customersById, t]
+  );
+
+  const renderEmptyData = useCallback(
+    () => (
+      <View className="items-center pt-12">
+        <ThemedText type="default" themeColor="textSecondary">
+          {t('locations.calendar.empty')}
+        </ThemedText>
+      </View>
+    ),
+    [t]
+  );
 
   return (
     <ThemedView className="flex-1">
@@ -159,30 +193,8 @@ export default function CalendrierScreen() {
           <Agenda
             items={items}
             markedDates={markedDates}
-            renderItem={(item) => {
-              const entry = item as RentalEntry;
-              return (
-                <Pressable
-                  onPress={() => router.push(`/locations/${entry.rental.id}`)}
-                  className="mx-4 mt-2 gap-1 rounded-2xl border border-[#e1e5f0] bg-white p-3"
-                >
-                  <View className="flex-row items-center justify-between">
-                    <ThemedText type="smallBold">{entry.name}</ThemedText>
-                    <RentalStatusBadge status={entry.rental.statut} />
-                  </View>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {entry.rental.numero}
-                  </ThemedText>
-                </Pressable>
-              );
-            }}
-            renderEmptyData={() => (
-              <View className="items-center pt-12">
-                <ThemedText type="default" themeColor="textSecondary">
-                  {t('locations.calendar.empty')}
-                </ThemedText>
-              </View>
-            )}
+            renderItem={renderItem}
+            renderEmptyData={renderEmptyData}
             theme={{ todayTextColor: '#1f5eff', selectedDayBackgroundColor: '#1f5eff', dotColor: '#1f5eff' }}
           />
         )}

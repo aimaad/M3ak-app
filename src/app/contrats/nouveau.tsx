@@ -63,7 +63,8 @@ export default function NouveauContratScreen() {
         },
       });
       router.replace(`/contrats/${contract.id}`);
-    } catch {
+    } catch (err) {
+      console.error('Échec de création du contrat :', err);
       setSubmitError(t('contract.form.createError'));
     }
   }
