@@ -1,6 +1,9 @@
+import { uploadFile } from '@/features/storage/api';
 import { getSupabase } from '@/lib/supabase';
 
-import type { Vehicle, VehicleInput } from './types';
+import type { Vehicle, VehicleDocument, VehicleDocumentType, VehicleInput } from './types';
+
+export const VEHICLE_DOCUMENTS_BUCKET = 'vehicle-documents';
 
 type VehicleRow = {
   id: string;
@@ -15,6 +18,7 @@ type VehicleRow = {
   statut: Vehicle['statut'];
   prix_jour: number;
   photo_url: string | null;
+  documents: VehicleDocument[];
   created_at: string;
   updated_at: string;
 };
@@ -33,6 +37,7 @@ function fromRow(row: VehicleRow): Vehicle {
     statut: row.statut,
     prixJour: Number(row.prix_jour),
     photoUrl: row.photo_url,
+    documents: row.documents ?? [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -89,4 +94,31 @@ export async function updateVehicle(id: string, input: VehicleInput): Promise<Ve
 
   if (error) throw error;
   return fromRow(data as VehicleRow);
+}
+
+export async function updateVehicleDocuments(id: string, documents: VehicleDocument[]): Promise<Vehicle> {
+  const { data, error } = await getSupabase()
+    .from('vehicles')
+    .update({ documents })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return fromRow(data as VehicleRow);
+}
+
+export async function uploadVehicleDocument(
+  agencyId: string,
+  vehicleId: string,
+  type: VehicleDocumentType,
+  localUri: string
+): Promise<VehicleDocument> {
+  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
+  const path = `${agencyId}/${vehicleId}/${type}-${Date.now()}.${extension}`;
+
+  await uploadFile(VEHICLE_DOCUMENTS_BUCKET, path, localUri, contentType);
+
+  return { type, path, uploadedAt: new Date().toISOString() };
 }

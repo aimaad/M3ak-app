@@ -1,12 +1,11 @@
 import { findDocument, mergeDocuments } from '../documents';
-import type { CustomerDocument } from '../types';
+
+type TestDoc = { type: 'cin' | 'permis'; path: string; uploadedAt: string };
 
 describe('mergeDocuments', () => {
   it('ajoute un nouveau type de document', () => {
-    const existing: CustomerDocument[] = [{ type: 'cin', path: 'a/cin.jpg', uploadedAt: '2026-01-01' }];
-    const incoming: CustomerDocument[] = [
-      { type: 'permis', path: 'a/permis.jpg', uploadedAt: '2026-01-02' },
-    ];
+    const existing: TestDoc[] = [{ type: 'cin', path: 'a/cin.jpg', uploadedAt: '2026-01-01' }];
+    const incoming: TestDoc[] = [{ type: 'permis', path: 'a/permis.jpg', uploadedAt: '2026-01-02' }];
 
     const result = mergeDocuments(existing, incoming);
     expect(result).toHaveLength(2);
@@ -15,8 +14,8 @@ describe('mergeDocuments', () => {
   });
 
   it('remplace un document existant du même type par le plus récent', () => {
-    const existing: CustomerDocument[] = [{ type: 'cin', path: 'a/old.jpg', uploadedAt: '2026-01-01' }];
-    const incoming: CustomerDocument[] = [{ type: 'cin', path: 'a/new.jpg', uploadedAt: '2026-02-01' }];
+    const existing: TestDoc[] = [{ type: 'cin', path: 'a/old.jpg', uploadedAt: '2026-01-01' }];
+    const incoming: TestDoc[] = [{ type: 'cin', path: 'a/new.jpg', uploadedAt: '2026-02-01' }];
 
     const result = mergeDocuments(existing, incoming);
     expect(result).toHaveLength(1);
@@ -26,6 +25,6 @@ describe('mergeDocuments', () => {
 
 describe('findDocument', () => {
   it("renvoie undefined si le type n'existe pas", () => {
-    expect(findDocument([], 'cin')).toBeUndefined();
+    expect(findDocument<TestDoc['type']>([], 'cin')).toBeUndefined();
   });
 });

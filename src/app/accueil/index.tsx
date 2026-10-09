@@ -1,15 +1,16 @@
 import { Redirect, router } from 'expo-router';
 import { useMemo } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
-import { SectionTabs } from '@/components/section-tabs';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { signOut } from '@/features/auth/api';
 import { useMyAgency } from '@/features/agency/hooks';
-import { computeUtilizationRate, sumPaymentsInMonth } from '@/features/dashboard/metrics';
+import { computeUtilizationRate, revenueByDay, sumPaymentsInMonth } from '@/features/dashboard/metrics';
+import { RevenueChart } from '@/features/dashboard/revenue-chart';
 import { useMaintenanceItems } from '@/features/maintenance/hooks';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { useAllPayments } from '@/features/payments/hooks';
@@ -17,9 +18,12 @@ import { countByStatus } from '@/features/vehicles/filters';
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { StatusFilter } from '@/features/vehicles/filters';
 import type { Vehicle } from '@/features/vehicles/types';
+import type { Payment } from '@/features/payments/types';
 import { useLanguage } from '@/i18n/use-language';
 
 const EMPTY_VEHICLES: Vehicle[] = [];
+const EMPTY_PAYMENTS: Payment[] = [];
+const CHART_DAYS = 7;
 
 const KPI_TILES: { statut: StatusFilter; labelKey: string }[] = [
   { statut: 'disponible', labelKey: 'flotte.status.disponible' },
@@ -36,16 +40,24 @@ export default function AccueilScreen() {
   const maintenanceQuery = useMaintenanceItems();
 
   const vehicles = vehiclesQuery.data ?? EMPTY_VEHICLES;
+  const payments = paymentsQuery.data ?? EMPTY_PAYMENTS;
   const counts = useMemo(() => countByStatus(vehicles), [vehicles]);
   const utilizationRate = useMemo(() => computeUtilizationRate(vehicles), [vehicles]);
-  const revenue = useMemo(
-    () => sumPaymentsInMonth(paymentsQuery.data ?? []),
-    [paymentsQuery.data]
-  );
+  const revenue = useMemo(() => sumPaymentsInMonth(payments), [payments]);
+  const chartPoints = useMemo(() => revenueByDay(payments, CHART_DAYS), [payments]);
 
   const urgentMaintenance = (maintenanceQuery.data ?? [])
     .filter((item) => item.statut !== 'effectuee')
     .slice(0, 4);
+
+  const isRefreshing =
+    vehiclesQuery.isFetching || paymentsQuery.isFetching || maintenanceQuery.isFetching;
+
+  function handleRefresh() {
+    vehiclesQuery.refetch();
+    paymentsQuery.refetch();
+    maintenanceQuery.refetch();
+  }
 
   const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -79,14 +91,17 @@ export default function AccueilScreen() {
           }
         />
 
-        <SectionTabs current="accueil" />
-
         {vehiclesQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
           </View>
         ) : (
-          <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
+          <ScrollView
+            contentContainerClassName="gap-6 px-6 pb-28"
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#1f5eff" />
+            }
+          >
             <View>
               <ThemedText type="small" themeColor="textSecondary">
                 {t('accueil.fleetTotal')}
@@ -132,6 +147,11 @@ export default function AccueilScreen() {
               </View>
             </View>
 
+            <View className="gap-3 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+              <ThemedText type="smallBold">{t('accueil.revenueChartTitle', { days: CHART_DAYS })}</ThemedText>
+              <RevenueChart points={chartPoints} />
+            </View>
+
             <View className="gap-3">
               <View className="flex-row items-center justify-between">
                 <ThemedText type="smallBold">{t('accueil.maintenanceSection')}</ThemedText>
@@ -164,6 +184,8 @@ export default function AccueilScreen() {
             </View>
           </ScrollView>
         )}
+
+        <BottomTabBar current="accueil" />
       </SafeAreaView>
     </ThemedView>
   );

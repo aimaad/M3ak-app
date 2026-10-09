@@ -8,7 +8,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
 import { CustomerForm } from '@/features/customers/customer-form';
 import { uploadCustomerDocument } from '@/features/customers/api';
-import { mergeDocuments } from '@/features/customers/documents';
+import { mergeDocuments } from '@/features/storage/documents';
 import { useCreateCustomer, useUpdateCustomerDocuments } from '@/features/customers/hooks';
 import type { CustomerInput, PendingDocument } from '@/features/customers/types';
 import { useLanguage } from '@/i18n/use-language';

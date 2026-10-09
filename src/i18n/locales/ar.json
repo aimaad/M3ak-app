@@ -8,7 +8,9 @@
     "restartRequired": "أعد تشغيل التطبيق لتفعيل تغيير اللغة.",
     "comingSoon": "قريباً",
     "cancel": "إلغاء",
-    "back": "رجوع"
+    "back": "رجوع",
+    "camera": "الكاميرا",
+    "gallery": "المعرض"
   },
   "auth": {
     "title": "تسجيل الدخول",
@@ -113,8 +115,13 @@
     "historySection": "التاريخ",
     "historyPlaceholder": "قريباً: الكراءات والفحوصات ديال هاد السيارة غادي يبانو هنا.",
     "documentsSection": "الوثائق",
-    "documentsPlaceholder": "قريباً: البطاقة الرمادية، التأمين، الزيارة التقنية.",
+    "noDocuments": "ماكاين حتى وثيقة مزادة.",
     "notFound": "السيارة ماكايناش.",
+    "documents": {
+      "carte_grise": "البطاقة الرمادية",
+      "assurance": "التأمين",
+      "visite_technique": "الزيارة التقنية"
+    },
     "fields": {
       "marque": "الماركة",
       "modele": "الموديل",
@@ -138,6 +145,7 @@
       "saving": "كنسجلو…",
       "createError": "تعذرت زيادة هاد السيارة.",
       "updateError": "تعذر حفظ التعديلات.",
+      "uploadError": "تسجلات السيارة، ولكن تعذر إرسال وثيقة. عاود المحاولة من بطاقة السيارة.",
       "errors": {
         "required": "هاد الحقل خاصو يتعمر.",
         "invalid_number": "دخل رقم صحيح.",
@@ -172,9 +180,7 @@
     },
     "documents": {
       "cin": "تصويرة ديال CIN",
-      "permis": "تصويرة ديال رخصة السياقة",
-      "camera": "الكاميرا",
-      "gallery": "المعرض"
+      "permis": "تصويرة ديال رخصة السياقة"
     },
     "form": {
       "newTitle": "زيادة زبون",
@@ -305,6 +311,7 @@
     "fleetTotalCount_other": "{{count}} ديال السيارات مسجلة",
     "utilizationRate": "معدل الاستعمال",
     "revenueThisMonth": "رقم المعاملات (الشهر)",
+    "revenueChartTitle": "الأرباح ديال آخر {{days}} ديال الأيام",
     "maintenanceSection": "آجال الصيانة",
     "maintenanceEmpty": "ماكاين حتى أجل قريب.",
     "seeAll": "شوف الكل"

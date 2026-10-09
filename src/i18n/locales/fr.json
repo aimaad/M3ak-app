@@ -8,7 +8,9 @@
     "restartRequired": "Redémarrez l'application pour appliquer le changement de langue.",
     "comingSoon": "Bientôt disponible",
     "cancel": "Annuler",
-    "back": "Retour"
+    "back": "Retour",
+    "camera": "Caméra",
+    "gallery": "Galerie"
   },
   "auth": {
     "title": "Connexion",
@@ -113,8 +115,13 @@
     "historySection": "Historique",
     "historyPlaceholder": "Bientôt disponible : les locations et inspections de ce véhicule s'afficheront ici.",
     "documentsSection": "Documents",
-    "documentsPlaceholder": "Bientôt disponible : carte grise, assurance, visite technique.",
+    "noDocuments": "Aucun document ajouté.",
     "notFound": "Véhicule introuvable.",
+    "documents": {
+      "carte_grise": "Carte grise",
+      "assurance": "Assurance",
+      "visite_technique": "Visite technique"
+    },
     "fields": {
       "marque": "Marque",
       "modele": "Modèle",
@@ -138,6 +145,7 @@
       "saving": "Enregistrement…",
       "createError": "Impossible d'ajouter ce véhicule.",
       "updateError": "Impossible d'enregistrer les modifications.",
+      "uploadError": "Le véhicule a été enregistré, mais l'envoi d'un document a échoué. Réessayez depuis la fiche véhicule.",
       "errors": {
         "required": "Ce champ est obligatoire.",
         "invalid_number": "Entrez un nombre valide.",
@@ -172,9 +180,7 @@
     },
     "documents": {
       "cin": "Photo de la CIN",
-      "permis": "Photo du permis",
-      "camera": "Caméra",
-      "gallery": "Galerie"
+      "permis": "Photo du permis"
     },
     "form": {
       "newTitle": "Ajouter un client",
@@ -305,6 +311,7 @@
     "fleetTotalCount_other": "{{count}} véhicules enregistrés",
     "utilizationRate": "Taux d'utilisation",
     "revenueThisMonth": "Chiffre d'affaires (mois)",
+    "revenueChartTitle": "Revenus des {{days}} derniers jours",
     "maintenanceSection": "Échéances de maintenance",
     "maintenanceEmpty": "Aucune échéance à venir.",
     "seeAll": "Voir tout"

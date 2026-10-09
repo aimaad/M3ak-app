@@ -2,12 +2,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { Image, Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
-
-import { useDocumentSignedUrl } from './hooks';
 
 type DocumentPhotoFieldProps = {
   label: string;
+  bucket: string;
   localUri: string | null;
   existingPath?: string;
   onPick: (uri: string) => void;
@@ -32,9 +32,9 @@ async function pickFromCamera(): Promise<string | null> {
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
-export function DocumentPhotoField({ label, localUri, existingPath, onPick }: DocumentPhotoFieldProps) {
+export function DocumentPhotoField({ label, bucket, localUri, existingPath, onPick }: DocumentPhotoFieldProps) {
   const { t } = useLanguage();
-  const { data: signedUrl } = useDocumentSignedUrl(localUri ? undefined : existingPath);
+  const { data: signedUrl } = useSignedUrl(bucket, localUri ? undefined : existingPath);
   const previewUri = localUri ?? signedUrl;
 
   async function handlePick(source: 'library' | 'camera') {
@@ -55,13 +55,13 @@ export function DocumentPhotoField({ label, localUri, existingPath, onPick }: Do
           onPress={() => handlePick('camera')}
           className="flex-1 items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
         >
-          <ThemedText type="small">{t('customer.documents.camera')}</ThemedText>
+          <ThemedText type="small">{t('common.camera')}</ThemedText>
         </Pressable>
         <Pressable
           onPress={() => handlePick('library')}
           className="flex-1 items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
         >
-          <ThemedText type="small">{t('customer.documents.gallery')}</ThemedText>
+          <ThemedText type="small">{t('common.gallery')}</ThemedText>
         </Pressable>
       </View>
     </View>

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView } from 'react-native';
 
+import { DocumentPhotoField } from '@/components/document-photo-field';
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
+import { findDocument } from '@/features/storage/documents';
 import { useLanguage } from '@/i18n/use-language';
 
-import { findDocument } from './documents';
-import { DocumentPhotoField } from './document-photo-field';
+import { DOCUMENTS_BUCKET } from './api';
 import type { CustomerDocument, CustomerInput, PendingDocument } from './types';
 import { isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from './validation';
 
@@ -98,12 +99,14 @@ export function CustomerForm({
 
       <DocumentPhotoField
         label={t('customer.documents.cin')}
+        bucket={DOCUMENTS_BUCKET}
         localUri={pendingDocuments.find((d) => d.type === 'cin')?.localUri ?? null}
         existingPath={findDocument(existingDocuments, 'cin')?.path}
         onPick={(uri) => pickDocument('cin', uri)}
       />
       <DocumentPhotoField
         label={t('customer.documents.permis')}
+        bucket={DOCUMENTS_BUCKET}
         localUri={pendingDocuments.find((d) => d.type === 'permis')?.localUri ?? null}
         existingPath={findDocument(existingDocuments, 'permis')?.path}
         onPick={(uri) => pickDocument('permis', uri)}

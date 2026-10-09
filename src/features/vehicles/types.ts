@@ -10,6 +10,25 @@ export const VEHICLE_STATUSES: VehicleStatus[] = [
 
 export const FUEL_TYPES: FuelType[] = ['essence', 'diesel', 'hybride', 'electrique'];
 
+export type VehicleDocumentType = 'carte_grise' | 'assurance' | 'visite_technique';
+
+export const VEHICLE_DOCUMENT_TYPES: VehicleDocumentType[] = [
+  'carte_grise',
+  'assurance',
+  'visite_technique',
+];
+
+export type VehicleDocument = {
+  type: VehicleDocumentType;
+  path: string;
+  uploadedAt: string;
+};
+
+export type PendingVehicleDocument = {
+  type: VehicleDocumentType;
+  localUri: string;
+};
+
 export type Vehicle = {
   id: string;
   agencyId: string;
@@ -23,6 +42,7 @@ export type Vehicle = {
   statut: VehicleStatus;
   prixJour: number;
   photoUrl: string | null;
+  documents: VehicleDocument[];
   createdAt: string;
   updatedAt: string;
 };

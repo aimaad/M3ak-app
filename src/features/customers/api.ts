@@ -1,8 +1,9 @@
+import { uploadFile } from '@/features/storage/api';
 import { getSupabase } from '@/lib/supabase';
 
 import type { Customer, CustomerDocument, CustomerInput, DocumentType } from './types';
 
-const DOCUMENTS_BUCKET = 'client-documents';
+export const DOCUMENTS_BUCKET = 'client-documents';
 
 type CustomerRow = {
   id: string;
@@ -101,26 +102,11 @@ export async function uploadCustomerDocument(
   type: DocumentType,
   localUri: string
 ): Promise<CustomerDocument> {
-  const response = await fetch(localUri);
-  const arrayBuffer = await response.arrayBuffer();
   const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
   const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
   const path = `${agencyId}/${customerId}/${type}-${Date.now()}.${extension}`;
 
-  const { error } = await getSupabase()
-    .storage.from(DOCUMENTS_BUCKET)
-    .upload(path, arrayBuffer, { contentType, upsert: true });
-
-  if (error) throw error;
+  await uploadFile(DOCUMENTS_BUCKET, path, localUri, contentType);
 
   return { type, path, uploadedAt: new Date().toISOString() };
-}
-
-export async function getDocumentSignedUrl(path: string): Promise<string> {
-  const { data, error } = await getSupabase()
-    .storage.from(DOCUMENTS_BUCKET)
-    .createSignedUrl(path, 60 * 60);
-
-  if (error) throw error;
-  return data.signedUrl;
 }

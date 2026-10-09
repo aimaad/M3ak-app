@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
-import { SectionTabs } from '@/components/section-tabs';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -34,8 +34,6 @@ export default function ClientsScreen() {
           subtitle={t('clients.subtitle', { count: customers.length })}
         />
 
-        <SectionTabs current="clients" />
-
         <View className="px-6 pb-4">
           <TextField placeholder={t('clients.searchPlaceholder')} value={search} onChangeText={setSearch} />
         </View>
@@ -57,7 +55,14 @@ export default function ClientsScreen() {
           <FlatList
             data={filtered}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-3 px-6 pb-28"
+            contentContainerClassName="gap-3 px-6 pb-32"
+            refreshControl={
+              <RefreshControl
+                refreshing={customersQuery.isFetching}
+                onRefresh={() => customersQuery.refetch()}
+                tintColor="#1f5eff"
+              />
+            }
             renderItem={({ item }) => (
               <CustomerCard customer={item} onPress={() => router.push(`/clients/${item.id}`)} />
             )}
@@ -73,12 +78,14 @@ export default function ClientsScreen() {
 
         <Pressable
           onPress={() => router.push('/clients/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
+          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('clients.addClient')}`}
           </ThemedText>
         </Pressable>
+
+        <BottomTabBar current="clients" />
       </SafeAreaView>
     </ThemedView>
   );

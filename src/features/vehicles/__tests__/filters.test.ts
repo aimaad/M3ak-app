@@ -15,6 +15,7 @@ function makeVehicle(overrides: Partial<Vehicle>): Vehicle {
     statut: 'disponible',
     prixJour: 250,
     photoUrl: null,
+    documents: [],
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     ...overrides,

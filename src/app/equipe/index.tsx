@@ -1,9 +1,9 @@
 import * as Clipboard from 'expo-clipboard';
-import { Alert, Linking, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Linking, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
-import { SectionTabs } from '@/components/section-tabs';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
@@ -52,9 +52,20 @@ export default function EquipeScreen() {
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('equipe.title')} subtitle={t('equipe.subtitle')} />
-        <SectionTabs current="equipe" />
 
-        <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
+        <ScrollView
+          contentContainerClassName="gap-6 px-6 pb-28"
+          refreshControl={
+            <RefreshControl
+              refreshing={membersQuery.isFetching || invitesQuery.isFetching}
+              onRefresh={() => {
+                membersQuery.refetch();
+                invitesQuery.refetch();
+              }}
+              tintColor="#1f5eff"
+            />
+          }
+        >
           <View className="gap-2">
             <ThemedText type="smallBold">{t('equipe.membersSection')}</ThemedText>
             {(membersQuery.data ?? []).map((member) => (
@@ -122,6 +133,8 @@ export default function EquipeScreen() {
             </View>
           ) : null}
         </ScrollView>
+
+        <BottomTabBar current="equipe" />
       </SafeAreaView>
     </ThemedView>
   );

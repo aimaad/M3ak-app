@@ -1,21 +1,25 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 
+import { DocumentPhotoField } from '@/components/document-photo-field';
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
+import { findDocument } from '@/features/storage/documents';
 import { useLanguage } from '@/i18n/use-language';
 
-import { FUEL_TYPES, VEHICLE_STATUSES } from './types';
+import { VEHICLE_DOCUMENTS_BUCKET } from './api';
+import { FUEL_TYPES, VEHICLE_DOCUMENT_TYPES, VEHICLE_STATUSES } from './types';
 import { isFormValid, toVehicleInput, validateVehicleForm, type VehicleFormValues } from './validation';
-import type { VehicleInput } from './types';
+import type { PendingVehicleDocument, VehicleDocument, VehicleInput } from './types';
 
 type VehicleFormProps = {
   initialValues?: VehicleFormValues;
+  existingDocuments?: VehicleDocument[];
   submitLabel: string;
   submittingLabel: string;
   isSubmitting: boolean;
   submitError?: string | null;
-  onSubmit: (input: VehicleInput) => void;
+  onSubmit: (input: VehicleInput, pendingDocuments: PendingVehicleDocument[]) => void;
 };
 
 const EMPTY_VALUES: VehicleFormValues = {
@@ -31,6 +35,7 @@ const EMPTY_VALUES: VehicleFormValues = {
 
 export function VehicleForm({
   initialValues,
+  existingDocuments = [],
   submitLabel,
   submittingLabel,
   isSubmitting,
@@ -40,6 +45,7 @@ export function VehicleForm({
   const { t } = useLanguage();
   const [values, setValues] = useState<VehicleFormValues>(initialValues ?? EMPTY_VALUES);
   const [touched, setTouched] = useState(false);
+  const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>([]);
 
   const errors = validateVehicleForm(values);
   const showErrors = touched;
@@ -48,10 +54,14 @@ export function VehicleForm({
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
+  function pickDocument(type: PendingVehicleDocument['type'], localUri: string) {
+    setPendingDocuments((prev) => [...prev.filter((doc) => doc.type !== type), { type, localUri }]);
+  }
+
   function handleSubmit() {
     setTouched(true);
     if (!isFormValid(errors)) return;
-    onSubmit(toVehicleInput(values));
+    onSubmit(toVehicleInput(values), pendingDocuments);
   }
 
   return (
@@ -149,6 +159,22 @@ export function VehicleForm({
             );
           })}
         </View>
+      </View>
+
+      <View className="gap-4">
+        <ThemedText type="small" themeColor="textSecondary">
+          {t('vehicle.documentsSection')}
+        </ThemedText>
+        {VEHICLE_DOCUMENT_TYPES.map((type) => (
+          <DocumentPhotoField
+            key={type}
+            label={t(`vehicle.documents.${type}`)}
+            bucket={VEHICLE_DOCUMENTS_BUCKET}
+            localUri={pendingDocuments.find((d) => d.type === type)?.localUri ?? null}
+            existingPath={findDocument(existingDocuments, type)?.path}
+            onPick={(uri) => pickDocument(type, uri)}
+          />
+        ))}
       </View>
 
       {submitError ? (

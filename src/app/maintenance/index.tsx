@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, FlatList, Pressable, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
@@ -42,6 +42,13 @@ export default function MaintenanceScreen() {
             data={maintenanceQuery.data ?? []}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-28"
+            refreshControl={
+              <RefreshControl
+                refreshing={maintenanceQuery.isFetching}
+                onRefresh={() => maintenanceQuery.refetch()}
+                tintColor="#1f5eff"
+              />
+            }
             renderItem={({ item }) => {
               const vehicle = vehicles.find((v) => v.id === item.vehicleId);
               return (

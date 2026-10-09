@@ -1,13 +1,15 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Alert, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useUpdateVehicle, useVehicle } from '@/features/vehicles/hooks';
-import type { VehicleInput } from '@/features/vehicles/types';
+import { mergeDocuments } from '@/features/storage/documents';
+import { uploadVehicleDocument } from '@/features/vehicles/api';
+import { useUpdateVehicle, useUpdateVehicleDocuments, useVehicle } from '@/features/vehicles/hooks';
+import type { PendingVehicleDocument, VehicleInput } from '@/features/vehicles/types';
 import { VehicleForm } from '@/features/vehicles/vehicle-form';
 import type { VehicleFormValues } from '@/features/vehicles/validation';
 import { useLanguage } from '@/i18n/use-language';
@@ -17,18 +19,40 @@ export default function ModifierVehiculeScreen() {
   const { t } = useLanguage();
   const { data: vehicle, isLoading } = useVehicle(id);
   const updateVehicle = useUpdateVehicle();
+  const updateDocuments = useUpdateVehicleDocuments();
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(input: VehicleInput) {
-    if (!id) return;
+  async function handleSubmit(input: VehicleInput, pendingDocuments: PendingVehicleDocument[]) {
+    if (!vehicle) return;
     setSubmitError(null);
-    updateVehicle.mutate(
-      { id, input },
-      {
-        onSuccess: () => router.back(),
-        onError: () => setSubmitError(t('vehicle.form.updateError')),
+    setIsSubmitting(true);
+
+    try {
+      await updateVehicle.mutateAsync({ id: vehicle.id, input });
+
+      if (pendingDocuments.length > 0) {
+        try {
+          const uploaded = await Promise.all(
+            pendingDocuments.map((doc) =>
+              uploadVehicleDocument(vehicle.agencyId, vehicle.id, doc.type, doc.localUri)
+            )
+          );
+          await updateDocuments.mutateAsync({
+            id: vehicle.id,
+            documents: mergeDocuments(vehicle.documents, uploaded),
+          });
+        } catch {
+          Alert.alert(t('common.appName'), t('vehicle.form.uploadError'));
+        }
       }
-    );
+
+      router.back();
+    } catch {
+      setSubmitError(t('vehicle.form.updateError'));
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const initialValues: VehicleFormValues | undefined = vehicle
@@ -62,9 +86,10 @@ export default function ModifierVehiculeScreen() {
           <VehicleForm
             key={vehicle.id}
             initialValues={initialValues}
+            existingDocuments={vehicle.documents}
             submitLabel={t('vehicle.form.save')}
             submittingLabel={t('vehicle.form.saving')}
-            isSubmitting={updateVehicle.isPending}
+            isSubmitting={isSubmitting}
             submitError={submitError}
             onSubmit={handleSubmit}
           />

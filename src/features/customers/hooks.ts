@@ -1,13 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import {
-  createCustomer,
-  getCustomer,
-  getDocumentSignedUrl,
-  listCustomers,
-  updateCustomer,
-  updateCustomerDocuments,
-} from './api';
+import { createCustomer, getCustomer, listCustomers, updateCustomer, updateCustomerDocuments } from './api';
 import type { CustomerDocument, CustomerInput } from './types';
 
 const customersKey = ['customers'] as const;
@@ -59,14 +52,5 @@ export function useUpdateCustomerDocuments() {
       queryClient.invalidateQueries({ queryKey: customersKey });
       queryClient.invalidateQueries({ queryKey: customerKey(data.id) });
     },
-  });
-}
-
-export function useDocumentSignedUrl(path: string | undefined) {
-  return useQuery({
-    queryKey: ['document-url', path],
-    queryFn: () => getDocumentSignedUrl(path as string),
-    enabled: !!path,
-    staleTime: 50 * 60 * 1000,
   });
 }

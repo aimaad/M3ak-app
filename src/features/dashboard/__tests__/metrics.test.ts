@@ -1,4 +1,4 @@
-import { computeUtilizationRate, sumPaymentsInMonth } from '../metrics';
+import { computeUtilizationRate, revenueByDay, sumPaymentsInMonth } from '../metrics';
 
 describe('computeUtilizationRate', () => {
   it('renvoie 0 pour une flotte vide', () => {
@@ -40,5 +40,35 @@ describe('sumPaymentsInMonth', () => {
 
   it("renvoie 0 s'il n'y a aucun paiement ce mois-ci", () => {
     expect(sumPaymentsInMonth([], reference)).toBe(0);
+  });
+});
+
+describe('revenueByDay', () => {
+  const reference = new Date('2026-03-10T12:00:00.000Z');
+
+  it('renvoie un point par jour, dans l\'ordre chronologique, aujourd\'hui inclus', () => {
+    const points = revenueByDay([], 3, reference);
+    expect(points.map((p) => p.date)).toEqual(['2026-03-08', '2026-03-09', '2026-03-10']);
+    expect(points.every((p) => p.total === 0)).toBe(true);
+  });
+
+  it('additionne plusieurs paiements du même jour', () => {
+    const payments = [
+      { montant: 100, datePaiement: '2026-03-09T08:00:00.000Z' },
+      { montant: 50, datePaiement: '2026-03-09T18:00:00.000Z' },
+      { montant: 200, datePaiement: '2026-03-10T08:00:00.000Z' },
+    ];
+    const points = revenueByDay(payments, 3, reference);
+    expect(points).toEqual([
+      { date: '2026-03-08', total: 0 },
+      { date: '2026-03-09', total: 150 },
+      { date: '2026-03-10', total: 200 },
+    ]);
+  });
+
+  it('ignore les paiements hors de la plage demandée', () => {
+    const payments = [{ montant: 999, datePaiement: '2026-02-01T08:00:00.000Z' }];
+    const points = revenueByDay(payments, 3, reference);
+    expect(points.every((p) => p.total === 0)).toBe(true);
   });
 });

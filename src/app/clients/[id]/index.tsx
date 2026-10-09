@@ -1,12 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { findDocument } from '@/features/customers/documents';
-import { useCustomer, useDocumentSignedUrl } from '@/features/customers/hooks';
+import { DOCUMENTS_BUCKET } from '@/features/customers/api';
+import { findDocument } from '@/features/storage/documents';
+import { useCustomer } from '@/features/customers/hooks';
 import type { DocumentType } from '@/features/customers/types';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -17,32 +19,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
         {label}
       </ThemedText>
       <ThemedText type="smallBold">{value}</ThemedText>
-    </View>
-  );
-}
-
-function DocumentPreview({ label, path }: { label: string; path?: string }) {
-  const { t } = useLanguage();
-  const { data: signedUrl, isLoading } = useDocumentSignedUrl(path);
-
-  return (
-    <View className="gap-2">
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      {!path ? (
-        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#e1e5f0] bg-white">
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('customer.noDocuments')}
-          </ThemedText>
-        </View>
-      ) : isLoading || !signedUrl ? (
-        <View className="h-36 items-center justify-center rounded-2xl bg-[#f4f6fb]">
-          <ActivityIndicator color="#1f5eff" />
-        </View>
-      ) : (
-        <Image source={{ uri: signedUrl }} className="h-36 w-full rounded-2xl" resizeMode="cover" />
-      )}
     </View>
   );
 }
@@ -106,7 +82,9 @@ export default function ClientDetailScreen() {
                 <DocumentPreview
                   key={type}
                   label={t(`customer.documents.${type}`)}
+                  bucket={DOCUMENTS_BUCKET}
                   path={findDocument(customer.documents, type)?.path}
+                  emptyLabel={t('customer.noDocuments')}
                 />
               ))}
             </View>

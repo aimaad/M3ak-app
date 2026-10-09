@@ -8,7 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { uploadCustomerDocument } from '@/features/customers/api';
 import { CustomerForm } from '@/features/customers/customer-form';
-import { mergeDocuments } from '@/features/customers/documents';
+import { mergeDocuments } from '@/features/storage/documents';
 import { useCustomer, useUpdateCustomer, useUpdateCustomerDocuments } from '@/features/customers/hooks';
 import type { CustomerInput, PendingDocument } from '@/features/customers/types';
 import type { CustomerFormValues } from '@/features/customers/validation';

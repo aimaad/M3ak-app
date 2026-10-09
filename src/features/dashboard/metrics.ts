@@ -20,3 +20,34 @@ export function sumPaymentsInMonth(
     })
     .reduce((sum, payment) => sum + payment.montant, 0);
 }
+
+export type DailyRevenuePoint = { date: string; total: number };
+
+function toDateKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+/**
+ * Revenus par jour sur les `days` derniers jours (aujourd'hui inclus), dans l'ordre
+ * chronologique — pour un graphique en barres. Les jours sans paiement valent 0.
+ */
+export function revenueByDay(
+  payments: { montant: number; datePaiement: string }[],
+  days: number,
+  reference: Date = new Date()
+): DailyRevenuePoint[] {
+  const totalsByDate = new Map<string, number>();
+  for (const payment of payments) {
+    const key = toDateKey(payment.datePaiement);
+    totalsByDate.set(key, (totalsByDate.get(key) ?? 0) + payment.montant);
+  }
+
+  const points: DailyRevenuePoint[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const day = new Date(reference);
+    day.setDate(day.getDate() - i);
+    const key = toDateKey(day.toISOString());
+    points.push({ date: key, total: totalsByDate.get(key) ?? 0 });
+  }
+  return points;
+}

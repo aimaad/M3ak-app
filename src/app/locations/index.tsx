@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
-import { SectionTabs } from '@/components/section-tabs';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useCustomers } from '@/features/customers/hooks';
@@ -52,8 +52,6 @@ export default function LocationsScreen() {
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('locations.title')} subtitle={t('locations.subtitle', { count: rentals.length })} />
 
-        <SectionTabs current="locations" />
-
         <View className="pb-4">
           <RentalStatusFilterChips value={statusFilter} onChange={setStatusFilter} counts={counts} />
         </View>
@@ -75,7 +73,14 @@ export default function LocationsScreen() {
           <FlatList
             data={filtered}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-3 px-6 pb-28"
+            contentContainerClassName="gap-3 px-6 pb-32"
+            refreshControl={
+              <RefreshControl
+                refreshing={rentalsQuery.isFetching}
+                onRefresh={() => rentalsQuery.refetch()}
+                tintColor="#1f5eff"
+              />
+            }
             renderItem={({ item }) => (
               <RentalCard
                 rental={item}
@@ -96,12 +101,14 @@ export default function LocationsScreen() {
 
         <Pressable
           onPress={() => router.push('/locations/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
+          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('locations.addRental')}`}
           </ThemedText>
         </Pressable>
+
+        <BottomTabBar current="locations" />
       </SafeAreaView>
     </ThemedView>
   );

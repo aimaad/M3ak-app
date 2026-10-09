@@ -2,10 +2,14 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { findDocument } from '@/features/storage/documents';
+import { VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
 import { useVehicle } from '@/features/vehicles/hooks';
+import { VEHICLE_DOCUMENT_TYPES } from '@/features/vehicles/types';
 import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -92,15 +96,17 @@ export default function VehicleDetailScreen() {
               </View>
             </View>
 
-            <View>
-              <ThemedText type="smallBold" className="mb-2">
-                {t('vehicle.documentsSection')}
-              </ThemedText>
-              <View className="rounded-3xl border border-dashed border-[#e1e5f0] bg-white p-4">
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.documentsPlaceholder')}
-                </ThemedText>
-              </View>
+            <View className="gap-4">
+              <ThemedText type="smallBold">{t('vehicle.documentsSection')}</ThemedText>
+              {VEHICLE_DOCUMENT_TYPES.map((type) => (
+                <DocumentPreview
+                  key={type}
+                  label={t(`vehicle.documents.${type}`)}
+                  bucket={VEHICLE_DOCUMENTS_BUCKET}
+                  path={findDocument(vehicle.documents, type)?.path}
+                  emptyLabel={t('vehicle.noDocuments')}
+                />
+              ))}
             </View>
           </ScrollView>
         )}
