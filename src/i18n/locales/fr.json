@@ -281,8 +281,20 @@
     "noDocuments": "Aucun document ajouté.",
     "notFound": "Client introuvable.",
     "loadError": "Impossible de charger ce client. Vérifiez votre connexion.",
-    "historySection": "Historique et évolutions à venir",
-    "historyPlaceholder": "Bientôt disponible : réservations, locations, contrats, paiements et incidents de ce client s'afficheront ici.",
+    "historySection": "Historique des réservations et locations",
+    "historyPlaceholder": "Aucune réservation ou location pour ce client.",
+    "paymentsSection": "Historique des paiements",
+    "noPayments": "Aucun paiement enregistré.",
+    "incidents": {
+      "retard": "Retour en retard",
+      "annulee": "Annulée"
+    },
+    "consentSection": "Protection des données personnelles",
+    "consentGiven": "Consentement recueilli",
+    "consentMissing": "Consentement non recueilli",
+    "consentDate": "Depuis le {{date}}",
+    "consentGive": "Marquer comme recueilli",
+    "consentRevoke": "Révoquer",
     "archivedBadge": "Archivé",
     "archive": "Archiver ce client",
     "reactivate": "Réactiver ce client",
@@ -422,6 +434,13 @@
     "startAction": "Démarrer la location",
     "completeAction": "Terminer la location",
     "cancelAction": "Annuler la réservation",
+    "extend": {
+      "action": "Prolonger",
+      "title": "Prolonger la location",
+      "currentEnd": "Fin prévue actuelle : {{date}}",
+      "confirm": "Confirmer la prolongation",
+      "error": "Impossible de prolonger cette location."
+    },
     "status": {
       "tous": "Toutes",
       "en_attente_confirmation": "En attente",
@@ -585,6 +604,7 @@
     "utilizationRate": "Taux d'utilisation",
     "revenueThisMonth": "Chiffre d'affaires (mois)",
     "revenueChartTitle": "Revenus des {{days}} derniers jours",
+    "documentAlertsSection": "Documents à renouveler",
     "maintenanceSection": "Échéances de maintenance",
     "maintenanceEmpty": "Aucune échéance à venir.",
     "seeAll": "Voir tout"

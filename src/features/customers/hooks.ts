@@ -9,6 +9,7 @@ import {
   listDrivers,
   reactivateCustomer,
   removeDriver,
+  setCustomerConsent,
   updateCustomer,
   updateCustomerDocuments,
 } from './api';
@@ -72,6 +73,18 @@ export function useArchiveCustomer() {
 
 export function useReactivateCustomer() {
   return useCustomerStatusMutation(reactivateCustomer);
+}
+
+export function useSetCustomerConsent() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, consent }: { id: string; consent: boolean }) => setCustomerConsent(id, consent),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: customersKey });
+      queryClient.invalidateQueries({ queryKey: customerKey(data.id) });
+    },
+  });
 }
 
 export function useUpdateCustomerDocuments() {

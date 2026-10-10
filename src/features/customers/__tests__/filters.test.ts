@@ -28,6 +28,8 @@ function makeCustomer(overrides: Partial<Customer>): Customer {
     raisonSociale: null,
     ice: null,
     notes: null,
+    consentementDonnees: false,
+    consentementDate: null,
     documents: [],
     archivedAt: null,
     createdAt: '2026-01-01T00:00:00.000Z',

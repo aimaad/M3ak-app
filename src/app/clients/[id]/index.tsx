@@ -2,16 +2,28 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { DOCUMENTS_BUCKET } from '@/features/customers/api';
 import { DriverList } from '@/features/customers/driver-list';
-import { useArchiveCustomer, useCustomer, useReactivateCustomer } from '@/features/customers/hooks';
+import {
+  useArchiveCustomer,
+  useCustomer,
+  useReactivateCustomer,
+  useSetCustomerConsent,
+} from '@/features/customers/hooks';
 import { findDocument } from '@/features/storage/documents';
 import { DOCUMENT_TYPES } from '@/features/customers/types';
+import { deriveRentalIncidents } from '@/features/rentals/incidents';
+import { useCustomerRentals } from '@/features/rentals/hooks';
+import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
+import { useAllPayments } from '@/features/payments/hooks';
+import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 import { useLanguage } from '@/i18n/use-language';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -25,11 +37,14 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function isExpiringSoon(expiresAt: string | null, withinDays = 30): boolean {
-  if (!expiresAt) return false;
-  const limit = new Date();
-  limit.setDate(limit.getDate() + withinDays);
-  return new Date(expiresAt).getTime() <= limit.getTime();
+const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
+  ok: '#81778F',
+  bientot: M3akPalette.warning,
+  expire: M3akPalette.danger,
+};
+
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
 export default function ClientDetailScreen() {
@@ -39,8 +54,20 @@ export default function ClientDetailScreen() {
   const { data: customer, isLoading, isError } = useCustomer(id);
   const archiveCustomer = useArchiveCustomer();
   const reactivateCustomer = useReactivateCustomer();
+  const setConsent = useSetCustomerConsent();
+  const { data: rentals = [] } = useCustomerRentals(customer?.id);
+  const { data: allPayments = [] } = useAllPayments();
 
   const isManager = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
+
+  const rentalIds = new Set(rentals.map((rental) => rental.id));
+  const customerPayments = allPayments.filter((payment) => rentalIds.has(payment.rentalId));
+  const incidents = deriveRentalIncidents(rentals);
+
+  function handleToggleConsent() {
+    if (!customer) return;
+    setConsent.mutate({ id: customer.id, consent: !customer.consentementDonnees });
+  }
 
   function handleArchive() {
     if (!customer) return;
@@ -179,7 +206,10 @@ export default function ClientDetailScreen() {
                       </ThemedText>
                     ) : null}
                     {doc?.expiresAt ? (
-                      <ThemedText type="small" style={{ color: isExpiringSoon(doc.expiresAt) ? '#DC2626' : '#81778F' }}>
+                      <ThemedText
+                        type="small"
+                        style={{ color: URGENCY_COLOR[computeExpiryUrgency(doc.expiresAt) ?? 'ok'] }}
+                      >
                         {t('vehicle.documentExpiry', { date: new Date(doc.expiresAt).toLocaleDateString('fr-FR') })}
                       </ThemedText>
                     ) : null}
@@ -193,14 +223,94 @@ export default function ClientDetailScreen() {
               <DriverList agencyId={customer.agencyId} customerId={customer.id} canRemove={isManager} />
             </View>
 
-            <View>
-              <ThemedText type="smallBold" className="mb-2">
-                {t('customer.historySection')}
-              </ThemedText>
-              <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('customer.historySection')}</ThemedText>
+              {rentals.length === 0 ? (
+                <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('customer.historyPlaceholder')}
+                  </ThemedText>
+                </View>
+              ) : (
+                <View className="gap-2">
+                  {rentals.map((rental) => (
+                    <Pressable
+                      key={rental.id}
+                      onPress={() => router.push(`/locations/${rental.id}`)}
+                      className="gap-1 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                    >
+                      <View className="flex-row items-center justify-between">
+                        <ThemedText type="small">{rental.numero}</ThemedText>
+                        <RentalStatusBadge status={rental.statut} />
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {formatShortDate(rental.dateDebutPrevue)} → {formatShortDate(rental.dateFinPrevue)}
+                        {rental.prixTotal != null ? ` · ${rental.prixTotal.toLocaleString('fr-FR')} MAD` : ''}
+                      </ThemedText>
+                      {incidents.some((incident) => incident.rentalId === rental.id) ? (
+                        <View className="flex-row flex-wrap gap-1 pt-1">
+                          {incidents
+                            .filter((incident) => incident.rentalId === rental.id)
+                            .map((incident) => (
+                              <View
+                                key={incident.type}
+                                className="rounded-full px-2 py-0.5"
+                                style={{ backgroundColor: M3akPalette.dangerLight }}
+                              >
+                                <ThemedText type="small" style={{ color: M3akPalette.danger, fontSize: 11 }}>
+                                  {t(`customer.incidents.${incident.type}`)}
+                                </ThemedText>
+                              </View>
+                            ))}
+                        </View>
+                      ) : null}
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('customer.paymentsSection')}</ThemedText>
+              {customerPayments.length === 0 ? (
                 <ThemedText type="small" themeColor="textSecondary">
-                  {t('customer.historyPlaceholder')}
+                  {t('customer.noPayments')}
                 </ThemedText>
+              ) : (
+                <View className="gap-2">
+                  {customerPayments.map((payment) => (
+                    <View
+                      key={payment.id}
+                      className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                    >
+                      <ThemedText type="small">{t(`locations.paymentMethods.${payment.methode}`)}</ThemedText>
+                      <ThemedText type="smallBold">{`${payment.montant.toLocaleString('fr-FR')} MAD`}</ThemedText>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('customer.consentSection')}</ThemedText>
+              <View className="flex-row items-center justify-between rounded-3xl border border-[#EAE5F2] bg-white px-4 py-3">
+                <View className="flex-1 gap-0.5">
+                  <ThemedText type="small">
+                    {customer.consentementDonnees ? t('customer.consentGiven') : t('customer.consentMissing')}
+                  </ThemedText>
+                  {customer.consentementDonnees && customer.consentementDate ? (
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('customer.consentDate', { date: formatShortDate(customer.consentementDate) })}
+                    </ThemedText>
+                  ) : null}
+                </View>
+                <Button
+                  label={customer.consentementDonnees ? t('customer.consentRevoke') : t('customer.consentGive')}
+                  variant={customer.consentementDonnees ? 'danger' : 'secondary'}
+                  size="sm"
+                  onPress={handleToggleConsent}
+                  disabled={setConsent.isPending}
+                />
               </View>
             </View>
 

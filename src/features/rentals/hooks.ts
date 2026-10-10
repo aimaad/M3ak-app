@@ -7,6 +7,7 @@ import {
   createRental,
   getRental,
   listRentals,
+  listRentalsForCustomer,
   listRentalsForVehicle,
   updateRentalDates,
 } from './api';
@@ -33,6 +34,16 @@ export function useVehicleRentals(vehicleId: string | undefined) {
     queryKey: vehicleRentalsKey(vehicleId ?? ''),
     queryFn: () => listRentalsForVehicle(vehicleId as string),
     enabled: !!vehicleId,
+  });
+}
+
+const customerRentalsKey = (customerId: string) => ['rentals', 'customer', customerId] as const;
+
+export function useCustomerRentals(customerId: string | undefined) {
+  return useQuery({
+    queryKey: customerRentalsKey(customerId ?? ''),
+    queryFn: () => listRentalsForCustomer(customerId as string),
+    enabled: !!customerId,
   });
 }
 

@@ -95,6 +95,17 @@ export async function listRentalsForVehicle(vehicleId: string): Promise<Rental[]
   return (data as RentalRow[]).map(fromRow);
 }
 
+export async function listRentalsForCustomer(customerId: string): Promise<Rental[]> {
+  const { data, error } = await getSupabase()
+    .from('rentals')
+    .select('*')
+    .eq('customer_id', customerId)
+    .order('date_debut_prevue', { ascending: false });
+
+  if (error) throw error;
+  return (data as RentalRow[]).map(fromRow);
+}
+
 export async function getRental(id: string): Promise<Rental | null> {
   const { data, error } = await getSupabase().from('rentals').select('*').eq('id', id).maybeSingle();
 

@@ -64,6 +64,9 @@ agence ne voie **que ses propres données**.
   contrat à un autre utilisateur réel de l'agence. `created_by` doit désormais
   correspondre à l'auteur réel de l'action (voir `scripts/rental-rls-audit.mjs`
   et `scripts/contract-rls-audit.mjs`)
+- `migrations/0018_customer_consent.sql` — ajoute `consentement_donnees` et
+  `consentement_date` sur `customers`, pour la gestion du consentement de
+  protection des données personnelles
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -106,7 +109,8 @@ agence ne voie **que ses propres données**.
     cliquez **Run**.
 18. Copiez-collez le contenu de `migrations/0017_fix_created_by_spoofing_and_error_states.sql`,
     cliquez **Run**.
-19. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+19. Copiez-collez le contenu de `migrations/0018_customer_consent.sql`, cliquez **Run**.
+20. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 

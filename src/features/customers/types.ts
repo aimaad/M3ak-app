@@ -46,6 +46,8 @@ export type Customer = {
   raisonSociale: string | null;
   ice: string | null;
   notes: string | null;
+  consentementDonnees: boolean;
+  consentementDate: string | null;
   documents: CustomerDocument[];
   archivedAt: string | null;
   createdAt: string;

@@ -13,6 +13,7 @@ import { useDeposit } from '@/features/deposits/hooks';
 import { useInspectionForRental } from '@/features/inspections/hooks';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import { usePaymentsForRental } from '@/features/payments/hooks';
+import { ExtendRentalForm } from '@/features/rentals/extend-rental-form';
 import { useCancelRental, useConfirmRental, useRental } from '@/features/rentals/hooks';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useVehicle } from '@/features/vehicles/hooks';
@@ -52,6 +53,11 @@ export default function LocationDetailScreen() {
   const canStart = rentalConfirmed && contract?.statut === 'signe';
   const canConfirm = rental?.statut === 'en_attente_confirmation';
   const canCancel = rental?.statut === 'en_attente_confirmation' || rental?.statut === 'confirmee' || rental?.statut === 'reservee';
+  const canExtend =
+    rental?.statut === 'en_attente_confirmation' ||
+    rental?.statut === 'confirmee' ||
+    rental?.statut === 'reservee' ||
+    rental?.statut === 'en_cours';
   const soldeRestant = rental ? Math.max(0, (rental.prixTotal ?? 0) - rental.acomptePaye) : 0;
 
   async function handleCancel() {
@@ -127,6 +133,8 @@ export default function LocationDetailScreen() {
             </View>
             <InfoRow label={t('locations.soldeRestant')} value={`${soldeRestant.toLocaleString('fr-FR')} MAD`} />
           </View>
+
+          {canExtend ? <ExtendRentalForm rental={rental} /> : null}
 
           {canConfirm ? (
             <Pressable

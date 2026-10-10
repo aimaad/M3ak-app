@@ -281,8 +281,20 @@
     "noDocuments": "ماكاين حتى وثيقة مزادة.",
     "notFound": "الزبون ماكايناش.",
     "loadError": "تعذر تحميل هاد الزبون. تأكد من الاتصال.",
-    "historySection": "التاريخ والتطورات الجاية",
-    "historyPlaceholder": "قريباً: الحجوزات، الكراءات، العقود، الخلاصات والحوادث ديال هاد الزبون غادي يبانو هنا.",
+    "historySection": "تاريخ الحجوزات والكراءات",
+    "historyPlaceholder": "ماكاين حتى حجز ولا كراء ديال هاد الزبون.",
+    "paymentsSection": "تاريخ الخلاصات",
+    "noPayments": "ماكاين حتى خلاص مسجل.",
+    "incidents": {
+      "retard": "رجوع متأخر",
+      "annulee": "ملغية"
+    },
+    "consentSection": "حماية المعطيات الشخصية",
+    "consentGiven": "الموافقة متجمعة",
+    "consentMissing": "الموافقة ماتجمعاتش",
+    "consentDate": "من {{date}}",
+    "consentGive": "علّم كمتجمعة",
+    "consentRevoke": "سحب الموافقة",
     "archivedBadge": "مؤرشف",
     "archive": "أرشف هاد الزبون",
     "reactivate": "رجع فعّل هاد الزبون",
@@ -422,6 +434,13 @@
     "startAction": "بدا الكراء",
     "completeAction": "سالا الكراء",
     "cancelAction": "لغي الحجز",
+    "extend": {
+      "action": "مدّد",
+      "title": "مدّد الكراء",
+      "currentEnd": "تاريخ السالا الحالي: {{date}}",
+      "confirm": "أكّد التمديد",
+      "error": "تعذر تمديد هاد الكراء."
+    },
     "status": {
       "tous": "الكل",
       "en_attente_confirmation": "فالانتظار",
@@ -585,6 +604,7 @@
     "utilizationRate": "معدل الاستعمال",
     "revenueThisMonth": "رقم المعاملات (الشهر)",
     "revenueChartTitle": "الأرباح ديال آخر {{days}} ديال الأيام",
+    "documentAlertsSection": "وثائق خاصها تجديد",
     "maintenanceSection": "آجال الصيانة",
     "maintenanceEmpty": "ماكاين حتى أجل قريب.",
     "seeAll": "شوف الكل"

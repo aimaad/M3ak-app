@@ -6,8 +6,10 @@ import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { findDocument } from '@/features/storage/documents';
+import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 import { deleteVehiclePhotoFile, VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
 import {
   useArchiveVehicle,
@@ -31,12 +33,11 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function isExpiringSoon(expiresAt: string | null, withinDays = 30): boolean {
-  if (!expiresAt) return false;
-  const limit = new Date();
-  limit.setDate(limit.getDate() + withinDays);
-  return new Date(expiresAt).getTime() <= limit.getTime();
-}
+const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
+  ok: '#81778F',
+  bientot: M3akPalette.warning,
+  expire: M3akPalette.danger,
+};
 
 export default function VehicleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -231,7 +232,7 @@ export default function VehicleDetailScreen() {
                     {doc?.expiresAt ? (
                       <ThemedText
                         type="small"
-                        style={{ color: isExpiringSoon(doc.expiresAt) ? '#DC2626' : '#81778F' }}
+                        style={{ color: URGENCY_COLOR[computeExpiryUrgency(doc.expiresAt) ?? 'ok'] }}
                       >
                         {t('vehicle.documentExpiry', {
                           date: new Date(doc.expiresAt).toLocaleDateString('fr-FR'),

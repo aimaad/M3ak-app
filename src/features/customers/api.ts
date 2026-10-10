@@ -34,6 +34,8 @@ type CustomerRow = {
   raison_sociale: string | null;
   ice: string | null;
   notes: string | null;
+  consentement_donnees: boolean;
+  consentement_date: string | null;
   documents: CustomerDocument[];
   archived_at: string | null;
   created_at: string;
@@ -61,6 +63,8 @@ function fromRow(row: CustomerRow): Customer {
     raisonSociale: row.raison_sociale,
     ice: row.ice,
     notes: row.notes,
+    consentementDonnees: row.consentement_donnees,
+    consentementDate: row.consentement_date,
     documents: row.documents ?? [],
     archivedAt: row.archived_at,
     createdAt: row.created_at,
@@ -146,6 +150,21 @@ export async function reactivateCustomer(id: string): Promise<Customer> {
   const { data, error } = await getSupabase()
     .from('customers')
     .update({ archived_at: null })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return fromRow(data as CustomerRow);
+}
+
+export async function setCustomerConsent(id: string, consent: boolean): Promise<Customer> {
+  const { data, error } = await getSupabase()
+    .from('customers')
+    .update({
+      consentement_donnees: consent,
+      consentement_date: consent ? new Date().toISOString() : null,
+    })
     .eq('id', id)
     .select()
     .single();
