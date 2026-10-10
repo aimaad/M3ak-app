@@ -589,6 +589,7 @@
   "maintenance": {
     "title": "Maintenance",
     "empty": "Aucune échéance enregistrée.",
+    "loadError": "Impossible de charger les échéances. Vérifiez votre connexion.",
     "addAction": "Ajouter une échéance",
     "markDone": "Marquer comme effectuée",
     "done": "Effectuée",

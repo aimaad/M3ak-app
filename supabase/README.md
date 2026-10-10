@@ -53,6 +53,11 @@ agence ne voie **que ses propres données**.
   départ et le retour **atomiques** (réservation + véhicule + contrat mis à jour
   ensemble, ou rien du tout) avec protection explicite contre un double départ ou
   un double retour, et sans jamais écraser un véhicule déjà en maintenance
+- `migrations/0016_fix_signature_spoofing_and_regressions.sql` — corrige une faille
+  trouvée lors de l'audit de stabilisation : un membre pouvait signer un contrat
+  "au nom" d'un autre utilisateur réel de l'agence (ex. un employé attribuant la
+  signature au propriétaire). `signed_by` doit désormais correspondre à l'auteur
+  réel de l'action (voir `scripts/contract-rls-audit.mjs`)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -91,7 +96,9 @@ agence ne voie **que ses propres données**.
     (Active l'extension `btree_gist` — standard et déjà disponible sur Supabase, aucune
     configuration supplémentaire n'est nécessaire.)
 16. Copiez-collez le contenu de `migrations/0015_contracts.sql`, cliquez **Run**.
-17. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+17. Copiez-collez le contenu de `migrations/0016_fix_signature_spoofing_and_regressions.sql`,
+    cliquez **Run**.
+18. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 

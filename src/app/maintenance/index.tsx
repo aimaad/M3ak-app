@@ -37,6 +37,12 @@ export default function MaintenanceScreen() {
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
           </View>
+        ) : maintenanceQuery.isError ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('maintenance.loadError')}
+            </ThemedText>
+          </View>
         ) : (
           <FlatList
             data={maintenanceQuery.data ?? []}

@@ -40,12 +40,27 @@ async function createAgencyWithOwner(owner, nom) {
   return agency;
 }
 
+async function inviteMember(owner, agencyId, member, role) {
+  const code = Math.random().toString(36).slice(2, 8).toUpperCase();
+  await owner.client.from('agency_invites').insert({
+    agency_id: agencyId,
+    code,
+    role,
+    created_by: owner.id,
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  });
+  const { error } = await member.client.rpc('redeem_invite', { invite_code: code });
+  if (error) throw error;
+}
+
 async function main() {
   const ownerA = await createUser();
   const ownerB = await createUser();
+  const employeeA = await createUser();
 
   const agencyA = await createAgencyWithOwner(ownerA, 'Agence Contrats A');
   const agencyB = await createAgencyWithOwner(ownerB, 'Agence Contrats B');
+  await inviteMember(ownerA, agencyA.id, employeeA, 'employee');
 
   const { data: vehicleA } = await ownerA.client
     .from('vehicles')
@@ -133,6 +148,42 @@ async function main() {
     .update({ statut: 'signe', signed_at: new Date().toISOString(), signed_by: ownerA.id })
     .eq('id', contract.id);
   record('La signature avec preuve (horodatage + auteur) est acceptée', !signWithProofErr, signWithProofErr?.message ?? 'ok');
+
+  // --- Usurpation de signature : un employé ne peut pas attribuer la
+  // signature à un AUTRE utilisateur réel (ex. le propriétaire) — trouvé et
+  // corrigé pendant la phase de stabilisation (migration 0016). ---
+  const { data: rentalSpoof } = await ownerA.client
+    .from('rentals')
+    .insert({ agency_id: agencyA.id, vehicle_id: vehicleA.id, customer_id: customerA.id, statut: 'en_attente_confirmation', date_debut_prevue: '2027-03-01T09:00:00Z', date_fin_prevue: '2027-03-03T09:00:00Z', caution_montant: 500 })
+    .select()
+    .single();
+  const { data: contractSpoof } = await employeeA.client
+    .from('contracts')
+    .insert({
+      agency_id: agencyA.id,
+      rental_id: rentalSpoof.id,
+      customer_nom: 'Client Spoof',
+      vehicle_immatriculation: vehicleA.immatriculation,
+      vehicle_marque: vehicleA.marque,
+      vehicle_modele: vehicleA.modele,
+      date_debut_prevue: rentalSpoof.date_debut_prevue,
+      date_fin_prevue: rentalSpoof.date_fin_prevue,
+      caution_montant: 0,
+    })
+    .select()
+    .single();
+  await employeeA.client.from('contracts').update({ statut: 'pret_a_signer' }).eq('id', contractSpoof.id);
+
+  const { data: spoofed, error: spoofErr } = await employeeA.client
+    .from('contracts')
+    .update({ statut: 'signe', signed_at: new Date().toISOString(), signed_by: ownerA.id })
+    .eq('id', contractSpoof.id)
+    .select();
+  record(
+    "Un employee ne peut PAS attribuer la signature à un autre utilisateur (ex. l'owner)",
+    !!spoofErr || (spoofed ?? []).length === 0,
+    spoofErr?.message ?? `AUCUNE ERREUR — ${(spoofed ?? []).length} ligne(s) signée(s) au nom d'un autre utilisateur !`
+  );
 
   // --- Vérifie que le déclencheur de TRANSITION (pas seulement la preuve de
   // signature) bloque bien un saut d'étape, même avec une preuve valide.
