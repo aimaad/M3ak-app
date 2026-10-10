@@ -20,14 +20,14 @@ export function DocumentPreview({ label, bucket, path, emptyLabel }: DocumentPre
         {label}
       </ThemedText>
       {!path ? (
-        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#e1e5f0] bg-white">
+        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white">
           <ThemedText type="small" themeColor="textSecondary">
             {emptyLabel}
           </ThemedText>
         </View>
       ) : isLoading || !signedUrl ? (
         <View className="h-36 items-center justify-center rounded-2xl bg-[#f4f6fb]">
-          <ActivityIndicator color="#1f5eff" />
+          <ActivityIndicator color="#7C3AED" />
         </View>
       ) : (
         <Image source={{ uri: signedUrl }} className="h-36 w-full rounded-2xl" resizeMode="cover" />

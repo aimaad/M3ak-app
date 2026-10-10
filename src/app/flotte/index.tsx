@@ -37,7 +37,7 @@ function KpiTile({ label, value, onPress }: { label: string; value: number; onPr
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      className="min-w-[130px] gap-1 rounded-3xl border border-[#e1e5f0] bg-white px-4 py-3"
+      className="min-w-[130px] gap-1 rounded-3xl border border-[#EAE5F2] bg-white px-4 py-3"
     >
       <ThemedText type="title" themeColor="primary">
         {value}
@@ -78,7 +78,7 @@ export default function FlotteScreen() {
   if (agencyQuery.isLoading) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color="#1f5eff" />
+        <ActivityIndicator color="#7C3AED" />
         <ThemedText type="small" themeColor="textSecondary" className="mt-2">
           {t('agency.loading')}
         </ThemedText>
@@ -148,10 +148,10 @@ export default function FlotteScreen() {
                 <Pressable
                   onPress={() => setFilters((prev) => ({ ...prev, marque: 'toutes' }))}
                   className={`rounded-full border px-4 py-2 ${
-                    filters.marque === 'toutes' ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'
+                    filters.marque === 'toutes' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: filters.marque === 'toutes' ? '#ffffff' : '#101423' }}>
+                  <ThemedText type="small" style={{ color: filters.marque === 'toutes' ? '#ffffff' : '#211A2E' }}>
                     {t('flotte.allBrands')}
                   </ThemedText>
                 </Pressable>
@@ -160,10 +160,10 @@ export default function FlotteScreen() {
                     key={marque}
                     onPress={() => setFilters((prev) => ({ ...prev, marque }))}
                     className={`rounded-full border px-4 py-2 ${
-                      filters.marque === marque ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'
+                      filters.marque === marque ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: filters.marque === marque ? '#ffffff' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: filters.marque === marque ? '#ffffff' : '#211A2E' }}>
                       {marque}
                     </ThemedText>
                   </Pressable>
@@ -181,10 +181,10 @@ export default function FlotteScreen() {
                     key={option}
                     onPress={() => setSort(option)}
                     className={`rounded-full border px-4 py-2 ${
-                      sort === option ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                      sort === option ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: sort === option ? '#ffffff' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: sort === option ? '#ffffff' : '#211A2E' }}>
                       {t(`flotte.sort.${option}`)}
                     </ThemedText>
                   </Pressable>
@@ -196,7 +196,7 @@ export default function FlotteScreen() {
 
         {vehiclesQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('flotte.loading')}
             </ThemedText>
@@ -216,7 +216,7 @@ export default function FlotteScreen() {
               <RefreshControl
                 refreshing={vehiclesQuery.isFetching}
                 onRefresh={() => vehiclesQuery.refetch()}
-                tintColor="#1f5eff"
+                tintColor="#7C3AED"
               />
             }
             renderItem={({ item }) => (
@@ -234,7 +234,7 @@ export default function FlotteScreen() {
 
         <Pressable
           onPress={() => router.push('/flotte/nouveau')}
-          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
+          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('flotte.addVehicle')}`}

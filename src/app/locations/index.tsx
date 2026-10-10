@@ -75,7 +75,7 @@ export default function LocationsScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('locations.loading')}
             </ThemedText>
@@ -95,7 +95,7 @@ export default function LocationsScreen() {
               <RefreshControl
                 refreshing={rentalsQuery.isFetching}
                 onRefresh={() => rentalsQuery.refetch()}
-                tintColor="#1f5eff"
+                tintColor="#7C3AED"
               />
             }
             renderItem={({ item }) => (
@@ -118,7 +118,7 @@ export default function LocationsScreen() {
 
         <Pressable
           onPress={() => router.push('/locations/nouveau')}
-          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
+          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('locations.addRental')}`}

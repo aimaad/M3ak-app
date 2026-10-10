@@ -12,7 +12,7 @@ export default function InspectionRetourScreen() {
   if (!rental) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color="#1f5eff" />
+        <ActivityIndicator color="#7C3AED" />
       </ThemedView>
     );
   }

@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { PickerField } from '@/components/picker-field';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
@@ -104,10 +105,10 @@ export default function NouvelleMaintenanceScreen() {
                     key={type}
                     onPress={() => update('type', type)}
                     className={`rounded-full border px-4 py-2 ${
-                      selected ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                      selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`maintenance.types.${type}`)}
                     </ThemedText>
                   </Pressable>
@@ -141,23 +142,18 @@ export default function NouvelleMaintenanceScreen() {
           />
 
           {submitError ? (
-            <ThemedText type="small" style={{ color: '#dc2626' }}>
+            <ThemedText type="small" style={{ color: '#DC2626' }}>
               {submitError}
             </ThemedText>
           ) : null}
 
-          <Pressable
+          <Button
+            label={createItem.isPending ? t('maintenance.form.saving') : t('maintenance.form.save')}
             onPress={handleSubmit}
             disabled={createItem.isPending}
-            className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-              createItem.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-            }`}
-          >
-            {createItem.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {createItem.isPending ? t('maintenance.form.saving') : t('maintenance.form.save')}
-            </ThemedText>
-          </Pressable>
+            loading={createItem.isPending}
+            style={{ marginTop: 8 }}
+          />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

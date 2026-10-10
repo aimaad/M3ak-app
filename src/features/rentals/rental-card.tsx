@@ -26,7 +26,7 @@ export function RentalCard({
   const { t } = useLanguage();
 
   return (
-    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1 gap-1">
           <ThemedText type="smallBold">

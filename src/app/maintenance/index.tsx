@@ -35,7 +35,7 @@ export default function MaintenanceScreen() {
 
         {maintenanceQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : maintenanceQuery.isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -52,7 +52,7 @@ export default function MaintenanceScreen() {
               <RefreshControl
                 refreshing={maintenanceQuery.isFetching}
                 onRefresh={() => maintenanceQuery.refetch()}
-                tintColor="#1f5eff"
+                tintColor="#7C3AED"
               />
             }
             renderItem={({ item }) => {
@@ -78,7 +78,7 @@ export default function MaintenanceScreen() {
 
         <Pressable
           onPress={() => router.push('/maintenance/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#1f5eff] px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('maintenance.addAction')}`}

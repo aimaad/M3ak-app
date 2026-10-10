@@ -1,12 +1,14 @@
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
 import { resendSignupCode, signUpWithEmail, verifySignupCode } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
 import {
@@ -115,18 +117,12 @@ export default function SignupScreen() {
               </ThemedText>
             ) : null}
 
-            <Pressable
+            <Button
+              label={isVerifying ? t('auth.verifying') : t('auth.verify')}
               onPress={handleVerify}
               disabled={isVerifying}
-              className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-                isVerifying ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-              }`}
-            >
-              {isVerifying ? <ActivityIndicator color="#ffffff" /> : null}
-              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                {isVerifying ? t('auth.verifying') : t('auth.verify')}
-              </ThemedText>
-            </Pressable>
+              loading={isVerifying}
+            />
 
             <Pressable onPress={handleResend} className="items-center py-2">
               <ThemedText type="small" themeColor="primary">
@@ -172,25 +168,19 @@ export default function SignupScreen() {
           />
 
           {error ? (
-            <View className="rounded-2xl bg-[#fee2e2] px-4 py-3">
-              <ThemedText type="small" style={{ color: '#dc2626' }}>
+            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
+              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                 {error}
               </ThemedText>
             </View>
           ) : null}
 
-          <Pressable
+          <Button
+            label={isSubmitting ? t('auth.signingUp') : t('auth.signUp')}
             onPress={handleSubmit}
             disabled={isSubmitting}
-            className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-              isSubmitting ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-            }`}
-          >
-            {isSubmitting ? <ActivityIndicator color="#ffffff" /> : null}
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {isSubmitting ? t('auth.signingUp') : t('auth.signUp')}
-            </ThemedText>
-          </Pressable>
+            loading={isSubmitting}
+          />
         </View>
       </SafeAreaView>
     </ThemedView>

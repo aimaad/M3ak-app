@@ -33,16 +33,16 @@ export function buildContractHtml(contract: Contract, agencyName: string): strin
       <head>
         <meta charset="utf-8" />
         <style>
-          body { font-family: Helvetica, Arial, sans-serif; color: #101423; padding: 24px; }
+          body { font-family: Helvetica, Arial, sans-serif; color: #211A2E; padding: 24px; }
           h1 { font-size: 20px; margin-bottom: 4px; }
-          h2 { font-size: 14px; margin-top: 24px; border-bottom: 1px solid #e1e5f0; padding-bottom: 4px; }
-          .ref { color: #5b6178; font-size: 12px; margin-bottom: 16px; }
+          h2 { font-size: 14px; margin-top: 24px; border-bottom: 1px solid #EAE5F2; padding-bottom: 4px; }
+          .ref { color: #81778F; font-size: 12px; margin-bottom: 16px; }
           table { width: 100%; border-collapse: collapse; margin-top: 8px; }
           td { padding: 4px 0; font-size: 13px; vertical-align: top; }
-          td.label { color: #5b6178; width: 45%; }
-          .notice { margin-top: 32px; font-size: 10px; color: #9aa3bd; border-top: 1px solid #e1e5f0; padding-top: 12px; }
+          td.label { color: #81778F; width: 45%; }
+          .notice { margin-top: 32px; font-size: 10px; color: #B3A6C2; border-top: 1px solid #EAE5F2; padding-top: 12px; }
           .signatures { margin-top: 48px; display: flex; justify-content: space-between; }
-          .sign-box { width: 45%; border-top: 1px solid #101423; padding-top: 4px; font-size: 12px; text-align: center; }
+          .sign-box { width: 45%; border-top: 1px solid #211A2E; padding-top: 4px; font-size: 12px; text-align: center; }
         </style>
       </head>
       <body>

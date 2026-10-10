@@ -1,5 +1,5 @@
 /**
- * Palette M3ak : bleu, cyan, jaune, fond clair. Voir docs/PRODUIT.md et docs/design/.
+ * Palette M3ak : mauve et blanc. Voir docs/PRODUIT.md et docs/design/.
  */
 
 import '@/global.css';
@@ -7,34 +7,44 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 export const M3akPalette = {
-  blue: '#1f5eff',
-  cyan: '#38e1ff',
-  yellow: '#ffd43b',
-  background: '#f4f6fb',
+  mauve: '#7C3AED',
+  mauveDeep: '#5B21B6',
+  mauveLight: '#EDE9FE',
+  background: '#FAF9FF',
+  success: '#15803D',
+  successLight: '#DCFCE7',
+  danger: '#DC2626',
+  dangerLight: '#FEE2E2',
+  warning: '#B45309',
+  warningLight: '#FEF3C7',
 } as const;
 
 export const Colors = {
   light: {
-    text: '#101423',
+    text: '#211A2E',
     background: M3akPalette.background,
-    backgroundElement: '#ffffff',
-    backgroundSelected: '#e5ebfd',
-    textSecondary: '#5b6478',
-    primary: M3akPalette.blue,
-    accent: M3akPalette.cyan,
-    warning: M3akPalette.yellow,
-    border: '#e1e5f0',
+    backgroundElement: '#FFFFFF',
+    backgroundSelected: M3akPalette.mauveLight,
+    textSecondary: '#81778F',
+    primary: M3akPalette.mauve,
+    accent: M3akPalette.mauveDeep,
+    success: M3akPalette.success,
+    warning: M3akPalette.warning,
+    danger: M3akPalette.danger,
+    border: '#EAE5F2',
   },
   dark: {
-    text: '#f4f6fb',
-    background: '#0d1120',
-    backgroundElement: '#161b2e',
-    backgroundSelected: '#1f2740',
-    textSecondary: '#9aa3bd',
-    primary: M3akPalette.blue,
-    accent: M3akPalette.cyan,
-    warning: M3akPalette.yellow,
-    border: '#242c45',
+    text: '#F5F2FC',
+    background: '#17101F',
+    backgroundElement: '#231A2E',
+    backgroundSelected: '#36204F',
+    textSecondary: '#B3A6C2',
+    primary: M3akPalette.mauve,
+    accent: '#C4B5FD',
+    success: '#4ADE80',
+    warning: '#FBBF24',
+    danger: '#F87171',
+    border: '#33243F',
   },
 } as const;
 

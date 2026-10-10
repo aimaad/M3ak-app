@@ -1,11 +1,14 @@
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
+import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextField } from '@/components/text-field';
+import { M3akPalette } from '@/constants/theme';
 import { signInWithEmail } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
@@ -53,10 +56,10 @@ export default function LoginScreen() {
                 key={code}
                 onPress={() => changeLanguage(code)}
                 className={`rounded-full border px-3 py-1 ${
-                  selected ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                  selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#101423' }}>
+                <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                   {t(`common.${LANGUAGE_LABEL_KEY[code]}`)}
                 </ThemedText>
               </Pressable>
@@ -64,11 +67,9 @@ export default function LoginScreen() {
           })}
         </View>
 
-        <View className="flex-1 justify-center gap-6">
-          <View className="items-center gap-1">
-            <ThemedText type="title" themeColor="primary" className="font-cairo-bold">
-              {t('common.appName')}
-            </ThemedText>
+        <View className="flex-1 justify-center gap-8">
+          <View className="items-center gap-2">
+            <Logo size="lg" />
             <ThemedText type="default" themeColor="textSecondary" className="text-center">
               {t('auth.subtitle')}
             </ThemedText>
@@ -94,25 +95,19 @@ export default function LoginScreen() {
             />
 
             {error ? (
-              <View className="rounded-2xl bg-[#fee2e2] px-4 py-3">
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
+                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                   {error}
                 </ThemedText>
               </View>
             ) : null}
 
-            <Pressable
+            <Button
+              label={isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
               onPress={handleSubmit}
               disabled={isSubmitting || !email || !password}
-              className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-                isSubmitting || !email || !password ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-              }`}
-            >
-              {isSubmitting ? <ActivityIndicator color="#ffffff" /> : null}
-              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                {isSubmitting ? t('auth.signingIn') : t('auth.signIn')}
-              </ThemedText>
-            </Pressable>
+              loading={isSubmitting}
+            />
 
             <Pressable onPress={() => router.push('/signup')} className="items-center py-2">
               <ThemedText type="small" themeColor="primary">

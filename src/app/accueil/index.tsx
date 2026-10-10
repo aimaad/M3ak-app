@@ -4,9 +4,11 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
+import { Card, PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
 import { signOut } from '@/features/auth/api';
 import { useMyAgency } from '@/features/agency/hooks';
 import { computeUtilizationRate, revenueByDay, sumPaymentsInMonth } from '@/features/dashboard/metrics';
@@ -64,7 +66,7 @@ export default function AccueilScreen() {
   if (agencyQuery.isLoading) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color="#1f5eff" />
+        <ActivityIndicator color={M3akPalette.mauve} />
         <ThemedText type="small" themeColor="textSecondary" className="mt-2">
           {t('agency.loading')}
         </ThemedText>
@@ -93,13 +95,13 @@ export default function AccueilScreen() {
 
         {vehiclesQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : (
           <ScrollView
             contentContainerClassName="gap-6 px-6 pb-28"
             refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#1f5eff" />
+              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={M3akPalette.mauve} />
             }
           >
             <View>
@@ -113,10 +115,10 @@ export default function AccueilScreen() {
 
             <View className="flex-row flex-wrap gap-3">
               {KPI_TILES.map((tile) => (
-                <Pressable
+                <PressableCard
                   key={tile.statut}
                   onPress={() => router.push({ pathname: '/flotte', params: { statut: tile.statut } })}
-                  className="w-[47%] gap-1 rounded-3xl border border-[#e1e5f0] bg-white p-4"
+                  className="w-[47%] gap-1"
                 >
                   <ThemedText type="title" themeColor="primary">
                     {counts[tile.statut]}
@@ -124,33 +126,33 @@ export default function AccueilScreen() {
                   <ThemedText type="small" themeColor="textSecondary">
                     {t(tile.labelKey)}
                   </ThemedText>
-                </Pressable>
+                </PressableCard>
               ))}
             </View>
 
             <View className="flex-row gap-3">
-              <View className="flex-1 gap-1 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+              <Card className="flex-1 gap-1">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('accueil.utilizationRate')}
                 </ThemedText>
                 <ThemedText type="subtitle" className="font-cairo-semibold">
                   {`${utilizationRate}%`}
                 </ThemedText>
-              </View>
-              <View className="flex-1 gap-1 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+              </Card>
+              <Card className="flex-1 gap-1">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('accueil.revenueThisMonth')}
                 </ThemedText>
                 <ThemedText type="subtitle" className="font-cairo-semibold">
                   {`${revenue.toLocaleString('fr-FR')} MAD`}
                 </ThemedText>
-              </View>
+              </Card>
             </View>
 
-            <View className="gap-3 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+            <Card className="gap-3">
               <ThemedText type="smallBold">{t('accueil.revenueChartTitle', { days: CHART_DAYS })}</ThemedText>
               <RevenueChart points={chartPoints} />
-            </View>
+            </Card>
 
             <View className="gap-3">
               <View className="flex-row items-center justify-between">

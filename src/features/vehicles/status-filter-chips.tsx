@@ -23,13 +23,13 @@ export function StatusFilterChips({ value, onChange, counts }: StatusFilterChips
             key={status}
             onPress={() => onChange(status)}
             className={`flex-row items-center gap-1.5 rounded-full border px-4 py-2 ${
-              selected ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'
+              selected ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
             }`}
           >
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#101423' }}>
+            <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
               {t(`flotte.status.${status}`)}
             </ThemedText>
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#5b6478' }}>
+            <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#81778F' }}>
               {counts[status]}
             </ThemedText>
           </Pressable>

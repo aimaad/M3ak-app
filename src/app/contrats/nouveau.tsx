@@ -1,8 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -76,7 +77,7 @@ export default function NouveauContratScreen() {
         <ScreenHeader title={t('contract.form.newTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -92,7 +93,7 @@ export default function NouveauContratScreen() {
           </View>
         ) : (
           <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-            <View className="rounded-3xl border border-[#e1e5f0] bg-white p-4 gap-1">
+            <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4 gap-1">
               <ThemedText type="smallBold">{`${vehicle.marque} ${vehicle.modele} · ${vehicle.immatriculation}`}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {customer.nomComplet}
@@ -121,23 +122,18 @@ export default function NouveauContratScreen() {
             />
 
             {submitError ? (
-              <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {submitError}
               </ThemedText>
             ) : null}
 
-            <Pressable
+            <Button
+              label={createContract.isPending ? t('contract.form.saving') : t('contract.form.save')}
               onPress={handleSubmit}
               disabled={createContract.isPending}
-              className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-                createContract.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-              }`}
-            >
-              {createContract.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                {createContract.isPending ? t('contract.form.saving') : t('contract.form.save')}
-              </ThemedText>
-            </Pressable>
+              loading={createContract.isPending}
+              style={{ marginTop: 8 }}
+            />
           </ScrollView>
         )}
       </SafeAreaView>

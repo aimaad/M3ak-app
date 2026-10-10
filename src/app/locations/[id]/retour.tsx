@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -94,7 +95,7 @@ export default function RetourScreen() {
         <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.retour.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -149,9 +150,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatRetour(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -159,7 +160,7 @@ export default function RetourScreen() {
               })}
             </View>
             {touched && contractErrors.etatRetour ? (
-              <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -176,9 +177,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#dc2626] bg-[#fee2e2]' : 'border-[#e1e5f0] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#DC2626] bg-[#FEE2E2]' : 'border-[#EAE5F2] bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#dc2626' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#DC2626' : '#211A2E' }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -197,17 +198,17 @@ export default function RetourScreen() {
           />
 
           {fees && totalFrais > 0 ? (
-            <View className="gap-2 rounded-2xl bg-[#fef3c7] p-4">
-              <ThemedText type="smallBold" style={{ color: '#b45309' }}>
+            <View className="gap-2 rounded-2xl bg-[#FEF3C7] p-4">
+              <ThemedText type="smallBold" style={{ color: '#B45309' }}>
                 {t('contract.fields.fraisProposes')}
               </ThemedText>
               {fees.retardMinutes > 0 ? (
-                <ThemedText type="small" style={{ color: '#b45309' }}>
+                <ThemedText type="small" style={{ color: '#B45309' }}>
                   {t('contract.feeRetard', { minutes: fees.retardMinutes, amount: fees.fraisRetard })}
                 </ThemedText>
               ) : null}
               {fees.fraisCarburant > 0 ? (
-                <ThemedText type="small" style={{ color: '#b45309' }}>
+                <ThemedText type="small" style={{ color: '#B45309' }}>
                   {t('contract.feeCarburant', { amount: fees.fraisCarburant })}
                 </ThemedText>
               ) : null}
@@ -217,7 +218,7 @@ export default function RetourScreen() {
                 onChangeText={setJustification}
               />
               <Pressable onPress={() => setAppliquerFrais((prev) => !prev)} className="flex-row items-center gap-2">
-                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#9aa3bd] bg-white'}`}>
+                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#B3A6C2] bg-white'}`}>
                   {appliquerFrais ? <ThemedText type="small" style={{ color: '#ffffff' }}>✓</ThemedText> : null}
                 </View>
                 <ThemedText type="small">{t('contract.applyFeesLabel', { amount: totalFrais })}</ThemedText>
@@ -226,23 +227,18 @@ export default function RetourScreen() {
           ) : null}
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#dc2626' }}>
+            <ThemedText type="small" style={{ color: '#DC2626' }}>
               {error}
             </ThemedText>
           ) : null}
 
-          <Pressable
+          <Button
+            label={recordReturn.isPending ? t('locations.retour.saving') : t('locations.retour.save')}
             onPress={handleSubmit}
             disabled={recordReturn.isPending}
-            className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-              recordReturn.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-            }`}
-          >
-            {recordReturn.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {recordReturn.isPending ? t('locations.retour.saving') : t('locations.retour.save')}
-            </ThemedText>
-          </Pressable>
+            loading={recordReturn.isPending}
+            style={{ marginTop: 8 }}
+          />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

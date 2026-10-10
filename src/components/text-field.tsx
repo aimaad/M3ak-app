@@ -16,14 +16,14 @@ export function TextField({ label, error, className, ...rest }: TextFieldProps) 
         </ThemedText>
       ) : null}
       <TextInput
-        placeholderTextColor="#9aa3bd"
-        className={`rounded-2xl border px-4 py-3 text-base text-[#101423] ${
-          error ? 'border-[#dc2626]' : 'border-[#e1e5f0]'
+        placeholderTextColor="#B3A6C2"
+        className={`rounded-2xl border px-4 py-3 text-base text-[#211A2E] ${
+          error ? 'border-[#DC2626]' : 'border-[#EAE5F2]'
         } bg-white ${className ?? ''}`}
         {...rest}
       />
       {error ? (
-        <ThemedText type="small" style={{ color: '#dc2626' }}>
+        <ThemedText type="small" style={{ color: '#DC2626' }}>
           {error}
         </ThemedText>
       ) : null}

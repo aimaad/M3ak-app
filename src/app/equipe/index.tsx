@@ -4,6 +4,7 @@ import { Alert, Linking, Pressable, RefreshControl, ScrollView, View } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -124,7 +125,7 @@ export default function EquipeScreen() {
                 membersQuery.refetch();
                 invitesQuery.refetch();
               }}
-              tintColor="#1f5eff"
+              tintColor="#7C3AED"
             />
           }
         >
@@ -138,7 +139,7 @@ export default function EquipeScreen() {
                   key={member.id}
                   onPress={canAct ? () => handleManageMember(member) : undefined}
                   disabled={!canAct}
-                  className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+                  className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
                 >
                   <ThemedText type="small">{member.nomComplet ?? t('equipe.unnamedMember')}</ThemedText>
                   <View className="flex-row items-center gap-2">
@@ -161,16 +162,14 @@ export default function EquipeScreen() {
               <ThemedText type="smallBold">{t('equipe.inviteSection')}</ThemedText>
               <View className="flex-row gap-2">
                 {INVITABLE_ROLES.map((role) => (
-                  <Pressable
+                  <Button
                     key={role}
+                    label={t('equipe.inviteAs', { role: t(`equipe.roles.${role}`) })}
                     onPress={() => handleInvite(role)}
                     disabled={createInvite.isPending}
-                    className="flex-1 items-center rounded-2xl bg-[#1f5eff] px-4 py-3"
-                  >
-                    <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                      {t('equipe.inviteAs', { role: t(`equipe.roles.${role}`) })}
-                    </ThemedText>
-                  </Pressable>
+                    size="sm"
+                    style={{ flex: 1 }}
+                  />
                 ))}
               </View>
 
@@ -189,7 +188,7 @@ export default function EquipeScreen() {
                     return (
                       <View
                         key={invite.id}
-                        className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+                        className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
                       >
                         <View>
                           <ThemedText type="smallBold">{invite.code}</ThemedText>

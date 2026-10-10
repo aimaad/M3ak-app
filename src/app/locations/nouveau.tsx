@@ -1,8 +1,9 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { PickerField } from '@/components/picker-field';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
@@ -224,7 +225,7 @@ export default function NouvelleLocationScreen() {
                 />
               </View>
               {showErrors && errors.dates ? (
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
+                <ThemedText type="small" style={{ color: '#DC2626' }}>
                   {t(`locations.form.errors.${errors.dates}`)}
                 </ThemedText>
               ) : null}
@@ -235,7 +236,7 @@ export default function NouvelleLocationScreen() {
           <TextField label={t('locations.lieuRetour')} value={lieuRetour} onChangeText={setLieuRetour} placeholder={t('vehicle.fields.optionalPlaceholder')} />
 
           {priceBreakdown ? (
-            <View className="gap-1 rounded-2xl border border-[#e1e5f0] bg-white p-4">
+            <View className="gap-1 rounded-2xl border border-[#EAE5F2] bg-white p-4">
               <View className="flex-row items-center justify-between">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('locations.priceBreakdown.duree', { count: priceBreakdown.dureeJours })}
@@ -248,7 +249,7 @@ export default function NouvelleLocationScreen() {
                 </ThemedText>
                 <ThemedText type="small">{`${priceBreakdown.sousTotal.toLocaleString('fr-FR')} MAD`}</ThemedText>
               </View>
-              <View className="mt-1 flex-row items-center justify-between border-t border-[#e1e5f0] pt-2">
+              <View className="mt-1 flex-row items-center justify-between border-t border-[#EAE5F2] pt-2">
                 <ThemedText type="smallBold">{t('locations.priceBreakdown.total')}</ThemedText>
                 <ThemedText type="smallBold" themeColor="primary">{`${priceBreakdown.total.toLocaleString('fr-FR')} MAD`}</ThemedText>
               </View>
@@ -293,35 +294,25 @@ export default function NouvelleLocationScreen() {
           />
 
           {submitError ? (
-            <ThemedText type="small" style={{ color: '#dc2626' }}>
+            <ThemedText type="small" style={{ color: '#DC2626' }}>
               {submitError}
             </ThemedText>
           ) : null}
 
-          <Pressable
+          <Button
+            label={t('locations.form.saveAsPending')}
             onPress={() => handleSubmit('en_attente_confirmation')}
             disabled={submittingAs !== null}
-            className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl border border-[#1f5eff] px-4 py-4 ${
-              submittingAs ? 'opacity-60' : ''
-            }`}
-          >
-            {submittingAs === 'en_attente_confirmation' ? <ActivityIndicator color="#1f5eff" /> : null}
-            <ThemedText type="smallBold" themeColor="primary">
-              {t('locations.form.saveAsPending')}
-            </ThemedText>
-          </Pressable>
-          <Pressable
+            loading={submittingAs === 'en_attente_confirmation'}
+            variant="secondary"
+            style={{ marginTop: 8 }}
+          />
+          <Button
+            label={t('locations.form.saveAsConfirmed')}
             onPress={() => handleSubmit('confirmee')}
             disabled={submittingAs !== null}
-            className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-              submittingAs ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-            }`}
-          >
-            {submittingAs === 'confirmee' ? <ActivityIndicator color="#ffffff" /> : null}
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {t('locations.form.saveAsConfirmed')}
-            </ThemedText>
-          </Pressable>
+            loading={submittingAs === 'confirmee'}
+          />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

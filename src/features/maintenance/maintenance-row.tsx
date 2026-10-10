@@ -7,9 +7,9 @@ import { computeMaintenanceUrgency, type MaintenanceUrgency } from './urgency';
 import type { MaintenanceItem } from './types';
 
 const URGENCY_STYLE: Record<MaintenanceUrgency, { background: string; text: string }> = {
-  a_venir: { background: '#e5ebfd', text: '#1f5eff' },
-  due: { background: '#fef3c7', text: '#b45309' },
-  en_retard: { background: '#fee2e2', text: '#dc2626' },
+  a_venir: { background: '#EDE9FE', text: '#7C3AED' },
+  due: { background: '#FEF3C7', text: '#B45309' },
+  en_retard: { background: '#FEE2E2', text: '#DC2626' },
 };
 
 export function MaintenanceRow({
@@ -32,7 +32,7 @@ export function MaintenanceRow({
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3">
+      className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
       <View className="flex-1 gap-0.5">
         <ThemedText type="smallBold">{t(`maintenance.types.${item.type}`)}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
@@ -43,9 +43,9 @@ export function MaintenanceRow({
       </View>
       <View
         className="rounded-full px-3 py-1"
-        style={{ backgroundColor: isDone ? '#e7f7ec' : style.background }}
+        style={{ backgroundColor: isDone ? '#DCFCE7' : style.background }}
       >
-        <ThemedText type="small" style={{ color: isDone ? '#15803d' : style.text }}>
+        <ThemedText type="small" style={{ color: isDone ? '#15803D' : style.text }}>
           {isDone ? t('maintenance.done') : t(`maintenance.urgency.${urgency}`)}
         </ThemedText>
       </View>

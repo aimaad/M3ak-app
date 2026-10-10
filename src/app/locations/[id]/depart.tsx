@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -71,7 +72,7 @@ export default function DepartScreen() {
         <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.depart.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -124,9 +125,9 @@ export default function DepartScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatDepart(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -134,7 +135,7 @@ export default function DepartScreen() {
               })}
             </View>
             {touched && contractErrors.etatDepart ? (
-              <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -151,9 +152,9 @@ export default function DepartScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#101423' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -172,23 +173,18 @@ export default function DepartScreen() {
           />
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#dc2626' }}>
+            <ThemedText type="small" style={{ color: '#DC2626' }}>
               {error}
             </ThemedText>
           ) : null}
 
-          <Pressable
+          <Button
+            label={recordDeparture.isPending ? t('locations.depart.saving') : t('locations.depart.save')}
             onPress={handleSubmit}
             disabled={recordDeparture.isPending}
-            className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-              recordDeparture.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-            }`}
-          >
-            {recordDeparture.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {recordDeparture.isPending ? t('locations.depart.saving') : t('locations.depart.save')}
-            </ThemedText>
-          </Pressable>
+            loading={recordDeparture.isPending}
+            style={{ marginTop: 8 }}
+          />
         </ScrollView>
       </SafeAreaView>
     </ThemedView>

@@ -1,12 +1,14 @@
 import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
 import { signOut } from '@/features/auth/api';
 import { useCreateAgency, useMyAgency, useRedeemInvite } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -82,20 +84,20 @@ export default function OnboardingScreen() {
             <Pressable
               onPress={() => setMode('create')}
               className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-                mode === 'create' ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                mode === 'create' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
               }`}
             >
-              <ThemedText type="smallBold" style={{ color: mode === 'create' ? '#ffffff' : '#101423' }}>
+              <ThemedText type="smallBold" style={{ color: mode === 'create' ? '#ffffff' : '#211A2E' }}>
                 {t('onboarding.createTab')}
               </ThemedText>
             </Pressable>
             <Pressable
               onPress={() => setMode('join')}
               className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-                mode === 'join' ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                mode === 'join' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
               }`}
             >
-              <ThemedText type="smallBold" style={{ color: mode === 'join' ? '#ffffff' : '#101423' }}>
+              <ThemedText type="smallBold" style={{ color: mode === 'join' ? '#ffffff' : '#211A2E' }}>
                 {t('onboarding.joinTab')}
               </ThemedText>
             </Pressable>
@@ -108,23 +110,17 @@ export default function OnboardingScreen() {
               <TextField label={t('onboarding.agencyCity')} value={ville} onChangeText={setVille} />
 
               {error ? (
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
+                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                   {error}
                 </ThemedText>
               ) : null}
 
-              <Pressable
+              <Button
+                label={t('onboarding.createAction')}
                 onPress={handleCreate}
                 disabled={createAgency.isPending}
-                className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-                  createAgency.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-                }`}
-              >
-                {createAgency.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                  {t('onboarding.createAction')}
-                </ThemedText>
-              </Pressable>
+                loading={createAgency.isPending}
+              />
             </View>
           ) : (
             <View className="gap-4">
@@ -137,23 +133,17 @@ export default function OnboardingScreen() {
               />
 
               {error ? (
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
+                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                   {error}
                 </ThemedText>
               ) : null}
 
-              <Pressable
+              <Button
+                label={t('onboarding.joinAction')}
                 onPress={handleJoin}
                 disabled={redeemInvite.isPending}
-                className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-                  redeemInvite.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-                }`}
-              >
-                {redeemInvite.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                  {t('onboarding.joinAction')}
-                </ThemedText>
-              </Pressable>
+                loading={redeemInvite.isPending}
+              />
             </View>
           )}
         </View>

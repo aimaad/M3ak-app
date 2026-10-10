@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -20,7 +21,7 @@ function formatDateTime(iso: string): string {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#e1e5f0] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -92,7 +93,7 @@ export default function ContratDetailScreen() {
           <ScreenHeader title={t('contract.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color="#1f5eff" />
+              <ActivityIndicator color="#7C3AED" />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('contract.loadError') : t('contract.notFound')}
@@ -116,7 +117,7 @@ export default function ContratDetailScreen() {
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
           <ContractStatusBadge status={contract.statut} />
 
-          <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+          <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
             <InfoRow label={t('locations.vehicle')} value={`${contract.vehicleMarque} ${contract.vehicleModele} · ${contract.vehicleImmatriculation}`} />
             <InfoRow label={t('locations.customer')} value={contract.customerNom} />
             {contract.driverNom ? <InfoRow label={t('locations.driver')} value={contract.driverNom} /> : null}
@@ -133,7 +134,7 @@ export default function ContratDetailScreen() {
           {contract.conditionsParticulieres ? (
             <View className="gap-2">
               <ThemedText type="smallBold">{t('contract.fields.conditionsParticulieres')}</ThemedText>
-              <View className="rounded-3xl border border-[#e1e5f0] bg-white p-4">
+              <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
                 <ThemedText type="default">{contract.conditionsParticulieres}</ThemedText>
               </View>
             </View>
@@ -147,43 +148,39 @@ export default function ContratDetailScreen() {
 
           <View className="gap-2">
             {canMarkReady ? (
-              <Pressable
+              <Button
+                label={t('contract.markReadyAction')}
                 onPress={() => markReadyToSign.mutate(contract.id)}
                 disabled={markReadyToSign.isPending}
-                className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4"
-              >
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                  {t('contract.markReadyAction')}
-                </ThemedText>
-              </Pressable>
+                loading={markReadyToSign.isPending}
+              />
             ) : null}
             {canSign ? (
-              <Pressable onPress={handleSign} disabled={signContract.isPending} className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4">
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                  {t('contract.signAction')}
-                </ThemedText>
-              </Pressable>
+              <Button
+                label={t('contract.signAction')}
+                onPress={handleSign}
+                disabled={signContract.isPending}
+                loading={signContract.isPending}
+              />
             ) : null}
             {contract.statut === 'signe' && rental ? (
-              <Pressable
+              <Button
+                label={t('locations.startAction')}
+                variant="secondary"
+                size="sm"
                 onPress={() =>
                   router.push({ pathname: '/locations/[id]/depart', params: { id: rental.id, vehicleId: rental.vehicleId } })
                 }
-                className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
-              >
-                <ThemedText type="small" themeColor="primary">
-                  {t('locations.startAction')}
-                </ThemedText>
-              </Pressable>
+              />
             ) : null}
 
             <Pressable
               onPress={handleGeneratePdf}
               disabled={isGeneratingPdf}
-              className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+              className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
             >
               {isGeneratingPdf ? (
-                <ActivityIndicator color="#1f5eff" />
+                <ActivityIndicator color="#7C3AED" />
               ) : (
                 <ThemedText type="small" themeColor="primary">
                   {contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
@@ -191,14 +188,14 @@ export default function ContratDetailScreen() {
               )}
             </Pressable>
             {pdfError ? (
-              <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {pdfError}
               </ThemedText>
             ) : null}
 
             {canCancel ? (
-              <Pressable onPress={handleCancel} className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3">
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <Pressable onPress={handleCancel} className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+                <ThemedText type="small" style={{ color: '#DC2626' }}>
                   {t('contract.cancelAction')}
                 </ThemedText>
               </Pressable>

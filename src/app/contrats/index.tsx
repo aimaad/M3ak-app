@@ -48,9 +48,9 @@ export default function ContratsScreen() {
         <View className="flex-row flex-wrap gap-2 px-6 pb-4">
           <Pressable
             onPress={() => setStatusFilter('tous')}
-            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'}`}
+            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'}`}
           >
-            <ThemedText type="small" style={{ color: statusFilter === 'tous' ? '#ffffff' : '#101423' }}>
+            <ThemedText type="small" style={{ color: statusFilter === 'tous' ? '#ffffff' : '#211A2E' }}>
               {t('flotte.status.tous')}
             </ThemedText>
           </Pressable>
@@ -58,9 +58,9 @@ export default function ContratsScreen() {
             <Pressable
               key={status}
               onPress={() => setStatusFilter(status)}
-              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'}`}
+              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'}`}
             >
-              <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#101423' }}>
+              <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#211A2E' }}>
                 {t(`contract.status.${status}`)}
               </ThemedText>
             </Pressable>
@@ -69,7 +69,7 @@ export default function ContratsScreen() {
 
         {contractsQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : contractsQuery.isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -85,7 +85,7 @@ export default function ContratsScreen() {
             renderItem={({ item }) => (
               <Pressable
                 onPress={() => router.push(`/contrats/${item.id}`)}
-                className="gap-2 rounded-3xl border border-[#e1e5f0] bg-white p-4"
+                className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4"
               >
                 <View className="flex-row items-start justify-between gap-2">
                   <View className="flex-1 gap-1">

@@ -9,8 +9,8 @@ type DateRangeCalendarProps = {
   minDate?: string;
 };
 
-const COLOR_PRIMARY = '#1f5eff';
-const COLOR_DISABLED = '#e1e5f0';
+const COLOR_PRIMARY = '#7C3AED';
+const COLOR_DISABLED = '#EAE5F2';
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);

@@ -21,7 +21,7 @@ export function DepositResolveForm({ deposit }: { deposit: Deposit }) {
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-[#e1e5f0] bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-[#EAE5F2] bg-white p-4">
       <TextField
         label={t('locations.cautionResolveLabel')}
         value={montantRetenu}
@@ -35,7 +35,7 @@ export function DepositResolveForm({ deposit }: { deposit: Deposit }) {
         onPress={handleSubmit}
         disabled={resolve.isPending}
         className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
-          resolve.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
+          resolve.isPending ? 'bg-[#B3A6C2]' : 'bg-[#7C3AED]'
         }`}
       >
         {resolve.isPending ? <ActivityIndicator color="#ffffff" /> : null}

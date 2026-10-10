@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -39,7 +40,7 @@ function valuesFromDetails(details: AgencyDetails): AgencyDetailsFormValues {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#e1e5f0] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -65,7 +66,7 @@ export default function EntrepriseScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : isError || !agencyId || !detailsQuery.data ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -209,26 +210,21 @@ function EntrepriseForm({
           />
 
           {feedback ? (
-            <ThemedText type="small" style={{ color: feedback.type === 'success' ? '#15803d' : '#dc2626' }}>
+            <ThemedText type="small" style={{ color: feedback.type === 'success' ? '#15803D' : '#DC2626' }}>
               {feedback.message}
             </ThemedText>
           ) : null}
 
-          <Pressable
+          <Button
+            label={updateDetails.isPending ? t('entreprise.saving') : t('entreprise.save')}
             onPress={handleSave}
             disabled={updateDetails.isPending}
-            className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-              updateDetails.isPending ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-            }`}
-          >
-            {updateDetails.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-              {updateDetails.isPending ? t('entreprise.saving') : t('entreprise.save')}
-            </ThemedText>
-          </Pressable>
+            loading={updateDetails.isPending}
+            style={{ marginTop: 8 }}
+          />
         </>
       ) : (
-        <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+        <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
           <InfoRow label={t('entreprise.fields.nom')} value={values.nom || '—'} />
           <InfoRow label={t('entreprise.fields.raisonSociale')} value={values.raisonSociale || '—'} />
           <InfoRow label={t('entreprise.fields.email')} value={values.email || '—'} />

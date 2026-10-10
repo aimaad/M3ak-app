@@ -6,12 +6,12 @@ import { useLanguage } from '@/i18n/use-language';
 import type { ContractStatus } from './types';
 
 const STYLES: Record<ContractStatus, { background: string; text: string; dot: string }> = {
-  preparation: { background: '#f1f2f5', text: '#5b6478', dot: '#5b6478' },
-  pret_a_signer: { background: '#fef3c7', text: '#b45309', dot: '#b45309' },
-  signe: { background: '#e5ebfd', text: '#1f5eff', dot: '#1f5eff' },
-  en_cours: { background: '#f3e8ff', text: '#7c3aed', dot: '#7c3aed' },
-  cloture: { background: '#e7f7ec', text: '#15803d', dot: '#15803d' },
-  annule: { background: '#fee2e2', text: '#dc2626', dot: '#dc2626' },
+  preparation: { background: '#F1EEF7', text: '#81778F', dot: '#81778F' },
+  pret_a_signer: { background: '#FEF3C7', text: '#B45309', dot: '#B45309' },
+  signe: { background: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
+  en_cours: { background: '#E0F2FE', text: '#0369A1', dot: '#0369A1' },
+  cloture: { background: '#DCFCE7', text: '#15803D', dot: '#15803D' },
+  annule: { background: '#FEE2E2', text: '#DC2626', dot: '#DC2626' },
 };
 
 export function ContractStatusBadge({ status }: { status: ContractStatus }) {

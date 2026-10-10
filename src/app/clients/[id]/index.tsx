@@ -16,7 +16,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#e1e5f0] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -84,7 +84,7 @@ export default function ClientDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -101,7 +101,7 @@ export default function ClientDetailScreen() {
         ) : (
           <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
             <View className="flex-row items-center gap-2">
-              <View className="rounded-full bg-[#e5ebfd] px-2.5 py-1">
+              <View className="rounded-full bg-[#EDE9FE] px-2.5 py-1">
                 <ThemedText type="small" themeColor="primary">
                   {t(`customer.type.${customer.typeClient}`)}
                 </ThemedText>
@@ -117,7 +117,7 @@ export default function ClientDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('customer.sections.coordonnees')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
                 <InfoRow label={t('customer.fields.telephone')} value={customer.telephone ?? '—'} />
                 <InfoRow label={t('customer.fields.telephoneSecondaire')} value={customer.telephoneSecondaire ?? '—'} />
                 <InfoRow label={t('customer.fields.email')} value={customer.email ?? '—'} />
@@ -138,7 +138,7 @@ export default function ClientDetailScreen() {
                 <ThemedText type="smallBold" className="mb-2">
                   {t('customer.sections.type')}
                 </ThemedText>
-                <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+                <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
                   <InfoRow label={t('customer.fields.raisonSociale')} value={customer.raisonSociale ?? '—'} />
                   <View className="flex-row items-center justify-between py-3">
                     <ThemedText type="default" themeColor="textSecondary">
@@ -155,7 +155,7 @@ export default function ClientDetailScreen() {
                 <ThemedText type="smallBold" className="mb-2">
                   {t('customer.sections.notes')}
                 </ThemedText>
-                <View className="rounded-3xl border border-[#e1e5f0] bg-white p-4">
+                <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
                   <ThemedText type="default">{customer.notes}</ThemedText>
                 </View>
               </View>
@@ -179,7 +179,7 @@ export default function ClientDetailScreen() {
                       </ThemedText>
                     ) : null}
                     {doc?.expiresAt ? (
-                      <ThemedText type="small" style={{ color: isExpiringSoon(doc.expiresAt) ? '#dc2626' : '#5b6178' }}>
+                      <ThemedText type="small" style={{ color: isExpiringSoon(doc.expiresAt) ? '#DC2626' : '#81778F' }}>
                         {t('vehicle.documentExpiry', { date: new Date(doc.expiresAt).toLocaleDateString('fr-FR') })}
                       </ThemedText>
                     ) : null}
@@ -197,7 +197,7 @@ export default function ClientDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('customer.historySection')}
               </ThemedText>
-              <View className="gap-1 rounded-3xl border border-dashed border-[#e1e5f0] bg-white p-4">
+              <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('customer.historyPlaceholder')}
                 </ThemedText>
@@ -207,7 +207,7 @@ export default function ClientDetailScreen() {
             {isManager ? (
               <Pressable
                 onPress={customer.archivedAt ? handleReactivate : handleArchive}
-                className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-4"
+                className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-4"
               >
                 <ThemedText type="smallBold" themeColor={customer.archivedAt ? 'primary' : undefined}>
                   {customer.archivedAt ? t('customer.reactivate') : t('customer.archive')}

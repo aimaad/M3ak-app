@@ -88,7 +88,7 @@ export default function ModifierClientScreen() {
         <ScreenHeader title={t('customer.form.editTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">

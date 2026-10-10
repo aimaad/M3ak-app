@@ -16,7 +16,7 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
   return (
     <Pressable
       onPress={onPress}
-      className="gap-3 rounded-3xl border border-[#e1e5f0] bg-white p-4"
+      className="gap-3 rounded-3xl border border-[#EAE5F2] bg-white p-4"
     >
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1 gap-1">

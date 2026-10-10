@@ -3,12 +3,12 @@ import type { VehicleStatus } from './types';
 export type StatusStyle = { background: string; text: string; dot: string };
 
 const STATUS_STYLES: Record<VehicleStatus, StatusStyle> = {
-  disponible: { background: '#e5ebfd', text: '#1f5eff', dot: '#1f5eff' },
-  en_location: { background: '#f3e8ff', text: '#7c3aed', dot: '#7c3aed' },
-  maintenance: { background: '#fee2e2', text: '#dc2626', dot: '#dc2626' },
-  a_inspecter: { background: '#101423', text: '#ffffff', dot: '#38e1ff' },
-  en_preparation: { background: '#fef3c7', text: '#b45309', dot: '#b45309' },
-  indisponible: { background: '#f1f2f6', text: '#5b6178', dot: '#5b6178' },
+  disponible: { background: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
+  en_location: { background: '#E0F2FE', text: '#0369A1', dot: '#0369A1' },
+  maintenance: { background: '#FEE2E2', text: '#DC2626', dot: '#DC2626' },
+  a_inspecter: { background: '#211A2E', text: '#FFFFFF', dot: '#C4B5FD' },
+  en_preparation: { background: '#FEF3C7', text: '#B45309', dot: '#B45309' },
+  indisponible: { background: '#F1EEF7', text: '#81778F', dot: '#81778F' },
 };
 
 export function statusStyle(status: VehicleStatus): StatusStyle {

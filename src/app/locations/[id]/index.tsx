@@ -24,7 +24,7 @@ function formatDateTime(iso: string): string {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#e1e5f0] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -80,7 +80,7 @@ export default function LocationDetailScreen() {
           <ScreenHeader title={t('locations.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color="#1f5eff" />
+              <ActivityIndicator color="#7C3AED" />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('locations.loadError') : t('locations.notFound')}
@@ -108,7 +108,7 @@ export default function LocationDetailScreen() {
             </ThemedText>
           </View>
 
-          <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+          <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
             <InfoRow label={t('locations.vehicle')} value={vehicle ? vehicle.immatriculation : '—'} />
             <InfoRow label={t('locations.customer')} value={customer?.nomComplet ?? '—'} />
             <InfoRow
@@ -132,7 +132,7 @@ export default function LocationDetailScreen() {
             <Pressable
               onPress={handleConfirm}
               disabled={confirmRental.isPending}
-              className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4"
+              className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
             >
               {confirmRental.isPending ? (
                 <ActivityIndicator color="#ffffff" />
@@ -149,7 +149,7 @@ export default function LocationDetailScreen() {
             {contract ? (
               <Pressable
                 onPress={() => router.push(`/contrats/${contract.id}`)}
-                className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+                className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
               >
                 <ThemedText type="small">{contract.numero}</ThemedText>
                 <ContractStatusBadge status={contract.statut} />
@@ -157,7 +157,7 @@ export default function LocationDetailScreen() {
             ) : canCreateContract ? (
               <Pressable
                 onPress={() => router.push(`/contrats/nouveau?rentalId=${rental.id}`)}
-                className="items-center rounded-2xl border border-[#1f5eff] px-4 py-3"
+                className="items-center rounded-2xl border border-[#7C3AED] px-4 py-3"
               >
                 <ThemedText type="smallBold" themeColor="primary">
                   {t('contract.createAction')}
@@ -179,10 +179,10 @@ export default function LocationDetailScreen() {
                   params: { id: rental.id },
                 })
               }
-              className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+              className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
             >
               <ThemedText type="small">{t('inspection.title.depart')}</ThemedText>
-              <ThemedText type="small" themeColor={inspectionDepart?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionDepart?.statut === 'terminee' ? { color: '#15803d' } : undefined}>
+              <ThemedText type="small" themeColor={inspectionDepart?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionDepart?.statut === 'terminee' ? { color: '#15803D' } : undefined}>
                 {inspectionDepart?.statut === 'terminee' ? t('inspection.done') : t('inspection.todo')}
               </ThemedText>
             </Pressable>
@@ -194,10 +194,10 @@ export default function LocationDetailScreen() {
                     params: { id: rental.id },
                   })
                 }
-                className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+                className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
               >
                 <ThemedText type="small">{t('inspection.title.retour')}</ThemedText>
-                <ThemedText type="small" themeColor={inspectionRetour?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionRetour?.statut === 'terminee' ? { color: '#15803d' } : undefined}>
+                <ThemedText type="small" themeColor={inspectionRetour?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionRetour?.statut === 'terminee' ? { color: '#15803D' } : undefined}>
                   {inspectionRetour?.statut === 'terminee' ? t('inspection.done') : t('inspection.todo')}
                 </ThemedText>
               </Pressable>
@@ -213,7 +213,7 @@ export default function LocationDetailScreen() {
                     params: { id: rental.id, vehicleId: rental.vehicleId },
                   })
                 }
-                className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4"
+                className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
               >
                 <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
                   {t('locations.startAction')}
@@ -225,9 +225,9 @@ export default function LocationDetailScreen() {
           {canCancel ? (
             <Pressable
               onPress={handleCancel}
-              className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+              className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
             >
-              <ThemedText type="small" style={{ color: '#dc2626' }}>
+              <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {t('locations.cancelAction')}
               </ThemedText>
             </Pressable>
@@ -241,7 +241,7 @@ export default function LocationDetailScreen() {
                   params: { id: rental.id, vehicleId: rental.vehicleId },
                 })
               }
-              className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4"
+              className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
             >
               <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
                 {t('locations.completeAction')}
@@ -253,7 +253,7 @@ export default function LocationDetailScreen() {
             <ThemedText type="smallBold">{t('locations.cautionSection')}</ThemedText>
             {deposit ? (
               <>
-                <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+                <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
                   <InfoRow
                     label={t('locations.cautionBlocked')}
                     value={`${deposit.montantBloque.toLocaleString('fr-FR')} MAD`}
@@ -281,7 +281,7 @@ export default function LocationDetailScreen() {
           {rental.notes ? (
             <View className="gap-2">
               <ThemedText type="smallBold">{t('locations.notes')}</ThemedText>
-              <View className="rounded-3xl border border-[#e1e5f0] bg-white p-4">
+              <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
                 <ThemedText type="default">{rental.notes}</ThemedText>
               </View>
             </View>
@@ -298,7 +298,7 @@ export default function LocationDetailScreen() {
                 {payments.map((payment) => (
                   <View
                     key={payment.id}
-                    className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+                    className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
                   >
                     <ThemedText type="small">{t(`locations.paymentMethods.${payment.methode}`)}</ThemedText>
                     <ThemedText type="smallBold">{`${payment.montant.toLocaleString('fr-FR')} MAD`}</ThemedText>

@@ -4,6 +4,8 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
+import { M3akPalette } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/i18n/use-language';
 
 export type SectionKey = 'accueil' | 'flotte' | 'clients' | 'locations' | 'equipe';
@@ -34,17 +36,17 @@ const SECTIONS: {
   },
 ];
 
-const ACTIVE_COLOR = '#1f5eff';
-const INACTIVE_COLOR = '#9aa3bd';
+const INACTIVE_COLOR = '#B3A6C2';
 
 export function BottomTabBar({ current }: { current: SectionKey }) {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
 
   return (
     <View
-      className="absolute inset-x-0 bottom-0 flex-row border-t border-[#e1e5f0] bg-white"
-      style={{ paddingBottom: Math.max(insets.bottom, 10) }}
+      className="absolute inset-x-0 bottom-0 flex-row border-t bg-white"
+      style={{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }}
     >
       {SECTIONS.map((section) => {
         const selected = section.key === current;
@@ -52,14 +54,22 @@ export function BottomTabBar({ current }: { current: SectionKey }) {
           <Pressable
             key={section.key}
             onPress={() => !selected && router.replace(section.href)}
-            className="flex-1 items-center gap-0.5 pt-2"
+            className="flex-1 items-center gap-1 pt-2"
           >
-            <Ionicons
-              name={selected ? section.iconActive : section.icon}
-              size={22}
-              color={selected ? ACTIVE_COLOR : INACTIVE_COLOR}
-            />
-            <ThemedText type="small" style={{ color: selected ? ACTIVE_COLOR : INACTIVE_COLOR, fontSize: 11 }}>
+            <View
+              className="h-7 w-11 items-center justify-center rounded-full"
+              style={{ backgroundColor: selected ? M3akPalette.mauveLight : 'transparent' }}
+            >
+              <Ionicons
+                name={selected ? section.iconActive : section.icon}
+                size={20}
+                color={selected ? M3akPalette.mauve : INACTIVE_COLOR}
+              />
+            </View>
+            <ThemedText
+              type="small"
+              style={{ color: selected ? M3akPalette.mauve : INACTIVE_COLOR, fontSize: 11 }}
+            >
               {t(section.labelKey)}
             </ThemedText>
           </Pressable>

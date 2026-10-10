@@ -89,7 +89,7 @@ export function InspectionCaptureScreen({
   if (!permission) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color="#1f5eff" />
+        <ActivityIndicator color="#7C3AED" />
       </ThemedView>
     );
   }
@@ -101,7 +101,7 @@ export function InspectionCaptureScreen({
           <ThemedText type="default" themeColor="textSecondary" className="text-center">
             {t('inspection.permissionRequired')}
           </ThemedText>
-          <Pressable onPress={requestPermission} className="rounded-2xl bg-[#1f5eff] px-5 py-3">
+          <Pressable onPress={requestPermission} className="rounded-2xl bg-[#7C3AED] px-5 py-3">
             <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
               {t('inspection.grantPermission')}
             </ThemedText>
@@ -168,15 +168,15 @@ export function InspectionCaptureScreen({
                   onPress={() => setManualAngle(angle)}
                   className={`rounded-full border px-3 py-1.5 ${
                     selected
-                      ? 'border-[#1f5eff] bg-[#1f5eff]'
+                      ? 'border-[#7C3AED] bg-[#7C3AED]'
                       : done
-                        ? 'border-[#15803d] bg-[#e7f7ec]'
-                        : 'border-[#e1e5f0] bg-white'
+                        ? 'border-[#15803D] bg-[#DCFCE7]'
+                        : 'border-[#EAE5F2] bg-white'
                   }`}
                 >
                   <ThemedText
                     type="small"
-                    style={{ color: selected ? '#ffffff' : done ? '#15803d' : '#101423' }}
+                    style={{ color: selected ? '#ffffff' : done ? '#15803D' : '#211A2E' }}
                   >
                     {`${done ? '✓ ' : ''}${t(`inspection.angles.${angle}`)}`}
                   </ThemedText>
@@ -189,7 +189,7 @@ export function InspectionCaptureScreen({
             <Pressable
               onPress={handleFinish}
               disabled={completeInspection.isPending}
-              className="items-center rounded-2xl bg-[#1f5eff] px-4 py-4"
+              className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
             >
               <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
                 {t('inspection.finish')}
@@ -199,9 +199,9 @@ export function InspectionCaptureScreen({
             <Pressable
               onPress={handleCapture}
               disabled={!inspection || isCapturing}
-              className="h-16 w-16 self-center items-center justify-center rounded-full border-4 border-[#1f5eff] bg-white"
+              className="h-16 w-16 self-center items-center justify-center rounded-full border-4 border-[#7C3AED] bg-white"
             >
-              {isCapturing ? <ActivityIndicator color="#1f5eff" /> : <View className="h-11 w-11 rounded-full bg-[#1f5eff]" />}
+              {isCapturing ? <ActivityIndicator color="#7C3AED" /> : <View className="h-11 w-11 rounded-full bg-[#7C3AED]" />}
             </Pressable>
           )}
         </View>

@@ -81,10 +81,10 @@ export default function CalendrierScreen() {
   const markedDates = useMemo(() => {
     const marks: Record<string, object> = {};
     for (const day of daysWithBookings.keys()) {
-      marks[day] = { marked: true, dotColor: '#1f5eff', selected: day === selectedDay, selectedColor: '#e5ebfd' };
+      marks[day] = { marked: true, dotColor: '#7C3AED', selected: day === selectedDay, selectedColor: '#EDE9FE' };
     }
     if (selectedDay && !marks[selectedDay]) {
-      marks[selectedDay] = { selected: true, selectedColor: '#e5ebfd' };
+      marks[selectedDay] = { selected: true, selectedColor: '#EDE9FE' };
     }
     return marks;
   }, [daysWithBookings, selectedDay]);
@@ -118,10 +118,10 @@ export default function CalendrierScreen() {
                 key={status}
                 onPress={() => setStatusFilter(status)}
                 className={`rounded-full border px-4 py-2 ${
-                  statusFilter === status ? 'border-[#101423] bg-[#101423]' : 'border-[#e1e5f0] bg-white'
+                  statusFilter === status ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#101423' }}>
+                <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#211A2E' }}>
                   {t(`locations.status.${status}`)}
                 </ThemedText>
               </Pressable>
@@ -131,10 +131,10 @@ export default function CalendrierScreen() {
             <Pressable
               onPress={() => setVehicleFilter('tous')}
               className={`rounded-full border px-4 py-2 ${
-                vehicleFilter === 'tous' ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                vehicleFilter === 'tous' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
               }`}
             >
-              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#ffffff' : '#101423' }}>
+              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#ffffff' : '#211A2E' }}>
                 {t('locations.calendar.allVehicles')}
               </ThemedText>
             </Pressable>
@@ -143,10 +143,10 @@ export default function CalendrierScreen() {
                 key={v.id}
                 onPress={() => setVehicleFilter(v.id)}
                 className={`rounded-full border px-4 py-2 ${
-                  vehicleFilter === v.id ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+                  vehicleFilter === v.id ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#ffffff' : '#101423' }}>
+                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#ffffff' : '#211A2E' }}>
                   {v.immatriculation}
                 </ThemedText>
               </Pressable>
@@ -156,15 +156,15 @@ export default function CalendrierScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : (
           <View className="flex-1">
             <Calendar
               markedDates={markedDates}
               onDayPress={(day: DateData) => setSelectedDay((prev) => (prev === day.dateString ? null : day.dateString))}
-              theme={{ todayTextColor: '#1f5eff', arrowColor: '#1f5eff', dotColor: '#1f5eff' }}
-              style={{ borderBottomWidth: 1, borderBottomColor: '#e1e5f0' }}
+              theme={{ todayTextColor: '#7C3AED', arrowColor: '#7C3AED', dotColor: '#7C3AED' }}
+              style={{ borderBottomWidth: 1, borderBottomColor: '#EAE5F2' }}
             />
 
             {selectedDay ? (
@@ -188,7 +188,7 @@ export default function CalendrierScreen() {
                 return (
                   <Pressable
                     onPress={() => router.push(`/locations/${item.id}`)}
-                    className="gap-1 rounded-2xl border border-[#e1e5f0] bg-white p-3"
+                    className="gap-1 rounded-2xl border border-[#EAE5F2] bg-white p-3"
                   >
                     <View className="flex-row items-center justify-between">
                       <ThemedText type="smallBold">{label}</ThemedText>

@@ -6,10 +6,10 @@ module.exports = {
     extend: {
       colors: {
         m3ak: {
-          blue: '#1f5eff',
-          cyan: '#38e1ff',
-          yellow: '#ffd43b',
-          background: '#f4f6fb',
+          mauve: '#7C3AED',
+          mauveDeep: '#5B21B6',
+          mauveLight: '#EDE9FE',
+          background: '#FAF9FF',
         },
       },
       fontFamily: {

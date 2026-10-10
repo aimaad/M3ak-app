@@ -9,13 +9,13 @@ export function CustomerCard({ customer, onPress }: { customer: Customer; onPres
   const { t } = useLanguage();
 
   return (
-    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#e1e5f0] bg-white p-4">
+    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
       <View className="flex-row items-start justify-between gap-2">
         <ThemedText type="smallBold" className="flex-1">
           {customer.nomComplet}
         </ThemedText>
         <View className="items-end gap-1">
-          <View className="rounded-full bg-[#e5ebfd] px-2.5 py-1">
+          <View className="rounded-full bg-[#EDE9FE] px-2.5 py-1">
             <ThemedText type="small" themeColor="primary">
               {t(`customer.type.${customer.typeClient}`)}
             </ThemedText>

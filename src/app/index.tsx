@@ -2,8 +2,10 @@ import { Redirect } from 'expo-router';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-context';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -15,9 +17,7 @@ export default function Index() {
     return (
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1 items-center justify-center gap-3 px-8">
-          <ThemedText type="subtitle" themeColor="primary" className="text-center font-cairo-semibold">
-            {t('common.appName')}
-          </ThemedText>
+          <Logo size="lg" />
           <ThemedText type="subtitle" className="text-center font-cairo-semibold">
             {t('auth.configMissingTitle')}
           </ThemedText>
@@ -33,7 +33,7 @@ export default function Index() {
     return (
       <ThemedView className="flex-1">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color="#1f5eff" />
+          <ActivityIndicator color={M3akPalette.mauve} />
         </View>
       </ThemedView>
     );

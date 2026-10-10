@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { Pressable, ScrollView, View } from 'react-native';
 
+import { Button } from '@/components/button';
 import { DocumentPhotoField } from '@/components/document-photo-field';
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
@@ -84,10 +85,10 @@ function ChipGroup<T extends string>({
             onPress={() => !disabled && onSelect(option)}
             disabled={disabled}
             className={`rounded-full border px-4 py-2 ${
-              isSelected ? 'border-[#1f5eff] bg-[#1f5eff]' : 'border-[#e1e5f0] bg-white'
+              isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
             } ${disabled ? 'opacity-50' : ''}`}
           >
-            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#101423' }}>
+            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>
               {getLabel(option)}
             </ThemedText>
           </Pressable>
@@ -305,7 +306,7 @@ export function VehicleForm({
           {t('vehicle.fields.statut')}
         </ThemedText>
         {statusLocked ? (
-          <View className="rounded-2xl border border-dashed border-[#e1e5f0] bg-white px-4 py-3">
+          <View className="rounded-2xl border border-dashed border-[#EAE5F2] bg-white px-4 py-3">
             <ThemedText type="small" themeColor="textSecondary">
               {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
             </ThemedText>
@@ -330,25 +331,20 @@ export function VehicleForm({
       />
 
       {submitError ? (
-        <View className="rounded-2xl bg-[#fee2e2] px-4 py-3">
-          <ThemedText type="small" style={{ color: '#dc2626' }}>
+        <View className="rounded-2xl bg-[#FEE2E2] px-4 py-3">
+          <ThemedText type="small" style={{ color: '#DC2626' }}>
             {submitError}
           </ThemedText>
         </View>
       ) : null}
 
-      <Pressable
+      <Button
+        label={isSubmitting ? submittingLabel : submitLabel}
         onPress={handleSubmit}
         disabled={isSubmitting}
-        className={`mt-2 flex-row items-center justify-center gap-2 rounded-2xl px-4 py-4 ${
-          isSubmitting ? 'bg-[#9aa3bd]' : 'bg-[#1f5eff]'
-        }`}
-      >
-        {isSubmitting ? <ActivityIndicator color="#ffffff" /> : null}
-        <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-          {isSubmitting ? submittingLabel : submitLabel}
-        </ThemedText>
-      </Pressable>
+        loading={isSubmitting}
+        style={{ marginTop: 8 }}
+      />
     </ScrollView>
   );
 }

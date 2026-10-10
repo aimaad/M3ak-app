@@ -43,20 +43,20 @@ export function PickerField<T>({
 
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
-        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#dc2626]' : 'border-[#e1e5f0]'} bg-white`}
+        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#DC2626]' : 'border-[#EAE5F2]'} bg-white`}
       >
         <ThemedText type="default" themeColor={selectedItem ? undefined : 'textSecondary'}>
           {selectedItem ? getLabel(selectedItem) : placeholder}
         </ThemedText>
       </Pressable>
       {error ? (
-        <ThemedText type="small" style={{ color: '#dc2626' }}>
+        <ThemedText type="small" style={{ color: '#DC2626' }}>
           {error}
         </ThemedText>
       ) : null}
 
       {expanded ? (
-        <View className="gap-2 rounded-2xl border border-[#e1e5f0] bg-white p-3">
+        <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-3">
           <TextField placeholder={searchPlaceholder} value={query} onChangeText={setQuery} />
           <ScrollView className="max-h-52" keyboardShouldPersistTaps="handled">
             {filtered.map((item) => {
@@ -70,7 +70,7 @@ export function PickerField<T>({
                     setExpanded(false);
                     setQuery('');
                   }}
-                  className={`rounded-xl px-3 py-2 ${selected ? 'bg-[#e5ebfd]' : ''}`}
+                  className={`rounded-xl px-3 py-2 ${selected ? 'bg-[#EDE9FE]' : ''}`}
                 >
                   <ThemedText type="smallBold">{getLabel(item)}</ThemedText>
                   {getSubLabel?.(item) ? (

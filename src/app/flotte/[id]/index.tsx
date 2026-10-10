@@ -22,7 +22,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#e1e5f0] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -104,7 +104,7 @@ export default function VehicleDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#1f5eff" />
+            <ActivityIndicator color="#7C3AED" />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -133,7 +133,7 @@ export default function VehicleDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.infoSection')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
                 <InfoRow label={t('vehicle.fields.immatriculation')} value={vehicle.immatriculation} />
                 <InfoRow label={t('vehicle.fields.marque')} value={vehicle.marque} />
                 <InfoRow label={t('vehicle.fields.modele')} value={vehicle.modele} />
@@ -150,7 +150,7 @@ export default function VehicleDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.sections.caracteristiques')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
                 <InfoRow
                   label={t('vehicle.fields.categorie')}
                   value={vehicle.categorie ? t(`vehicle.category.${vehicle.categorie}`) : '—'}
@@ -175,7 +175,7 @@ export default function VehicleDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.sections.tarification')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#e1e5f0] bg-white px-4">
+              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
                 <View className="flex-row items-center justify-between py-3">
                   <ThemedText type="default" themeColor="textSecondary">
                     {t('vehicle.fields.prixJour')}
@@ -200,7 +200,7 @@ export default function VehicleDetailScreen() {
                 <ThemedText type="smallBold" className="mb-2">
                   {t('vehicle.fields.description')}
                 </ThemedText>
-                <View className="rounded-3xl border border-[#e1e5f0] bg-white p-4">
+                <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
                   <ThemedText type="default">{vehicle.description}</ThemedText>
                 </View>
               </View>
@@ -231,7 +231,7 @@ export default function VehicleDetailScreen() {
                     {doc?.expiresAt ? (
                       <ThemedText
                         type="small"
-                        style={{ color: isExpiringSoon(doc.expiresAt) ? '#dc2626' : '#5b6178' }}
+                        style={{ color: isExpiringSoon(doc.expiresAt) ? '#DC2626' : '#81778F' }}
                       >
                         {t('vehicle.documentExpiry', {
                           date: new Date(doc.expiresAt).toLocaleDateString('fr-FR'),
@@ -247,7 +247,7 @@ export default function VehicleDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.historySection')}
               </ThemedText>
-              <View className="gap-1 rounded-3xl border border-dashed border-[#e1e5f0] bg-white p-4">
+              <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('vehicle.historyPlaceholder')}
                 </ThemedText>
@@ -257,7 +257,7 @@ export default function VehicleDetailScreen() {
             {isManager ? (
               <Pressable
                 onPress={vehicle.archivedAt ? handleReactivate : handleArchive}
-                className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-4"
+                className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-4"
               >
                 <ThemedText type="smallBold" themeColor={vehicle.archivedAt ? 'primary' : undefined}>
                   {vehicle.archivedAt ? t('vehicle.reactivate') : t('vehicle.archive')}

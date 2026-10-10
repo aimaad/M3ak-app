@@ -71,9 +71,9 @@ export function DriverList({
   return (
     <View className="gap-3">
       {driversQuery.isLoading ? (
-        <ActivityIndicator color="#1f5eff" />
+        <ActivityIndicator color="#7C3AED" />
       ) : (driversQuery.data ?? []).length === 0 ? (
-        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-[#e1e5f0] bg-white">
+        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white">
           <ThemedText type="small" themeColor="textSecondary">
             {t('customer.noDrivers')}
           </ThemedText>
@@ -82,7 +82,7 @@ export function DriverList({
         (driversQuery.data ?? []).map((driver) => (
           <View
             key={driver.id}
-            className="flex-row items-center justify-between rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+            className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
           >
             <View>
               <ThemedText type="smallBold">{driver.nomComplet}</ThemedText>
@@ -92,7 +92,7 @@ export function DriverList({
             </View>
             {canRemove ? (
               <Pressable onPress={() => handleRemove(driver.id)} hitSlop={8}>
-                <ThemedText type="small" style={{ color: '#dc2626' }}>
+                <ThemedText type="small" style={{ color: '#DC2626' }}>
                   {t('customer.removeDriver')}
                 </ThemedText>
               </Pressable>
@@ -102,7 +102,7 @@ export function DriverList({
       )}
 
       {showForm ? (
-        <View className="gap-2 rounded-2xl border border-[#e1e5f0] bg-white p-4">
+        <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-4">
           <TextField
             label={t('customer.fields.nomComplet')}
             value={values.nomComplet}
@@ -128,14 +128,14 @@ export function DriverList({
           <View className="flex-row gap-2">
             <Pressable
               onPress={() => setShowForm(false)}
-              className="flex-1 items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+              className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
             >
               <ThemedText type="small">{t('common.cancel')}</ThemedText>
             </Pressable>
             <Pressable
               onPress={handleAdd}
               disabled={createDriver.isPending}
-              className="flex-1 items-center rounded-2xl bg-[#1f5eff] px-4 py-3"
+              className="flex-1 items-center rounded-2xl bg-[#7C3AED] px-4 py-3"
             >
               <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
                 {createDriver.isPending ? t('customer.form.saving') : t('customer.addDriver')}
@@ -146,7 +146,7 @@ export function DriverList({
       ) : (
         <Pressable
           onPress={() => setShowForm(true)}
-          className="items-center rounded-2xl border border-[#e1e5f0] bg-white px-4 py-3"
+          className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
         >
           <ThemedText type="small" themeColor="primary">
             {`+ ${t('customer.addDriver')}`}

@@ -27,7 +27,7 @@ function GalleryThumbnail({
       {canDelete ? (
         <Pressable
           onPress={onDelete}
-          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-[#101423]"
+          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-[#211A2E]"
         >
           <ThemedText type="small" style={{ color: '#ffffff' }}>
             ×
@@ -51,7 +51,7 @@ export function VehiclePhotoGallery({
 }) {
   if (photos.length === 0) {
     return (
-      <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#e1e5f0] bg-white">
+      <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white">
         <ThemedText type="small" themeColor="textSecondary">
           {emptyLabel}
         </ThemedText>
