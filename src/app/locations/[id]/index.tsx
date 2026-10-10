@@ -1,7 +1,9 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
+import { Card, PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -114,7 +116,7 @@ export default function LocationDetailScreen() {
             </ThemedText>
           </View>
 
-          <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+          <Card padded={false} className="px-4">
             <InfoRow label={t('locations.vehicle')} value={vehicle ? vehicle.immatriculation : '—'} />
             <InfoRow label={t('locations.customer')} value={customer?.nomComplet ?? '—'} />
             <InfoRow
@@ -132,45 +134,31 @@ export default function LocationDetailScreen() {
               </ThemedText>
             </View>
             <InfoRow label={t('locations.soldeRestant')} value={`${soldeRestant.toLocaleString('fr-FR')} MAD`} />
-          </View>
+          </Card>
 
           {canExtend ? <ExtendRentalForm rental={rental} /> : null}
 
           {canConfirm ? (
-            <Pressable
-              onPress={handleConfirm}
-              disabled={confirmRental.isPending}
-              className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
-            >
-              {confirmRental.isPending ? (
-                <ActivityIndicator color="#ffffff" />
-              ) : (
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                  {t('locations.confirmAction')}
-                </ThemedText>
-              )}
-            </Pressable>
+            <Button label={t('locations.confirmAction')} onPress={handleConfirm} loading={confirmRental.isPending} />
           ) : null}
 
           <View className="gap-2">
             <ThemedText type="smallBold">{t('contract.section')}</ThemedText>
             {contract ? (
-              <Pressable
+              <PressableCard
                 onPress={() => router.push(`/contrats/${contract.id}`)}
-                className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                padded={false}
+                className="flex-row items-center justify-between px-4 py-3"
               >
                 <ThemedText type="small">{contract.numero}</ThemedText>
                 <ContractStatusBadge status={contract.statut} />
-              </Pressable>
+              </PressableCard>
             ) : canCreateContract ? (
-              <Pressable
+              <Button
+                label={t('contract.createAction')}
+                variant="secondary"
                 onPress={() => router.push(`/contrats/nouveau?rentalId=${rental.id}`)}
-                className="items-center rounded-2xl border border-[#7C3AED] px-4 py-3"
-              >
-                <ThemedText type="smallBold" themeColor="primary">
-                  {t('contract.createAction')}
-                </ThemedText>
-              </Pressable>
+              />
             ) : (
               <ThemedText type="small" themeColor="textSecondary">
                 {t('contract.unavailableHint')}
@@ -180,88 +168,71 @@ export default function LocationDetailScreen() {
 
           <View className="gap-2">
             <ThemedText type="smallBold">{t('inspection.section')}</ThemedText>
-            <Pressable
+            <PressableCard
               onPress={() =>
                 router.push({
                   pathname: '/locations/[id]/inspection-depart',
                   params: { id: rental.id },
                 })
               }
-              className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+              padded={false}
+              className="flex-row items-center justify-between px-4 py-3"
             >
               <ThemedText type="small">{t('inspection.title.depart')}</ThemedText>
               <ThemedText type="small" themeColor={inspectionDepart?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionDepart?.statut === 'terminee' ? { color: '#15803D' } : undefined}>
                 {inspectionDepart?.statut === 'terminee' ? t('inspection.done') : t('inspection.todo')}
               </ThemedText>
-            </Pressable>
+            </PressableCard>
             {rental.statut === 'en_cours' || rental.statut === 'terminee' ? (
-              <Pressable
+              <PressableCard
                 onPress={() =>
                   router.push({
                     pathname: '/locations/[id]/inspection-retour',
                     params: { id: rental.id },
                   })
                 }
-                className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                padded={false}
+                className="flex-row items-center justify-between px-4 py-3"
               >
                 <ThemedText type="small">{t('inspection.title.retour')}</ThemedText>
                 <ThemedText type="small" themeColor={inspectionRetour?.statut === 'terminee' ? undefined : 'textSecondary'} style={inspectionRetour?.statut === 'terminee' ? { color: '#15803D' } : undefined}>
                   {inspectionRetour?.statut === 'terminee' ? t('inspection.done') : t('inspection.todo')}
                 </ThemedText>
-              </Pressable>
+              </PressableCard>
             ) : null}
           </View>
 
           {canStart ? (
-            <View className="gap-2">
-              <Pressable
-                onPress={() =>
-                  router.push({
-                    pathname: '/locations/[id]/depart',
-                    params: { id: rental.id, vehicleId: rental.vehicleId },
-                  })
-                }
-                className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
-              >
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                  {t('locations.startAction')}
-                </ThemedText>
-              </Pressable>
-            </View>
+            <Button
+              label={t('locations.startAction')}
+              onPress={() =>
+                router.push({
+                  pathname: '/locations/[id]/depart',
+                  params: { id: rental.id, vehicleId: rental.vehicleId },
+                })
+              }
+            />
           ) : null}
 
-          {canCancel ? (
-            <Pressable
-              onPress={handleCancel}
-              className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
-            >
-              <ThemedText type="small" style={{ color: '#DC2626' }}>
-                {t('locations.cancelAction')}
-              </ThemedText>
-            </Pressable>
-          ) : null}
+          {canCancel ? <Button label={t('locations.cancelAction')} variant="danger" onPress={handleCancel} /> : null}
 
           {rental.statut === 'en_cours' ? (
-            <Pressable
+            <Button
+              label={t('locations.completeAction')}
               onPress={() =>
                 router.push({
                   pathname: '/locations/[id]/retour',
                   params: { id: rental.id, vehicleId: rental.vehicleId },
                 })
               }
-              className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
-            >
-              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                {t('locations.completeAction')}
-              </ThemedText>
-            </Pressable>
+            />
           ) : null}
 
           <View className="gap-3">
             <ThemedText type="smallBold">{t('locations.cautionSection')}</ThemedText>
             {deposit ? (
               <>
-                <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+                <Card padded={false} className="px-4">
                   <InfoRow
                     label={t('locations.cautionBlocked')}
                     value={`${deposit.montantBloque.toLocaleString('fr-FR')} MAD`}
@@ -278,7 +249,7 @@ export default function LocationDetailScreen() {
                       {`${deposit.montantRestitue.toLocaleString('fr-FR')} MAD`}
                     </ThemedText>
                   </View>
-                </View>
+                </Card>
                 {rental.statut === 'terminee' && deposit.statut === 'bloquee' ? (
                   <DepositResolveForm deposit={deposit} />
                 ) : null}
@@ -289,9 +260,9 @@ export default function LocationDetailScreen() {
           {rental.notes ? (
             <View className="gap-2">
               <ThemedText type="smallBold">{t('locations.notes')}</ThemedText>
-              <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
+              <Card>
                 <ThemedText type="default">{rental.notes}</ThemedText>
-              </View>
+              </Card>
             </View>
           ) : null}
 
@@ -304,13 +275,14 @@ export default function LocationDetailScreen() {
             ) : (
               <View className="gap-2">
                 {payments.map((payment) => (
-                  <View
+                  <Card
                     key={payment.id}
-                    className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                    padded={false}
+                    className="flex-row items-center justify-between px-4 py-3"
                   >
                     <ThemedText type="small">{t(`locations.paymentMethods.${payment.methode}`)}</ThemedText>
                     <ThemedText type="smallBold">{`${payment.montant.toLocaleString('fr-FR')} MAD`}</ThemedText>
-                  </View>
+                  </Card>
                 ))}
               </View>
             )}

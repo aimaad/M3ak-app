@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
+import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import type { Customer } from '@/features/customers/types';
 import type { Vehicle } from '@/features/vehicles/types';
@@ -26,7 +27,7 @@ export function RentalCard({
   const { t } = useLanguage();
 
   return (
-    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <PressableCard onPress={onPress} className="gap-2">
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1 gap-1">
           <ThemedText type="smallBold">
@@ -41,6 +42,6 @@ export function RentalCard({
       <ThemedText type="small" themeColor="textSecondary">
         {formatDate(rental.dateDebutPrevue)} → {formatDate(rental.dateFinPrevue)}
       </ThemedText>
-    </Pressable>
+    </PressableCard>
   );
 }

@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
+import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -9,7 +10,7 @@ export function CustomerCard({ customer, onPress }: { customer: Customer; onPres
   const { t } = useLanguage();
 
   return (
-    <Pressable onPress={onPress} className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <PressableCard onPress={onPress} className="gap-2">
       <View className="flex-row items-start justify-between gap-2">
         <ThemedText type="smallBold" className="flex-1">
           {customer.nomComplet}
@@ -44,6 +45,6 @@ export function CustomerCard({ customer, onPress }: { customer: Customer; onPres
           </ThemedText>
         ) : null}
       </View>
-    </Pressable>
+    </PressableCard>
   );
 }

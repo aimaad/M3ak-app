@@ -1,5 +1,6 @@
-import { Image, Pressable, View } from 'react-native';
+import { Image, View } from 'react-native';
 
+import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -14,10 +15,7 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
   const { data: photoUrl } = useSignedUrl(VEHICLE_PHOTOS_BUCKET, firstPhoto);
 
   return (
-    <Pressable
-      onPress={onPress}
-      className="gap-3 rounded-3xl border border-[#EAE5F2] bg-white p-4"
-    >
+    <PressableCard onPress={onPress} className="gap-3">
       <View className="flex-row items-start justify-between gap-2">
         <View className="flex-1 gap-1">
           <ThemedText type="smallBold">
@@ -40,7 +38,7 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
       {photoUrl ? (
         <Image source={{ uri: photoUrl }} className="h-28 w-full rounded-2xl" resizeMode="cover" />
       ) : (
-        <View className="h-28 items-center justify-center rounded-2xl bg-[#f4f6fb]">
+        <View className="h-28 items-center justify-center rounded-2xl bg-[#EDE9FE]">
           <ThemedText type="small" themeColor="textSecondary">
             {vehicle.marque} {vehicle.modele}
           </ThemedText>
@@ -65,6 +63,6 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
           </ThemedText>
         </View>
       </View>
-    </Pressable>
+    </PressableCard>
   );
 }

@@ -2,6 +2,8 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Button } from '@/components/button';
+import { Card } from '@/components/card';
 import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -134,7 +136,7 @@ export default function VehicleDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.infoSection')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+              <Card padded={false} className="px-4">
                 <InfoRow label={t('vehicle.fields.immatriculation')} value={vehicle.immatriculation} />
                 <InfoRow label={t('vehicle.fields.marque')} value={vehicle.marque} />
                 <InfoRow label={t('vehicle.fields.modele')} value={vehicle.modele} />
@@ -144,14 +146,14 @@ export default function VehicleDetailScreen() {
                   label={t('vehicle.fields.kilometrage')}
                   value={`${vehicle.kilometrage.toLocaleString('fr-FR')} ${t('flotte.km')}`}
                 />
-              </View>
+              </Card>
             </View>
 
             <View>
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.sections.caracteristiques')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+              <Card padded={false} className="px-4">
                 <InfoRow
                   label={t('vehicle.fields.categorie')}
                   value={vehicle.categorie ? t(`vehicle.category.${vehicle.categorie}`) : '—'}
@@ -169,14 +171,14 @@ export default function VehicleDetailScreen() {
                   label={t('vehicle.fields.niveauCarburant')}
                   value={vehicle.niveauCarburant !== null ? `${vehicle.niveauCarburant}%` : '—'}
                 />
-              </View>
+              </Card>
             </View>
 
             <View>
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.sections.tarification')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+              <Card padded={false} className="px-4">
                 <View className="flex-row items-center justify-between py-3">
                   <ThemedText type="default" themeColor="textSecondary">
                     {t('vehicle.fields.prixJour')}
@@ -193,7 +195,7 @@ export default function VehicleDetailScreen() {
                   label={t('vehicle.fields.prixMois')}
                   value={vehicle.prixMois !== null ? `${vehicle.prixMois.toLocaleString('fr-FR')} MAD` : '—'}
                 />
-              </View>
+              </Card>
             </View>
 
             {vehicle.description ? (
@@ -201,9 +203,9 @@ export default function VehicleDetailScreen() {
                 <ThemedText type="smallBold" className="mb-2">
                   {t('vehicle.fields.description')}
                 </ThemedText>
-                <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
+                <Card>
                   <ThemedText type="default">{vehicle.description}</ThemedText>
-                </View>
+                </Card>
               </View>
             ) : null}
 
@@ -256,14 +258,11 @@ export default function VehicleDetailScreen() {
             </View>
 
             {isManager ? (
-              <Pressable
+              <Button
+                label={vehicle.archivedAt ? t('vehicle.reactivate') : t('vehicle.archive')}
+                variant={vehicle.archivedAt ? 'secondary' : 'danger'}
                 onPress={vehicle.archivedAt ? handleReactivate : handleArchive}
-                className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-4"
-              >
-                <ThemedText type="smallBold" themeColor={vehicle.archivedAt ? 'primary' : undefined}>
-                  {vehicle.archivedAt ? t('vehicle.reactivate') : t('vehicle.archive')}
-                </ThemedText>
-              </Pressable>
+              />
             ) : null}
           </ScrollView>
         )}

@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
+import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -7,7 +8,7 @@ import { computeMaintenanceUrgency, type MaintenanceUrgency } from './urgency';
 import type { MaintenanceItem } from './types';
 
 const URGENCY_STYLE: Record<MaintenanceUrgency, { background: string; text: string }> = {
-  a_venir: { background: '#EDE9FE', text: '#7C3AED' },
+  a_venir: { background: '#F1EEF7', text: '#81778F' },
   due: { background: '#FEF3C7', text: '#B45309' },
   en_retard: { background: '#FEE2E2', text: '#DC2626' },
 };
@@ -29,10 +30,12 @@ export function MaintenanceRow({
   const style = URGENCY_STYLE[urgency];
 
   return (
-    <Pressable
+    <PressableCard
       onPress={onPress}
       disabled={!onPress}
-      className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+      padded={false}
+      className="flex-row items-center justify-between px-4 py-3"
+    >
       <View className="flex-1 gap-0.5">
         <ThemedText type="smallBold">{t(`maintenance.types.${item.type}`)}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
@@ -49,6 +52,6 @@ export function MaintenanceRow({
           {isDone ? t('maintenance.done') : t(`maintenance.urgency.${urgency}`)}
         </ThemedText>
       </View>
-    </Pressable>
+    </PressableCard>
   );
 }

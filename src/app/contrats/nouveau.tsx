@@ -4,6 +4,7 @@ import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -93,7 +94,7 @@ export default function NouveauContratScreen() {
           </View>
         ) : (
           <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-            <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4 gap-1">
+            <Card className="gap-1">
               <ThemedText type="smallBold">{`${vehicle.marque} ${vehicle.modele} · ${vehicle.immatriculation}`}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {customer.nomComplet}
@@ -102,7 +103,7 @@ export default function NouveauContratScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {rental.prixTotal != null ? `${rental.prixTotal.toLocaleString('fr-FR')} MAD` : '—'} · {t('locations.cautionBlocked')} {rental.cautionMontant.toLocaleString('fr-FR')} MAD
               </ThemedText>
-            </View>
+            </Card>
 
             <TextField
               label={t('contract.fields.conditionsParticulieres')}

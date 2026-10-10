@@ -22,7 +22,7 @@ function GalleryThumbnail({
       {signedUrl ? (
         <Image source={{ uri: signedUrl }} className="h-28 w-28 rounded-2xl" resizeMode="cover" />
       ) : (
-        <View className="h-28 w-28 rounded-2xl bg-[#f4f6fb]" />
+        <View className="h-28 w-28 rounded-2xl bg-[#FAF9FF]" />
       )}
       {canDelete ? (
         <Pressable

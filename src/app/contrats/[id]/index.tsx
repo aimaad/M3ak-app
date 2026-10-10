@@ -1,10 +1,11 @@
 import * as Sharing from 'expo-sharing';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -117,7 +118,7 @@ export default function ContratDetailScreen() {
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
           <ContractStatusBadge status={contract.statut} />
 
-          <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+          <Card padded={false} className="px-4">
             <InfoRow label={t('locations.vehicle')} value={`${contract.vehicleMarque} ${contract.vehicleModele} · ${contract.vehicleImmatriculation}`} />
             <InfoRow label={t('locations.customer')} value={contract.customerNom} />
             {contract.driverNom ? <InfoRow label={t('locations.driver')} value={contract.driverNom} /> : null}
@@ -129,14 +130,14 @@ export default function ContratDetailScreen() {
               </ThemedText>
               <ThemedText type="smallBold">{`${contract.cautionMontant.toLocaleString('fr-FR')} MAD`}</ThemedText>
             </View>
-          </View>
+          </Card>
 
           {contract.conditionsParticulieres ? (
             <View className="gap-2">
               <ThemedText type="smallBold">{t('contract.fields.conditionsParticulieres')}</ThemedText>
-              <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
+              <Card>
                 <ThemedText type="default">{contract.conditionsParticulieres}</ThemedText>
-              </View>
+              </Card>
             </View>
           ) : null}
 
@@ -174,32 +175,20 @@ export default function ContratDetailScreen() {
               />
             ) : null}
 
-            <Pressable
+            <Button
+              label={contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
+              variant="secondary"
               onPress={handleGeneratePdf}
               disabled={isGeneratingPdf}
-              className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
-            >
-              {isGeneratingPdf ? (
-                <ActivityIndicator color="#7C3AED" />
-              ) : (
-                <ThemedText type="small" themeColor="primary">
-                  {contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
-                </ThemedText>
-              )}
-            </Pressable>
+              loading={isGeneratingPdf}
+            />
             {pdfError ? (
               <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {pdfError}
               </ThemedText>
             ) : null}
 
-            {canCancel ? (
-              <Pressable onPress={handleCancel} className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
-                <ThemedText type="small" style={{ color: '#DC2626' }}>
-                  {t('contract.cancelAction')}
-                </ThemedText>
-              </Pressable>
-            ) : null}
+            {canCancel ? <Button label={t('contract.cancelAction')} variant="danger" onPress={handleCancel} /> : null}
           </View>
         </ScrollView>
       </SafeAreaView>

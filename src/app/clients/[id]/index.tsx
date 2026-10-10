@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { Card, PressableCard } from '@/components/card';
 import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -144,7 +145,7 @@ export default function ClientDetailScreen() {
               <ThemedText type="smallBold" className="mb-2">
                 {t('customer.sections.coordonnees')}
               </ThemedText>
-              <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+              <Card padded={false} className="px-4">
                 <InfoRow label={t('customer.fields.telephone')} value={customer.telephone ?? '—'} />
                 <InfoRow label={t('customer.fields.telephoneSecondaire')} value={customer.telephoneSecondaire ?? '—'} />
                 <InfoRow label={t('customer.fields.email')} value={customer.email ?? '—'} />
@@ -157,7 +158,7 @@ export default function ClientDetailScreen() {
                   </ThemedText>
                   <ThemedText type="smallBold">{customer.numeroPermis ?? '—'}</ThemedText>
                 </View>
-              </View>
+              </Card>
             </View>
 
             {customer.typeClient === 'entreprise' ? (
@@ -165,7 +166,7 @@ export default function ClientDetailScreen() {
                 <ThemedText type="smallBold" className="mb-2">
                   {t('customer.sections.type')}
                 </ThemedText>
-                <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+                <Card padded={false} className="px-4">
                   <InfoRow label={t('customer.fields.raisonSociale')} value={customer.raisonSociale ?? '—'} />
                   <View className="flex-row items-center justify-between py-3">
                     <ThemedText type="default" themeColor="textSecondary">
@@ -173,7 +174,7 @@ export default function ClientDetailScreen() {
                     </ThemedText>
                     <ThemedText type="smallBold">{customer.ice ?? '—'}</ThemedText>
                   </View>
-                </View>
+                </Card>
               </View>
             ) : null}
 
@@ -182,9 +183,9 @@ export default function ClientDetailScreen() {
                 <ThemedText type="smallBold" className="mb-2">
                   {t('customer.sections.notes')}
                 </ThemedText>
-                <View className="rounded-3xl border border-[#EAE5F2] bg-white p-4">
+                <Card>
                   <ThemedText type="default">{customer.notes}</ThemedText>
-                </View>
+                </Card>
               </View>
             ) : null}
 
@@ -234,10 +235,11 @@ export default function ClientDetailScreen() {
               ) : (
                 <View className="gap-2">
                   {rentals.map((rental) => (
-                    <Pressable
+                    <PressableCard
                       key={rental.id}
                       onPress={() => router.push(`/locations/${rental.id}`)}
-                      className="gap-1 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                      padded={false}
+                      className="gap-1 px-4 py-3"
                     >
                       <View className="flex-row items-center justify-between">
                         <ThemedText type="small">{rental.numero}</ThemedText>
@@ -264,7 +266,7 @@ export default function ClientDetailScreen() {
                             ))}
                         </View>
                       ) : null}
-                    </Pressable>
+                    </PressableCard>
                   ))}
                 </View>
               )}
@@ -279,13 +281,14 @@ export default function ClientDetailScreen() {
               ) : (
                 <View className="gap-2">
                   {customerPayments.map((payment) => (
-                    <View
+                    <Card
                       key={payment.id}
-                      className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+                      padded={false}
+                      className="flex-row items-center justify-between px-4 py-3"
                     >
                       <ThemedText type="small">{t(`locations.paymentMethods.${payment.methode}`)}</ThemedText>
                       <ThemedText type="smallBold">{`${payment.montant.toLocaleString('fr-FR')} MAD`}</ThemedText>
-                    </View>
+                    </Card>
                   ))}
                 </View>
               )}
@@ -293,7 +296,7 @@ export default function ClientDetailScreen() {
 
             <View className="gap-2">
               <ThemedText type="smallBold">{t('customer.consentSection')}</ThemedText>
-              <View className="flex-row items-center justify-between rounded-3xl border border-[#EAE5F2] bg-white px-4 py-3">
+              <Card padded={false} className="flex-row items-center justify-between px-4 py-3">
                 <View className="flex-1 gap-0.5">
                   <ThemedText type="small">
                     {customer.consentementDonnees ? t('customer.consentGiven') : t('customer.consentMissing')}
@@ -311,18 +314,15 @@ export default function ClientDetailScreen() {
                   onPress={handleToggleConsent}
                   disabled={setConsent.isPending}
                 />
-              </View>
+              </Card>
             </View>
 
             {isManager ? (
-              <Pressable
+              <Button
+                label={customer.archivedAt ? t('customer.reactivate') : t('customer.archive')}
+                variant={customer.archivedAt ? 'secondary' : 'danger'}
                 onPress={customer.archivedAt ? handleReactivate : handleArchive}
-                className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-4"
-              >
-                <ThemedText type="smallBold" themeColor={customer.archivedAt ? 'primary' : undefined}>
-                  {customer.archivedAt ? t('customer.reactivate') : t('customer.archive')}
-                </ThemedText>
-              </Pressable>
+              />
             ) : null}
           </ScrollView>
         )}

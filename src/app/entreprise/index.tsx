@@ -147,7 +147,7 @@ function EntrepriseForm({
           {logoUrl ? (
             <Image source={{ uri: logoUrl }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />
           ) : (
-            <View className="h-24 w-24 items-center justify-center rounded-2xl bg-[#f4f6fb]">
+            <View className="h-24 w-24 items-center justify-center rounded-2xl bg-[#FAF9FF]">
               <ThemedText type="title" themeColor="primary">
                 {values.nom.charAt(0).toUpperCase() || '?'}
               </ThemedText>

@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -83,10 +84,7 @@ export default function ContratsScreen() {
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-10"
             renderItem={({ item }) => (
-              <Pressable
-                onPress={() => router.push(`/contrats/${item.id}`)}
-                className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4"
-              >
+              <PressableCard onPress={() => router.push(`/contrats/${item.id}`)} className="gap-2">
                 <View className="flex-row items-start justify-between gap-2">
                   <View className="flex-1 gap-1">
                     <ThemedText type="smallBold">{item.numero}</ThemedText>
@@ -99,7 +97,7 @@ export default function ContratsScreen() {
                 <ThemedText type="small" themeColor="textSecondary">
                   {formatDate(item.dateDebutPrevue)} → {formatDate(item.dateFinPrevue)}
                 </ThemedText>
-              </Pressable>
+              </PressableCard>
             )}
             ListEmptyComponent={
               <View className="items-center pt-12">

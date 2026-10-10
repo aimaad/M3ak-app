@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
 
+import { Button } from '@/components/button';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
@@ -126,21 +127,15 @@ export function DriverList({
             onChangeText={(v) => update('numeroPermis', v)}
           />
           <View className="flex-row gap-2">
-            <Pressable
-              onPress={() => setShowForm(false)}
-              className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
-            >
-              <ThemedText type="small">{t('common.cancel')}</ThemedText>
-            </Pressable>
-            <Pressable
+            <Button label={t('common.cancel')} variant="secondary" size="sm" onPress={() => setShowForm(false)} style={{ flex: 1 }} />
+            <Button
+              label={createDriver.isPending ? t('customer.form.saving') : t('customer.addDriver')}
+              size="sm"
               onPress={handleAdd}
               disabled={createDriver.isPending}
-              className="flex-1 items-center rounded-2xl bg-[#7C3AED] px-4 py-3"
-            >
-              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
-                {createDriver.isPending ? t('customer.form.saving') : t('customer.addDriver')}
-              </ThemedText>
-            </Pressable>
+              loading={createDriver.isPending}
+              style={{ flex: 1 }}
+            />
           </View>
         </View>
       ) : (

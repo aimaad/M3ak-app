@@ -26,7 +26,7 @@ export function DocumentPreview({ label, bucket, path, emptyLabel }: DocumentPre
           </ThemedText>
         </View>
       ) : isLoading || !signedUrl ? (
-        <View className="h-36 items-center justify-center rounded-2xl bg-[#f4f6fb]">
+        <View className="h-36 items-center justify-center rounded-2xl bg-[#FAF9FF]">
           <ActivityIndicator color="#7C3AED" />
         </View>
       ) : (
