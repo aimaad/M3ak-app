@@ -18,7 +18,7 @@ import { useLanguage } from '@/i18n/use-language';
 export default function ModifierVehiculeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
-  const { data: vehicle, isLoading } = useVehicle(id);
+  const { data: vehicle, isLoading, isError } = useVehicle(id);
   const updateVehicle = useUpdateVehicle();
   const updateDocuments = useUpdateVehicleDocuments();
   const updatePhotos = useUpdateVehiclePhotos();
@@ -97,11 +97,17 @@ export default function ModifierVehiculeScreen() {
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('vehicle.form.editTitle')} showBack />
-        {isLoading || !initialValues ? (
+        {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
           </View>
-        ) : !vehicle ? (
+        ) : isError ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('vehicle.loadError')}
+            </ThemedText>
+          </View>
+        ) : !vehicle || !initialValues ? (
           <View className="flex-1 items-center justify-center px-8">
             <ThemedText type="default" themeColor="textSecondary">
               {t('vehicle.notFound')}

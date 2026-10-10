@@ -314,6 +314,34 @@ async function main() {
   });
   record('Un double retour est refusé', !!doubleReturnErr && /already_recorded_or_invalid_state/.test(doubleReturnErr.message), doubleReturnErr?.message ?? 'AUCUNE ERREUR — double retour accepté !');
 
+  // --- created_by ne peut pas être usurpé (même famille que signed_by,
+  // corrigé en migration 0017) ---
+  const { data: rentalForSpoof } = await ownerA.client
+    .from('rentals')
+    .insert({ agency_id: agencyA.id, vehicle_id: vehicleA.id, customer_id: customerA.id, statut: 'en_attente_confirmation', date_debut_prevue: '2027-05-01T09:00:00Z', date_fin_prevue: '2027-05-03T09:00:00Z', caution_montant: 500 })
+    .select()
+    .single();
+  const { data: spoofedCreatedBy, error: spoofedCreatedByErr } = await ownerA.client
+    .from('contracts')
+    .insert({
+      agency_id: agencyA.id,
+      rental_id: rentalForSpoof.id,
+      customer_nom: 'Client Spoof CreatedBy',
+      vehicle_immatriculation: vehicleA.immatriculation,
+      vehicle_marque: vehicleA.marque,
+      vehicle_modele: vehicleA.modele,
+      date_debut_prevue: rentalForSpoof.date_debut_prevue,
+      date_fin_prevue: rentalForSpoof.date_fin_prevue,
+      caution_montant: 0,
+      created_by: ownerB.id, // tentative d'attribuer la création à un AUTRE utilisateur réel
+    })
+    .select();
+  record(
+    "created_by ne peut PAS être attribué à un autre utilisateur réel",
+    !!spoofedCreatedByErr || (spoofedCreatedBy ?? []).length === 0,
+    spoofedCreatedByErr?.message ?? `AUCUNE ERREUR — ${(spoofedCreatedBy ?? []).length} ligne(s) créée(s) au nom d'un autre utilisateur !`
+  );
+
   // --- PDF : isolation du stockage ---
   const pdfPathA = `${agencyA.id}/${contract.id}/contrat-${Date.now()}.pdf`;
   const tinyPdf = new Blob([new Uint8Array([1, 2, 3])]);

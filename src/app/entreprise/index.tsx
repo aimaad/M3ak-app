@@ -56,15 +56,22 @@ export default function EntrepriseScreen() {
   const detailsQuery = useAgencyDetails(agencyId);
 
   const isLoading = membershipQuery.isLoading || detailsQuery.isLoading;
+  const isError = membershipQuery.isError || detailsQuery.isError;
 
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('entreprise.title')} subtitle={t('entreprise.subtitle')} showBack />
 
-        {isLoading || !agencyId || !detailsQuery.data ? (
+        {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
+          </View>
+        ) : isError || !agencyId || !detailsQuery.data ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('entreprise.loadError')}
+            </ThemedText>
           </View>
         ) : (
           <EntrepriseForm

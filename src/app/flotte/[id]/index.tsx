@@ -42,7 +42,7 @@ export default function VehicleDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
-  const { data: vehicle, isLoading } = useVehicle(id);
+  const { data: vehicle, isLoading, isError } = useVehicle(id);
   const updatePhotos = useUpdateVehiclePhotos();
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
@@ -105,6 +105,12 @@ export default function VehicleDetailScreen() {
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
+          </View>
+        ) : isError ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('vehicle.loadError')}
+            </ThemedText>
           </View>
         ) : !vehicle ? (
           <View className="flex-1 items-center justify-center px-8">

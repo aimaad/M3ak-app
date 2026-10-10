@@ -281,6 +281,27 @@ async function main() {
   });
   record("L'annulation libère bien la période pour une nouvelle réservation", !afterCancelErr, afterCancelErr?.message ?? 'ok');
 
+  // --- created_by ne peut pas être usurpé (même famille que signed_by sur les
+  // contrats, corrigé en migration 0017) ---
+  const { data: spoofedCreatedBy, error: spoofedCreatedByErr } = await ownerA.client
+    .from('rentals')
+    .insert({
+      agency_id: agencyA.id,
+      vehicle_id: vehicleA.id,
+      customer_id: customerA.id,
+      statut: 'en_attente_confirmation',
+      date_debut_prevue: '2027-04-01T09:00:00Z',
+      date_fin_prevue: '2027-04-03T09:00:00Z',
+      caution_montant: 500,
+      created_by: ownerB.id, // tentative d'attribuer la création à un AUTRE utilisateur réel
+    })
+    .select();
+  record(
+    "created_by ne peut PAS être attribué à un autre utilisateur réel",
+    !!spoofedCreatedByErr || (spoofedCreatedBy ?? []).length === 0,
+    spoofedCreatedByErr?.message ?? `AUCUNE ERREUR — ${(spoofedCreatedBy ?? []).length} ligne(s) créée(s) au nom d'un autre utilisateur !`
+  );
+
   // --- Bilan ---
   const failed = results.filter((r) => !r.pass);
   console.log('\n=== BILAN RÉSERVATIONS ===');

@@ -36,7 +36,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 export default function LocationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
-  const { data: rental, isLoading } = useRental(id);
+  const { data: rental, isLoading, isError } = useRental(id);
   const { data: vehicle } = useVehicle(rental?.vehicleId);
   const { data: customer } = useCustomer(rental?.customerId);
   const { data: deposit } = useDeposit(rental?.id);
@@ -73,17 +73,17 @@ export default function LocationDetailScreen() {
     });
   }
 
-  if (isLoading || !rental) {
+  if (isLoading || isError || !rental) {
     return (
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.detailsTitle')} showBack />
-          <View className="flex-1 items-center justify-center">
+          <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
               <ActivityIndicator color="#1f5eff" />
             ) : (
-              <ThemedText type="default" themeColor="textSecondary">
-                {t('locations.notFound')}
+              <ThemedText type="default" themeColor="textSecondary" className="text-center">
+                {isError ? t('locations.loadError') : t('locations.notFound')}
               </ThemedText>
             )}
           </View>

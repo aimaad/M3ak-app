@@ -17,7 +17,7 @@ import { useLanguage } from '@/i18n/use-language';
 export default function ModifierClientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
-  const { data: customer, isLoading } = useCustomer(id);
+  const { data: customer, isLoading, isError } = useCustomer(id);
   const customersQuery = useCustomers();
   const updateCustomer = useUpdateCustomer();
   const updateDocuments = useUpdateCustomerDocuments();
@@ -86,11 +86,17 @@ export default function ModifierClientScreen() {
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('customer.form.editTitle')} showBack />
-        {isLoading || !initialValues ? (
+        {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
           </View>
-        ) : !customer ? (
+        ) : isError ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('customer.loadError')}
+            </ThemedText>
+          </View>
+        ) : !customer || !initialValues ? (
           <View className="flex-1 items-center justify-center px-8">
             <ThemedText type="default" themeColor="textSecondary">
               {t('customer.notFound')}

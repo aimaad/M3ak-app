@@ -18,9 +18,9 @@ export default function NouveauContratScreen() {
   const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
-  const { data: rental, isLoading: isLoadingRental } = useRental(rentalId);
-  const { data: vehicle } = useVehicle(rental?.vehicleId);
-  const { data: customer } = useCustomer(rental?.customerId);
+  const { data: rental, isLoading: isLoadingRental, isError: isRentalError } = useRental(rentalId);
+  const { data: vehicle, isError: isVehicleError } = useVehicle(rental?.vehicleId);
+  const { data: customer, isError: isCustomerError } = useCustomer(rental?.customerId);
   const { data: drivers } = useDrivers(customer?.id);
   const createContract = useCreateContract();
 
@@ -34,6 +34,7 @@ export default function NouveauContratScreen() {
   );
 
   const isLoading = isLoadingRental || agencyQuery.isLoading;
+  const isError = isRentalError || isVehicleError || isCustomerError || agencyQuery.isError;
   const canSubmit = !!rental && !!vehicle && !!customer && !!agencyQuery.data;
 
   async function handleSubmit() {
@@ -76,6 +77,12 @@ export default function NouveauContratScreen() {
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
+          </View>
+        ) : isError ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('locations.loadError')}
+            </ThemedText>
           </View>
         ) : !rental || !vehicle || !customer ? (
           <View className="flex-1 items-center justify-center px-8">

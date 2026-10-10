@@ -36,7 +36,7 @@ export default function ClientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
-  const { data: customer, isLoading } = useCustomer(id);
+  const { data: customer, isLoading, isError } = useCustomer(id);
   const archiveCustomer = useArchiveCustomer();
   const reactivateCustomer = useReactivateCustomer();
 
@@ -85,6 +85,12 @@ export default function ClientDetailScreen() {
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#1f5eff" />
+          </View>
+        ) : isError ? (
+          <View className="flex-1 items-center justify-center px-8">
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('customer.loadError')}
+            </ThemedText>
           </View>
         ) : !customer ? (
           <View className="flex-1 items-center justify-center px-8">

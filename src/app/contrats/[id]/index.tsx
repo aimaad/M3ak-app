@@ -33,7 +33,7 @@ export default function ContratDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
-  const { data: contract, isLoading } = useContract(id);
+  const { data: contract, isLoading, isError } = useContract(id);
   const { data: rental } = useRental(contract?.rentalId);
   const markReadyToSign = useMarkReadyToSign();
   const signContract = useSignContract();
@@ -85,13 +85,19 @@ export default function ContratDetailScreen() {
     ]);
   }
 
-  if (isLoading || !contract) {
+  if (isLoading || isError || !contract) {
     return (
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.detailsTitle')} showBack />
-          <View className="flex-1 items-center justify-center">
-            {isLoading ? <ActivityIndicator color="#1f5eff" /> : <ThemedText type="default" themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
+          <View className="flex-1 items-center justify-center px-8">
+            {isLoading ? (
+              <ActivityIndicator color="#1f5eff" />
+            ) : (
+              <ThemedText type="default" themeColor="textSecondary" className="text-center">
+                {isError ? t('contract.loadError') : t('contract.notFound')}
+              </ThemedText>
+            )}
           </View>
         </SafeAreaView>
       </ThemedView>

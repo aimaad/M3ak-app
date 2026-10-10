@@ -99,6 +99,7 @@
   "entreprise": {
     "title": "Mon entreprise",
     "subtitle": "Informations de votre agence",
+    "loadError": "Impossible de charger les informations de l'entreprise. Vérifiez votre connexion.",
     "logoChange": "Changer le logo",
     "fields": {
       "nom": "Nom commercial",
@@ -173,6 +174,7 @@
     "noDocuments": "Aucun document ajouté.",
     "noPhotos": "Aucune photo ajoutée.",
     "notFound": "Véhicule introuvable.",
+    "loadError": "Impossible de charger ce véhicule. Vérifiez votre connexion.",
     "archivedBadge": "Archivé",
     "archive": "Archiver ce véhicule",
     "reactivate": "Réactiver ce véhicule",
@@ -278,6 +280,7 @@
     "documentsSection": "Documents",
     "noDocuments": "Aucun document ajouté.",
     "notFound": "Client introuvable.",
+    "loadError": "Impossible de charger ce client. Vérifiez votre connexion.",
     "historySection": "Historique et évolutions à venir",
     "historyPlaceholder": "Bientôt disponible : réservations, locations, contrats, paiements et incidents de ce client s'afficheront ici.",
     "archivedBadge": "Archivé",
