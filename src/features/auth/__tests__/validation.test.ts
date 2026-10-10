@@ -10,6 +10,8 @@ import {
 
 function makeValues(overrides: Partial<SignupFormValues> = {}): SignupFormValues {
   return {
+    prenom: 'Imad',
+    nom: 'Alaoui',
     email: 'moi@exemple.com',
     password: 'motdepasse123',
     confirmPassword: 'motdepasse123',
@@ -20,6 +22,14 @@ function makeValues(overrides: Partial<SignupFormValues> = {}): SignupFormValues
 describe('validateSignupForm', () => {
   it("n'a aucune erreur pour des valeurs valides", () => {
     expect(isSignupFormValid(validateSignupForm(makeValues()))).toBe(true);
+  });
+
+  it('exige un prénom et un nom valides', () => {
+    expect(validateSignupForm(makeValues({ prenom: '  ' })).prenom).toBe('required');
+    expect(validateSignupForm(makeValues({ nom: '' })).nom).toBe('required');
+    expect(validateSignupForm(makeValues({ prenom: 'A' })).prenom).toBe('invalid_name');
+    expect(validateSignupForm(makeValues({ nom: 'Alaoui2' })).nom).toBe('invalid_name');
+    expect(validateSignupForm(makeValues({ prenom: 'عبد الله', nom: "El Fassi-O'Neil" }))).toEqual({});
   });
 
   it('exige un e-mail valide', () => {

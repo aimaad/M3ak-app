@@ -1,13 +1,17 @@
+import { validatePersonName } from './names';
+
 export type SignupFormValues = {
+  prenom: string;
+  nom: string;
   email: string;
   password: string;
   confirmPassword: string;
 };
 
-export type SignupFormErrorCode = 'required' | 'invalid_email' | 'too_short' | 'mismatch';
+export type SignupFormErrorCode = 'required' | 'invalid_email' | 'too_short' | 'mismatch' | 'invalid_name';
 
 export type SignupFormErrors = Partial<
-  Record<'email' | 'password' | 'confirmPassword', SignupFormErrorCode>
+  Record<'prenom' | 'nom' | 'email' | 'password' | 'confirmPassword', SignupFormErrorCode>
 >;
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -15,6 +19,11 @@ const MIN_PASSWORD_LENGTH = 6;
 
 export function validateSignupForm(values: SignupFormValues): SignupFormErrors {
   const errors: SignupFormErrors = {};
+
+  const prenomError = validatePersonName(values.prenom);
+  if (prenomError) errors.prenom = prenomError;
+  const nomError = validatePersonName(values.nom);
+  if (nomError) errors.nom = nomError;
 
   if (!values.email.trim()) {
     errors.email = 'required';

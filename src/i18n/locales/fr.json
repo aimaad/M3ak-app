@@ -15,6 +15,8 @@
   "auth": {
     "title": "Connexion",
     "subtitle": "Connectez-vous avec le compte de votre agence",
+    "prenom": "Prénom",
+    "nom": "Nom",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
@@ -43,7 +45,8 @@
       "required": "Ce champ est obligatoire.",
       "invalid_email": "Entrez une adresse e-mail valide.",
       "too_short": "6 caractères minimum.",
-      "mismatch": "Les mots de passe ne correspondent pas."
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "invalid_name": "Entrez un nom valide (2 caractères minimum, sans chiffres)."
     }
   },
   "agency": {

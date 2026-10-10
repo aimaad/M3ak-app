@@ -20,7 +20,7 @@ import {
 } from '@/features/auth/validation';
 import { useLanguage } from '@/i18n/use-language';
 
-const EMPTY_VALUES: SignupFormValues = { email: '', password: '', confirmPassword: '' };
+const EMPTY_VALUES: SignupFormValues = { prenom: '', nom: '', email: '', password: '', confirmPassword: '' };
 
 export default function SignupScreen() {
   const { session } = useSession();
@@ -49,7 +49,10 @@ export default function SignupScreen() {
 
     setIsSubmitting(true);
     try {
-      const hasSession = await signUpWithEmail(values.email.trim(), values.password);
+      const hasSession = await signUpWithEmail(values.email.trim(), values.password, {
+        prenom: values.prenom,
+        nom: values.nom,
+      });
       if (hasSession) {
         router.replace('/onboarding');
       } else {
@@ -141,6 +144,20 @@ export default function SignupScreen() {
         <ScreenHeader title={t('auth.signUpTitle')} subtitle={t('auth.signUpSubtitle')} showBack />
 
         <View className="gap-4 px-6">
+          <TextField
+            label={t('auth.prenom')}
+            value={values.prenom}
+            onChangeText={(v) => update('prenom', v)}
+            autoComplete="given-name"
+            error={touched && errors.prenom ? t(`auth.errors.${errors.prenom}`) : undefined}
+          />
+          <TextField
+            label={t('auth.nom')}
+            value={values.nom}
+            onChangeText={(v) => update('nom', v)}
+            autoComplete="family-name"
+            error={touched && errors.nom ? t(`auth.errors.${errors.nom}`) : undefined}
+          />
           <TextField
             label={t('auth.email')}
             value={values.email}

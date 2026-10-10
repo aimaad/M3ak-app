@@ -1,3 +1,4 @@
+import { buildFullName, type PersonName } from '@/features/auth/names';
 import { uploadFile } from '@/features/storage/api';
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
@@ -83,8 +84,9 @@ export async function getMyAgencyMembership(): Promise<AgencyMembership | null> 
 export async function createAgency(
   nom: string,
   ville: string | null,
-  ownerName: string
+  owner: PersonName
 ): Promise<AgencyMembership> {
+  const ownerName = buildFullName(owner);
   const supabase = getSupabase();
   const userId = await getCurrentUserId();
   if (!userId) throw new Error('Non connecté');
@@ -100,6 +102,8 @@ export async function createAgency(
     agency_id: agency.id,
     user_id: userId,
     role: 'owner',
+    prenom: owner.prenom.trim(),
+    nom: owner.nom.trim(),
     nom_complet: ownerName,
   });
   if (memberError) throw memberError;

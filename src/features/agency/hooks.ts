@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import type { PersonName } from '@/features/auth/names';
 import { useSession } from '@/features/auth/session-context';
 
 import {
@@ -35,8 +36,8 @@ export function useCreateAgency() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ nom, ville, ownerName }: { nom: string; ville: string | null; ownerName: string }) =>
-      createAgency(nom, ville, ownerName),
+    mutationFn: ({ nom, ville, owner }: { nom: string; ville: string | null; owner: PersonName }) =>
+      createAgency(nom, ville, owner),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-agency'] });
     },

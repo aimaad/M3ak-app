@@ -9,7 +9,9 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
-import { signOut } from '@/features/auth/api';
+import { saveMyNames, signOut } from '@/features/auth/api';
+import { buildFullName, readNamesFromMetadata, validatePersonName } from '@/features/auth/names';
+import { useSession } from '@/features/auth/session-context';
 import { useCreateAgency, useMyAgency, useRedeemInvite } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -24,18 +26,32 @@ export default function OnboardingScreen() {
   const [mode, setMode] = useState<Mode>('create');
   const [nom, setNom] = useState('');
   const [ville, setVille] = useState('');
-  const [ownerName, setOwnerName] = useState('');
+  const { session } = useSession();
+  // Prénom/nom saisis à l'inscription ; sinon (ancien compte) on les demande ici.
+  const savedNames = readNamesFromMetadata(session?.user.user_metadata);
+  const [prenom, setPrenom] = useState('');
+  const [nomFamille, setNomFamille] = useState('');
+  const names = savedNames ?? { prenom, nom: nomFamille };
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  function namesAreValid() {
+    return !validatePersonName(names.prenom) && !validatePersonName(names.nom);
+  }
+
+  async function ensureNamesSaved() {
+    if (!savedNames) await saveMyNames(names);
+  }
+
   async function handleCreate() {
     setError(null);
-    if (!nom.trim() || !ownerName.trim()) {
+    if (!nom.trim() || !namesAreValid()) {
       setError(t('onboarding.errors.required'));
       return;
     }
     try {
-      await createAgency.mutateAsync({ nom: nom.trim(), ville: ville.trim() || null, ownerName: ownerName.trim() });
+      await ensureNamesSaved();
+      await createAgency.mutateAsync({ nom: nom.trim(), ville: ville.trim() || null, owner: names });
       router.replace('/accueil');
     } catch (err) {
       console.error('Échec de création d\'agence :', err);
@@ -46,11 +62,12 @@ export default function OnboardingScreen() {
 
   async function handleJoin() {
     setError(null);
-    if (!code.trim()) {
+    if (!code.trim() || !namesAreValid()) {
       setError(t('onboarding.errors.required'));
       return;
     }
     try {
+      await ensureNamesSaved();
       await redeemInvite.mutateAsync(code.trim().toUpperCase());
       router.replace('/accueil');
     } catch (err) {
@@ -103,9 +120,19 @@ export default function OnboardingScreen() {
             </Pressable>
           </View>
 
+          {savedNames ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {buildFullName(savedNames)}
+            </ThemedText>
+          ) : (
+            <View className="gap-4">
+              <TextField label={t('auth.prenom')} value={prenom} onChangeText={setPrenom} autoComplete="given-name" />
+              <TextField label={t('auth.nom')} value={nomFamille} onChangeText={setNomFamille} autoComplete="family-name" />
+            </View>
+          )}
+
           {mode === 'create' ? (
             <View className="gap-4">
-              <TextField label={t('onboarding.ownerName')} value={ownerName} onChangeText={setOwnerName} />
               <TextField label={t('onboarding.agencyName')} value={nom} onChangeText={setNom} />
               <TextField label={t('onboarding.agencyCity')} value={ville} onChangeText={setVille} />
 
