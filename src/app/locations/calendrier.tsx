@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { Agenda, type AgendaEntry, type AgendaSchedule } from 'react-native-calendars';
+import { useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, View } from 'react-native';
+import { Calendar, type DateData } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
@@ -16,14 +16,6 @@ import type { Rental } from '@/features/rentals/types';
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
-
-// Pas de texte traduit à l'intérieur : "name" n'est utilisé que comme clé
-// stable par react-native-calendars. L'affichage réel (marque/modèle/
-// client traduits) se construit dans renderItem, pas ici — sinon la
-// référence de "items" change à chaque rendu (la fonction t() de
-// react-i18next n'est pas stable) et Agenda boucle indéfiniment
-// ("Maximum update depth exceeded").
-type RentalEntry = AgendaEntry & { rental: Rental };
 
 function toDateKey(iso: string): string {
   return iso.slice(0, 10);
@@ -40,6 +32,10 @@ function eachDayInRange(startISO: string, endISO: string): string[] {
   return days;
 }
 
+function formatDay(iso: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+}
+
 export default function CalendrierScreen() {
   const { t } = useLanguage();
   const rentalsQuery = useRentals();
@@ -48,6 +44,7 @@ export default function CalendrierScreen() {
 
   const [statusFilter, setStatusFilter] = useState<RentalStatusFilter>('tous');
   const [vehicleFilter, setVehicleFilter] = useState<string | 'tous'>('tous');
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const vehiclesById = useMemo(() => {
     const map = new Map<string, Vehicle>();
@@ -69,63 +66,35 @@ export default function CalendrierScreen() {
     });
   }, [rentalsQuery.data, statusFilter, vehicleFilter]);
 
-  const items: AgendaSchedule = useMemo(() => {
-    const schedule: Record<string, RentalEntry[]> = {};
+  const daysWithBookings = useMemo(() => {
+    const map = new Map<string, Rental[]>();
     for (const rental of filteredRentals) {
       for (const day of eachDayInRange(rental.dateDebutPrevue, rental.dateFinPrevue)) {
-        const entry: RentalEntry = { name: rental.numero, height: 72, day, rental };
-        schedule[day] = [...(schedule[day] ?? []), entry];
+        const list = map.get(day) ?? [];
+        list.push(rental);
+        map.set(day, list);
       }
     }
-    return schedule;
+    return map;
   }, [filteredRentals]);
 
   const markedDates = useMemo(() => {
     const marks: Record<string, object> = {};
-    for (const day of Object.keys(items)) {
-      marks[day] = { marked: true, dotColor: '#1f5eff' };
+    for (const day of daysWithBookings.keys()) {
+      marks[day] = { marked: true, dotColor: '#1f5eff', selected: day === selectedDay, selectedColor: '#e5ebfd' };
+    }
+    if (selectedDay && !marks[selectedDay]) {
+      marks[selectedDay] = { selected: true, selectedColor: '#e5ebfd' };
     }
     return marks;
-  }, [items]);
+  }, [daysWithBookings, selectedDay]);
+
+  const visibleRentals = useMemo(() => {
+    const list = selectedDay ? (daysWithBookings.get(selectedDay) ?? []) : filteredRentals;
+    return [...list].sort((a, b) => a.dateDebutPrevue.localeCompare(b.dateDebutPrevue));
+  }, [selectedDay, daysWithBookings, filteredRentals]);
 
   const isLoading = rentalsQuery.isLoading || vehiclesQuery.isLoading || customersQuery.isLoading;
-
-  const renderItem = useCallback(
-    (item: AgendaEntry) => {
-      const entry = item as RentalEntry;
-      const vehicle = vehiclesById.get(entry.rental.vehicleId);
-      const customer = customersById.get(entry.rental.customerId);
-      const label = `${vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')} · ${
-        customer?.nomComplet ?? t('locations.unknownCustomer')
-      }`;
-      return (
-        <Pressable
-          onPress={() => router.push(`/locations/${entry.rental.id}`)}
-          className="mx-4 mt-2 gap-1 rounded-2xl border border-[#e1e5f0] bg-white p-3"
-        >
-          <View className="flex-row items-center justify-between">
-            <ThemedText type="smallBold">{label}</ThemedText>
-            <RentalStatusBadge status={entry.rental.statut} />
-          </View>
-          <ThemedText type="small" themeColor="textSecondary">
-            {entry.rental.numero}
-          </ThemedText>
-        </Pressable>
-      );
-    },
-    [vehiclesById, customersById, t]
-  );
-
-  const renderEmptyData = useCallback(
-    () => (
-      <View className="items-center pt-12">
-        <ThemedText type="default" themeColor="textSecondary">
-          {t('locations.calendar.empty')}
-        </ThemedText>
-      </View>
-    ),
-    [t]
-  );
 
   return (
     <ThemedView className="flex-1">
@@ -190,13 +159,56 @@ export default function CalendrierScreen() {
             <ActivityIndicator color="#1f5eff" />
           </View>
         ) : (
-          <Agenda
-            items={items}
-            markedDates={markedDates}
-            renderItem={renderItem}
-            renderEmptyData={renderEmptyData}
-            theme={{ todayTextColor: '#1f5eff', selectedDayBackgroundColor: '#1f5eff', dotColor: '#1f5eff' }}
-          />
+          <View className="flex-1">
+            <Calendar
+              markedDates={markedDates}
+              onDayPress={(day: DateData) => setSelectedDay((prev) => (prev === day.dateString ? null : day.dateString))}
+              theme={{ todayTextColor: '#1f5eff', arrowColor: '#1f5eff', dotColor: '#1f5eff' }}
+              style={{ borderBottomWidth: 1, borderBottomColor: '#e1e5f0' }}
+            />
+
+            {selectedDay ? (
+              <Pressable onPress={() => setSelectedDay(null)} className="px-6 py-2">
+                <ThemedText type="small" themeColor="primary">
+                  {`${formatDay(selectedDay)} · ${t('locations.calendar.viewList')}`}
+                </ThemedText>
+              </Pressable>
+            ) : null}
+
+            <FlatList
+              data={visibleRentals}
+              keyExtractor={(item) => item.id}
+              contentContainerClassName="gap-3 px-6 pb-10 pt-3"
+              renderItem={({ item }) => {
+                const vehicle = vehiclesById.get(item.vehicleId);
+                const customer = customersById.get(item.customerId);
+                const label = `${vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')} · ${
+                  customer?.nomComplet ?? t('locations.unknownCustomer')
+                }`;
+                return (
+                  <Pressable
+                    onPress={() => router.push(`/locations/${item.id}`)}
+                    className="gap-1 rounded-2xl border border-[#e1e5f0] bg-white p-3"
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <ThemedText type="smallBold">{label}</ThemedText>
+                      <RentalStatusBadge status={item.statut} />
+                    </View>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {item.numero} · {formatDay(item.dateDebutPrevue)} → {formatDay(item.dateFinPrevue)}
+                    </ThemedText>
+                  </Pressable>
+                );
+              }}
+              ListEmptyComponent={
+                <View className="items-center pt-12">
+                  <ThemedText type="default" themeColor="textSecondary">
+                    {t('locations.calendar.empty')}
+                  </ThemedText>
+                </View>
+              }
+            />
+          </View>
         )}
       </SafeAreaView>
     </ThemedView>
