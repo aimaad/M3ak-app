@@ -231,6 +231,16 @@ export function VehicleForm({
             {t('vehicle.fields.branch')}
           </ThemedText>
           <View className="flex-row flex-wrap gap-2">
+            <Pressable
+              onPress={() => setBranchId(null)}
+              className={`rounded-full border px-4 py-2 ${
+                branchId === null ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+              }`}
+            >
+              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : '#211A2E' }}>
+                {t('vehicle.fields.allBranches')}
+              </ThemedText>
+            </Pressable>
             {branches.map((branch) => {
               const isSelected = branchId === branch.id;
               return (

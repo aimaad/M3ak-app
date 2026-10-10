@@ -168,6 +168,17 @@ async function main() {
     otherBranchInsertErr?.message ?? 'AUCUNE ERREUR'
   );
 
+  // --- 2b'. Véhicule sans filiale = visible par toutes les filiales ---
+  const { data: carShared } = await owner.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: null, immatriculation: '5555-A-1', marque: 'Fiat', modele: 'Tipo' })
+    .select()
+    .single();
+  const { data: sharedSeen } = await employee.client.from('vehicles').select('id').eq('id', carShared?.id);
+  record('Véhicule sans filiale : visible par un employé de filiale', (sharedSeen ?? []).length === 1, `lignes: ${(sharedSeen ?? []).length}`);
+  const { data: sharedTaken } = await employee.client.from('vehicles').update({ branch_id: branchCasa.id }).eq('id', carShared?.id).select();
+  record('Un employé de filiale ne peut PAS s\'approprier un véhicule partagé', (sharedTaken ?? []).length === 0, `lignes modifiées: ${(sharedTaken ?? []).length}`);
+
   // --- 2c. Isolation stricte : un responsable de filiale ne voit rien des autres ---
   const manager2 = await createUser();
   await inviteMember(owner, agency.id, manager2, 'manager', branchRabat.id);
@@ -179,8 +190,8 @@ async function main() {
   );
   const { data: carsSeenByManager2 } = await manager2.client.from('vehicles').select('id').eq('agency_id', agency.id);
   record(
-    'Responsable de Rabat : ne voit PAS les véhicules de Casablanca',
-    (carsSeenByManager2 ?? []).every((v) => v.id === carRabat?.id) && (carsSeenByManager2 ?? []).length === 1,
+    'Responsable de Rabat : ne voit que ses véhicules + les véhicules partagés (pas ceux de Casablanca)',
+    (carsSeenByManager2 ?? []).every((v) => v.id === carRabat?.id || v.id === carShared?.id) && (carsSeenByManager2 ?? []).length === 2,
     `véhicules vus: ${(carsSeenByManager2 ?? []).length}`
   );
   const { data: membersSeenByManager2 } = await manager2.client.from('agency_members').select('user_id').eq('agency_id', agency.id);
