@@ -5,6 +5,8 @@ import { Button } from '@/components/button';
 import { DocumentPhotoField } from '@/components/document-photo-field';
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
+import { useMyProfile, useMyAgency } from '@/features/agency/hooks';
+import { useBranches } from '@/features/branches/hooks';
 import { findDocument } from '@/features/storage/documents';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -32,6 +34,7 @@ type VehicleFormProps = {
   initialValues?: VehicleFormValues;
   existingDocuments?: VehicleDocument[];
   existingPhotosCount?: number;
+  initialBranchId?: string | null;
   submitLabel: string;
   submittingLabel: string;
   isSubmitting: boolean;
@@ -110,6 +113,7 @@ export function VehicleForm({
   initialValues,
   existingDocuments = [],
   existingPhotosCount = 0,
+  initialBranchId = null,
   submitLabel,
   submittingLabel,
   isSubmitting,
@@ -122,6 +126,16 @@ export function VehicleForm({
   const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>([]);
   const [documentExpiries, setDocumentExpiries] = useState<Record<string, string>>({});
   const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
+  const [branchId, setBranchId] = useState<string | null>(initialBranchId);
+
+  // Seuls les membres sans filiale (accès à toutes les filiales) choisissent
+  // la filiale du véhicule ; un employé de filiale est rattaché automatiquement.
+  const agencyQuery = useMyAgency();
+  const agencyId = agencyQuery.data?.agencyId;
+  const profileQuery = useMyProfile(agencyId);
+  const branchesQuery = useBranches(agencyId);
+  const branches = branchesQuery.data ?? [];
+  const canChooseBranch = profileQuery.data?.branchId === null && branches.length > 0;
 
   const errors = validateVehicleForm(values);
   const showErrors = touched;
@@ -143,7 +157,11 @@ export function VehicleForm({
       ...doc,
       expiresAt: documentExpiries[doc.type]?.trim() ? documentExpiries[doc.type] : null,
     }));
-    onSubmit(toVehicleInput(values), documentsWithExpiry, pendingPhotos);
+    onSubmit(
+      canChooseBranch ? { ...toVehicleInput(values), branchId } : toVehicleInput(values),
+      documentsWithExpiry,
+      pendingPhotos
+    );
   }
 
   return (
@@ -207,6 +225,31 @@ export function VehicleForm({
           onSelect={(tr) => update('transmission', tr)}
         />
       </View>
+      {canChooseBranch ? (
+        <View className="gap-1.5">
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('vehicle.fields.branch')}
+          </ThemedText>
+          <View className="flex-row flex-wrap gap-2">
+            {branches.map((branch) => {
+              const isSelected = branchId === branch.id;
+              return (
+                <Pressable
+                  key={branch.id}
+                  onPress={() => setBranchId(branch.id)}
+                  className={`rounded-full border px-4 py-2 ${
+                    isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                  }`}
+                >
+                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>
+                    {branch.nom}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
       <View className="gap-1.5">
         <ThemedText type="small" themeColor="textSecondary">
           {t('vehicle.fields.carburant')}

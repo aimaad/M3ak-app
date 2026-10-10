@@ -119,6 +119,7 @@ export default function ModifierVehiculeScreen() {
             initialValues={initialValues}
             existingDocuments={vehicle.documents}
             existingPhotosCount={vehicle.photos.length}
+            initialBranchId={vehicle.branchId}
             submitLabel={t('vehicle.form.save')}
             submittingLabel={t('vehicle.form.saving')}
             isSubmitting={isSubmitting}

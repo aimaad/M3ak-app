@@ -111,6 +111,63 @@ async function main() {
     `branch_id=${employee2Row.branch_id}`
   );
 
+  // --- 2b. Accès par filiale : sans filiale = toutes, avec filiale = la sienne ---
+  const { data: branchRabat } = await owner.client
+    .from('branches')
+    .insert({ agency_id: agency.id, nom: 'Rabat', ville: 'Rabat' })
+    .select()
+    .single();
+  const { data: carCasa } = await owner.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: branchCasa.id, immatriculation: '1111-A-1', marque: 'Dacia', modele: 'Logan' })
+    .select()
+    .single();
+  const { data: carRabat } = await owner.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: branchRabat.id, immatriculation: '2222-A-1', marque: 'Renault', modele: 'Clio' })
+    .select()
+    .single();
+  const { data: seenByBranchEmployee } = await employee.client.from('vehicles').select('id').eq('agency_id', agency.id);
+  record(
+    'Employé rattaché à Casablanca : voit uniquement les véhicules de Casablanca',
+    (seenByBranchEmployee ?? []).length === 1 && seenByBranchEmployee[0].id === carCasa?.id,
+    `véhicules vus: ${(seenByBranchEmployee ?? []).length}`
+  );
+  const { data: seenByAllBranches } = await employee2.client.from('vehicles').select('id').eq('agency_id', agency.id);
+  record(
+    "Employé sans filiale : voit les véhicules de toutes les filiales",
+    (seenByAllBranches ?? []).length === 2,
+    `véhicules vus: ${(seenByAllBranches ?? []).length}`
+  );
+  const { data: updatedOther } = await employee.client
+    .from('vehicles')
+    .update({ kilometrage: 1 })
+    .eq('id', carRabat?.id)
+    .select();
+  record(
+    "Employé de Casablanca ne peut PAS modifier un véhicule de Rabat",
+    (updatedOther ?? []).length === 0,
+    `lignes modifiées: ${(updatedOther ?? []).length}`
+  );
+  const { data: ownCar } = await employee.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, immatriculation: '3333-A-1', marque: 'Kia', modele: 'Picanto' })
+    .select()
+    .single();
+  record(
+    "Un véhicule créé par un employé de filiale est rattaché à sa filiale",
+    ownCar?.branch_id === branchCasa.id,
+    `branch_id=${ownCar?.branch_id}`
+  );
+  const { error: otherBranchInsertErr } = await employee.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: branchRabat.id, immatriculation: '4444-A-1', marque: 'Kia', modele: 'Rio' });
+  record(
+    "Employé de Casablanca ne peut PAS créer un véhicule dans Rabat",
+    !!otherBranchInsertErr,
+    otherBranchInsertErr?.message ?? 'AUCUNE ERREUR'
+  );
+
   // --- 3. Isolation entre agences ---
   const { data: seenByOutsider } = await outsider.client.from('branches').select('id').eq('agency_id', agency.id);
   record("Un membre d'une autre agence ne voit PAS les filiales de A", (seenByOutsider ?? []).length === 0, `lignes vues: ${(seenByOutsider ?? []).length}`);

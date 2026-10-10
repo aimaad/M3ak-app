@@ -203,6 +203,7 @@
       "categorie": "Catégorie",
       "transmission": "Transmission",
       "carburant": "Carburant",
+      "branch": "Filiale",
       "kilometrage": "Kilométrage",
       "niveauCarburant": "Niveau de carburant actuel (%)",
       "niveauCarburantPlaceholder": "Ex. 75",

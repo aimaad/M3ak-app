@@ -89,6 +89,7 @@ function toRow(input: VehicleInput) {
     prix_semaine: input.prixSemaine,
     prix_mois: input.prixMois,
     description: input.description,
+    ...(input.branchId !== undefined ? { branch_id: input.branchId } : {}),
   };
 }
 

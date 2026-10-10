@@ -203,6 +203,7 @@
       "categorie": "الفئة",
       "transmission": "ناقل الحركة",
       "carburant": "نوع الوقود",
+      "branch": "الفرع",
       "kilometrage": "الكيلومتراج",
       "niveauCarburant": "مستوى الوقود الحالي (%)",
       "niveauCarburantPlaceholder": "مثلاً 75",

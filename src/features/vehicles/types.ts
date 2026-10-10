@@ -122,4 +122,6 @@ export type VehicleInput = {
   prixSemaine: number | null;
   prixMois: number | null;
   description: string | null;
+  /** Filiale du véhicule ; absent = inchangé (un membre de filiale est rattaché automatiquement côté serveur). */
+  branchId?: string | null;
 };
