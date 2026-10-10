@@ -675,6 +675,9 @@
     "subtitle": "Succursales de votre agence",
     "empty": "Aucune filiale pour l'instant. Tant qu'il n'y en a pas, les employés invités sont rattachés directement à l'agence.",
     "addAction": "Ajouter une filiale",
+    "form": {
+      "newTitle": "Nouvelle filiale"
+    },
     "fields": {
       "nom": "Nom de la filiale",
       "ville": "Ville",
