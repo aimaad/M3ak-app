@@ -26,3 +26,8 @@ export async function resendSignupCode(email: string): Promise<void> {
   const { error } = await getSupabase().auth.resend({ type: 'signup', email });
   if (error) throw error;
 }
+
+export async function updateMyPassword(newPassword: string): Promise<void> {
+  const { error } = await getSupabase().auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}

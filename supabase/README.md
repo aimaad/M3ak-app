@@ -78,6 +78,13 @@ agence ne voie **que ses propres données**.
   revient à `disponible` à la clôture, uniquement s'il n'y a plus d'autre
   intervention en cours sur ce véhicule — voir
   `scripts/maintenance-rls-audit.mjs`)
+- `migrations/0021_branches_team_and_audit_log.sql` — filiales reliées aux
+  invitations et aux membres, prénom/nom/photo de profil (chaque membre peut
+  modifier sa propre fiche, jamais son rôle ni sa filiale), un manager peut
+  désormais retirer un employee (pas un autre manager), filiales réservées à
+  owner/manager, nouveau bucket `member-avatars`, et nouveau journal d'audit
+  (`agency_audit_log`, visible uniquement par le owner, alimenté uniquement
+  par des déclencheurs serveur — voir `scripts/team-rls-audit.mjs`)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -125,7 +132,8 @@ agence ne voie **que ses propres données**.
     et **attendez que ça se termine avant de passer à l'étape suivante** (même raison que
     l'étape 14 : les deux ne doivent jamais être collées puis lancées ensemble).
 21. Copiez-collez le contenu de `migrations/0020_maintenance_repairs.sql`, cliquez **Run**.
-22. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+22. Copiez-collez le contenu de `migrations/0021_branches_team_and_audit_log.sql`, cliquez **Run**.
+23. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -233,6 +241,14 @@ agences (échéances et factures), **immobilisation automatique du véhicule** q
 une intervention démarre, libération à la clôture uniquement si plus aucune
 intervention n'est en cours sur ce véhicule, immobilisation immédiate pour une
 panne signalée directement en "en_cours".
+
+`scripts/team-rls-audit.mjs` fait la même chose pour le module Équipe & Filiales :
+filiales réservées à owner/manager, une invitation avec filiale affecte bien le
+nouveau membre à cette filiale, un manager peut retirer un employee mais jamais un
+autre manager ni le owner, chaque membre peut modifier sa propre fiche mais jamais
+son rôle ni celui d'un autre membre (même famille que la migration 0010), **journal
+d'audit visible uniquement par le owner** (ni un employee, ni le owner d'une autre
+agence), isolation des filiales et des avatars entre deux agences.
 
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à

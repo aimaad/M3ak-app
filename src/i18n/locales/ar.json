@@ -94,12 +94,16 @@
     "removeError": "تعذر حيد هاد العضو.",
     "lastOwnerError": "ماكيمكنش : خاص يبقى على الأقل مالك واحد.",
     "roleUpdateError": "تعذر بدل هاد الدور.",
-    "myCompany": "الوكالة ديالي"
+    "myCompany": "الوكالة ديالي",
+    "branches": "الفروع",
+    "chooseBranch": "شكون الفرع اللي غادي تحط فيه هاد {{role}}؟",
+    "noBranch": "حتى واحد (الوكالة)"
   },
   "entreprise": {
     "title": "الوكالة ديالي",
     "subtitle": "معلومات الوكالة ديالك",
     "loadError": "تعذر تحميل معلومات الوكالة. تأكد من الاتصال.",
+    "journal": "السجل",
     "logoChange": "بدل اللوغو",
     "fields": {
       "nom": "الاسم التجاري",
@@ -664,6 +668,70 @@
         "invalid_number": "دخل رقم صحيح.",
         "need_one": "دخل تاريخ أو كيلومتراج ديال الأجل."
       }
+    }
+  },
+  "filiales": {
+    "title": "الفروع",
+    "subtitle": "فروع الوكالة ديالك",
+    "empty": "ماكاين حتى فرع دابا. حيت ماكاينش، الموظفين اللي كتعيّطهم كيتربطو مباشرة بالوكالة.",
+    "addAction": "زيد فرع",
+    "fields": {
+      "nom": "سمية الفرع",
+      "ville": "المدينة",
+      "adresse": "العنوان"
+    },
+    "errors": {
+      "required": "هاد الحقل خاصو يتعمر."
+    },
+    "save": "حفظ",
+    "saving": "كنسجلو…",
+    "createError": "تعذر إنشاء هاد الفرع.",
+    "delete": "حيد",
+    "deleteConfirmTitle": "حيد الفرع {{nom}}؟",
+    "deleteError": "تعذر حيد هاد الفرع."
+  },
+  "profil": {
+    "title": "الملف الشخصي",
+    "loadError": "تعذر تحميل الملف الشخصي ديالك. تأكد من الاتصال.",
+    "avatarError": "تعذر إرسال الصورة. عاود حاول.",
+    "sections": {
+      "info": "المعلومات الشخصية",
+      "password": "كلمة السر"
+    },
+    "fields": {
+      "prenom": "الاسم الشخصي",
+      "nom": "الاسم العائلي",
+      "type": "نوع الحساب",
+      "branch": "الفرع",
+      "startDate": "تاريخ البداية",
+      "newPassword": "كلمة السر الجديدة",
+      "confirmPassword": "أكد كلمة السر"
+    },
+    "errors": {
+      "required": "هاد الحقل خاصو يتعمر."
+    },
+    "save": "حفظ",
+    "saving": "كنسجلو…",
+    "updateError": "تعذر تسجيل التعديلات.",
+    "updateSuccess": "تحدّث الملف الشخصي.",
+    "changePassword": "بدل كلمة السر",
+    "passwordError": "تعذر بدل كلمة السر.",
+    "passwordSuccess": "تبدلت كلمة السر."
+  },
+  "journal": {
+    "title": "سجل النشاط",
+    "subtitle": "تتبع العمليات ديال الفريق والفروع",
+    "empty": "ماكاين حتى نشاط مسجل دابا.",
+    "loadError": "تعذر تحميل السجل. تأكد من الاتصال.",
+    "unknownActor": "واحد",
+    "actions": {
+      "branch_created": "{{actor}} دار فرع « {{target}} »",
+      "branch_updated": "{{actor}} بدل الفرع « {{target}} »",
+      "branch_deleted": "{{actor}} حيد الفرع « {{target}} »",
+      "invite_created": "{{actor}} دار دعوة ({{code}})",
+      "member_joined": "{{actor}} دخل للوكالة",
+      "member_role_changed": "{{actor}} بدل الدور ديال « {{target}} »",
+      "member_removed": "{{actor}} حيد « {{target}} » من الوكالة"
     }
   }
 }

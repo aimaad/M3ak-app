@@ -3,14 +3,15 @@ import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Avatar } from '@/components/avatar';
 import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { Card, PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
-import { signOut } from '@/features/auth/api';
-import { useMyAgency } from '@/features/agency/hooks';
+import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
 import { useCustomers } from '@/features/customers/hooks';
 import { computeUtilizationRate, revenueByDay, sumPaymentsInMonth } from '@/features/dashboard/metrics';
@@ -58,6 +59,7 @@ const KPI_TILES: { statut: StatusFilter; labelKey: string }[] = [
 export default function AccueilScreen() {
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
+  const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
   const vehiclesQuery = useVehicles();
   const paymentsQuery = useAllPayments();
   const maintenanceQuery = useMaintenanceItems();
@@ -126,10 +128,12 @@ export default function AccueilScreen() {
           title={t('accueil.greeting', { name: agencyQuery.data?.memberName ?? '' })}
           subtitle={today}
           right={
-            <Pressable onPress={() => signOut()} hitSlop={8}>
-              <ThemedText type="small" themeColor="primary">
-                {t('auth.signOut')}
-              </ThemedText>
+            <Pressable onPress={() => router.push('/profil')} hitSlop={8}>
+              <Avatar
+                path={profileQuery.data?.photoPath}
+                size={40}
+                initials={getInitials(profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName)}
+              />
             </Pressable>
           }
         />

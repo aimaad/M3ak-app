@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -62,7 +63,20 @@ export default function EntrepriseScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t('entreprise.title')} subtitle={t('entreprise.subtitle')} showBack />
+        <ScreenHeader
+          title={t('entreprise.title')}
+          subtitle={t('entreprise.subtitle')}
+          showBack
+          right={
+            isOwner ? (
+              <Pressable onPress={() => router.push('/journal')} hitSlop={8}>
+                <ThemedText type="small" themeColor="primary">
+                  {t('entreprise.journal')}
+                </ThemedText>
+              </Pressable>
+            ) : undefined
+          }
+        />
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">

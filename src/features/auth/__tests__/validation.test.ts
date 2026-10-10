@@ -1,7 +1,9 @@
 import {
+  isPasswordChangeFormValid,
   isSignupFormValid,
   isValidOtpCode,
   normalizeOtpCode,
+  validatePasswordChangeForm,
   validateSignupForm,
   type SignupFormValues,
 } from '../validation';
@@ -47,6 +49,23 @@ describe('normalizeOtpCode', () => {
     expect(normalizeOtpCode('72776389')).toBe('72776389');
     expect(normalizeOtpCode('123456789012')).toBe('1234567890');
     expect(normalizeOtpCode('abc123')).toBe('123');
+  });
+});
+
+describe('validatePasswordChangeForm', () => {
+  it("n'a aucune erreur pour des valeurs valides", () => {
+    const errors = validatePasswordChangeForm({ password: 'motdepasse123', confirmPassword: 'motdepasse123' });
+    expect(isPasswordChangeFormValid(errors)).toBe(true);
+  });
+
+  it('exige un mot de passe de 6 caractères minimum', () => {
+    expect(validatePasswordChangeForm({ password: '123', confirmPassword: '123' }).password).toBe('too_short');
+  });
+
+  it('exige que les deux mots de passe correspondent', () => {
+    expect(
+      validatePasswordChangeForm({ password: 'motdepasse123', confirmPassword: 'autrechose' }).confirmPassword
+    ).toBe('mismatch');
   });
 });
 

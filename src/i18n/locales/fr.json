@@ -94,12 +94,16 @@
     "removeError": "Impossible de retirer ce membre.",
     "lastOwnerError": "Impossible : il doit rester au moins un propriétaire.",
     "roleUpdateError": "Impossible de changer ce rôle.",
-    "myCompany": "Mon entreprise"
+    "myCompany": "Mon entreprise",
+    "branches": "Filiales",
+    "chooseBranch": "Affecter ce {{role}} à quelle filiale ?",
+    "noBranch": "Aucune (agence)"
   },
   "entreprise": {
     "title": "Mon entreprise",
     "subtitle": "Informations de votre agence",
     "loadError": "Impossible de charger les informations de l'entreprise. Vérifiez votre connexion.",
+    "journal": "Journal",
     "logoChange": "Changer le logo",
     "fields": {
       "nom": "Nom commercial",
@@ -664,6 +668,70 @@
         "invalid_number": "Entrez un nombre valide.",
         "need_one": "Renseignez une date ou un kilométrage d'échéance."
       }
+    }
+  },
+  "filiales": {
+    "title": "Filiales",
+    "subtitle": "Succursales de votre agence",
+    "empty": "Aucune filiale pour l'instant. Tant qu'il n'y en a pas, les employés invités sont rattachés directement à l'agence.",
+    "addAction": "Ajouter une filiale",
+    "fields": {
+      "nom": "Nom de la filiale",
+      "ville": "Ville",
+      "adresse": "Adresse"
+    },
+    "errors": {
+      "required": "Ce champ est obligatoire."
+    },
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "createError": "Impossible de créer cette filiale.",
+    "delete": "Supprimer",
+    "deleteConfirmTitle": "Supprimer la filiale {{nom}} ?",
+    "deleteError": "Impossible de supprimer cette filiale."
+  },
+  "profil": {
+    "title": "Profil",
+    "loadError": "Impossible de charger votre profil. Vérifiez votre connexion.",
+    "avatarError": "Impossible d'envoyer la photo. Réessayez.",
+    "sections": {
+      "info": "Informations personnelles",
+      "password": "Mot de passe"
+    },
+    "fields": {
+      "prenom": "Prénom",
+      "nom": "Nom",
+      "type": "Type de compte",
+      "branch": "Filiale",
+      "startDate": "Date de début",
+      "newPassword": "Nouveau mot de passe",
+      "confirmPassword": "Confirmer le mot de passe"
+    },
+    "errors": {
+      "required": "Ce champ est obligatoire."
+    },
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "updateError": "Impossible d'enregistrer les modifications.",
+    "updateSuccess": "Profil mis à jour.",
+    "changePassword": "Modifier le mot de passe",
+    "passwordError": "Impossible de modifier le mot de passe.",
+    "passwordSuccess": "Mot de passe modifié."
+  },
+  "journal": {
+    "title": "Journal d'activité",
+    "subtitle": "Traçabilité des actions sur l'équipe et les filiales",
+    "empty": "Aucune activité enregistrée pour l'instant.",
+    "loadError": "Impossible de charger le journal. Vérifiez votre connexion.",
+    "unknownActor": "Quelqu'un",
+    "actions": {
+      "branch_created": "{{actor}} a créé la filiale « {{target}} »",
+      "branch_updated": "{{actor}} a modifié la filiale « {{target}} »",
+      "branch_deleted": "{{actor}} a supprimé la filiale « {{target}} »",
+      "invite_created": "{{actor}} a créé une invitation ({{code}})",
+      "member_joined": "{{actor}} a rejoint l'agence",
+      "member_role_changed": "{{actor}} a changé le rôle de « {{target}} »",
+      "member_removed": "{{actor}} a retiré « {{target}} » de l'agence"
     }
   }
 }

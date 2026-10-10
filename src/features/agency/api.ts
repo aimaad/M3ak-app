@@ -9,9 +9,13 @@ import type {
   AgencyMember,
   AgencyMembership,
   AgencyRole,
+  AuditLogEntry,
+  MemberProfile,
+  MemberProfileInput,
 } from './types';
 
 export const AGENCY_ASSETS_BUCKET = 'agency-assets';
+export const MEMBER_AVATARS_BUCKET = 'member-avatars';
 
 type AgencyRow = {
   id: string;
@@ -115,25 +119,41 @@ export async function redeemInvite(code: string): Promise<AgencyRole> {
   return data as AgencyRole;
 }
 
-export async function listAgencyMembers(agencyId: string): Promise<AgencyMember[]> {
-  const { data, error } = await getSupabase()
-    .from('agency_members')
-    .select('id, user_id, role, nom_complet')
-    .eq('agency_id', agencyId);
+type AgencyMemberRow = {
+  id: string;
+  user_id: string;
+  role: AgencyRole;
+  nom_complet: string | null;
+  branch_id: string | null;
+  branch: { nom: string } | { nom: string }[] | null;
+};
 
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
+function memberFromRow(row: AgencyMemberRow): AgencyMember {
+  const branch = Array.isArray(row.branch) ? row.branch[0] : row.branch;
+  return {
     id: row.id,
     userId: row.user_id,
     role: row.role,
     nomComplet: row.nom_complet,
-  }));
+    branchId: row.branch_id,
+    branchNom: branch?.nom ?? null,
+  };
+}
+
+export async function listAgencyMembers(agencyId: string): Promise<AgencyMember[]> {
+  const { data, error } = await getSupabase()
+    .from('agency_members')
+    .select('id, user_id, role, nom_complet, branch_id, branch:branches(nom)')
+    .eq('agency_id', agencyId);
+
+  if (error) throw error;
+  return (data as AgencyMemberRow[]).map(memberFromRow);
 }
 
 export async function listAgencyInvites(agencyId: string): Promise<AgencyInvite[]> {
   const { data, error } = await getSupabase()
     .from('agency_invites')
-    .select('id, agency_id, code, role, expires_at, used_at, created_at')
+    .select('id, agency_id, code, role, branch_id, expires_at, used_at, created_at')
     .eq('agency_id', agencyId)
     .order('created_at', { ascending: false });
 
@@ -143,13 +163,18 @@ export async function listAgencyInvites(agencyId: string): Promise<AgencyInvite[
     agencyId: row.agency_id,
     code: row.code,
     role: row.role,
+    branchId: row.branch_id,
     expiresAt: row.expires_at,
     usedAt: row.used_at,
     createdAt: row.created_at,
   }));
 }
 
-export async function createAgencyInvite(agencyId: string, role: AgencyRole): Promise<AgencyInvite> {
+export async function createAgencyInvite(
+  agencyId: string,
+  role: AgencyRole,
+  branchId: string | null
+): Promise<AgencyInvite> {
   const supabase = getSupabase();
   const userId = await getCurrentUserId();
 
@@ -159,6 +184,7 @@ export async function createAgencyInvite(agencyId: string, role: AgencyRole): Pr
       agency_id: agencyId,
       code: generateInviteCode(),
       role,
+      branch_id: branchId,
       created_by: userId,
       expires_at: inviteExpiryDate().toISOString(),
     })
@@ -171,6 +197,7 @@ export async function createAgencyInvite(agencyId: string, role: AgencyRole): Pr
     agencyId: data.agency_id,
     code: data.code,
     role: data.role,
+    branchId: data.branch_id,
     expiresAt: data.expires_at,
     usedAt: data.used_at,
     createdAt: data.created_at,
@@ -230,14 +257,120 @@ export async function updateMemberRole(memberId: string, role: AgencyRole): Prom
     .from('agency_members')
     .update({ role })
     .eq('id', memberId)
-    .select('id, user_id, role, nom_complet')
-    .single();
+    .select('id, user_id, role, nom_complet, branch_id, branch:branches(nom)')
+    .single<AgencyMemberRow>();
 
   if (error) throw error;
-  return { id: data.id, userId: data.user_id, role: data.role, nomComplet: data.nom_complet };
+  return memberFromRow(data);
 }
 
 export async function removeMember(memberId: string): Promise<void> {
   const { error } = await getSupabase().from('agency_members').delete().eq('id', memberId);
   if (error) throw error;
+}
+
+// ======================================================================
+// Profil du membre connecté
+// ======================================================================
+
+type MemberProfileRow = {
+  id: string;
+  agency_id: string;
+  user_id: string;
+  role: AgencyRole;
+  prenom: string | null;
+  nom: string | null;
+  nom_complet: string | null;
+  photo_path: string | null;
+  branch_id: string | null;
+  branch: { nom: string } | { nom: string }[] | null;
+  created_at: string;
+};
+
+function profileFromRow(row: MemberProfileRow): MemberProfile {
+  const branch = Array.isArray(row.branch) ? row.branch[0] : row.branch;
+  return {
+    id: row.id,
+    agencyId: row.agency_id,
+    userId: row.user_id,
+    role: row.role,
+    prenom: row.prenom,
+    nom: row.nom,
+    nomComplet: row.nom_complet,
+    photoPath: row.photo_path,
+    branchId: row.branch_id,
+    branchNom: branch?.nom ?? null,
+    createdAt: row.created_at,
+  };
+}
+
+export async function getMyMemberProfile(agencyId: string): Promise<MemberProfile | null> {
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+
+  const { data, error } = await getSupabase()
+    .from('agency_members')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .eq('agency_id', agencyId)
+    .eq('user_id', userId)
+    .maybeSingle<MemberProfileRow>();
+
+  if (error) throw error;
+  return data ? profileFromRow(data) : null;
+}
+
+export async function updateMyProfile(memberId: string, input: MemberProfileInput): Promise<MemberProfile> {
+  const nomComplet = `${input.prenom.trim()} ${input.nom.trim()}`.trim();
+
+  const { data, error } = await getSupabase()
+    .from('agency_members')
+    .update({ prenom: input.prenom.trim() || null, nom: input.nom.trim() || null, nom_complet: nomComplet || null })
+    .eq('id', memberId)
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .single<MemberProfileRow>();
+
+  if (error) throw error;
+  return profileFromRow(data);
+}
+
+export async function uploadMemberAvatar(agencyId: string, memberId: string, localUri: string): Promise<MemberProfile> {
+  const userId = await getCurrentUserId();
+  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
+  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
+  const path = `${agencyId}/${userId}/avatar-${Date.now()}.${extension}`;
+
+  await uploadFile(MEMBER_AVATARS_BUCKET, path, localUri, contentType);
+
+  const { data, error } = await getSupabase()
+    .from('agency_members')
+    .update({ photo_path: path })
+    .eq('id', memberId)
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .single<MemberProfileRow>();
+
+  if (error) throw error;
+  return profileFromRow(data);
+}
+
+// ======================================================================
+// Journal d'audit (owner uniquement, lecture seule — RLS le garantit)
+// ======================================================================
+
+export async function listAuditLog(agencyId: string): Promise<AuditLogEntry[]> {
+  const { data, error } = await getSupabase()
+    .from('agency_audit_log')
+    .select('id, actor_name, action, target_label, details, created_at')
+    .eq('agency_id', agencyId)
+    .order('created_at', { ascending: false })
+    .limit(200);
+
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    actorName: row.actor_name,
+    action: row.action,
+    targetLabel: row.target_label,
+    details: row.details,
+    createdAt: row.created_at,
+  }));
 }

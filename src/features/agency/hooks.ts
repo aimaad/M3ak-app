@@ -7,15 +7,19 @@ import {
   createAgencyInvite,
   getAgencyDetails,
   getMyAgencyMembership,
+  getMyMemberProfile,
   listAgencyInvites,
   listAgencyMembers,
+  listAuditLog,
   redeemInvite,
   removeMember,
   updateAgencyDetails,
   updateMemberRole,
+  updateMyProfile,
   uploadAgencyLogo,
+  uploadMemberAvatar,
 } from './api';
-import type { AgencyDetailsInput, AgencyRole } from './types';
+import type { AgencyDetailsInput, AgencyRole, MemberProfileInput } from './types';
 
 export function useMyAgency() {
   const { session } = useSession();
@@ -70,8 +74,15 @@ export function useCreateAgencyInvite() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ agencyId, role }: { agencyId: string; role: AgencyRole }) =>
-      createAgencyInvite(agencyId, role),
+    mutationFn: ({
+      agencyId,
+      role,
+      branchId,
+    }: {
+      agencyId: string;
+      role: AgencyRole;
+      branchId: string | null;
+    }) => createAgencyInvite(agencyId, role, branchId),
     onSuccess: (invite) => {
       queryClient.invalidateQueries({ queryKey: ['agency-invites', invite.agencyId] });
     },
@@ -131,5 +142,50 @@ export function useRemoveMember(agencyId: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['agency-members', agencyId] });
     },
+  });
+}
+
+export function useMyProfile(agencyId: string | undefined) {
+  const { session } = useSession();
+
+  return useQuery({
+    queryKey: ['my-profile', agencyId, session?.user.id],
+    queryFn: () => getMyMemberProfile(agencyId as string),
+    enabled: !!agencyId && !!session,
+  });
+}
+
+export function useUpdateMyProfile(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ memberId, input }: { memberId: string; input: MemberProfileInput }) =>
+      updateMyProfile(memberId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-profile', agencyId] });
+      queryClient.invalidateQueries({ queryKey: ['my-agency'] });
+      queryClient.invalidateQueries({ queryKey: ['agency-members', agencyId] });
+    },
+  });
+}
+
+export function useUploadMemberAvatar(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ memberId, localUri }: { memberId: string; localUri: string }) =>
+      uploadMemberAvatar(agencyId as string, memberId, localUri),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-profile', agencyId] });
+      queryClient.invalidateQueries({ queryKey: ['agency-members', agencyId] });
+    },
+  });
+}
+
+export function useAuditLog(agencyId: string | undefined) {
+  return useQuery({
+    queryKey: ['audit-log', agencyId],
+    queryFn: () => listAuditLog(agencyId as string),
+    enabled: !!agencyId,
   });
 }
