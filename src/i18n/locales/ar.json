@@ -168,8 +168,6 @@
     "detailsTitle": "بطاقة السيارة",
     "edit": "عدّل",
     "infoSection": "المعلومات",
-    "historySection": "التاريخ والتطورات الجاية",
-    "historyPlaceholder": "قريباً: الحجوزات، عقود الكراء، الفحوصات، التدخلات والمردودية ديال هاد السيارة غادي يبانو هنا.",
     "documentsSection": "الوثائق",
     "noDocuments": "ماكاين حتى وثيقة مزادة.",
     "noPhotos": "ماكاين حتى تصويرة مزادة.",
@@ -613,13 +611,23 @@
     "title": "الصيانة",
     "empty": "ماكاين حتى أجل مسجل.",
     "loadError": "تعذر تحميل الآجال. تأكد من الاتصال.",
+    "notFound": "هاد الأجل ماكاينش.",
+    "detailsTitle": "تفاصيل الصيانة",
     "addAction": "زيد أجل",
     "markDone": "علّم كديرت",
     "done": "ديرت",
+    "startAction": "بدا التدخل",
+    "completeAction": "علّم كسالا",
+    "completeSection": "سالا التدخل",
+    "completeError": "تعذر تسجيل سالا هاد التدخل.",
+    "noFacture": "ماكاين حتى فاكتورة مزادة.",
     "urgency": {
       "a_venir": "جاي",
       "due": "قريب",
       "en_retard": "متأخر"
+    },
+    "status": {
+      "en_cours": "فالتدخل"
     },
     "types": {
       "vidange": "فيدانج",
@@ -627,8 +635,18 @@
       "visite_technique": "الزيارة التقنية",
       "freins": "الفرامل",
       "pneus": "الكَوانيش",
+      "panne": "عطب",
       "autre": "آخر"
     },
+    "fields": {
+      "garage": "الكاراج",
+      "cout": "الثمن (درهم)",
+      "piecesRemplacees": "القطع اللي تبدلو",
+      "facture": "الفاكتورة",
+      "dateIntervention": "تاريخ التدخل"
+    },
+    "costSection": "مصاريف الصيانة",
+    "totalCost": "المجموع المصروف",
     "form": {
       "newTitle": "أجل جديد",
       "vehiclePlaceholder": "اختار سيارة",

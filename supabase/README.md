@@ -67,6 +67,17 @@ agence ne voie **que ses propres données**.
 - `migrations/0018_customer_consent.sql` — ajoute `consentement_donnees` et
   `consentement_date` sur `customers`, pour la gestion du consentement de
   protection des données personnelles
+- `migrations/0019_maintenance_enum_values.sql` — ajoute les valeurs `panne`
+  (type) et `en_cours` (statut) aux énums de maintenance — **doit être
+  exécutée seule, avant 0020** (même raison que 0013 avant 0014 : une valeur
+  d'énum ajoutée ne peut pas être utilisée dans la même transaction)
+- `migrations/0020_maintenance_repairs.sql` — pannes et réparations : garage,
+  coût, pièces remplacées, facture (nouveau bucket `maintenance-documents`),
+  et immobilisation automatique du véhicule pendant une intervention
+  (`statut` passe à `maintenance` quand une échéance devient `en_cours`, et
+  revient à `disponible` à la clôture, uniquement s'il n'y a plus d'autre
+  intervention en cours sur ce véhicule — voir
+  `scripts/maintenance-rls-audit.mjs`)
 - `seed.sql` — données de démo : une agence "M3ak Demo — Casablanca" avec 15 véhicules,
   3 clients et quelques échéances de maintenance
 
@@ -110,7 +121,11 @@ agence ne voie **que ses propres données**.
 18. Copiez-collez le contenu de `migrations/0017_fix_created_by_spoofing_and_error_states.sql`,
     cliquez **Run**.
 19. Copiez-collez le contenu de `migrations/0018_customer_consent.sql`, cliquez **Run**.
-20. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
+20. Copiez-collez le contenu de `migrations/0019_maintenance_enum_values.sql`, cliquez **Run**,
+    et **attendez que ça se termine avant de passer à l'étape suivante** (même raison que
+    l'étape 14 : les deux ne doivent jamais être collées puis lancées ensemble).
+21. Copiez-collez le contenu de `migrations/0020_maintenance_repairs.sql`, cliquez **Run**.
+22. (Optionnel mais recommandé pour tester) Copiez-collez `seed.sql`, cliquez **Run**.
 
 Vous devriez voir les tables apparaître dans **Table Editor**.
 
@@ -211,6 +226,13 @@ preuve de signature valide, **départ et retour atomiques** (réservation + véh
 + contrat ensemble via RPC), double départ/retour refusé, véhicule déjà en
 maintenance jamais écrasé au retour, isolation des contrats et des PDF entre deux
 agences.
+
+`scripts/maintenance-rls-audit.mjs` fait la même chose pour le module Maintenance :
+permissions (employee ne peut pas supprimer une échéance), isolation entre deux
+agences (échéances et factures), **immobilisation automatique du véhicule** quand
+une intervention démarre, libération à la clôture uniquement si plus aucune
+intervention n'est en cours sur ce véhicule, immobilisation immédiate pour une
+panne signalée directement en "en_cours".
 
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à

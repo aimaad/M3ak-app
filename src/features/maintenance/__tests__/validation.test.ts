@@ -1,4 +1,9 @@
-import { isMaintenanceFormValid, validateMaintenanceForm, type MaintenanceFormValues } from '../validation';
+import {
+  isMaintenanceFormValid,
+  isValidMaintenanceCost,
+  validateMaintenanceForm,
+  type MaintenanceFormValues,
+} from '../validation';
 
 function makeValues(overrides: Partial<MaintenanceFormValues> = {}): MaintenanceFormValues {
   return {
@@ -43,5 +48,26 @@ describe('validateMaintenanceForm', () => {
     expect(
       validateMaintenanceForm(makeValues({ echeanceDate: '', echeanceKm: 'abc' })).echeanceKm
     ).toBe('invalid_number');
+  });
+
+  it("n'exige pas d'échéance pour une panne (incident signalé maintenant)", () => {
+    const errors = validateMaintenanceForm(makeValues({ type: 'panne', echeanceDate: '', echeanceKm: '' }));
+    expect(isMaintenanceFormValid(errors)).toBe(true);
+  });
+});
+
+describe('isValidMaintenanceCost', () => {
+  it('accepte une valeur vide (coût facultatif)', () => {
+    expect(isValidMaintenanceCost('')).toBe(true);
+  });
+
+  it('accepte un coût positif', () => {
+    expect(isValidMaintenanceCost('450')).toBe(true);
+    expect(isValidMaintenanceCost('450.50')).toBe(true);
+  });
+
+  it('rejette un coût négatif ou non numérique', () => {
+    expect(isValidMaintenanceCost('-10')).toBe(false);
+    expect(isValidMaintenanceCost('abc')).toBe(false);
   });
 });

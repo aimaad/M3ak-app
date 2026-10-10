@@ -26,8 +26,14 @@ export function MaintenanceRow({
 }) {
   const { t } = useLanguage();
   const isDone = item.statut === 'effectuee';
+  const isInProgress = item.statut === 'en_cours';
   const urgency = computeMaintenanceUrgency(item, currentKm);
   const style = URGENCY_STYLE[urgency];
+  const badge = isDone
+    ? { background: '#DCFCE7', text: '#15803D', label: t('maintenance.done') }
+    : isInProgress
+      ? { background: '#E0F2FE', text: '#0369A1', label: t('maintenance.status.en_cours') }
+      : { background: style.background, text: style.text, label: t(`maintenance.urgency.${urgency}`) };
 
   return (
     <PressableCard
@@ -42,14 +48,12 @@ export function MaintenanceRow({
           {vehicleLabel ?? '—'}
           {item.echeanceDate ? ` • ${item.echeanceDate}` : ''}
           {item.echeanceKm != null ? ` • ${item.echeanceKm.toLocaleString('fr-FR')} km` : ''}
+          {isDone && item.cout != null ? ` • ${item.cout.toLocaleString('fr-FR')} MAD` : ''}
         </ThemedText>
       </View>
-      <View
-        className="rounded-full px-3 py-1"
-        style={{ backgroundColor: isDone ? '#DCFCE7' : style.background }}
-      >
-        <ThemedText type="small" style={{ color: isDone ? '#15803D' : style.text }}>
-          {isDone ? t('maintenance.done') : t(`maintenance.urgency.${urgency}`)}
+      <View className="rounded-full px-3 py-1" style={{ backgroundColor: badge.background }}>
+        <ThemedText type="small" style={{ color: badge.text }}>
+          {badge.label}
         </ThemedText>
       </View>
     </PressableCard>

@@ -37,7 +37,9 @@ export function validateMaintenanceForm(values: MaintenanceFormValues): Maintena
     }
   }
 
-  if (!hasDate && !hasKm) {
+  // Une panne est un incident signalé maintenant, pas une échéance à venir :
+  // elle n'a pas besoin de date ou de kilométrage prévisionnel.
+  if (!hasDate && !hasKm && values.type !== 'panne') {
     errors.echeanceDate = 'need_one';
   }
 
@@ -46,4 +48,10 @@ export function validateMaintenanceForm(values: MaintenanceFormValues): Maintena
 
 export function isMaintenanceFormValid(errors: MaintenanceFormErrors): boolean {
   return Object.keys(errors).length === 0;
+}
+
+export function isValidMaintenanceCost(value: string): boolean {
+  if (value.trim() === '') return true;
+  const cost = Number(value);
+  return Number.isFinite(cost) && cost >= 0;
 }

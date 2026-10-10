@@ -3,13 +3,14 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-nat
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
-import { Card } from '@/components/card';
+import { Card, PressableCard } from '@/components/card';
 import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
+import { useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
 import { findDocument } from '@/features/storage/documents';
 import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 import { deleteVehiclePhotoFile, VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
@@ -49,8 +50,12 @@ export default function VehicleDetailScreen() {
   const updatePhotos = useUpdateVehiclePhotos();
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
+  const { data: maintenanceItems = [] } = useVehicleMaintenanceItems(id);
 
   const isManager = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
+  const totalMaintenanceCost = maintenanceItems
+    .filter((item) => item.statut === 'effectuee' && item.cout != null)
+    .reduce((sum, item) => sum + (item.cout ?? 0), 0);
 
   async function handleDeletePhoto(photo: VehiclePhoto) {
     if (!vehicle) return;
@@ -246,15 +251,51 @@ export default function VehicleDetailScreen() {
               })}
             </View>
 
-            <View>
-              <ThemedText type="smallBold" className="mb-2">
-                {t('vehicle.historySection')}
-              </ThemedText>
-              <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.historyPlaceholder')}
-                </ThemedText>
+            <View className="gap-2">
+              <View className="flex-row items-center justify-between">
+                <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
+                {totalMaintenanceCost > 0 ? (
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('maintenance.totalCost')} : {totalMaintenanceCost.toLocaleString('fr-FR')} MAD
+                  </ThemedText>
+                ) : null}
               </View>
+              {maintenanceItems.length === 0 ? (
+                <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('maintenance.empty')}
+                  </ThemedText>
+                </View>
+              ) : (
+                <View className="gap-2">
+                  {maintenanceItems.map((item) => (
+                    <PressableCard
+                      key={item.id}
+                      onPress={() => router.push(`/maintenance/${item.id}`)}
+                      padded={false}
+                      className="flex-row items-center justify-between px-4 py-3"
+                    >
+                      <View className="flex-1 gap-0.5">
+                        <ThemedText type="small">{t(`maintenance.types.${item.type}`)}</ThemedText>
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {item.dateIntervention ?? item.echeanceDate ?? '—'}
+                          {item.cout != null ? ` · ${item.cout.toLocaleString('fr-FR')} MAD` : ''}
+                        </ThemedText>
+                      </View>
+                      <ThemedText
+                        type="small"
+                        style={{ color: item.statut === 'effectuee' ? '#15803D' : item.statut === 'en_cours' ? '#0369A1' : '#81778F' }}
+                      >
+                        {item.statut === 'effectuee'
+                          ? t('maintenance.done')
+                          : item.statut === 'en_cours'
+                            ? t('maintenance.status.en_cours')
+                            : t(`maintenance.urgency.${item.statut}`)}
+                      </ThemedText>
+                    </PressableCard>
+                  ))}
+                </View>
+              )}
             </View>
 
             {isManager ? (

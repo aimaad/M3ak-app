@@ -168,8 +168,6 @@
     "detailsTitle": "Fiche véhicule",
     "edit": "Modifier",
     "infoSection": "Informations",
-    "historySection": "Historique et évolutions à venir",
-    "historyPlaceholder": "Bientôt disponible : réservations, contrats de location, inspections, interventions et rentabilité de ce véhicule s'afficheront ici.",
     "documentsSection": "Documents",
     "noDocuments": "Aucun document ajouté.",
     "noPhotos": "Aucune photo ajoutée.",
@@ -613,13 +611,23 @@
     "title": "Maintenance",
     "empty": "Aucune échéance enregistrée.",
     "loadError": "Impossible de charger les échéances. Vérifiez votre connexion.",
+    "notFound": "Échéance introuvable.",
+    "detailsTitle": "Détail de l'entretien",
     "addAction": "Ajouter une échéance",
     "markDone": "Marquer comme effectuée",
     "done": "Effectuée",
+    "startAction": "Démarrer l'intervention",
+    "completeAction": "Marquer comme terminée",
+    "completeSection": "Clôture de l'intervention",
+    "completeError": "Impossible d'enregistrer la clôture de cette intervention.",
+    "noFacture": "Aucune facture ajoutée.",
     "urgency": {
       "a_venir": "À venir",
       "due": "Bientôt",
       "en_retard": "En retard"
+    },
+    "status": {
+      "en_cours": "En intervention"
     },
     "types": {
       "vidange": "Vidange",
@@ -627,8 +635,18 @@
       "visite_technique": "Visite technique",
       "freins": "Freins",
       "pneus": "Pneus",
+      "panne": "Panne / incident",
       "autre": "Autre"
     },
+    "fields": {
+      "garage": "Garage / prestataire",
+      "cout": "Coût (MAD)",
+      "piecesRemplacees": "Pièces remplacées",
+      "facture": "Facture",
+      "dateIntervention": "Date de l'intervention"
+    },
+    "costSection": "Coût d'entretien",
+    "totalCost": "Total dépensé",
     "form": {
       "newTitle": "Nouvelle échéance",
       "vehiclePlaceholder": "Choisir un véhicule",

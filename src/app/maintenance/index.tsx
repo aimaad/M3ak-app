@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
-import { ActivityIndicator, Alert, FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useMarkMaintenanceDone, useMaintenanceItems } from '@/features/maintenance/hooks';
+import { useMaintenanceItems } from '@/features/maintenance/hooks';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { useVehicles } from '@/features/vehicles/hooks';
 import { isRTL } from '@/i18n';
@@ -16,17 +16,8 @@ export default function MaintenanceScreen() {
   const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
   const maintenanceQuery = useMaintenanceItems();
   const vehiclesQuery = useVehicles();
-  const markDone = useMarkMaintenanceDone();
 
   const vehicles = vehiclesQuery.data ?? [];
-
-  function handlePress(itemId: string, isDone: boolean) {
-    if (isDone) return;
-    Alert.alert(t('maintenance.markDone'), undefined, [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('maintenance.markDone'), onPress: () => markDone.mutate(itemId) },
-    ]);
-  }
 
   return (
     <ThemedView className="flex-1">
@@ -62,7 +53,7 @@ export default function MaintenanceScreen() {
                   item={item}
                   vehicleLabel={vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined}
                   currentKm={vehicle?.kilometrage ?? null}
-                  onPress={() => handlePress(item.id, item.statut === 'effectuee')}
+                  onPress={() => router.push(`/maintenance/${item.id}`)}
                 />
               );
             }}
