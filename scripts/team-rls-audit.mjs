@@ -168,6 +168,38 @@ async function main() {
     otherBranchInsertErr?.message ?? 'AUCUNE ERREUR'
   );
 
+  // --- 2c. Isolation stricte : un responsable de filiale ne voit rien des autres ---
+  const manager2 = await createUser();
+  await inviteMember(owner, agency.id, manager2, 'manager', branchRabat.id);
+  const { data: branchesSeenByManager2 } = await manager2.client.from('branches').select('id').eq('agency_id', agency.id);
+  record(
+    'Responsable rattaché à Rabat : ne voit que la filiale Rabat',
+    (branchesSeenByManager2 ?? []).length === 1 && branchesSeenByManager2[0].id === branchRabat.id,
+    `filiales vues: ${(branchesSeenByManager2 ?? []).length}`
+  );
+  const { data: carsSeenByManager2 } = await manager2.client.from('vehicles').select('id').eq('agency_id', agency.id);
+  record(
+    'Responsable de Rabat : ne voit PAS les véhicules de Casablanca',
+    (carsSeenByManager2 ?? []).every((v) => v.id === carRabat?.id) && (carsSeenByManager2 ?? []).length === 1,
+    `véhicules vus: ${(carsSeenByManager2 ?? []).length}`
+  );
+  const { data: membersSeenByManager2 } = await manager2.client.from('agency_members').select('user_id').eq('agency_id', agency.id);
+  record(
+    "Responsable de Rabat : ne voit PAS l'employé de Casablanca dans l'équipe",
+    !(membersSeenByManager2 ?? []).some((m) => m.user_id === employee.id),
+    `membres vus: ${(membersSeenByManager2 ?? []).length}`
+  );
+  const { error: manager2BranchErr } = await manager2.client
+    .from('branches')
+    .insert({ agency_id: agency.id, nom: 'Tanger', ville: 'Tanger' });
+  record('Responsable de filiale ne peut PAS créer de filiale', !!manager2BranchErr, manager2BranchErr?.message ?? 'AUCUNE ERREUR');
+  const { error: manager2InviteErr } = await manager2.client
+    .from('agency_invites')
+    .insert({ agency_id: agency.id, code: 'ZZ9999', role: 'employee', branch_id: branchCasa.id, created_by: manager2.id, expires_at: new Date(Date.now() + 86400000).toISOString() });
+  record('Responsable de Rabat ne peut PAS inviter dans Casablanca', !!manager2InviteErr, manager2InviteErr?.message ?? 'AUCUNE ERREUR');
+  const { data: allBranchesOwner } = await owner.client.from('branches').select('id').eq('agency_id', agency.id);
+  record("L'admin (owner) voit toutes les filiales", (allBranchesOwner ?? []).length >= 2, `filiales vues: ${(allBranchesOwner ?? []).length}`);
+
   // --- 3. Isolation entre agences ---
   const { data: seenByOutsider } = await outsider.client.from('branches').select('id').eq('agency_id', agency.id);
   record("Un membre d'une autre agence ne voit PAS les filiales de A", (seenByOutsider ?? []).length === 0, `lignes vues: ${(seenByOutsider ?? []).length}`);

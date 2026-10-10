@@ -16,6 +16,7 @@ import {
   useAgencyMembers,
   useCreateAgencyInvite,
   useMyAgency,
+  useMyProfile,
   useRemoveMember,
   useUpdateMemberRole,
 } from '@/features/agency/hooks';
@@ -33,6 +34,7 @@ export default function EquipeScreen() {
   const invitesQuery = useAgencyInvites(agencyQuery.data?.agencyId);
   const branchesQuery = useBranches(agencyQuery.data?.agencyId);
   const createInvite = useCreateAgencyInvite();
+  const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
   const updateRole = useUpdateMemberRole(agencyQuery.data?.agencyId);
   const removeMember = useRemoveMember(agencyQuery.data?.agencyId);
 
@@ -67,6 +69,12 @@ export default function EquipeScreen() {
   }
 
   function handleInvite(role: AgencyRole) {
+    // Un membre rattaché à une filiale (hors admin) invite toujours dans SA filiale.
+    const myBranchId = profileQuery.data?.branchId ?? null;
+    if (!isOwner && myBranchId) {
+      sendInvite(role, myBranchId);
+      return;
+    }
     if (branches.length === 0) {
       sendInvite(role, null);
       return;

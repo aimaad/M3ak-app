@@ -7,7 +7,7 @@ import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useMyAgency } from '@/features/agency/hooks';
+import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { useBranches, useDeleteBranch } from '@/features/branches/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -17,7 +17,11 @@ export default function FilialesScreen() {
   const branchesQuery = useBranches(agencyQuery.data?.agencyId);
   const deleteBranch = useDeleteBranch(agencyQuery.data?.agencyId);
 
-  const isManager = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
+  const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
+  const role = agencyQuery.data?.role;
+  // Un responsable rattaché à une filiale ne gère pas les filiales (il ne voit que la sienne).
+  const isManager =
+    role === 'owner' || (role === 'manager' && !!profileQuery.data && profileQuery.data.branchId === null);
 
   function handleDelete(id: string, nom: string) {
     Alert.alert(t('filiales.deleteConfirmTitle', { nom }), undefined, [
