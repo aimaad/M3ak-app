@@ -42,6 +42,9 @@ export default function EquipeScreen() {
 
   const canManage = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
   const isOwner = agencyQuery.data?.role === 'owner';
+  // Membre rattaché à une filiale (hors admin) : il invite uniquement dans SA filiale.
+  const myBranchId = isOwner ? null : (profileQuery.data?.branchId ?? null);
+  const profileReady = !!profileQuery.data;
   const branches = branchesQuery.data ?? [];
 
   async function sendInvite(role: AgencyRole, branchId: string | null) {
@@ -70,8 +73,8 @@ export default function EquipeScreen() {
 
   function handleInvite(role: AgencyRole) {
     // Un membre rattaché à une filiale (hors admin) invite toujours dans SA filiale.
-    const myBranchId = profileQuery.data?.branchId ?? null;
-    if (!isOwner && myBranchId) {
+    if (!profileReady) return;
+    if (myBranchId) {
       sendInvite(role, myBranchId);
       return;
     }
@@ -214,7 +217,7 @@ export default function EquipeScreen() {
                     key={role}
                     label={t('equipe.inviteAs', { role: t(`equipe.roles.${role}`) })}
                     onPress={() => handleInvite(role)}
-                    disabled={createInvite.isPending}
+                    disabled={createInvite.isPending || !profileReady}
                     size="sm"
                     style={{ flex: 1 }}
                   />
