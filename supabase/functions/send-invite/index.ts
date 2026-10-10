@@ -53,6 +53,16 @@ function escapeHtml(value: string): string {
     .replace(/'/g, '&#39;');
 }
 
+// Retire accents et caractères non ASCII (ex. « Zaïd » → « Zaid », texte arabe → vide).
+function toAscii(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7e]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function formatCode(code: string): string {
   return code.replace(/(.{4})(?=.)/g, '$1-');
 }
@@ -73,7 +83,9 @@ export function buildInviteEmail(invite: InvitePayload): { subject: string; text
   const inviter = invite.inviter_name?.trim() || null;
   const branchLine = invite.branch_name ? ` (filiale ${invite.branch_name})` : '';
 
-  const subject = `${invite.agency_name} vous invite à rejoindre M3ak`;
+  // Titre en ASCII pur : l'encodage des accents dans l'en-tête Subject s'affiche
+  // brut (=?utf-8?Q?...?=) chez certains clients. Le corps reste en UTF-8.
+  const subject = `Invitation a rejoindre M3ak - ${toAscii(invite.agency_name) || 'votre agence'}`;
 
   const text = [
     `Bonjour ${invite.prenom},`,
