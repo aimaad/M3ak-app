@@ -14,13 +14,15 @@ import {
   listAuditLog,
   redeemInvite,
   removeMember,
+  resendAgencyInvite,
+  revokeAgencyInvite,
   updateAgencyDetails,
   updateMemberRole,
   updateMyProfile,
   uploadAgencyLogo,
   uploadMemberAvatar,
 } from './api';
-import type { AgencyDetailsInput, AgencyRole, MemberProfileInput } from './types';
+import type { AgencyDetailsInput, AgencyRole, CreateInviteInput, MemberProfileInput } from './types';
 
 export function useMyAgency() {
   const { session } = useSession();
@@ -75,17 +77,31 @@ export function useCreateAgencyInvite() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      agencyId,
-      role,
-      branchId,
-    }: {
-      agencyId: string;
-      role: AgencyRole;
-      branchId: string | null;
-    }) => createAgencyInvite(agencyId, role, branchId),
-    onSuccess: (invite) => {
-      queryClient.invalidateQueries({ queryKey: ['agency-invites', invite.agencyId] });
+    mutationFn: (input: CreateInviteInput) => createAgencyInvite(input),
+    onSuccess: (_result, input) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-invites', input.agencyId] });
+    },
+  });
+}
+
+export function useResendAgencyInvite(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (inviteId: string) => resendAgencyInvite(inviteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-invites', agencyId] });
+    },
+  });
+}
+
+export function useRevokeAgencyInvite(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (inviteId: string) => revokeAgencyInvite(inviteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-invites', agencyId] });
     },
   });
 }

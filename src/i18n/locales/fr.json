@@ -64,10 +64,10 @@
     "createError": "Impossible de créer l'agence. Réessayez.",
     "inviteCode": "Code d'invitation",
     "joinAction": "Rejoindre l'agence",
-    "joinError": "Code invalide, expiré, ou déjà utilisé.",
     "errors": {
       "required": "Remplissez les champs obligatoires."
-    }
+    },
+    "joinHint": "Vous êtes connecté avec {{email}}. Ce doit être l'adresse e-mail qui a reçu l'invitation."
   },
   "equipe": {
     "title": "Équipe",
@@ -75,16 +75,7 @@
     "membersSection": "Membres",
     "unnamedMember": "Membre",
     "inviteSection": "Inviter",
-    "inviteAs": "Inviter un {{role}}",
-    "inviteError": "Impossible de créer l'invitation. Réessayez.",
     "pendingInvites": "Invitations en cours",
-    "inviteActive": "En attente",
-    "inviteUsed": "Utilisée",
-    "inviteExpired": "Expirée",
-    "inviteCreatedTitle": "Code créé : {{code}}",
-    "inviteMessage": "Rejoignez l'agence {{agency}} sur M3ak ! Ouvrez l'app, créez un compte, puis entrez ce code d'invitation : {{code}}",
-    "copyCode": "Copier le code",
-    "shareWhatsapp": "Partager sur WhatsApp",
     "roles": {
       "owner": "Propriétaire",
       "manager": "Responsable",
@@ -99,8 +90,58 @@
     "roleUpdateError": "Impossible de changer ce rôle.",
     "myCompany": "Mon entreprise",
     "branches": "Filiales",
-    "chooseBranch": "Affecter ce {{role}} à quelle filiale ?",
-    "noBranch": "Aucune (agence)"
+    "invite": {
+      "title": "Inviter un membre",
+      "subtitle": "L'invitation est nominative et liée à son e-mail",
+      "cta": "Inviter un membre",
+      "notAllowed": "Seuls les responsables peuvent inviter.",
+      "role": "Rôle",
+      "branch": "Filiale",
+      "allAgency": "Toute l'agence",
+      "yourBranch": "Votre filiale",
+      "yourBranchHint": "Vous pouvez inviter uniquement dans votre filiale.",
+      "emailBinding": "Le code sera lié à cette adresse e-mail : seule cette personne pourra l'utiliser, une seule fois, pendant 7 jours.",
+      "send": "Envoyer l'invitation",
+      "sending": "Envoi en cours…",
+      "createdFor": "Invitation créée pour {{name}}",
+      "emailSent": "E-mail envoyé à {{email}}.",
+      "emailFailed": "L'e-mail n'a pas pu être envoyé. Partagez le code par WhatsApp.",
+      "emailNotConfigured": "L'envoi d'e-mail n'est pas disponible pour le moment. Partagez le code par WhatsApp.",
+      "codeLabel": "Code d'invitation (affiché une seule fois)",
+      "codeHint": "Ce code ne fonctionne qu'avec {{email}}, une seule fois, jusqu'au {{date}}.",
+      "copy": "Copier le code",
+      "copied": "Copié ✓",
+      "whatsapp": "WhatsApp",
+      "done": "Terminé",
+      "whatsappMessage": "Bonjour {{prenom}}, l'agence {{agency}} vous invite sur M3ak en tant que {{role}}.\n1) Installez l'app M3ak et créez un compte avec CETTE adresse e-mail : {{email}}\n2) Choisissez « Rejoindre » et entrez ce code : {{code}}\nCode personnel, à usage unique, valable jusqu'au {{date}}. Ne le partagez pas.",
+      "status": {
+        "pending": "En attente",
+        "accepted": "Acceptée",
+        "expired": "Expirée",
+        "revoked": "Annulée"
+      },
+      "resend": "Renvoyer",
+      "revoke": "Annuler",
+      "revokeConfirmTitle": "Annuler l'invitation de {{name}} ?",
+      "revokeConfirmBody": "Son code ne fonctionnera plus.",
+      "errors": {
+        "generic": "Une erreur est survenue. Réessayez.",
+        "not_allowed": "Vous n'avez pas le droit de faire cela.",
+        "not_authenticated": "Vous devez être connecté.",
+        "role_not_allowed": "Ce rôle ne peut pas être invité.",
+        "invalid_email": "Entrez une adresse e-mail valide.",
+        "invalid_name": "Entrez un prénom et un nom valides.",
+        "branch_access_denied": "Vous pouvez inviter uniquement dans votre filiale.",
+        "branch_must_belong_to_same_agency": "Cette filiale n'appartient pas à votre agence.",
+        "already_member": "Cette personne fait déjà partie de l'agence.",
+        "invite_already_pending": "Une invitation est déjà en attente pour cet e-mail. Renvoyez-la ou annulez-la.",
+        "invite_not_pending": "Cette invitation n'est plus en attente.",
+        "invite_not_found": "Invitation introuvable.",
+        "invite_invalid_or_expired": "Code invalide, expiré, annulé ou déjà utilisé.",
+        "invite_email_mismatch": "Cette invitation est destinée à une autre adresse e-mail. Connectez-vous avec l'e-mail qui a reçu l'invitation.",
+        "email_not_confirmed": "Confirmez d'abord votre adresse e-mail avec le code reçu."
+      }
+    }
   },
   "entreprise": {
     "title": "Mon entreprise",
@@ -736,7 +777,9 @@
       "branch_created": "{{actor}} a créé la filiale « {{target}} »",
       "branch_updated": "{{actor}} a modifié la filiale « {{target}} »",
       "branch_deleted": "{{actor}} a supprimé la filiale « {{target}} »",
-      "invite_created": "{{actor}} a créé une invitation ({{code}})",
+      "invite_created": "{{actor}} a invité {{target}}",
+      "invite_resent": "{{actor}} a renvoyé l'invitation de {{target}}",
+      "invite_revoked": "{{actor}} a annulé l'invitation de {{target}}",
       "member_joined": "{{actor}} a rejoint l'agence",
       "member_role_changed": "{{actor}} a changé le rôle de « {{target}} »",
       "member_removed": "{{actor}} a retiré « {{target}} » de l'agence"

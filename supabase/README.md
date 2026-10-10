@@ -250,6 +250,45 @@ son rôle ni celui d'un autre membre (même famille que la migration 0010), **jo
 d'audit visible uniquement par le owner** (ni un employee, ni le owner d'une autre
 agence), isolation des filiales et des avatars entre deux agences.
 
+## Accès par filiale et invitations sécurisées (migrations 0022 à 0026)
+
+À exécuter **dans l'ordre**, une par une, dans le SQL Editor (« Copy raw file » sur GitHub
+puis « Run ») :
+
+- `0022_branch_scoped_access.sql` — un membre rattaché à une filiale ne voit que les
+  véhicules, locations et données liées de sa filiale ; un membre sans filiale voit tout.
+- `0023_member_names_from_signup.sql` — le prénom et le nom saisis à l'inscription sont
+  recopiés sur le profil quand on rejoint une agence.
+- `0024_strict_branch_isolation.sql` — isolation stricte : rien des autres filiales
+  (équipe, invitations, fichiers) ; l'admin (owner) voit toujours tout ; un responsable de
+  filiale invite uniquement dans sa filiale.
+- `0025_shared_vehicles.sql` — un véhicule sans filiale est partagé par toute l'agence.
+- `0026_secure_invitations.sql` — invitations nominatives (prénom, nom, e-mail), code de 12
+  caractères généré par le serveur et jamais stocké en clair, lié à l'e-mail exact de la
+  personne, à usage unique, valable 7 jours, annulable et renvoyable. **Les anciennes
+  invitations par code simple sont annulées** : il faut en recréer.
+
+### Envoi des invitations par e-mail (Gmail)
+
+L'e-mail part depuis la fonction serveur `send-invite` (`supabase/functions/send-invite`).
+Sans elle, tout fonctionne quand même : l'invitation est créée et le code est partagé par
+WhatsApp ou copié (pas d'e-mail automatique).
+
+1. Dans votre compte Google : activez la validation en deux étapes puis créez un **mot de
+   passe d'application** (myaccount.google.com → Sécurité → Mots de passe d'application).
+   Le mot de passe de connexion Gmail ne fonctionne pas.
+2. Dans Supabase → Edge Functions → Secrets, ajoutez :
+   - `SMTP_USER` : votre adresse Gmail d'envoi
+   - `SMTP_PASSWORD` : le mot de passe d'application (16 caractères)
+   - `SMTP_FROM_NAME` : (optionnel) nom affiché, par exemple `M3ak`
+3. Déployez la fonction : `npx supabase functions deploy send-invite` (la connexion
+   Supabase CLI du projet est nécessaire), ou créez-la depuis le tableau de bord en collant
+   le contenu de `supabase/functions/send-invite/index.ts`.
+
+Ces identifiants ne sont **jamais** dans l'app mobile : ils restent des secrets serveur. La
+configuration SMTP de Supabase Auth (e-mails de confirmation) est distincte : la fonction ne
+peut pas la réutiliser, d'où ces deux secrets.
+
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à
 l'étape 2).

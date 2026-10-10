@@ -1,8 +1,9 @@
+import { FunctionsHttpError } from '@supabase/supabase-js';
+
 import { buildFullName, type PersonName } from '@/features/auth/names';
 import { uploadFile } from '@/features/storage/api';
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
-import { generateInviteCode, inviteExpiryDate } from './invite-code';
 import type {
   AgencyDetails,
   AgencyDetailsInput,
@@ -11,6 +12,8 @@ import type {
   AgencyMembership,
   AgencyRole,
   AuditLogEntry,
+  CreateInviteInput,
+  InviteResult,
   MemberProfile,
   MemberProfileInput,
 } from './types';
@@ -154,58 +157,132 @@ export async function listAgencyMembers(agencyId: string): Promise<AgencyMember[
   return (data as AgencyMemberRow[]).map(memberFromRow);
 }
 
+type AgencyInviteRow = {
+  id: string;
+  agency_id: string;
+  email: string | null;
+  prenom: string | null;
+  nom: string | null;
+  role: AgencyRole;
+  branch_id: string | null;
+  expires_at: string;
+  used_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+};
+
 export async function listAgencyInvites(agencyId: string): Promise<AgencyInvite[]> {
   const { data, error } = await getSupabase()
     .from('agency_invites')
-    .select('id, agency_id, code, role, branch_id, expires_at, used_at, created_at')
+    .select('id, agency_id, email, prenom, nom, role, branch_id, expires_at, used_at, revoked_at, created_at')
     .eq('agency_id', agencyId)
+    .not('email', 'is', null)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []).map((row) => ({
+  return ((data ?? []) as AgencyInviteRow[]).map((row) => ({
     id: row.id,
     agencyId: row.agency_id,
-    code: row.code,
+    email: row.email ?? '',
+    prenom: row.prenom,
+    nom: row.nom,
     role: row.role,
     branchId: row.branch_id,
     expiresAt: row.expires_at,
     usedAt: row.used_at,
+    revokedAt: row.revoked_at,
     createdAt: row.created_at,
   }));
 }
 
-export async function createAgencyInvite(
-  agencyId: string,
-  role: AgencyRole,
-  branchId: string | null
-): Promise<AgencyInvite> {
-  const supabase = getSupabase();
-  const userId = await getCurrentUserId();
+type InvitePayload = {
+  id: string;
+  code: string;
+  email: string;
+  prenom: string;
+  nom: string;
+  role: AgencyRole;
+  branch_name: string | null;
+  agency_name: string;
+  inviter_name: string | null;
+  expires_at: string;
+};
 
-  const { data, error } = await supabase
-    .from('agency_invites')
-    .insert({
-      agency_id: agencyId,
-      code: generateInviteCode(),
-      role,
-      branch_id: branchId,
-      created_by: userId,
-      expires_at: inviteExpiryDate().toISOString(),
-    })
-    .select()
-    .single();
-  if (error) throw error;
+type InviteFunctionResponse = {
+  invite: InvitePayload;
+  emailSent: boolean;
+  emailError: string | null;
+};
 
+function resultFromPayload(payload: InvitePayload, emailSent: boolean, emailError: string | null): InviteResult {
   return {
-    id: data.id,
-    agencyId: data.agency_id,
-    code: data.code,
-    role: data.role,
-    branchId: data.branch_id,
-    expiresAt: data.expires_at,
-    usedAt: data.used_at,
-    createdAt: data.created_at,
+    inviteId: payload.id,
+    code: payload.code,
+    email: payload.email,
+    prenom: payload.prenom,
+    nom: payload.nom,
+    role: payload.role,
+    agencyName: payload.agency_name,
+    branchName: payload.branch_name,
+    inviterName: payload.inviter_name,
+    expiresAt: payload.expires_at,
+    emailSent,
+    emailError,
   };
+}
+
+/**
+ * Appelle la fonction serveur « send-invite » (création + envoi de l'e-mail).
+ * Renvoie null si elle n'est pas déployée / injoignable : l'appelant retombe alors
+ * sur la fonction SQL directe (sans e-mail, partage WhatsApp / copie seulement).
+ * Les refus métier (droits, doublon…) sont remontés comme des erreurs à code court.
+ */
+async function callInviteFunction(body: Record<string, unknown>): Promise<InviteFunctionResponse | null> {
+  const { data, error } = await getSupabase().functions.invoke('send-invite', { body });
+
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      if (error.context.status === 404) return null;
+      const parsed = (await error.context.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(parsed?.error ?? 'invite_failed');
+    }
+    return null;
+  }
+  return data as InviteFunctionResponse;
+}
+
+export async function createAgencyInvite(input: CreateInviteInput): Promise<InviteResult> {
+  const viaFunction = await callInviteFunction({ action: 'create', ...input });
+  if (viaFunction) {
+    return resultFromPayload(viaFunction.invite, viaFunction.emailSent, viaFunction.emailError);
+  }
+
+  const { data, error } = await getSupabase().rpc('create_agency_invite', {
+    p_agency_id: input.agencyId,
+    p_email: input.email,
+    p_prenom: input.prenom,
+    p_nom: input.nom,
+    p_role: input.role,
+    p_branch_id: input.branchId,
+  });
+  if (error) throw new Error(error.message);
+  return resultFromPayload(data as InvitePayload, false, 'function_unavailable');
+}
+
+export async function resendAgencyInvite(inviteId: string): Promise<InviteResult> {
+  const viaFunction = await callInviteFunction({ action: 'resend', inviteId });
+  if (viaFunction) {
+    return resultFromPayload(viaFunction.invite, viaFunction.emailSent, viaFunction.emailError);
+  }
+
+  const { data, error } = await getSupabase().rpc('resend_agency_invite', { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
+  return resultFromPayload(data as InvitePayload, false, 'function_unavailable');
+}
+
+export async function revokeAgencyInvite(inviteId: string): Promise<void> {
+  const { error } = await getSupabase().rpc('revoke_agency_invite', { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
 }
 
 export async function getAgencyDetails(agencyId: string): Promise<AgencyDetails> {

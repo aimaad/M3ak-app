@@ -35,10 +35,6 @@ async function createUser() {
   return { id: data.user.id, email, client };
 }
 
-function randomCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
 async function createAgencyWithOwner(owner, nom) {
   const { data: agency, error } = await owner.client.from('agencies').insert({ nom, created_by: owner.id }).select().single();
   if (error) throw error;
@@ -47,14 +43,16 @@ async function createAgencyWithOwner(owner, nom) {
 }
 
 async function inviteMember(owner, agencyId, member, role, branchId = null) {
-  const code = randomCode();
-  const { data: invite, error } = await owner.client
-    .from('agency_invites')
-    .insert({ agency_id: agencyId, code, role, branch_id: branchId, created_by: owner.id, expires_at: new Date(Date.now() + 7 * 86400000).toISOString() })
-    .select()
-    .single();
+  const { data: invite, error } = await owner.client.rpc('create_agency_invite', {
+    p_agency_id: agencyId,
+    p_email: member.email,
+    p_prenom: 'Test',
+    p_nom: 'Audit',
+    p_role: role,
+    p_branch_id: branchId,
+  });
   if (error) throw error;
-  const { error: redeemErr } = await member.client.rpc('redeem_invite', { invite_code: code });
+  const { error: redeemErr } = await member.client.rpc('redeem_invite', { invite_code: invite.code });
   if (redeemErr) throw redeemErr;
   return invite;
 }
@@ -204,10 +202,29 @@ async function main() {
     .from('branches')
     .insert({ agency_id: agency.id, nom: 'Tanger', ville: 'Tanger' });
   record('Responsable de filiale ne peut PAS créer de filiale', !!manager2BranchErr, manager2BranchErr?.message ?? 'AUCUNE ERREUR');
-  const { error: manager2InviteErr } = await manager2.client
-    .from('agency_invites')
-    .insert({ agency_id: agency.id, code: 'ZZ9999', role: 'employee', branch_id: branchCasa.id, created_by: manager2.id, expires_at: new Date(Date.now() + 86400000).toISOString() });
+  const inviteeCasa = await createUser();
+  const { error: manager2InviteErr } = await manager2.client.rpc('create_agency_invite', {
+    p_agency_id: agency.id, p_email: inviteeCasa.email, p_prenom: 'Test', p_nom: 'Audit', p_role: 'employee', p_branch_id: branchCasa.id,
+  });
   record('Responsable de Rabat ne peut PAS inviter dans Casablanca', !!manager2InviteErr, manager2InviteErr?.message ?? 'AUCUNE ERREUR');
+  const { data: inviteDefault, error: inviteDefaultErr } = await manager2.client.rpc('create_agency_invite', {
+    p_agency_id: agency.id, p_email: inviteeCasa.email, p_prenom: 'Test', p_nom: 'Audit', p_role: 'employee', p_branch_id: null,
+  });
+  record(
+    'Responsable de Rabat sans filiale précisée : invitation rattachée à Rabat (jamais à toute l\'agence)',
+    !inviteDefaultErr && inviteDefault?.branch_id === branchRabat.id,
+    inviteDefaultErr?.message ?? `branch_id=${inviteDefault?.branch_id}`
+  );
+  const { error: directInsertErr } = await owner.client.from('agency_invites').insert({
+    agency_id: agency.id, role: 'employee', email: 'direct@example.test', expires_at: new Date(Date.now() + 86400000).toISOString(),
+  });
+  record('Insertion directe dans agency_invites interdite (même owner)', !!directInsertErr, directInsertErr?.message ?? 'AUCUNE ERREUR');
+  const wrongUser = await createUser();
+  const { error: wrongEmailErr } = await wrongUser.client.rpc('redeem_invite', { invite_code: inviteDefault?.code ?? 'AAAAAAAAAAAA' });
+  record("Un code d'invitation ne marche PAS avec un autre e-mail", !!wrongEmailErr && /invite_email_mismatch/.test(wrongEmailErr.message), wrongEmailErr?.message ?? 'AUCUNE ERREUR');
+  const { data: reused } = await inviteeCasa.client.rpc('redeem_invite', { invite_code: inviteDefault?.code });
+  const { error: reusedErr } = await inviteeCasa.client.rpc('redeem_invite', { invite_code: inviteDefault?.code });
+  record('Code à usage unique : second usage refusé', reused === 'employee' && !!reusedErr, reusedErr?.message ?? 'AUCUNE ERREUR');
   const { data: allBranchesOwner } = await owner.client.from('branches').select('id').eq('agency_id', agency.id);
   record("L'admin (owner) voit toutes les filiales", (allBranchesOwner ?? []).length >= 2, `filiales vues: ${(allBranchesOwner ?? []).length}`);
 

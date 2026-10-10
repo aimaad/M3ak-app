@@ -64,10 +64,10 @@
     "createError": "تعذر صواب الوكالة. عاود المحاولة.",
     "inviteCode": "كود الدعوة",
     "joinAction": "انضم للوكالة",
-    "joinError": "الكود خاطئ، فات وقتو، أو تستعمل من قبل.",
     "errors": {
       "required": "عمر الحقول المطلوبة."
-    }
+    },
+    "joinHint": "أنت مسجل الدخول بـ {{email}}. خاصو يكون هو البريد الإلكتروني لي توصل بالدعوة."
   },
   "equipe": {
     "title": "الفريق",
@@ -75,16 +75,7 @@
     "membersSection": "الأعضاء",
     "unnamedMember": "عضو",
     "inviteSection": "دعوة",
-    "inviteAs": "دعوة {{role}}",
-    "inviteError": "تعذر صواب الدعوة. عاود المحاولة.",
     "pendingInvites": "الدعوات الجارية",
-    "inviteActive": "فالانتظار",
-    "inviteUsed": "تستعملات",
-    "inviteExpired": "فاتها الوقت",
-    "inviteCreatedTitle": "الكود تصاوب : {{code}}",
-    "inviteMessage": "انضم لوكالة {{agency}} فتطبيق M3ak! حل التطبيق، صاوب حساب، من بعد دخل هاد كود الدعوة : {{code}}",
-    "copyCode": "نسخ الكود",
-    "shareWhatsapp": "شارك فـ WhatsApp",
     "roles": {
       "owner": "المالك",
       "manager": "المسؤول",
@@ -99,8 +90,58 @@
     "roleUpdateError": "تعذر بدل هاد الدور.",
     "myCompany": "الوكالة ديالي",
     "branches": "الفروع",
-    "chooseBranch": "شكون الفرع اللي غادي تحط فيه هاد {{role}}؟",
-    "noBranch": "حتى واحد (الوكالة)"
+    "invite": {
+      "title": "عرض على عضو جديد",
+      "subtitle": "الدعوة شخصية ومرتبطة بالبريد الإلكتروني ديالو",
+      "cta": "عرض على عضو جديد",
+      "notAllowed": "غير المسؤولين لي يقدرو يصيفطو الدعوات.",
+      "role": "الدور",
+      "branch": "الفرع",
+      "allAgency": "الوكالة كاملة",
+      "yourBranch": "الفرع ديالك",
+      "yourBranchHint": "تقدر تعرض غير فالفرع ديالك.",
+      "emailBinding": "الرمز غادي يتربط بهاد البريد الإلكتروني: غير هاد الشخص لي غادي يقدر يستعملو، مرة وحدة، وفمدة 7 أيام.",
+      "send": "صيفط الدعوة",
+      "sending": "كيتصيفط…",
+      "createdFor": "تصاوبات دعوة ل {{name}}",
+      "emailSent": "تصيفط البريد الإلكتروني ل {{email}}.",
+      "emailFailed": "ما قدرناش نصيفطو البريد الإلكتروني. شارك الرمز عبر واتساب.",
+      "emailNotConfigured": "إرسال البريد الإلكتروني ماشي متاح دابا. شارك الرمز عبر واتساب.",
+      "codeLabel": "رمز الدعوة (كيبان غير مرة وحدة)",
+      "codeHint": "هاد الرمز كيخدم غير مع {{email}}، مرة وحدة، حتى لـ {{date}}.",
+      "copy": "نسخ الرمز",
+      "copied": "تنسخ ✓",
+      "whatsapp": "واتساب",
+      "done": "سالينا",
+      "whatsappMessage": "السلام {{prenom}}، وكالة {{agency}} كتعرض عليك تنضم لـ M3ak بصفة {{role}}.\n1) نزل تطبيق M3ak وصاوب حساب بنفس هاد البريد الإلكتروني: {{email}}\n2) ختار «انضم» ودخل هاد الرمز: {{code}}\nالرمز شخصي، كيخدم مرة وحدة، حتى لـ {{date}}. ما تشاركوهش.",
+      "status": {
+        "pending": "فالانتظار",
+        "accepted": "مقبولة",
+        "expired": "سالات",
+        "revoked": "ملغية"
+      },
+      "resend": "عاود صيفط",
+      "revoke": "إلغاء",
+      "revokeConfirmTitle": "تلغي دعوة {{name}}؟",
+      "revokeConfirmBody": "الرمز ديالو ما غاديش يخدم.",
+      "errors": {
+        "generic": "وقع مشكل. عاود حاول.",
+        "not_allowed": "ماعندكش الحق دير هادشي.",
+        "not_authenticated": "خاصك تكون مسجل الدخول.",
+        "role_not_allowed": "هاد الدور ما يمكنش يتعرض.",
+        "invalid_email": "دخل بريد إلكتروني صحيح.",
+        "invalid_name": "دخل اسم شخصي وعائلي صحيحين.",
+        "branch_access_denied": "تقدر تعرض غير فالفرع ديالك.",
+        "branch_must_belong_to_same_agency": "هاد الفرع ماشي ديال الوكالة ديالك.",
+        "already_member": "هاد الشخص راه عضو فالوكالة.",
+        "invite_already_pending": "كاينة دعوة فالانتظار لهاد البريد. عاود صيفطها ولا لغيها.",
+        "invite_not_pending": "هاد الدعوة ما بقاتش فالانتظار.",
+        "invite_not_found": "الدعوة ما لقيناهاش.",
+        "invite_invalid_or_expired": "الرمز غالط، سالا، ملغي ولا تستعمل من قبل.",
+        "invite_email_mismatch": "هاد الدعوة موجهة لبريد إلكتروني آخر. دخل بالبريد لي توصل بالدعوة.",
+        "email_not_confirmed": "أكد البريد الإلكتروني ديالك أولا بالرمز لي توصلك."
+      }
+    }
   },
   "entreprise": {
     "title": "الوكالة ديالي",
@@ -736,7 +777,9 @@
       "branch_created": "{{actor}} دار فرع « {{target}} »",
       "branch_updated": "{{actor}} بدل الفرع « {{target}} »",
       "branch_deleted": "{{actor}} حيد الفرع « {{target}} »",
-      "invite_created": "{{actor}} دار دعوة ({{code}})",
+      "invite_created": "{{actor}} عرض على {{target}}",
+      "invite_resent": "{{actor}} عاود صيفط دعوة {{target}}",
+      "invite_revoked": "{{actor}} لغى دعوة {{target}}",
       "member_joined": "{{actor}} دخل للوكالة",
       "member_role_changed": "{{actor}} بدل الدور ديال « {{target}} »",
       "member_removed": "{{actor}} حيد « {{target}} » من الوكالة"

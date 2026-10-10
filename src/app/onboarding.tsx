@@ -13,6 +13,8 @@ import { saveMyNames, signOut } from '@/features/auth/api';
 import { buildFullName, readNamesFromMetadata, validatePersonName } from '@/features/auth/names';
 import { useSession } from '@/features/auth/session-context';
 import { useCreateAgency, useMyAgency, useRedeemInvite } from '@/features/agency/hooks';
+import { formatInviteCode, isValidInviteCode, normalizeInviteCode } from '@/features/agency/invite-code';
+import { inviteErrorKey } from '@/features/agency/invite-errors';
 import { useLanguage } from '@/i18n/use-language';
 
 type Mode = 'create' | 'join';
@@ -62,18 +64,17 @@ export default function OnboardingScreen() {
 
   async function handleJoin() {
     setError(null);
-    if (!code.trim() || !namesAreValid()) {
+    if (!isValidInviteCode(code) || !namesAreValid()) {
       setError(t('onboarding.errors.required'));
       return;
     }
     try {
       await ensureNamesSaved();
-      await redeemInvite.mutateAsync(code.trim().toUpperCase());
+      await redeemInvite.mutateAsync(normalizeInviteCode(code));
       router.replace('/accueil');
     } catch (err) {
       console.error('Échec pour rejoindre une agence :', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`${t('onboarding.joinError')} (${message})`);
+      setError(t(inviteErrorKey(err)));
     }
   }
 
@@ -154,10 +155,14 @@ export default function OnboardingScreen() {
               <TextField
                 label={t('onboarding.inviteCode')}
                 value={code}
-                onChangeText={(v) => setCode(v.toUpperCase())}
+                onChangeText={(v) => setCode(formatInviteCode(v))}
                 autoCapitalize="characters"
-                placeholder="A1B2C3"
+                autoCorrect={false}
+                placeholder="ABCD-EFGH-JK23"
               />
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('onboarding.joinHint', { email: session?.user.email ?? '' })}
+              </ThemedText>
 
               {error ? (
                 <ThemedText type="small" style={{ color: M3akPalette.danger }}>

@@ -33,10 +33,6 @@ async function createUser() {
   return { id: data.user.id, email, client };
 }
 
-function randomCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
 async function main() {
   const ownerA = await createUser();
   const managerA = await createUser();
@@ -73,18 +69,18 @@ async function main() {
   });
 
   // --- #9 Invitations : création + redemption réelles ---
-  const managerCode = randomCode();
-  const { error: inviteManagerErr } = await ownerA.client.from('agency_invites').insert({
-    agency_id: agencyA.id,
-    code: managerCode,
-    role: 'manager',
-    created_by: ownerA.id,
-    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  const { data: managerInvite, error: inviteManagerErr } = await ownerA.client.rpc('create_agency_invite', {
+    p_agency_id: agencyA.id,
+    p_email: managerA.email,
+    p_prenom: 'Manager',
+    p_nom: 'Audit',
+    p_role: 'manager',
+    p_branch_id: null,
   });
   record('9. Owner peut créer une invitation manager', !inviteManagerErr, inviteManagerErr?.message ?? 'invitation créée');
 
   const { data: redeemManagerData, error: redeemManagerErr } = await managerA.client.rpc('redeem_invite', {
-    invite_code: managerCode,
+    invite_code: managerInvite?.code,
   });
   record(
     '9. redeem_invite fonctionne réellement (manager)',
@@ -92,16 +88,16 @@ async function main() {
     redeemManagerErr?.message ?? `rôle obtenu = ${redeemManagerData}`
   );
 
-  const employeeCode = randomCode();
-  await ownerA.client.from('agency_invites').insert({
-    agency_id: agencyA.id,
-    code: employeeCode,
-    role: 'employee',
-    created_by: ownerA.id,
-    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  const { data: employeeInvite } = await ownerA.client.rpc('create_agency_invite', {
+    p_agency_id: agencyA.id,
+    p_email: employeeA.email,
+    p_prenom: 'Employee',
+    p_nom: 'Audit',
+    p_role: 'employee',
+    p_branch_id: null,
   });
   const { data: redeemEmpData, error: redeemEmpErr } = await employeeA.client.rpc('redeem_invite', {
-    invite_code: employeeCode,
+    invite_code: employeeInvite?.code,
   });
   record(
     '9. redeem_invite fonctionne réellement (employee)',
@@ -190,30 +186,19 @@ async function main() {
       `lignes modifiées: ${(employeeSelfPromoteData ?? []).length}`
   );
 
-  const ownerInviteCode = randomCode();
-  const { error: managerOwnerInviteErr } = await managerA.client.from('agency_invites').insert({
-    agency_id: agencyA.id,
-    code: ownerInviteCode,
-    role: 'owner',
-    created_by: managerA.id,
-    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  const { error: managerOwnerInviteErr } = await managerA.client.rpc('create_agency_invite', {
+    p_agency_id: agencyA.id,
+    p_email: accomplice1.email,
+    p_prenom: 'Complice',
+    p_nom: 'Audit',
+    p_role: 'owner',
+    p_branch_id: null,
   });
   record(
     '7. Manager ne peut PAS créer une invitation role=owner',
     !!managerOwnerInviteErr,
     managerOwnerInviteErr?.message ?? 'AUCUNE ERREUR — invitation owner créée par un manager !'
   );
-
-  if (!managerOwnerInviteErr) {
-    const { data: redeemOwnerData, error: redeemOwnerErr } = await accomplice1.client.rpc('redeem_invite', {
-      invite_code: ownerInviteCode,
-    });
-    record(
-      '7. (conséquence) un compte tiers devient owner via ce code',
-      !!redeemOwnerErr,
-      redeemOwnerErr?.message ?? `AUCUNE ERREUR — rôle obtenu = ${redeemOwnerData} !`
-    );
-  }
 
   const { data: managerDirectInsertOwner, error: managerDirectInsertErr } = await managerA.client
     .from('agency_members')

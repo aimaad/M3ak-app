@@ -25,7 +25,11 @@ function describeEntry(entry: AuditLogEntry, t: (key: string, params?: Record<st
     case 'branch_deleted':
       return t('journal.actions.branch_deleted', { actor, target: entry.targetLabel ?? '—' });
     case 'invite_created':
-      return t('journal.actions.invite_created', { actor, code: entry.targetLabel ?? '—' });
+      return t('journal.actions.invite_created', { actor, target: entry.targetLabel ?? '—' });
+    case 'invite_resent':
+      return t('journal.actions.invite_resent', { actor, target: entry.targetLabel ?? '—' });
+    case 'invite_revoked':
+      return t('journal.actions.invite_revoked', { actor, target: entry.targetLabel ?? '—' });
     case 'member_joined':
       return t('journal.actions.member_joined', { actor: entry.targetLabel ?? t('journal.unknownActor') });
     case 'member_role_changed':

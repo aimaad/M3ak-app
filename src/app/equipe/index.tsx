@@ -1,7 +1,6 @@
 import { router } from 'expo-router';
-import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { Alert, Linking, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
@@ -14,16 +13,18 @@ import { useBranches } from '@/features/branches/hooks';
 import {
   useAgencyInvites,
   useAgencyMembers,
-  useCreateAgencyInvite,
   useMyAgency,
-  useMyProfile,
   useRemoveMember,
+  useResendAgencyInvite,
+  useRevokeAgencyInvite,
   useUpdateMemberRole,
 } from '@/features/agency/hooks';
 import { useSession } from '@/features/auth/session-context';
-import { isInviteExpired } from '@/features/agency/invite-code';
+import { inviteErrorKey } from '@/features/agency/invite-errors';
+import { inviteStatus } from '@/features/agency/invite-code';
+import { InviteResultCard } from '@/features/agency/invite-result-card';
 import { canRemoveMember } from '@/features/agency/permissions';
-import { INVITABLE_ROLES, type AgencyMember, type AgencyRole } from '@/features/agency/types';
+import type { AgencyInvite, AgencyMember, AgencyRole, InviteResult } from '@/features/agency/types';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function EquipeScreen() {
@@ -33,56 +34,41 @@ export default function EquipeScreen() {
   const membersQuery = useAgencyMembers(agencyQuery.data?.agencyId);
   const invitesQuery = useAgencyInvites(agencyQuery.data?.agencyId);
   const branchesQuery = useBranches(agencyQuery.data?.agencyId);
-  const createInvite = useCreateAgencyInvite();
-  const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
   const updateRole = useUpdateMemberRole(agencyQuery.data?.agencyId);
   const removeMember = useRemoveMember(agencyQuery.data?.agencyId);
+  const resendInvite = useResendAgencyInvite(agencyQuery.data?.agencyId);
+  const revokeInvite = useRevokeAgencyInvite(agencyQuery.data?.agencyId);
 
-  const [pendingRole, setPendingRole] = useState<AgencyRole | null>(null);
+  const [lastInvite, setLastInvite] = useState<InviteResult | null>(null);
 
   const canManage = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
   const isOwner = agencyQuery.data?.role === 'owner';
-  // Membre rattaché à une filiale (hors admin) : il invite uniquement dans SA filiale.
-  const myBranchId = isOwner ? null : (profileQuery.data?.branchId ?? null);
-  const profileReady = !!profileQuery.data;
   const branches = branchesQuery.data ?? [];
 
-  async function sendInvite(role: AgencyRole, branchId: string | null) {
-    if (!agencyQuery.data) return;
-    setPendingRole(null);
-
-    let invite;
-    try {
-      invite = await createInvite.mutateAsync({ agencyId: agencyQuery.data.agencyId, role, branchId });
-    } catch {
-      Alert.alert(t('common.appName'), t('equipe.inviteError'));
-      return;
-    }
-
-    const message = t('equipe.inviteMessage', { code: invite.code, agency: agencyQuery.data.agencyName });
-
-    Alert.alert(t('equipe.inviteCreatedTitle', { code: invite.code }), message, [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('equipe.copyCode'), onPress: () => Clipboard.setStringAsync(invite.code) },
-      {
-        text: t('equipe.shareWhatsapp'),
-        onPress: () => Linking.openURL(`https://wa.me/?text=${encodeURIComponent(message)}`),
-      },
-    ]);
+  function inviteName(invite: AgencyInvite) {
+    return `${invite.prenom ?? ''} ${invite.nom ?? ''}`.trim() || invite.email;
   }
 
-  function handleInvite(role: AgencyRole) {
-    // Un membre rattaché à une filiale (hors admin) invite toujours dans SA filiale.
-    if (!profileReady) return;
-    if (myBranchId) {
-      sendInvite(role, myBranchId);
-      return;
-    }
-    if (branches.length === 0) {
-      sendInvite(role, null);
-      return;
-    }
-    setPendingRole(role);
+  function handleResend(invite: AgencyInvite) {
+    resendInvite.mutate(invite.id, {
+      onSuccess: (result) => setLastInvite(result),
+      onError: (err) => Alert.alert(t('common.appName'), t(inviteErrorKey(err))),
+    });
+  }
+
+  function handleRevoke(invite: AgencyInvite) {
+    Alert.alert(t('equipe.invite.revokeConfirmTitle', { name: inviteName(invite) }), t('equipe.invite.revokeConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('equipe.invite.revoke'),
+        style: 'destructive',
+        onPress: () => {
+          revokeInvite.mutate(invite.id, {
+            onError: (err) => Alert.alert(t('common.appName'), t(inviteErrorKey(err))),
+          });
+        },
+      },
+    ]);
   }
 
   function handleManageMember(member: AgencyMember, canChangeRole: boolean, canRemove: boolean) {
@@ -211,48 +197,9 @@ export default function EquipeScreen() {
           {canManage ? (
             <View className="gap-3">
               <ThemedText type="smallBold">{t('equipe.inviteSection')}</ThemedText>
-              <View className="flex-row gap-2">
-                {INVITABLE_ROLES.map((role) => (
-                  <Button
-                    key={role}
-                    label={t('equipe.inviteAs', { role: t(`equipe.roles.${role}`) })}
-                    onPress={() => handleInvite(role)}
-                    disabled={createInvite.isPending || !profileReady}
-                    size="sm"
-                    style={{ flex: 1 }}
-                  />
-                ))}
-              </View>
+              <Button label={t('equipe.invite.cta')} icon="person-add-outline" onPress={() => router.push('/equipe/inviter')} />
 
-              {pendingRole ? (
-                <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('equipe.chooseBranch', { role: t(`equipe.roles.${pendingRole}`) })}
-                  </ThemedText>
-                  <View className="flex-row flex-wrap gap-2">
-                    <Pressable
-                      onPress={() => sendInvite(pendingRole, null)}
-                      className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2"
-                    >
-                      <ThemedText type="small">{t('equipe.noBranch')}</ThemedText>
-                    </Pressable>
-                    {branches.map((branch) => (
-                      <Pressable
-                        key={branch.id}
-                        onPress={() => sendInvite(pendingRole, branch.id)}
-                        className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2"
-                      >
-                        <ThemedText type="small">{branch.nom}</ThemedText>
-                      </Pressable>
-                    ))}
-                  </View>
-                  <Pressable onPress={() => setPendingRole(null)} className="items-center py-1">
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {t('common.cancel')}
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              ) : null}
+              {lastInvite ? <InviteResultCard result={lastInvite} onDone={() => setLastInvite(null)} /> : null}
 
               {(invitesQuery.data ?? []).length > 0 ? (
                 <View className="gap-2">
@@ -260,30 +207,47 @@ export default function EquipeScreen() {
                     {t('equipe.pendingInvites')}
                   </ThemedText>
                   {(invitesQuery.data ?? []).map((invite) => {
-                    const expired = isInviteExpired(invite.expiresAt);
-                    const status = invite.usedAt
-                      ? t('equipe.inviteUsed')
-                      : expired
-                        ? t('equipe.inviteExpired')
-                        : t('equipe.inviteActive');
+                    const status = inviteStatus(invite);
                     const branchLabel = invite.branchId
                       ? (branches.find((b) => b.id === invite.branchId)?.nom ?? null)
                       : null;
                     return (
-                      <View
-                        key={invite.id}
-                        className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
-                      >
-                        <View>
-                          <ThemedText type="smallBold">{invite.code}</ThemedText>
+                      <View key={invite.id} className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+                        <View className="flex-row items-start justify-between gap-3">
+                          <View className="flex-1">
+                            <ThemedText type="smallBold">{inviteName(invite)}</ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {invite.email}
+                            </ThemedText>
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {t(`equipe.roles.${invite.role}`)}
+                              {branchLabel ? ` · ${branchLabel}` : ''}
+                            </ThemedText>
+                          </View>
                           <ThemedText type="small" themeColor="textSecondary">
-                            {t(`equipe.roles.${invite.role}`)}
-                            {branchLabel ? ` · ${branchLabel}` : ''}
+                            {t(`equipe.invite.status.${status}`)}
                           </ThemedText>
                         </View>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {status}
-                        </ThemedText>
+                        {status === 'pending' || status === 'expired' ? (
+                          <View className="flex-row gap-2">
+                            <Button
+                              label={t('equipe.invite.resend')}
+                              variant="secondary"
+                              size="sm"
+                              style={{ flex: 1 }}
+                              disabled={resendInvite.isPending}
+                              onPress={() => handleResend(invite)}
+                            />
+                            <Button
+                              label={t('equipe.invite.revoke')}
+                              variant="danger"
+                              size="sm"
+                              style={{ flex: 1 }}
+                              disabled={revokeInvite.isPending}
+                              onPress={() => handleRevoke(invite)}
+                            />
+                          </View>
+                        ) : null}
                       </View>
                     );
                   })}

@@ -22,12 +22,40 @@ export type AgencyMember = {
 export type AgencyInvite = {
   id: string;
   agencyId: string;
-  code: string;
+  email: string;
+  prenom: string | null;
+  nom: string | null;
   role: AgencyRole;
   branchId: string | null;
   expiresAt: string;
   usedAt: string | null;
+  revokedAt: string | null;
   createdAt: string;
+};
+
+export type CreateInviteInput = {
+  agencyId: string;
+  email: string;
+  prenom: string;
+  nom: string;
+  role: AgencyRole;
+  branchId: string | null;
+};
+
+/** Résultat d'une création / d'un renvoi : le code n'est connu que maintenant (jamais relisible ensuite). */
+export type InviteResult = {
+  inviteId: string;
+  code: string;
+  email: string;
+  prenom: string;
+  nom: string;
+  role: AgencyRole;
+  agencyName: string;
+  branchName: string | null;
+  inviterName: string | null;
+  expiresAt: string;
+  emailSent: boolean;
+  emailError: string | null;
 };
 
 export type MemberProfile = {
