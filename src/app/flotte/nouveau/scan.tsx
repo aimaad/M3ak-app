@@ -69,8 +69,8 @@ async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
 
   const result =
     source === 'library'
-      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 })
-      : await ImagePicker.launchCameraAsync({ quality: 0.7 });
+      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.5 })
+      : await ImagePicker.launchCameraAsync({ quality: 0.5 });
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 

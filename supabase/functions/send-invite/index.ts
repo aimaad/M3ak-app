@@ -175,7 +175,18 @@ async function sendEmail(invite: InvitePayload): Promise<{ sent: boolean; error?
 }
 
 Deno.serve(async (request: Request) => {
-  if (request.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS });
+  if (request.method === 'OPTIONS') {
+    // Préflight navigateur : on accepte les en-têtes demandés (le client Supabase
+    // en ajoute selon sa version), sinon l'appel échoue avant d'atteindre la fonction.
+    return new Response('ok', {
+      headers: {
+        ...CORS_HEADERS,
+        'Access-Control-Allow-Headers':
+          request.headers.get('Access-Control-Request-Headers') ?? CORS_HEADERS['Access-Control-Allow-Headers'],
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      },
+    });
+  }
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
   const authorization = request.headers.get('Authorization');
