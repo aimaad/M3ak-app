@@ -146,7 +146,16 @@ async function callGeminiModel(
             ],
           },
         ],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 1024 },
+        generationConfig: {
+          responseMimeType: 'application/json',
+          temperature: 0,
+          // Les modèles « thinking » comptent leur réflexion dans cette limite : trop
+          // basse, la réponse JSON est coupée en plein milieu (« unterminated string »).
+          maxOutputTokens: 8192,
+          // Extraction simple : pas besoin de réflexion (supprime la troncature et
+          // accélère). Paramètre accepté par la famille 2.5 Flash uniquement.
+          ...(model.includes('2.5-flash') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+        },
       }),
     }
   );
@@ -163,11 +172,13 @@ async function callGeminiModel(
   }
 
   const data = (await response.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
     promptFeedback?: { blockReason?: string };
   };
-  const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('');
+  const candidate = data.candidates?.[0];
+  const text = candidate?.content?.parts?.map((part) => part.text ?? '').join('');
   if (!text) throw new Error(`gemini_empty_response${data.promptFeedback?.blockReason ? `: ${data.promptFeedback.blockReason}` : ''}`);
+  if (candidate?.finishReason === 'MAX_TOKENS') throw new Error('gemini_response_truncated');
 
   return parseModelJson(text);
 }
