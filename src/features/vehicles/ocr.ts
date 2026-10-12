@@ -54,7 +54,15 @@ export async function scanVehicleDocument(localUri: string): Promise<ScanVehicle
       } | null;
       return { ok: false, error: parsed?.error ?? 'ocr_failed', detail: parsed?.detail };
     }
-    return { ok: false, error: 'unavailable', detail: error.message };
+    // FunctionsFetchError : la requête n'est pas partie / n'a pas abouti. La vraie cause
+    // (réseau coupé, délai dépassé, corps trop gros…) est dans error.context.
+    const cause = (error as { context?: unknown }).context;
+    const causeMessage = cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : '';
+    return {
+      ok: false,
+      error: 'unavailable',
+      detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''} (image ${Math.round(imageBase64.length / 1024)} Ko)`,
+    };
   }
 
   return data as ScanVehicleDocumentResult;
