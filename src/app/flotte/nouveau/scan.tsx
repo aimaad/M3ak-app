@@ -79,6 +79,7 @@ export default function ScannerCarteGriseScreen() {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
 
@@ -92,10 +93,12 @@ export default function ScannerCarteGriseScreen() {
     setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
+    setErrorDetail(null);
 
     const result = await scanVehicleDocument(uri);
     if (!result.ok) {
       setErrorCode(result.error);
+      setErrorDetail(result.detail ?? null);
       setStatus('error');
       return;
     }
@@ -176,6 +179,11 @@ export default function ScannerCarteGriseScreen() {
                   ? t('vehicle.quickCreate.errorNotConfigured')
                   : t('vehicle.quickCreate.errorFailed')}
               </ThemedText>
+              {errorDetail ? (
+                <ThemedText type="small" themeColor="textSecondary" selectable>
+                  {errorDetail}
+                </ThemedText>
+              ) : null}
               <View className="flex-row gap-2">
                 <Button
                   label={t('vehicle.quickCreate.retake')}

@@ -29,7 +29,9 @@ export type ScanErrorCode =
   | 'image_too_large'
   | 'unavailable';
 
-export type ScanVehicleDocumentResult = { ok: true; fields: VehicleOcrFields } | { ok: false; error: ScanErrorCode };
+export type ScanVehicleDocumentResult =
+  | { ok: true; fields: VehicleOcrFields }
+  | { ok: false; error: ScanErrorCode; detail?: string };
 
 function guessMimeType(uri: string): string {
   const extension = uri.split('.').pop()?.split('?')[0]?.toLowerCase();
@@ -46,10 +48,13 @@ export async function scanVehicleDocument(localUri: string): Promise<ScanVehicle
 
   if (error) {
     if (error instanceof FunctionsHttpError) {
-      const parsed = (await error.context.json().catch(() => null)) as { error?: ScanErrorCode } | null;
-      return { ok: false, error: parsed?.error ?? 'ocr_failed' };
+      const parsed = (await error.context.json().catch(() => null)) as {
+        error?: ScanErrorCode;
+        detail?: string;
+      } | null;
+      return { ok: false, error: parsed?.error ?? 'ocr_failed', detail: parsed?.detail };
     }
-    return { ok: false, error: 'unavailable' };
+    return { ok: false, error: 'unavailable', detail: error.message };
   }
 
   return data as ScanVehicleDocumentResult;

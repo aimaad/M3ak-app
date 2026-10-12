@@ -114,8 +114,22 @@ async function callAnthropic(apiKey: string, imageBase64: string, mediaType: str
 }
 
 // Offre gratuite de Google AI Studio (limites de débit et de volume par jour).
-async function callGemini(apiKey: string, imageBase64: string, mediaType: string): Promise<ExtractionResult> {
-  const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash';
+// Les noms de modèles changent avec le temps : si le premier n'existe plus
+// (erreur 404), on essaie les suivants.
+const GEMINI_MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
+
+class GeminiHttpError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+  }
+}
+
+async function callGeminiModel(
+  apiKey: string,
+  model: string,
+  imageBase64: string,
+  mediaType: string
+): Promise<ExtractionResult> {
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
@@ -138,17 +152,42 @@ async function callGemini(apiKey: string, imageBase64: string, mediaType: string
   );
 
   if (!response.ok) {
-    const detail = await response.text().catch(() => '');
-    throw new Error(`gemini_error_${response.status}: ${detail.slice(0, 300)}`);
+    const raw = await response.text().catch(() => '');
+    let message = raw.slice(0, 200);
+    try {
+      message = (JSON.parse(raw) as { error?: { message?: string } }).error?.message?.slice(0, 200) ?? message;
+    } catch {
+      // corps non JSON : on garde le texte brut tronqué
+    }
+    throw new GeminiHttpError(response.status, message);
   }
 
   const data = (await response.json()) as {
     candidates?: { content?: { parts?: { text?: string }[] } }[];
+    promptFeedback?: { blockReason?: string };
   };
   const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('');
-  if (!text) throw new Error('gemini_empty_response');
+  if (!text) throw new Error(`gemini_empty_response${data.promptFeedback?.blockReason ? `: ${data.promptFeedback.blockReason}` : ''}`);
 
   return parseModelJson(text);
+}
+
+async function callGemini(apiKey: string, imageBase64: string, mediaType: string): Promise<ExtractionResult> {
+  const configured = Deno.env.get('GEMINI_MODEL');
+  const models = configured ? [configured] : GEMINI_MODEL_CANDIDATES;
+
+  let lastError: unknown = null;
+  for (const model of models) {
+    try {
+      return await callGeminiModel(apiKey, model, imageBase64, mediaType);
+    } catch (error) {
+      lastError = error;
+      // Modèle inconnu : on tente le suivant. Toute autre erreur (clé refusée,
+      // quota, image illisible) ne dépend pas du modèle : inutile de réessayer.
+      if (!(error instanceof GeminiHttpError && error.status === 404)) break;
+    }
+  }
+  throw lastError;
 }
 
 function parseModelJson(text: string): ExtractionResult {
@@ -226,7 +265,10 @@ Deno.serve(async (request: Request) => {
       : await callAnthropic(anthropicKey!, imageBase64, mimeType);
     return json({ ok: true, fields });
   } catch (error) {
-    console.error('Échec de l\'extraction OCR :', error instanceof Error ? error.message : error);
-    return json({ ok: false, error: 'ocr_failed' });
+    const detail =
+      error instanceof GeminiHttpError ? `gemini_${error.status}: ${error.message}` : error instanceof Error ? error.message : String(error);
+    console.error('Échec de l\'extraction OCR :', detail);
+    // Aucune clé n'apparaît ici : seulement le code HTTP et le message d'erreur du fournisseur.
+    return json({ ok: false, error: 'ocr_failed', detail: detail.slice(0, 240) });
   }
 });
