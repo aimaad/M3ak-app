@@ -292,3 +292,34 @@ peut pas la réutiliser, d'où ces deux secrets.
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à
 l'étape 2).
+
+## Création rapide de véhicule et scan de carte grise (migration 0027)
+
+- `0027_vehicle_vin_and_finition.sql` — ajoute `vin` et `finition` sur `vehicles`, avec un
+  `vin` unique par agence quand renseigné (plusieurs véhicules sans VIN restent possibles).
+  À exécuter dans le SQL Editor comme les précédentes.
+
+`scripts/vehicle-rls-audit.mjs` a été complété avec le contrôle du VIN en double (refusé
+dans la même agence, autorisé si aucun VIN n'est renseigné sur plusieurs véhicules).
+
+### Scan automatique de la carte grise par IA (optionnel)
+
+L'écran « Ajouter un véhicule » propose de scanner la carte grise pour préremplir le
+formulaire. Cette lecture passe par la fonction serveur `scan-vehicle-document`
+(`supabase/functions/scan-vehicle-document`), qui appelle l'API Anthropic (Claude) côté
+serveur — la clé n'est **jamais** dans l'app mobile.
+
+Sans cette fonction déployée ou sans clé configurée, tout fonctionne quand même : l'écran
+l'indique clairement et renvoie vers la saisie par plaque/VIN ou la saisie manuelle.
+
+1. Créez une clé API sur [console.anthropic.com](https://console.anthropic.com) (compte
+   payant à l'usage — quelques centimes par scan).
+2. Dans Supabase → Edge Functions → Secrets, ajoutez `ANTHROPIC_API_KEY` avec cette clé.
+3. Déployez la fonction : `npx supabase functions deploy scan-vehicle-document`, ou
+   créez-la depuis le tableau de bord en collant le contenu de
+   `supabase/functions/scan-vehicle-document/index.ts`.
+
+La photo de la carte grise n'est jamais stockée par cette fonction : elle est envoyée à
+l'API Anthropic pour extraction puis oubliée. Si l'employé choisit de la garder comme
+document du véhicule, elle est envoyée séparément vers le bucket `vehicle-documents`,
+comme n'importe quel autre document.

@@ -11,6 +11,8 @@ function makeValues(overrides: Partial<VehicleFormValues> = {}): VehicleFormValu
     marque: 'Dacia',
     modele: 'Logan',
     immatriculation: '8921-أ-14',
+    vin: '',
+    finition: '',
     annee: '2022',
     categorie: 'economique',
     couleur: 'Blanc',

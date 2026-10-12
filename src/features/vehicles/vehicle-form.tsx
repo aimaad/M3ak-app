@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ChipGroup } from '@/components/chip-group';
 import { DocumentPhotoField } from '@/components/document-photo-field';
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
@@ -50,6 +51,8 @@ const EMPTY_VALUES: VehicleFormValues = {
   marque: '',
   modele: '',
   immatriculation: '',
+  vin: '',
+  finition: '',
   annee: '',
   categorie: null,
   couleur: '',
@@ -64,42 +67,6 @@ const EMPTY_VALUES: VehicleFormValues = {
   description: '',
   statut: 'disponible',
 };
-
-function ChipGroup<T extends string>({
-  options,
-  selected,
-  getLabel,
-  onSelect,
-  disabled,
-}: {
-  options: T[];
-  selected: T | null;
-  getLabel: (value: T) => string;
-  onSelect: (value: T) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <View className="flex-row flex-wrap gap-2">
-      {options.map((option) => {
-        const isSelected = selected === option;
-        return (
-          <Pressable
-            key={option}
-            onPress={() => !disabled && onSelect(option)}
-            disabled={disabled}
-            className={`rounded-full border px-4 py-2 ${
-              isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
-            } ${disabled ? 'opacity-50' : ''}`}
-          >
-            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>
-              {getLabel(option)}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 function SectionTitle({ children }: { children: string }) {
   return (
@@ -195,6 +162,19 @@ export function VehicleForm({
         onChangeText={(v) => update('annee', v)}
         keyboardType="number-pad"
         error={showErrors && errors.annee ? t(`vehicle.form.errors.${errors.annee}`) : undefined}
+      />
+      <TextField
+        label={t('vehicle.fields.finition')}
+        value={values.finition}
+        onChangeText={(v) => update('finition', v)}
+        placeholder={t('vehicle.fields.optionalPlaceholder')}
+      />
+      <TextField
+        label={t('vehicle.fields.vin')}
+        value={values.vin}
+        onChangeText={(v) => update('vin', v)}
+        autoCapitalize="characters"
+        placeholder={t('vehicle.fields.optionalPlaceholder')}
       />
       <TextField
         label={t('vehicle.fields.couleur')}

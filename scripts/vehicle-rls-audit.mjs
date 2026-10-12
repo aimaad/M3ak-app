@@ -115,6 +115,29 @@ async function main() {
     .insert({ ...baseVehicle, agency_id: agencyB.id, immatriculation: plate });
   record("Même immatriculation autorisée dans une autre agence", !otherAgencyErr, otherAgencyErr?.message ?? 'ok');
 
+  // --- VIN en double : refusé dans la même agence, autorisé si VIN absent ---
+  const vin = `VIN-TEST-${Date.now()}`;
+  const { error: vinSetErr } = await ownerA.client.from('vehicles').update({ vin }).eq('id', vehicle.id);
+  record("Le VIN peut être renseigné sur un véhicule existant", !vinSetErr, vinSetErr?.message ?? 'ok');
+
+  const { error: vinDupErr } = await ownerA.client
+    .from('vehicles')
+    .insert({ ...baseVehicle, agency_id: agencyA.id, immatriculation: `${plate}-2`, vin });
+  record('VIN en double refusé (même agence)', vinDupErr?.code === '23505', vinDupErr?.message ?? 'AUCUNE ERREUR — doublon de VIN accepté !');
+
+  const { data: twoNullVins, error: nullVinErr } = await ownerA.client
+    .from('vehicles')
+    .insert([
+      { ...baseVehicle, agency_id: agencyA.id, immatriculation: `${plate}-3` },
+      { ...baseVehicle, agency_id: agencyA.id, immatriculation: `${plate}-4` },
+    ])
+    .select();
+  record(
+    'Plusieurs véhicules sans VIN (null) restent possibles dans la même agence',
+    !nullVinErr && (twoNullVins ?? []).length === 2,
+    nullVinErr?.message ?? `lignes créées: ${(twoNullVins ?? []).length}`
+  );
+
   // --- 4/8. Permissions : employee peut créer/modifier, mais pas archiver ---
   const { data: empUpdate, error: empUpdateErr } = await employeeA.client
     .from('vehicles')

@@ -18,8 +18,10 @@ type VehicleRow = {
   agency_id: string;
   branch_id: string | null;
   immatriculation: string;
+  vin: string | null;
   marque: string;
   modele: string;
+  finition: string | null;
   annee: number | null;
   categorie: Vehicle['categorie'];
   couleur: string | null;
@@ -47,8 +49,10 @@ function fromRow(row: VehicleRow): Vehicle {
     agencyId: row.agency_id,
     branchId: row.branch_id,
     immatriculation: row.immatriculation,
+    vin: row.vin,
     marque: row.marque,
     modele: row.modele,
+    finition: row.finition,
     annee: row.annee,
     categorie: row.categorie,
     couleur: row.couleur,
@@ -76,6 +80,8 @@ function toRow(input: VehicleInput) {
     marque: input.marque,
     modele: input.modele,
     immatriculation: input.immatriculation,
+    vin: input.vin,
+    finition: input.finition,
     annee: input.annee,
     categorie: input.categorie,
     couleur: input.couleur,
@@ -111,6 +117,40 @@ export async function listVehicles(): Promise<Vehicle[]> {
 
   if (error) throw error;
   return (data as VehicleRow[]).map(fromRow);
+}
+
+/**
+ * Vérification amont (avant soumission) d'un doublon d'immatriculation ou de
+ * VIN dans l'agence — la contrainte unique en base reste le garde-fou
+ * définitif (voir isDuplicatePlateError / duplicateVehicleField), ceci n'est
+ * qu'un retour rapide côté UI pour éviter une erreur après coup.
+ */
+export async function findDuplicateVehicle(
+  agencyId: string,
+  immatriculation: string,
+  vin: string | null
+): Promise<{ field: 'immatriculation' | 'vin'; vehicle: Vehicle } | null> {
+  const { data: byPlate, error: plateError } = await getSupabase()
+    .from('vehicles')
+    .select('*')
+    .eq('agency_id', agencyId)
+    .eq('immatriculation', immatriculation)
+    .maybeSingle();
+  if (plateError) throw plateError;
+  if (byPlate) return { field: 'immatriculation', vehicle: fromRow(byPlate as VehicleRow) };
+
+  if (vin) {
+    const { data: byVin, error: vinError } = await getSupabase()
+      .from('vehicles')
+      .select('*')
+      .eq('agency_id', agencyId)
+      .eq('vin', vin)
+      .maybeSingle();
+    if (vinError) throw vinError;
+    if (byVin) return { field: 'vin', vehicle: fromRow(byVin as VehicleRow) };
+  }
+
+  return null;
 }
 
 export async function getVehicle(id: string): Promise<Vehicle | null> {

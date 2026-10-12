@@ -82,8 +82,10 @@ export type Vehicle = {
   agencyId: string;
   branchId: string | null;
   immatriculation: string;
+  vin: string | null;
   marque: string;
   modele: string;
+  finition: string | null;
   annee: number | null;
   categorie: VehicleCategory | null;
   couleur: string | null;
@@ -107,8 +109,10 @@ export type Vehicle = {
 
 export type VehicleInput = {
   immatriculation: string;
+  vin: string | null;
   marque: string;
   modele: string;
+  finition: string | null;
   annee: number | null;
   categorie: VehicleCategory | null;
   couleur: string | null;

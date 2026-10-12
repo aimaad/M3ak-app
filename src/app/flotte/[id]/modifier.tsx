@@ -10,7 +10,7 @@ import { mergeDocuments } from '@/features/storage/documents';
 import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
 import { useUpdateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicle } from '@/features/vehicles/hooks';
 import type { PendingVehicleDocument, VehicleInput } from '@/features/vehicles/types';
-import { isDuplicatePlateError } from '@/features/vehicles/validation';
+import { duplicateVehicleField } from '@/features/vehicles/validation';
 import { VehicleForm } from '@/features/vehicles/vehicle-form';
 import type { VehicleFormValues } from '@/features/vehicles/validation';
 import { useLanguage } from '@/i18n/use-language';
@@ -66,7 +66,14 @@ export default function ModifierVehiculeScreen() {
 
       router.back();
     } catch (error) {
-      setSubmitError(isDuplicatePlateError(error) ? t('vehicle.form.duplicatePlateError') : t('vehicle.form.updateError'));
+      const duplicateField = duplicateVehicleField(error);
+      setSubmitError(
+        duplicateField === 'vin'
+          ? t('vehicle.form.duplicateVinError')
+          : duplicateField === 'immatriculation'
+            ? t('vehicle.form.duplicatePlateError')
+            : t('vehicle.form.updateError')
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -77,6 +84,8 @@ export default function ModifierVehiculeScreen() {
         marque: vehicle.marque,
         modele: vehicle.modele,
         immatriculation: vehicle.immatriculation,
+        vin: vehicle.vin ?? '',
+        finition: vehicle.finition ?? '',
         annee: vehicle.annee ? String(vehicle.annee) : '',
         categorie: vehicle.categorie,
         couleur: vehicle.couleur ?? '',

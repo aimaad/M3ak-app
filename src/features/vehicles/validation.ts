@@ -4,6 +4,8 @@ export type VehicleFormValues = {
   marque: string;
   modele: string;
   immatriculation: string;
+  vin: string;
+  finition: string;
   annee: string;
   categorie: VehicleCategory | null;
   couleur: string;
@@ -117,6 +119,8 @@ export function toVehicleInput(values: VehicleFormValues) {
     marque: values.marque.trim(),
     modele: values.modele.trim(),
     immatriculation: values.immatriculation.trim(),
+    vin: emptyToNull(values.vin),
+    finition: emptyToNull(values.finition),
     annee: values.annee.trim() ? Number(values.annee) : null,
     categorie: values.categorie,
     couleur: emptyToNull(values.couleur),
@@ -136,11 +140,24 @@ export function toVehicleInput(values: VehicleFormValues) {
 /** Code d'erreur Postgres pour une violation de contrainte unique (ex. immatriculation en double). */
 const POSTGRES_UNIQUE_VIOLATION = '23505';
 
-export function isDuplicatePlateError(error: unknown): boolean {
+function isUniqueViolation(error: unknown): error is { code: string; message?: string } {
   return (
     typeof error === 'object' &&
     error !== null &&
     'code' in error &&
     (error as { code?: unknown }).code === POSTGRES_UNIQUE_VIOLATION
   );
+}
+
+export function isDuplicatePlateError(error: unknown): boolean {
+  return isUniqueViolation(error);
+}
+
+/** Distingue quelle contrainte unique a été violée, pour afficher le bon message. */
+export function duplicateVehicleField(error: unknown): 'immatriculation' | 'vin' | null {
+  if (!isUniqueViolation(error)) return null;
+  const message = error.message ?? '';
+  if (message.includes('vehicles_agency_vin_unique')) return 'vin';
+  if (message.includes('immatriculation')) return 'immatriculation';
+  return 'immatriculation';
 }
