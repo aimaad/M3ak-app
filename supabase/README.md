@@ -312,14 +312,22 @@ serveur — la clé n'est **jamais** dans l'app mobile.
 Sans cette fonction déployée ou sans clé configurée, tout fonctionne quand même : l'écran
 l'indique clairement et renvoie vers la saisie par plaque/VIN ou la saisie manuelle.
 
-1. Créez une clé API sur [console.anthropic.com](https://console.anthropic.com) (compte
-   payant à l'usage — quelques centimes par scan).
-2. Dans Supabase → Edge Functions → Secrets, ajoutez `ANTHROPIC_API_KEY` avec cette clé.
+1. **Gratuit (recommandé)** : créez une clé sur [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+   (offre gratuite Google Gemini, avec des limites de débit et de volume par jour).
+   Dans Supabase → Edge Functions → Secrets, ajoutez `GEMINI_API_KEY` avec cette clé.
+   Optionnel : `GEMINI_MODEL` pour changer de modèle (par défaut `gemini-2.5-flash`).
+   *Confidentialité* : sur l'offre gratuite, Google peut utiliser les images envoyées pour
+   améliorer ses produits, et des personnes peuvent les relire. Une carte grise contient
+   le nom et l'adresse du titulaire : à réserver aux véhicules de l'agence. Activer la
+   facturation côté Google (usage quasi nul) retire cette réserve.
+2. *Payant (alternative)* : une clé Anthropic dans le secret `ANTHROPIC_API_KEY`
+   ([console.anthropic.com](https://console.anthropic.com), quelques centimes par scan). Elle
+   n'est utilisée que si `GEMINI_API_KEY` est absent.
 3. Déployez la fonction : `npx supabase functions deploy scan-vehicle-document`, ou
    créez-la depuis le tableau de bord en collant le contenu de
    `supabase/functions/scan-vehicle-document/index.ts`.
 
 La photo de la carte grise n'est jamais stockée par cette fonction : elle est envoyée à
-l'API Anthropic pour extraction puis oubliée. Si l'employé choisit de la garder comme
+au fournisseur d'IA pour extraction puis oubliée. Si l'employé choisit de la garder comme
 document du véhicule, elle est envoyée séparément vers le bucket `vehicle-documents`,
 comme n'importe quel autre document.

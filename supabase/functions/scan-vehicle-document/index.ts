@@ -1,8 +1,11 @@
 // M3ak — lecture automatique d'une carte grise marocaine (OCR par IA) pour
 // préremplir la création rapide d'un véhicule.
 //
-// Secret à définir (voir supabase/README.md) :
-//   ANTHROPIC_API_KEY   clé API Anthropic (console.anthropic.com)
+// Secrets à définir (voir supabase/README.md) — un seul suffit :
+//   GEMINI_API_KEY      clé Google AI Studio, offre GRATUITE (aistudio.google.com/apikey)
+//   GEMINI_MODEL        (optionnel) modèle Gemini, par défaut « gemini-2.5-flash »
+//   ANTHROPIC_API_KEY   (optionnel, payant) clé Anthropic, utilisée seulement si
+//                       GEMINI_API_KEY est absent
 //
 // Si le secret est absent, la fonction répond explicitement
 // `{ ok: false, error: 'ocr_not_configured' }` — l'app renvoie alors
@@ -10,7 +13,7 @@
 // jamais prétendre qu'un champ a été lu automatiquement.
 //
 // La photo n'est jamais stockée par cette fonction : elle est transmise
-// telle quelle à l'API Anthropic pour extraction, puis oubliée. Si
+// telle quelle au fournisseur d'IA pour extraction, puis oubliée. Si
 // l'employé veut conserver la carte grise comme document du véhicule,
 // l'app l'envoie séparément vers le bucket vehicle-documents (comme pour
 // n'importe quel autre document).
@@ -107,9 +110,50 @@ async function callAnthropic(apiKey: string, imageBase64: string, mediaType: str
   const textBlock = data.content?.find((block) => block.type === 'text')?.text;
   if (!textBlock) throw new Error('anthropic_empty_response');
 
-  const cleaned = textBlock.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
-  const parsed = JSON.parse(cleaned) as ExtractionResult;
-  return sanitizeResult(parsed);
+  return parseModelJson(textBlock);
+}
+
+// Offre gratuite de Google AI Studio (limites de débit et de volume par jour).
+async function callGemini(apiKey: string, imageBase64: string, mediaType: string): Promise<ExtractionResult> {
+  const model = Deno.env.get('GEMINI_MODEL') ?? 'gemini-2.5-flash';
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: [
+          {
+            role: 'user',
+            parts: [
+              { inlineData: { mimeType: mediaType, data: imageBase64 } },
+              { text: 'Extrais les informations de cette carte grise, au format JSON demandé.' },
+            ],
+          },
+        ],
+        generationConfig: { responseMimeType: 'application/json', temperature: 0, maxOutputTokens: 1024 },
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    throw new Error(`gemini_error_${response.status}: ${detail.slice(0, 300)}`);
+  }
+
+  const data = (await response.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+  };
+  const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text ?? '').join('');
+  if (!text) throw new Error('gemini_empty_response');
+
+  return parseModelJson(text);
+}
+
+function parseModelJson(text: string): ExtractionResult {
+  const cleaned = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
+  return sanitizeResult(JSON.parse(cleaned) as ExtractionResult);
 }
 
 function sanitizeField<T>(field: unknown, allowed?: T[]): FieldResult<T> {
@@ -148,7 +192,7 @@ Deno.serve(async (request: Request) => {
 
   // Vérifie juste que l'appelant a une session Supabase valide (pas de lecture
   // de données métier ici) — évite qu'un tiers non authentifié fasse
-  // consommer l'API Anthropic payante.
+  // consommer l'API d'IA (quota gratuit ou payant).
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false },
@@ -156,8 +200,9 @@ Deno.serve(async (request: Request) => {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError || !userData.user) return json({ ok: false, error: 'not_authenticated' }, 401);
 
-  const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-  if (!apiKey) return json({ ok: false, error: 'ocr_not_configured' });
+  const geminiKey = Deno.env.get('GEMINI_API_KEY');
+  const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
+  if (!geminiKey && !anthropicKey) return json({ ok: false, error: 'ocr_not_configured' });
 
   let body: Record<string, unknown>;
   try {
@@ -176,7 +221,9 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const fields = await callAnthropic(apiKey, imageBase64, mimeType);
+    const fields = geminiKey
+      ? await callGemini(geminiKey, imageBase64, mimeType)
+      : await callAnthropic(anthropicKey!, imageBase64, mimeType);
     return json({ ok: true, fields });
   } catch (error) {
     console.error('Échec de l\'extraction OCR :', error instanceof Error ? error.message : error);
