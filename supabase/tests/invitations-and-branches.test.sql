@@ -148,5 +148,16 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
 insert into res2 select 'resp Rabat ne voit pas la location de Casa', (select count(*) from rentals)=0, (select count(*)::text from rentals);
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a4');
 insert into res2 select 'emp sans filiale voit la location', (select count(*) from rentals)=1, '';
+-- 0030 : un véhicule réservé / en location ne peut pas être archivé
+reset role;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+do $$ begin begin update vehicles set archived_at = now() where id='c3000000-0000-0000-0000-000000000003'; insert into res2 values('archivage refusé si location active', false, 'passé'); exception when others then insert into res2 values('archivage refusé si location active', sqlerrm='vehicle_has_active_rentals', sqlerrm); end; end $$;
+reset role;
+update rentals set statut='annulee';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+update vehicles set archived_at = now() where id='c3000000-0000-0000-0000-000000000003';
+insert into res2 select 'archivage autorisé si location annulée', archived_at is not null, '' from vehicles where id='c3000000-0000-0000-0000-000000000003';
 reset role;
 select case when ok then 'OK  ' else 'FAIL' end r, name, detail from res2 order by ok, name;

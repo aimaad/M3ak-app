@@ -275,6 +275,7 @@
     "reactivate": "Réactiver ce véhicule",
     "archiveConfirmTitle": "Archiver ce véhicule ?",
     "archiveConfirmBody": "Il n'apparaîtra plus dans la liste active, mais ses données restent conservées. Vous pourrez le réactiver à tout moment.",
+    "archiveBlockedActiveRentals": "Ce véhicule est réservé ou en location : il ne peut pas être archivé tant que ses locations ne sont pas terminées ou annulées.",
     "archiveError": "Impossible de modifier l'archivage de ce véhicule.",
     "photoDeleteError": "Impossible de supprimer cette photo.",
     "documentExpiryPlaceholder": "Date d'expiration (AAAA-MM-JJ), facultatif",

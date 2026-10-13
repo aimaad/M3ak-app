@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
+import { useVehicleRentals } from '@/features/rentals/hooks';
 import { useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
 import { findDocument } from '@/features/storage/documents';
 import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
@@ -20,6 +21,7 @@ import {
   useUpdateVehiclePhotos,
   useVehicle,
 } from '@/features/vehicles/hooks';
+import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
 import { VEHICLE_DOCUMENT_TYPES, type VehiclePhoto } from '@/features/vehicles/types';
 import { VehiclePhotoGallery } from '@/features/vehicles/vehicle-photo-gallery';
 import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
@@ -51,6 +53,8 @@ export default function VehicleDetailScreen() {
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
   const { data: maintenanceItems = [] } = useVehicleMaintenanceItems(id);
+  const rentalsQuery = useVehicleRentals(id);
+  const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentalsQuery.data ?? []);
 
   const isManager = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
   const totalMaintenanceCost = maintenanceItems
@@ -72,6 +76,10 @@ export default function VehicleDetailScreen() {
 
   function handleArchive() {
     if (!vehicle) return;
+    if (archiveBlocked) {
+      Alert.alert(t('common.appName'), t('vehicle.archiveBlockedActiveRentals'));
+      return;
+    }
     Alert.alert(t('vehicle.archiveConfirmTitle'), t('vehicle.archiveConfirmBody'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
@@ -79,7 +87,11 @@ export default function VehicleDetailScreen() {
         style: 'destructive',
         onPress: () => {
           archiveVehicle.mutate(vehicle.id, {
-            onError: () => Alert.alert(t('common.appName'), t('vehicle.archiveError')),
+            onError: (error) =>
+              Alert.alert(
+                t('common.appName'),
+                t(isArchiveBlockedError(error) ? 'vehicle.archiveBlockedActiveRentals' : 'vehicle.archiveError')
+              ),
           });
         },
       },
@@ -298,7 +310,11 @@ export default function VehicleDetailScreen() {
               )}
             </View>
 
-            {isManager ? (
+            {isManager && !vehicle.archivedAt && archiveBlocked ? (
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('vehicle.archiveBlockedActiveRentals')}
+              </ThemedText>
+            ) : isManager ? (
               <Button
                 label={vehicle.archivedAt ? t('vehicle.reactivate') : t('vehicle.archive')}
                 variant={vehicle.archivedAt ? 'secondary' : 'danger'}
