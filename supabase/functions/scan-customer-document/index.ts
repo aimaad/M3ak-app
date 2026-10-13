@@ -13,7 +13,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
-import { extractJsonFromImage, isVisionConfigured, VisionHttpError } from '../_shared/vision.ts';
+import { extractJsonFromImage, isVisionConfigured, VisionHttpError, VisionTimeoutError } from '../_shared/vision.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +22,25 @@ const CORS_HEADERS = {
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+
+class StageTimeoutError extends Error {
+  constructor(public stage: string) {
+    super(`stage_timeout:${stage}`);
+  }
+}
+
+/** Chaque étape a un délai maximal : si l'une reste bloquée, on sait laquelle (visible dans la réponse et les journaux). */
+async function withTimeout<T>(stage: string, promise: PromiseLike<T>, ms = 15_000): Promise<T> {
+  let timer: number | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new StageTimeoutError(stage)), ms);
+  });
+  try {
+    return await Promise.race([Promise.resolve(promise), timeout]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -115,6 +134,9 @@ Deno.serve(async (request: Request) => {
   }
   if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
+  const started = Date.now();
+  const lap = (stage: string) => console.log(`scan-customer-document: ${stage} ${Date.now() - started} ms`);
+
   const authorization = request.headers.get('Authorization');
   if (!authorization) return json({ ok: false, error: 'not_authenticated' }, 401);
 
@@ -123,31 +145,42 @@ Deno.serve(async (request: Request) => {
     global: { headers: { Authorization: authorization } },
     auth: { persistSession: false },
   });
-  const { data: userData, error: userError } = await supabase.auth.getUser();
-  if (userError || !userData.user) return json({ ok: false, error: 'not_authenticated' }, 401);
 
-  // L'option est propre à l'agence de l'appelant : désactivée tant que le propriétaire ne l'a pas autorisée.
-  const { data: membership } = await supabase
-    .from('agency_members')
-    .select('agency_id')
-    .eq('user_id', userData.user.id)
-    .limit(1)
-    .maybeSingle();
-  if (!membership) return json({ ok: false, error: 'not_authenticated' }, 401);
+  try {
+    const { data: userData, error: userError } = await withTimeout('auth', supabase.auth.getUser());
+    lap('auth ok');
+    if (userError || !userData.user) return json({ ok: false, error: 'not_authenticated' }, 401);
 
-  const { data: agency } = await supabase
-    .from('agencies')
-    .select('customer_ocr_enabled')
-    .eq('id', membership.agency_id)
-    .maybeSingle();
-  if (!agency?.customer_ocr_enabled) return json({ ok: false, error: 'ocr_disabled' });
+    // L'option est propre à l'agence de l'appelant : désactivée tant que le propriétaire ne l'a pas autorisée.
+    const { data: membership } = await withTimeout(
+      'membership',
+      supabase.from('agency_members').select('agency_id').eq('user_id', userData.user.id).limit(1).maybeSingle()
+    );
+    lap('membership ok');
+    if (!membership) return json({ ok: false, error: 'not_authenticated' }, 401);
+
+    const { data: agency } = await withTimeout(
+      'agency',
+      supabase.from('agencies').select('customer_ocr_enabled').eq('id', membership.agency_id).maybeSingle()
+    );
+    lap('agency ok');
+    if (!agency?.customer_ocr_enabled) return json({ ok: false, error: 'ocr_disabled' });
+  } catch (error) {
+    if (error instanceof StageTimeoutError) {
+      console.error(`Délai dépassé à l'étape « ${error.stage} »`);
+      return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
+    }
+    throw error;
+  }
 
   if (!isVisionConfigured()) return json({ ok: false, error: 'ocr_not_configured' });
 
   let body: Record<string, unknown>;
   try {
-    body = await request.json();
-  } catch {
+    body = (await withTimeout('body', request.json(), 20_000)) as Record<string, unknown>;
+    lap('body ok');
+  } catch (error) {
+    if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: 'stage:body' });
     return json({ ok: false, error: 'invalid_request' }, 400);
   }
 
@@ -168,8 +201,13 @@ Deno.serve(async (request: Request) => {
       systemPrompt: SYSTEM_PROMPT,
       userText: 'Extrais les champs de ce permis de conduire, au format JSON demandé.',
     });
+    lap('provider ok');
     return json({ ok: true, fields: sanitize(raw) });
   } catch (error) {
+    if (error instanceof VisionTimeoutError) {
+      console.error('Délai dépassé chez le fournisseur d\'IA');
+      return json({ ok: false, error: 'ocr_timeout', detail: 'stage:provider' });
+    }
     // Aucune donnée personnelle dans les journaux : seulement le type d'erreur.
     const detail =
       error instanceof VisionHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';

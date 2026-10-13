@@ -30,11 +30,15 @@ export type LicenceScanErrorCode =
   | 'invalid_image'
   | 'image_too_large'
   | 'function_not_deployed'
+  | 'ocr_timeout'
   | 'unavailable';
 
 export type LicenceScanResult =
   | { ok: true; fields: LicenceOcrFields }
   | { ok: false; error: LicenceScanErrorCode; detail?: string };
+
+/** Au-delà, on abandonne et on propose la saisie manuelle (le serveur répond lui-même avant 60 s). */
+const SCAN_TIMEOUT_MS = 70_000;
 
 const EMPTY_FIELD = { value: null, confidence: 'low' } as const;
 const MAX_TEXT_LENGTH = 120;
@@ -196,9 +200,16 @@ export async function scanLicence(localUri: string): Promise<LicenceScanResult> 
   const imageBase64 = await new File(localUri).base64();
   const mimeType = guessMimeType(localUri);
 
-  const { data, error } = await getSupabase().functions.invoke('scan-customer-document', {
-    body: { documentType: 'permis', imageBase64, mimeType },
-  });
+  // Sans délai côté app, un blocage serveur ferait attendre jusqu'au 504 de la plateforme (150 s).
+  const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), SCAN_TIMEOUT_MS));
+  const outcome = await Promise.race([
+    getSupabase().functions.invoke('scan-customer-document', {
+      body: { documentType: 'permis', imageBase64, mimeType },
+    }),
+    timeout,
+  ]);
+  if (outcome === 'timeout') return { ok: false, error: 'ocr_timeout', detail: 'stage:app' };
+  const { data, error } = outcome;
 
   if (error) {
     if (error instanceof FunctionsHttpError) {
@@ -215,9 +226,9 @@ export async function scanLicence(localUri: string): Promise<LicenceScanResult> 
     return { ok: false, error: 'unavailable', detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''}` };
   }
 
-  const payload = data as { ok?: boolean; error?: LicenceScanErrorCode; fields?: unknown };
+  const payload = data as { ok?: boolean; error?: LicenceScanErrorCode; fields?: unknown; detail?: string };
   if (payload.ok && payload.fields) {
     return { ok: true, fields: normalizeLicenceFields(payload.fields) };
   }
-  return { ok: false, error: payload.error ?? 'ocr_failed' };
+  return { ok: false, error: payload.error ?? 'ocr_failed', ...(payload.detail ? { detail: payload.detail } : {}) };
 }

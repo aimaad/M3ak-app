@@ -19,6 +19,26 @@ export class VisionHttpError extends Error {
   }
 }
 
+export class VisionTimeoutError extends Error {
+  constructor() {
+    super('provider_timeout');
+  }
+}
+
+/** Délai maximal d'un appel au fournisseur : au-delà, on répond une erreur claire plutôt que d'attendre le 504 de la plateforme. */
+const PROVIDER_TIMEOUT_MS = 45_000;
+
+async function providerFetch(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, { ...init, signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS) });
+  } catch (error) {
+    if (error instanceof DOMException && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
+      throw new VisionTimeoutError();
+    }
+    throw error;
+  }
+}
+
 export function isVisionConfigured(): boolean {
   return !!(Deno.env.get('GEMINI_API_KEY') || Deno.env.get('ANTHROPIC_API_KEY'));
 }
@@ -38,7 +58,7 @@ function parseJson(text: string): unknown {
 }
 
 async function callGeminiModel(apiKey: string, model: string, req: VisionRequest): Promise<unknown> {
-  const response = await fetch(
+  const response = await providerFetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
     {
       method: 'POST',
@@ -99,7 +119,7 @@ async function callGemini(apiKey: string, req: VisionRequest): Promise<unknown> 
 }
 
 async function callAnthropic(apiKey: string, req: VisionRequest): Promise<unknown> {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await providerFetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({

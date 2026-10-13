@@ -539,7 +539,8 @@
       "bannerTitle": "Informations lues sur le permis",
       "bannerBody": "Vérifiez chaque champ. Ceux marqués « à vérifier » étaient peu lisibles ; les champs vides n'ont pas pu être lus.",
       "verifyField": "À vérifier : lecture peu certaine",
-      "errorNotDeployed": "Le service de lecture n'est pas installé sur le serveur (fonction scan-customer-document introuvable). Saisissez à la main ou demandez son déploiement."
+      "errorNotDeployed": "Le service de lecture n'est pas installé sur le serveur (fonction scan-customer-document introuvable). Saisissez à la main ou demandez son déploiement.",
+      "errorTimeout": "La lecture met trop de temps à répondre. Réessayez, ou saisissez à la main."
     },
     "documentForm": {
       "type": "Type de document",

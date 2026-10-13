@@ -100,6 +100,8 @@ export default function ScannerPermisScreen() {
         ? 'customer.ocr.errorNotConfigured'
         : errorCode === 'function_not_deployed'
           ? 'customer.ocr.errorNotDeployed'
+        : errorCode === 'ocr_timeout'
+          ? 'customer.ocr.errorTimeout'
         : errorCode === 'nothing_read'
           ? 'customer.ocr.errorNothingRead'
           : 'customer.ocr.errorFailed';

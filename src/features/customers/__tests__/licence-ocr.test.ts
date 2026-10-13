@@ -189,6 +189,20 @@ describe('scanLicence (fonction serveur simulée)', () => {
     expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'function_not_deployed' });
   });
 
+  it("abandonne avec une erreur claire quand le serveur ne répond pas à temps", async () => {
+    jest.useFakeTimers();
+    mockInvoke.mockReturnValue(new Promise(() => undefined)); // ne se résout jamais
+    const pending = scanLicence('file:///permis.jpg');
+    await jest.advanceTimersByTimeAsync(71_000);
+    expect(await pending).toEqual({ ok: false, error: 'ocr_timeout', detail: 'stage:app' });
+    jest.useRealTimers();
+  });
+
+  it('transmet le détail d\'une erreur serveur (étape bloquée)', async () => {
+    mockInvoke.mockResolvedValue({ data: { ok: false, error: 'ocr_timeout', detail: 'stage:provider' }, error: null });
+    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_timeout', detail: 'stage:provider' });
+  });
+
   it('signale « indisponible » avec la cause quand la fonction est injoignable', async () => {
     const error = Object.assign(new Error('Failed to send a request to the Edge Function'), { context: new Error('Network request failed') });
     mockInvoke.mockResolvedValue({ data: null, error });
