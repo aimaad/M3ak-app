@@ -50,31 +50,29 @@ l'employé la saisit) ; une photo floue ou de travers donne moins de champs ; un
   fonction `send-invite` (e-mail d'invitation via SMTP Gmail, sans document). Aucun outil d'analytics
   ni de suivi d'erreurs n'est installé (`package.json` vérifié).
 
-### Configurer la clé d'une entreprise (administrateur M3AK) — depuis l'app
+### Configurer les clés et suivre l'utilisation (administrateur M3AK) — console web
 
-Une interface dédiée existe dans l'app : **Profil → « Administration M3AK : clés OCR »** (migration `0033`).
-Elle liste toutes les entreprises ; pour chacune : **Configurer / Remplacer / Retirer la clé**.
+Une **console web** dédiée (`admin-web/`, voir son README) permet à l'administrateur de la plateforme de :
+voir toutes les entreprises, configurer/modifier/retirer la clé Gemini de chacune, voir l'utilisation de l'OCR
+cloud (analyses, échecs, tokens) et un **coût estimé** en USD/MAD (migrations `0033` et `0034`).
 
-- **Qui y a accès :** uniquement les comptes présents dans la table `platform_admins`. Aucun utilisateur
-  d'entreprise, même propriétaire, ne peut s'y ajouter ni voir cet écran (contrôle côté serveur, pas seulement
-  dans l'app). Pour vous déclarer administrateur, une seule fois, dans Supabase → SQL Editor :
-  ```sql
-  insert into public.platform_admins (user_id)
-  select id from auth.users where email = '<VOTRE_EMAIL>';
-  ```
-- **Écriture seule :** une fois enregistrée, la clé ne peut plus être relue ni affichée ; l'écran montre seulement
-  « configurée » et ses 4 derniers caractères. Pour la changer, on la remplace.
-- **Droits limités :** l'administrateur plateforme n'obtient aucun accès aux clients, véhicules ou locations des
-  entreprises (testé).
-- **Transparence :** chaque ajout ou retrait est inscrit au **journal de l'entreprise** (« Administration M3AK a
-  configuré la clé… »), sans la clé.
+- **Qui y a accès :** uniquement les comptes présents dans `platform_admins` (ajout par SQL, une seule fois).
+  Aucun utilisateur d'entreprise, même propriétaire, n'y a accès ; contrôle côté serveur, pas seulement dans la page.
+- **Clé en écriture seule :** une fois enregistrée, elle ne peut plus être relue ; la console n'affiche que ses
+  4 derniers caractères. L'application mobile ne contient plus aucun écran d'administration.
+- **Droits limités :** aucun accès aux clients, véhicules ou locations des entreprises (testé).
+- **Suivi d'utilisation :** une ligne de compteurs par analyse (entreprise, type de document, succès, tokens) ;
+  jamais l'image, les valeurs lues ni la clé. La lecture sur le téléphone n'est pas comptée.
+- **Coût :** ESTIMATION = tokens × tarif que vous saisissez, seulement pour les clés déclarées « payantes ».
+  Le tarif Google n'est pas connu de l'application : tant qu'il n'est pas saisi, « Tarif non configuré ».
+  La facture réelle est celle de Google.
+- **Transparence :** chaque ajout ou retrait de clé est inscrit au journal de l'entreprise (sans la clé).
 - **Ensuite :** le propriétaire de l'entreprise active l'analyse dans Mon entreprise → Lecture des documents.
   Retirer la clé retire aussi son accord.
 
-Déployer la fonction : `npx supabase functions deploy scan-document` (aucun secret global à définir).
 Hygiène : ne collez jamais une clé dans un chat ou une capture d'écran ; en cas de fuite, révoquez-la chez Google
-et remplacez-la depuis l'écran d'administration. Durcissement possible plus tard : stocker les clés dans Supabase Vault
-et ajouter un bouton « tester la clé ».
+et remplacez-la depuis la console. Durcissement possible plus tard : Supabase Vault, bouton « tester la clé »,
+authentification à deux facteurs obligatoire pour les administrateurs.
 
 ## 3. Protection au transfert et au stockage
 
@@ -127,7 +125,8 @@ Côté Supabase : exécuter `supabase/migrations/0031_document_buckets_limits.sq
 | Aucune image envoyée sans clé + accord du propriétaire ; seul appel possible : `scan-document` ; repli = lecture locale (tests) | PASS |
 | La fonction serveur n'utilise que la clé de l'entreprise (pas de variable d'environnement globale, pas d'autre fournisseur) (test) | PASS |
 | La clé Gemini n'est lisible/écrivable par aucun utilisateur de l'app ; accord réservé au propriétaire ; isolation entre entreprises (tests SQL) | PASS |
-| Administration plateforme : accès réservé, clé en écriture seule, traces au journal, pas d'accès aux données clients (tests SQL) | PASS |
+| Console web : accès réservé, clé en écriture seule, usage et coût (tests SQL), calculs et garde-fous de la page (tests Jest) | PASS |
+| Console web testée dans un vrai navigateur connecté à votre projet Supabase | NOT VERIFIED |
 | Appel réel à Gemini avec une clé d'entreprise (déploiement + test sur appareil) | NOT VERIFIED |
 | Code natif de `expo-text-extractor` relu : aucun appel réseau | PASS (relecture manuelle) |
 | Texte OCR / champs absents des journaux (aucun `console.*` dans le code OCR) | PASS (test automatique) |

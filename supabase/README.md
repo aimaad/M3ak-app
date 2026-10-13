@@ -311,8 +311,11 @@ peut pas la réutiliser, d'où ces deux secrets.
   peut pas être archivé (contrôle serveur).
 - `0032_agency_ocr_settings.sql` — réglage OCR **par entreprise** : clé d'API Gemini (renseignée par
   l'opérateur, illisible depuis l'app) et accord du propriétaire. Voir `docs/OCR-CONFIDENTIALITE.md`.
-- `0033_platform_admin_ocr_keys.sql` — administration plateforme : table `platform_admins`, écran
-  « Profil → Administration M3AK » pour configurer la clé Gemini de chaque entreprise (écriture seule).
+- `0033_platform_admin_ocr_keys.sql` — administration plateforme : table `platform_admins` et fonctions
+  réservées à l'administrateur (clé Gemini par entreprise, en écriture seule).
+- `0034_ocr_usage_and_web_admin.sql` — suivi d'utilisation de l'OCR cloud (`ocr_usage_events`, compteurs
+  uniquement), tarif saisi par l'administrateur, offre gratuite/payante des clés, vue d'ensemble pour la
+  console web `admin-web/`.
 - `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
   taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.
 
@@ -320,7 +323,7 @@ peut pas la réutiliser, d'où ces deux secrets.
 
 Par défaut la lecture se fait **sur le téléphone** (voir `docs/OCR-CONFIDENTIALITE.md`). L'analyse par
 Google Gemini est optionnelle et propre à chaque entreprise (fonction `scan-document`, migration `0032`) :
-la clé de l'entreprise est enregistrée par l'administrateur M3AK depuis l'app (migration `0033`), puis le propriétaire donne
+la clé de l'entreprise est enregistrée par l'administrateur M3AK depuis la console web `admin-web/`, puis le propriétaire donne
 son accord dans l'app. Déploiement : `npx supabase functions deploy scan-document`. Pas de secret global
 (`GEMINI_API_KEY` n'est plus utilisé). Les anciennes fonctions `scan-customer-document` et
 `scan-vehicle-document` n'existent plus : supprimez-les du tableau de bord Supabase. La colonne

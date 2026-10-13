@@ -421,7 +421,7 @@ insert into platform_admins (user_id) values ('00000000-0000-0000-0000-000000000
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
 select pg_temp.ck('admin : un propriétaire n''est pas administrateur plateforme', not public.is_platform_admin(), '');
-select pg_temp.try('admin : un propriétaire ne peut pas lister les entreprises', $$select public.admin_list_ocr_agencies()$$, 'not_allowed');
+select pg_temp.try('admin : un propriétaire ne peut pas lister les entreprises', $$select public.admin_ocr_overview()$$, 'not_allowed');
 select pg_temp.try('admin : un propriétaire ne peut pas enregistrer une clé', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', 'AQ.fake-test-key-0123456789abcdef')$$, 'not_allowed');
 select pg_temp.try('admin : un propriétaire ne peut pas retirer une clé', $$select public.admin_clear_ocr_key('aaaaaaaa-0000-0000-0000-000000000001')$$, 'not_allowed');
 select pg_temp.try('admin : un propriétaire ne peut pas s''ajouter administrateur', $$insert into platform_admins (user_id) values ('00000000-0000-0000-0000-0000000000a1')$$, 'permission denied');
@@ -433,9 +433,9 @@ select pg_temp.try('admin : clé avec espaces refusée', $$select public.admin_s
 select pg_temp.try('admin : entreprise inconnue refusée', $$select public.admin_set_ocr_key('99999999-0000-0000-0000-000000000009', 'AQ.fake-test-key-0123456789abcdef')$$, 'agency_not_found');
 select pg_temp.try('admin : enregistre la clé d''une entreprise', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', '  AQ.fake-test-key-0123456789abcdef  ')$$);
 select pg_temp.ck('admin : la liste montre toutes les entreprises, l''état et les 4 derniers caractères, jamais la clé',
-  (select count(*) from jsonb_array_elements(public.admin_list_ocr_agencies()) e where e->>'agency_id' in ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002')) = 2
-  and (select (e->>'key_set')::boolean and e->>'key_last4' = 'cdef' from jsonb_array_elements(public.admin_list_ocr_agencies()) e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001')
-  and public.admin_list_ocr_agencies()::text not like '%AQ.fake%', '');
+  (select count(*) from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' in ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002')) = 2
+  and (select (e->>'key_set')::boolean and e->>'key_last4' = 'cdef' from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001')
+  and public.admin_ocr_overview()::text not like '%AQ.fake%', '');
 select pg_temp.try('admin : l''administrateur plateforme ne lit pas les clients d''une entreprise', $$select 1/(case when (select count(*) from customers) = 0 then 1 else 0 end)$$);
 select pg_temp.try('admin : retire la clé', $$select public.admin_clear_ocr_key('aaaaaaaa-0000-0000-0000-000000000001')$$);
 reset role;
@@ -443,6 +443,41 @@ select pg_temp.ck('admin : retirer la clé efface aussi l''accord et laisse une 
   (select gemini_api_key is null and cloud_enabled = false from agency_ocr_settings where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001')
   and (select count(*) = 2 from agency_audit_log where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001' and action in ('ocr_key_set', 'ocr_key_cleared'))
   and not exists (select 1 from agency_audit_log where details::text like '%AQ.fake-test%'), '');
+set role authenticated;
+
+-- ===== Utilisation et coût (0034) =====
+reset role;
+insert into ocr_usage_events (agency_id, document_type, ok, model, input_tokens, output_tokens, created_at) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'permis', true, 'gemini-2.5-flash', 1000000, 100000, now()),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'carte_grise', false, 'gemini-2.5-flash', 0, 0, now()),
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'permis', true, 'gemini-2.5-flash', 500000, 0, now() - interval '90 days'),
+  ('bbbbbbbb-0000-0000-0000-000000000002', 'permis', true, 'gemini-2.5-flash', 2000000, 0, now());
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.try('usage : un propriétaire ne peut pas lire les événements', $$select * from ocr_usage_events$$, 'permission denied');
+select pg_temp.try('usage : un propriétaire ne peut pas écrire un événement', $$insert into ocr_usage_events (agency_id, document_type, ok) values ('aaaaaaaa-0000-0000-0000-000000000001', 'permis', true)$$, 'permission denied');
+select pg_temp.try('usage : un propriétaire ne peut pas lire ni changer le tarif', $$select * from platform_ocr_pricing$$, 'permission denied');
+select pg_temp.try('usage : un propriétaire ne peut pas changer le tarif', $$select public.admin_set_ocr_pricing(1, 1, 10)$$, 'not_allowed');
+select pg_temp.try('usage : un propriétaire ne peut pas changer l''offre d''une clé', $$select public.admin_set_ocr_key_tier('aaaaaaaa-0000-0000-0000-000000000001', 'paid')$$, 'not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c9');
+select pg_temp.try('usage : tarif négatif refusé', $$select public.admin_set_ocr_pricing(-1, 1, 10)$$, 'invalid_pricing');
+select pg_temp.try('usage : offre inconnue refusée', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', 'AQ.fake-test-key-0123456789abcdef', 'gold')$$, 'invalid_tier');
+select pg_temp.try('usage : enregistre une clé payante pour A', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', 'AQ.fake-test-key-0123456789abcdef', 'paid')$$);
+select pg_temp.try('usage : enregistre une clé gratuite pour B', $$select public.admin_set_ocr_key('bbbbbbbb-0000-0000-0000-000000000002', 'AQ.fake-test-key-9876543210fedcba', 'free')$$);
+select pg_temp.ck('usage : sans tarif saisi, le coût d''une clé payante est inconnu (null) et jamais inventé',
+  (select (e->'cost_usd') = 'null'::jsonb from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+select pg_temp.try('usage : saisit le tarif', $$select public.admin_set_ocr_pricing(0.30, 2.50, 10)$$);
+select pg_temp.ck('usage : coût payant = tokens × tarif, toute la période (1,5 M entrée × 0,30 + 0,1 M sortie × 2,50 = 0,70 $)',
+  (select (e->>'cost_usd')::numeric = 0.70 from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001'),
+  (select e->>'cost_usd' from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001'));
+select pg_temp.ck('usage : la période filtre les analyses (30 derniers jours = 0,55 $, 2 analyses dont 1 échec)',
+  (select (e->>'cost_usd')::numeric = 0.55 and (e->>'scans')::int = 2 and (e->>'scans_failed')::int = 1
+     from jsonb_array_elements(public.admin_ocr_overview(now() - interval '30 days', now() + interval '1 day') -> 'agencies') e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+select pg_temp.ck('usage : une clé gratuite coûte 0 même avec des tokens',
+  (select (e->>'cost_usd')::numeric = 0 and (e->>'input_tokens')::bigint = 2000000 from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' = 'bbbbbbbb-0000-0000-0000-000000000002'), '');
+select pg_temp.try('usage : changer l''offre sans clé en place est refusé', $$select public.admin_set_ocr_key_tier('aaaaaaaa-0000-0000-0000-000000000001', 'free')$$);
+select pg_temp.ck('usage : la vue d''ensemble ne contient jamais de clé complète',
+  public.admin_ocr_overview()::text not like '%AQ.fake%', '');
 set role authenticated;
 
 reset role;

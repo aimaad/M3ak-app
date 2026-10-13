@@ -182,7 +182,10 @@ function parseJson(text: string): unknown {
   return JSON.parse(text.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim());
 }
 
-async function callGeminiModel(apiKey: string, model: string, prompt: string, imageBase64: string, mimeType: string) {
+type Usage = { inputTokens: number; outputTokens: number };
+type ProviderResult = { json: unknown; usage: Usage; model: string };
+
+async function callGeminiModel(apiKey: string, model: string, prompt: string, imageBase64: string, mimeType: string): Promise<ProviderResult> {
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -216,15 +219,22 @@ async function callGeminiModel(apiKey: string, model: string, prompt: string, im
     // Le message d'erreur d'un fournisseur ne contient pas la clé ; on la retire par précaution.
     throw new ProviderHttpError(response.status, message.split(apiKey).join('[clé]'));
   }
-  const data = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[] };
+  const data = (await response.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] }; finishReason?: string }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  };
+  const usage: Usage = {
+    inputTokens: Math.max(0, Math.trunc(data.usageMetadata?.promptTokenCount ?? 0)),
+    outputTokens: Math.max(0, Math.trunc(data.usageMetadata?.candidatesTokenCount ?? 0)),
+  };
   const candidate = data.candidates?.[0];
   const text = candidate?.content?.parts?.map((part) => part.text ?? '').join('');
   if (!text) throw new Error('provider_empty_response');
   if (candidate?.finishReason === 'MAX_TOKENS') throw new Error('provider_response_truncated');
-  return parseJson(text);
+  return { json: parseJson(text), usage, model };
 }
 
-async function callGemini(apiKey: string, prompt: string, imageBase64: string, mimeType: string) {
+async function callGemini(apiKey: string, prompt: string, imageBase64: string, mimeType: string): Promise<ProviderResult> {
   let lastError: unknown = null;
   for (const model of GEMINI_MODEL_CANDIDATES) {
     try {
@@ -235,6 +245,36 @@ async function callGemini(apiKey: string, prompt: string, imageBase64: string, m
     }
   }
   throw lastError;
+}
+
+type AdminClient = ReturnType<typeof createClient>;
+
+/**
+ * Suivi d'utilisation pour la console d'administration : uniquement des compteurs (entreprise, type de document,
+ * succès, nombre de tokens). Jamais l'image, ni les valeurs lues, ni la clé. Un échec d'écriture ne doit jamais
+ * faire échouer la lecture du document.
+ */
+async function recordUsage(
+  admin: AdminClient,
+  event: { agencyId: string; documentType: string; ok: boolean; errorCode?: string; model?: string; usage?: Usage }
+): Promise<void> {
+  try {
+    await withTimeout(
+      'usage',
+      admin.from('ocr_usage_events').insert({
+        agency_id: event.agencyId,
+        document_type: event.documentType,
+        ok: event.ok,
+        error_code: event.errorCode ?? null,
+        model: event.model ?? null,
+        input_tokens: event.usage?.inputTokens ?? 0,
+        output_tokens: event.usage?.outputTokens ?? 0,
+      }),
+      5_000
+    );
+  } catch {
+    // volontairement silencieux : aucune donnée à journaliser
+  }
 }
 
 Deno.serve(async (request: Request) => {
@@ -258,7 +298,9 @@ Deno.serve(async (request: Request) => {
     auth: { persistSession: false },
   });
 
+  const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
   let apiKey: string;
+  let agencyId: string;
   try {
     const { data: userData, error: userError } = await withTimeout('auth', supabase.auth.getUser());
     if (userError || !userData.user) return json({ ok: false, error: 'not_authenticated' }, 401);
@@ -270,7 +312,6 @@ Deno.serve(async (request: Request) => {
     if (!membership) return json({ ok: false, error: 'not_authenticated' }, 401);
 
     // La clé de l'entreprise n'est lisible qu'avec le rôle service (la table n'a aucune policy).
-    const admin = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
     const { data: settings } = await withTimeout(
       'settings',
       admin.from('agency_ocr_settings').select('cloud_enabled, gemini_api_key').eq('agency_id', membership.agency_id).maybeSingle()
@@ -278,6 +319,7 @@ Deno.serve(async (request: Request) => {
     if (!settings?.gemini_api_key) return json({ ok: false, error: 'ocr_not_configured' });
     if (!settings.cloud_enabled) return json({ ok: false, error: 'ocr_disabled' });
     apiKey = settings.gemini_api_key;
+    agencyId = membership.agency_id;
   } catch (error) {
     if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
     throw error;
@@ -299,13 +341,18 @@ Deno.serve(async (request: Request) => {
   if (imageBase64.length * 0.75 > MAX_IMAGE_BYTES) return json({ ok: false, error: 'image_too_large' }, 400);
 
   try {
-    const raw = await callGemini(apiKey, documentType === 'permis' ? LICENCE_PROMPT : REGISTRATION_PROMPT, imageBase64, mimeType);
-    return json({ ok: true, fields: documentType === 'permis' ? sanitizeLicence(raw) : sanitizeRegistration(raw) });
+    const result = await callGemini(apiKey, documentType === 'permis' ? LICENCE_PROMPT : REGISTRATION_PROMPT, imageBase64, mimeType);
+    await recordUsage(admin, { agencyId, documentType, ok: true, model: result.model, usage: result.usage });
+    return json({ ok: true, fields: documentType === 'permis' ? sanitizeLicence(result.json) : sanitizeRegistration(result.json) });
   } catch (error) {
-    if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
+    if (error instanceof StageTimeoutError) {
+      await recordUsage(admin, { agencyId, documentType, ok: false, errorCode: 'ocr_timeout' });
+      return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
+    }
     // Aucune donnée personnelle ni clé dans les journaux : seulement le type d'erreur.
     const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
     console.error("Échec de l'analyse du document :", detail.slice(0, 160));
+    await recordUsage(admin, { agencyId, documentType, ok: false, errorCode: error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed' });
     return json({ ok: false, error: 'ocr_failed', detail: detail.slice(0, 200) });
   }
 });

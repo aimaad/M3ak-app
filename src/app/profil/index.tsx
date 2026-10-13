@@ -1,5 +1,4 @@
 import * as ImagePicker from 'expo-image-picker';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,7 +11,6 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
-import { useIsPlatformAdmin } from '@/features/admin/hooks';
 import { useMyAgency, useMyProfile, useUpdateMyProfile, useUploadMemberAvatar } from '@/features/agency/hooks';
 import type { MemberProfile } from '@/features/agency/types';
 import { signOut, updateMyPassword } from '@/features/auth/api';
@@ -70,7 +68,6 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
   const { t } = useLanguage();
   const updateProfile = useUpdateMyProfile(agencyId);
   const uploadAvatar = useUploadMemberAvatar(agencyId);
-  const isPlatformAdmin = useIsPlatformAdmin().data === true;
 
   const [prenom, setPrenom] = useState(profile.prenom ?? '');
   const [nom, setNom] = useState(profile.nom ?? '');
@@ -238,10 +235,6 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           loading={isChangingPassword}
         />
       </View>
-
-      {isPlatformAdmin ? (
-        <Button label={t('admin.ocr.open')} variant="secondary" icon="key-outline" onPress={() => router.push('/admin/ocr')} />
-      ) : null}
 
       <Button label={t('auth.signOut')} variant="danger" onPress={() => signOut()} />
     </ScrollView>

@@ -20,9 +20,6 @@ const CLOUD_AWARE_FILES = [
   'features/customers/licence-ocr.ts',
   'features/vehicles/ocr.ts',
   'app/entreprise/index.tsx',
-  'app/admin/ocr.tsx',
-  'features/admin/ocr-keys.ts',
-  'features/admin/api.ts',
 ];
 const FORBIDDEN_NETWORK = /fetch\s*\(|XMLHttpRequest|WebSocket|functions\.invoke|@\/lib\/supabase|axios/;
 const FORBIDDEN_PROVIDERS = /gemini|generativelanguage|anthropic|openai|googleapis|vision\.google|(?<![a-z])textract|azure|cognitive|mistral/i;

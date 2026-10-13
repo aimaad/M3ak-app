@@ -1094,35 +1094,5 @@
     "enableConfirmBody": "Les photos de permis et de cartes grises scannées seront envoyées à Google pour être lues, avec la clé d'API de votre entreprise. Elles contiennent des données personnelles : informez vos clients. Avec une clé gratuite, Google peut utiliser les images ; préférez une clé avec facturation activée.",
     "settingsError": "Impossible de modifier ce réglage. Réessayez.",
     "ownerOnly": "Seul le propriétaire peut modifier ce réglage."
-  },
-  "admin": {
-    "ocr": {
-      "open": "Administration M3AK : clés OCR",
-      "title": "Clés OCR des entreprises",
-      "subtitle": "Administration M3AK",
-      "intro": "Enregistrez ici la clé d'API Gemini de chaque entreprise. Une clé est en écriture seule : elle ne peut être ni relue ni affichée après l'enregistrement. L'analyse par Gemini ne démarre que si le propriétaire de l'entreprise l'active ensuite. Avec une clé gratuite, Google peut utiliser les images ; pour la production, utilisez une clé avec facturation activée.",
-      "loadError": "Impossible de charger les entreprises. Vérifiez votre connexion et que la migration 0033 est appliquée.",
-      "empty": "Aucune entreprise.",
-      "keyConfigured": "Clé configurée : {{masked}}",
-      "keyMissing": "Aucune clé configurée.",
-      "consentGiven": "Le propriétaire a activé l'analyse Gemini.",
-      "consentPending": "Le propriétaire n'a pas encore activé l'analyse Gemini.",
-      "configure": "Configurer la clé",
-      "replace": "Remplacer la clé",
-      "clear": "Retirer la clé",
-      "save": "Enregistrer",
-      "clearTitle": "Retirer la clé de « {{nom}} » ?",
-      "clearBody": "L'analyse par Gemini sera arrêtée pour cette entreprise ; la lecture restera sur l'appareil.",
-      "keyLabel": "Clé d'API Gemini",
-      "keyPlaceholder": "Collez la clé ici",
-      "writeOnly": "Une fois enregistrée, la clé ne sera plus affichée (seuls ses 4 derniers caractères le seront).",
-      "errors": {
-        "required": "Collez la clé d'API.",
-        "format": "Clé invalide : 20 à 200 caractères, sans espace.",
-        "agencyNotFound": "Entreprise introuvable.",
-        "notAllowed": "Action réservée à l'administrateur M3AK.",
-        "generic": "Impossible d'enregistrer. Réessayez."
-      }
-    }
   }
 }
