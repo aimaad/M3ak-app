@@ -333,3 +333,24 @@ son accord dans l'app. Déploiement : `npx supabase functions deploy scan-docume
 
 Voir la section précédente et `docs/OCR-CONFIDENTIALITE.md`. La photo n'est téléversée dans le
 bucket privé `vehicle-documents` que si l'employé coche « Enregistrer la photo dans le dossier ».
+
+## Mot de passe oublié (app mobile et console web)
+
+L'app et la console utilisent un **code reçu par e-mail** (comme pour la confirmation d'inscription) : l'utilisateur
+saisit son e-mail, reçoit un code, puis choisit un nouveau mot de passe. **Une seule configuration est nécessaire
+dans Supabase**, sinon l'e-mail ne contiendra qu'un lien qui ne mène nulle part :
+
+1. Supabase → **Authentication → Email Templates → Reset Password**.
+2. Remplacez le contenu par un message qui affiche le code, par exemple :
+   ```html
+   <h2>Réinitialisation de votre mot de passe M3AK</h2>
+   <p>Votre code : <strong>{{ .Token }}</strong></p>
+   <p>Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.</p>
+   ```
+   et mettez un objet sans accents (comme pour l'invitation), par ex. « Code de reinitialisation M3AK ».
+3. L'envoi passe par le SMTP déjà configuré (Authentication → SMTP Settings). Sans SMTP personnalisé,
+   Supabase limite fortement le nombre d'e-mails par heure.
+
+Sécurité : l'écran répond toujours pareil, que l'adresse existe ou non ; le code est à usage unique et expire ;
+si le nouveau mot de passe est refusé, la session de récupération est refermée.
+

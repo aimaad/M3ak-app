@@ -16,7 +16,7 @@ import type { ReactNode } from 'react';
 
 import { SessionProvider, useSession } from '@/features/auth/session-context';
 
-const PUBLIC_SEGMENTS = new Set(['login', 'signup']);
+const PUBLIC_SEGMENTS = new Set(['login', 'signup', 'mot-de-passe-oublie']);
 
 /**
  * Renvoie vers /login dès que la session disparaît (déconnexion, expiration),

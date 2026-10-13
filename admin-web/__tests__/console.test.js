@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { adminErrorMessage, costLabel, parseDecimal, periodRange, summarize, validateKey } = require('../format.js');
+const { adminErrorMessage, costLabel, isValidCode, isValidEmail, normalizeCode, parseDecimal, periodRange, summarize, validateKey, validateNewPassword } = require('../format.js');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const squash = (text) => text.replace(/[\s  ]/g, ' ');
@@ -52,6 +52,26 @@ describe('saisies', () => {
   it('traduit les erreurs serveur', () => {
     expect(adminErrorMessage({ message: 'not_allowed' })).toMatch(/administrateurs/);
     expect(adminErrorMessage({ message: 'invalid_key_format' })).toMatch(/invalide/);
+  });
+});
+
+describe('mot de passe oublié', () => {
+  it('valide e-mail, code et nouveau mot de passe', () => {
+    expect(isValidEmail('admin@m3ak.ma')).toBe(true);
+    expect(isValidEmail('pas un email')).toBe(false);
+    expect(normalizeCode(' 12 34-56 ')).toBe('123456');
+    expect(isValidCode('123456')).toBe(true);
+    expect(isValidCode('12')).toBe(false);
+    expect(validateNewPassword('court', 'court')).toMatch(/8 caractères/);
+    expect(validateNewPassword('MotDePasse-2026', 'autre')).toMatch(/ne correspondent pas/);
+    expect(validateNewPassword('MotDePasse-2026', 'MotDePasse-2026')).toBeNull();
+  });
+  it('utilise le code reçu par e-mail (type recovery) puis change le mot de passe, sans révéler si le compte existe', () => {
+    const app = read('app.js');
+    expect(app).toContain("resetPasswordForEmail(email.value.trim())");
+    expect(app).toMatch(/verifyOtp\(\{ email: emailAddress, token: code\.value, type: 'recovery' \}\)/);
+    expect(app.indexOf('verifyOtp')).toBeLessThan(app.indexOf('updateUser'));
+    expect(app).toContain('Si un compte existe pour cette adresse');
   });
 });
 

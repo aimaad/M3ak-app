@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config.js';
-import { adminErrorMessage, costLabel, formatDate, formatInt, formatMad, formatUsd, parseDecimal, periodRange, summarize, validateKey } from './format.js';
+import { adminErrorMessage, costLabel, formatDate, formatInt, formatMad, formatUsd, isValidCode, isValidEmail, normalizeCode, parseDecimal, periodRange, summarize, validateKey, validateNewPassword } from './format.js';
 
 // Session conservée seulement pour l'onglet (sessionStorage) : fermer l'onglet déconnecte.
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -63,7 +63,101 @@ function showLogin(message) {
     h('label', {}, 'E-mail', email),
     h('label', {}, 'Mot de passe', password),
     error,
-    h('div', { class: 'actions' }, submit)
+    h('div', { class: 'actions' }, h('button', { class: 'btn ghost', type: 'button', onclick: () => showForgotPassword(email.value) }, 'Mot de passe oublié ?'), submit)
+  );
+  render(form);
+}
+
+// ---------- Mot de passe oublié : e-mail → code reçu → nouveau mot de passe ----------
+function showForgotPassword(prefillEmail = '') {
+  sessionBox.hidden = true;
+  const message = h('p', { class: 'error', role: 'alert' });
+  const email = h('input', { type: 'email', required: true, autocomplete: 'username', value: prefillEmail });
+  const submit = h('button', { class: 'btn', type: 'submit' }, 'Envoyer le code');
+  const form = h(
+    'form',
+    {
+      class: 'card login',
+      onsubmit: async (event) => {
+        event.preventDefault();
+        message.className = 'error';
+        message.textContent = '';
+        if (!isValidEmail(email.value)) {
+          message.textContent = 'Entrez une adresse e-mail valide.';
+          return;
+        }
+        submit.disabled = true;
+        const { error } = await supabase.auth.resetPasswordForEmail(email.value.trim());
+        submit.disabled = false;
+        if (error) {
+          // Message générique : on ne révèle pas si l'adresse correspond à un compte.
+          message.textContent = 'Impossible d’envoyer le code pour le moment. Réessayez dans quelques minutes.';
+          return;
+        }
+        showResetPassword(email.value.trim());
+      },
+    },
+    h('h1', {}, 'Mot de passe oublié'),
+    h('p', { class: 'muted' }, 'Entrez l’e-mail de votre compte : un code vous sera envoyé.'),
+    h('label', {}, 'E-mail', email),
+    message,
+    h('div', { class: 'actions' }, h('button', { class: 'btn ghost', type: 'button', onclick: () => showLogin() }, 'Retour'), submit)
+  );
+  render(form);
+}
+
+function showResetPassword(emailAddress) {
+  const message = h('p', { class: 'ok-msg', role: 'status' }, 'Si un compte existe pour cette adresse, un code vient d’être envoyé (pensez aux courriers indésirables).');
+  const code = h('input', { inputmode: 'numeric', autocomplete: 'one-time-code', required: true, placeholder: '123456' });
+  const password = h('input', { type: 'password', required: true, autocomplete: 'new-password' });
+  const confirm = h('input', { type: 'password', required: true, autocomplete: 'new-password' });
+  const submit = h('button', { class: 'btn', type: 'submit' }, 'Changer le mot de passe');
+  code.addEventListener('input', () => { code.value = normalizeCode(code.value); });
+  const form = h(
+    'form',
+    {
+      class: 'card login',
+      onsubmit: async (event) => {
+        event.preventDefault();
+        message.className = 'error';
+        message.textContent = '';
+        if (!isValidCode(code.value)) {
+          message.textContent = 'Code incorrect ou expiré.';
+          return;
+        }
+        const problem = validateNewPassword(password.value, confirm.value);
+        if (problem) {
+          message.textContent = problem;
+          return;
+        }
+        submit.disabled = true;
+        const { error: verifyError } = await supabase.auth.verifyOtp({ email: emailAddress, token: code.value, type: 'recovery' });
+        if (verifyError) {
+          submit.disabled = false;
+          message.textContent = 'Code incorrect ou expiré. Réessayez ou demandez un nouveau code.';
+          return;
+        }
+        const { error: updateError } = await supabase.auth.updateUser({ password: password.value });
+        password.value = '';
+        confirm.value = '';
+        submit.disabled = false;
+        if (updateError) {
+          // Le code est consommé : on referme la session de récupération et on repart de zéro.
+          await supabase.auth.signOut();
+          message.textContent = 'Le mot de passe n’a pas pu être changé. Demandez un nouveau code.';
+          return;
+        }
+        await start(); // connecté avec le nouveau mot de passe ; l'accès administrateur est revérifié
+      },
+    },
+    h('h1', {}, 'Nouveau mot de passe'),
+    message,
+    h('label', {}, 'Code reçu par e-mail', code),
+    h('label', {}, 'Nouveau mot de passe (8 caractères minimum)', password),
+    h('label', {}, 'Confirmer le mot de passe', confirm),
+    h('div', { class: 'actions' },
+      h('button', { class: 'btn ghost', type: 'button', onclick: () => showForgotPassword(emailAddress) }, 'Renvoyer un code'),
+      submit)
   );
   render(form);
 }

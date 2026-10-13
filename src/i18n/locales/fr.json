@@ -49,6 +49,21 @@
       "too_short": "6 caractères minimum.",
       "mismatch": "Les mots de passe ne correspondent pas.",
       "invalid_name": "Entrez un nom valide (2 caractères minimum, sans chiffres)."
+    },
+    "forgot": {
+      "link": "Mot de passe oublié ?",
+      "title": "Mot de passe oublié",
+      "subtitleEmail": "Entrez l'adresse e-mail de votre compte : nous vous enverrons un code.",
+      "subtitleCode": "Entrez le code reçu par e-mail et choisissez un nouveau mot de passe.",
+      "sendCode": "Envoyer le code",
+      "sending": "Envoi…",
+      "codeSent": "Si un compte existe pour cette adresse, un code vient d'être envoyé. Pensez à vérifier vos courriers indésirables.",
+      "sendError": "Impossible d'envoyer le code pour le moment. Réessayez dans quelques minutes.",
+      "codeLabel": "Code reçu par e-mail",
+      "newPassword": "Nouveau mot de passe",
+      "reset": "Changer le mot de passe",
+      "resetting": "Enregistrement…",
+      "resetError": "Code incorrect ou expiré. Réessayez ou renvoyez un nouveau code."
     }
   },
   "agency": {

@@ -82,3 +82,23 @@ export function adminErrorMessage(error) {
   if (message.includes('Invalid login')) return 'E-mail ou mot de passe incorrect.';
   return "L'opération a échoué. Vérifiez la connexion et que les migrations 0032 à 0034 sont appliquées.";
 }
+
+/** Mot de passe de la console : 8 caractères minimum (plus strict que l'app, car ce compte administre la plateforme). */
+export function validateNewPassword(password, confirm) {
+  if (!password || password.length < 8) return 'Le mot de passe doit contenir au moins 8 caractères.';
+  if (password !== confirm) return 'Les mots de passe ne correspondent pas.';
+  return null;
+}
+
+/** Code reçu par e-mail : 4 à 10 chiffres (la longueur dépend de la configuration Supabase). */
+export function normalizeCode(raw) {
+  return String(raw ?? '').replace(/\D/g, '').slice(0, 10);
+}
+
+export function isValidCode(code) {
+  return /^\d{4,10}$/.test(code);
+}
+
+export function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? '').trim());
+}

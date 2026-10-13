@@ -109,6 +109,12 @@ export default function LoginScreen() {
               loading={isSubmitting}
             />
 
+            <Pressable onPress={() => router.push('/mot-de-passe-oublie')} className="items-center py-1">
+              <ThemedText type="small" themeColor="primary">
+                {t('auth.forgot.link')}
+              </ThemedText>
+            </Pressable>
+
             <Pressable onPress={() => router.push('/signup')} className="items-center py-2">
               <ThemedText type="small" themeColor="primary">
                 {t('auth.noAccountHint')}

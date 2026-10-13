@@ -29,6 +29,11 @@ Elle ne donne **aucun accès** aux clients, véhicules ou locations des entrepri
    puis ouvrez l'adresse affichée (par ex. http://localhost:3000) et connectez-vous avec votre compte M3AK.
    (Ouvrir `index.html` directement en double-clic ne fonctionne pas : le navigateur bloque les modules hors serveur.)
 
+## Mot de passe oublié
+La page de connexion propose « Mot de passe oublié ? » : e-mail → code reçu par e-mail → nouveau mot de passe
+(8 caractères minimum). Elle suppose que le modèle d'e-mail « Reset Password » de Supabase affiche le code
+`{{ .Token }}` (voir `supabase/README.md`, section « Mot de passe oublié »).
+
 ## Mettre la console en ligne (gratuit)
 C'est un site statique : déposez le dossier `admin-web` (avec votre `config.js`) sur Cloudflare Pages, Netlify
 ou GitHub Pages. Seule la page de connexion est publique ; tout le reste est protégé côté serveur par la table

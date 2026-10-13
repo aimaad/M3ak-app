@@ -37,6 +37,29 @@ export async function resendSignupCode(email: string): Promise<void> {
   if (error) throw error;
 }
 
+/**
+ * Envoie un code de réinitialisation par e-mail. Aucune erreur n'est levée pour une adresse inconnue
+ * (Supabase répond pareil) : l'écran ne révèle donc jamais si un compte existe.
+ */
+export async function requestPasswordReset(email: string): Promise<void> {
+  const { error } = await getSupabase().auth.resetPasswordForEmail(email.trim());
+  if (error) throw error;
+}
+
+/** Vérifie le code reçu par e-mail (ouvre une session de récupération) puis enregistre le nouveau mot de passe. */
+export async function resetPasswordWithCode(email: string, code: string, newPassword: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error: verifyError } = await supabase.auth.verifyOtp({ email: email.trim(), token: code, type: 'recovery' });
+  if (verifyError) throw verifyError;
+  const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+  if (updateError) {
+    // Le code est consommé : on referme la session de récupération pour ne pas laisser l'appareil connecté
+    // sans que le mot de passe ait changé ; l'utilisateur redemandera un code.
+    await supabase.auth.signOut();
+    throw updateError;
+  }
+}
+
 export async function updateMyPassword(newPassword: string): Promise<void> {
   const { error } = await getSupabase().auth.updateUser({ password: newPassword });
   if (error) throw error;
