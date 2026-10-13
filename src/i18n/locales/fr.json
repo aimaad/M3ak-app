@@ -833,6 +833,8 @@
       },
       "fixBlockingFirst": "Corrigez d'abord les exigences en rouge.",
       "managerOnly": "Seul un responsable peut confirmer.",
+      "cannotConfirm": "Vous ne pouvez pas confirmer cette vérification avec votre rôle actuel.",
+      "roleLoading": "Chargement de votre rôle… Revenez sur cet écran dans un instant.",
       "startBlocked": "Départ impossible : la vérification avant départ n'est pas satisfaite.",
       "disclaimer": "La présence d'une photo ne prouve pas la validité d'un document, et la lecture automatique ne certifie ni son authenticité ni le droit de conduire. Seule la vérification du document original, confirmée ici, fait foi.",
       "errors": {

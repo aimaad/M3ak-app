@@ -185,6 +185,10 @@ export function DepartureChecklist({
             <ThemedText type="small" themeColor="textSecondary">
               {t('locations.departureCheck.managerOnly')}
             </ThemedText>
+          ) : state !== 'confirmed' ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {role ? t('locations.departureCheck.cannotConfirm') : t('locations.departureCheck.roleLoading')}
+            </ThemedText>
           ) : null}
         </Card>
       ) : null}
