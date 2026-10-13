@@ -44,6 +44,7 @@ export default function ScannerPermisScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
+  const [debugLines, setDebugLines] = useState<string[] | null>(null);
 
   async function handlePick(source: 'library' | 'camera') {
     const uri = await pickImage(source);
@@ -58,6 +59,7 @@ export default function ScannerPermisScreen() {
       setStatus('error');
       return;
     }
+    setDebugLines(result.debugLines ?? null);
     if (!hasAnyOcrValue(result.fields)) {
       setErrorCode('nothing_read');
       setStatus('error');
@@ -123,6 +125,15 @@ export default function ScannerPermisScreen() {
 
           {localUri && status !== 'idle' ? (
             <Image source={{ uri: localUri }} className="h-48 w-full rounded-2xl" resizeMode="cover" />
+          ) : null}
+
+          {__DEV__ && debugLines ? (
+            <Card className="gap-1">
+              <ThemedText type="smallBold">{t('ocr.debugTitle')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" selectable>
+                {debugLines.join('\n')}
+              </ThemedText>
+            </Card>
           ) : null}
 
           {status === 'processing' ? (

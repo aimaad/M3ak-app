@@ -22,7 +22,10 @@ export type VehicleOcrFields = {
 /** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
 export type ScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
 
-export type ScanVehicleDocumentResult = { ok: true; fields: VehicleOcrFields } | { ok: false; error: ScanErrorCode };
+/** `debugLines` : texte lu, fourni UNIQUEMENT dans une version de développement (jamais en production, jamais journalisé). */
+export type ScanVehicleDocumentResult =
+  | { ok: true; fields: VehicleOcrFields; debugLines?: string[] }
+  | { ok: false; error: ScanErrorCode };
 
 /**
  * Lit la carte grise par OCR LOCAL (sur l'appareil) : la photo n'est envoyée à aucun service d'analyse.
@@ -31,5 +34,9 @@ export type ScanVehicleDocumentResult = { ok: true; fields: VehicleOcrFields } |
 export async function scanVehicleDocument(localUri: string): Promise<ScanVehicleDocumentResult> {
   const recognized = await recognizeLines(localUri);
   if (!recognized.ok) return { ok: false, error: recognized.error };
-  return { ok: true, fields: parseRegistrationText(recognized.lines) };
+  return {
+    ok: true,
+    fields: parseRegistrationText(recognized.lines),
+    ...(__DEV__ ? { debugLines: recognized.lines } : {}),
+  };
 }

@@ -1082,6 +1082,7 @@
       "label": "Enregistrer la photo dans le dossier",
       "on": "La photo sera transmise de manière sécurisée à M3AK avec le dossier, et consultable par les personnes autorisées de votre agence.",
       "off": "La photo reste sur cet appareil et n'est pas enregistrée. Seules les informations que vous validez sont conservées."
-    }
+    },
+    "debugTitle": "Texte lu par l'OCR (version de développement uniquement)"
   }
 }

@@ -7,7 +7,6 @@ import { cleanName, findDate } from './text';
 type Key = 'immatriculation' | 'miseEnCirculation' | 'marque' | 'modele' | 'genre' | 'vin' | 'carburant' | 'couleur' | 'places';
 
 const SEP = String.raw`\s*[.):\-]?\s*`;
-const ARABIC_LETTER = /[ء-ي]/;
 
 /** `8921 | ب | 14` : 1 à 6 chiffres, une lettre arabe, 1 à 2 chiffres (l'ordre des blocs peut être inversé). */
 export function findPlate(text: string): string | null {
@@ -16,6 +15,15 @@ export function findPlate(text: string): string | null {
   // Lecture de droite à gauche : « 14 | ب | 8921 ».
   const b = /(\d{1,2})\s*[|/\-]?\s*([ء-ي])\s*[|/\-]?\s*(\d{1,6})(?!\d)/.exec(text);
   return b ? `${b[3]} | ${b[2]} | ${b[1]}` : null;
+}
+
+/**
+ * Plaque dont la lettre arabe n'a pas été reconnue (le moteur latin l'ignore souvent) :
+ * « 8921 | 14 » → « 8921 |  | 14 ». La lettre reste à saisir par l'employé (champ « à vérifier »).
+ */
+export function findPlatePartial(text: string): string | null {
+  const m = /(\d{3,6})\s*\|\s*(?:[^\d\s|]{1,2}\s*\|\s*)?(\d{1,2})(?!\d)/.exec(text);
+  return m ? `${m[1]} |  | ${m[2]}` : null;
 }
 
 const VIN_CHARS = /^[A-HJ-NPR-Z0-9]{17}$/;
@@ -50,7 +58,7 @@ const SPECS: LabelSpec<Key>[] = [
   {
     key: 'immatriculation',
     labels: [new RegExp(String.raw`^(?:NUMERO\s+D'?\s*IMMATRICULATION|N\s*[°O]\s*D'?\s*IMMATRICULATION|IMMATRICULATION)\b${SEP}`)],
-    accept: (t) => findPlate(t),
+    accept: (t) => findPlate(t) ?? findPlatePartial(t),
   },
   {
     key: 'miseEnCirculation',
@@ -84,11 +92,22 @@ const SPECS: LabelSpec<Key>[] = [
   },
 ];
 
+function earliestDate(lines: string[]): string | null {
+  const dates: string[] = [];
+  for (const line of lines) {
+    for (const chunk of line.match(/[0-9OolI|]{1,2}\s*[./-]\s*[0-9OolI|]{1,2}\s*[./-]\s*[0-9OolI|]{4}/g) ?? []) {
+      const iso = findDate(chunk);
+      if (iso && iso <= new Date().toISOString().slice(0, 10)) dates.push(iso);
+    }
+  }
+  return dates.sort()[0] ?? null;
+}
+
 const EMPTY = { value: null, confidence: 'low' } as const;
 
 /** Lit le texte OCR d'une carte grise. Un champ non trouvé reste null ; rien n'est deviné. */
 export function parseRegistrationText(lines: string[]): VehicleOcrFields {
-  const found = extractLabeled(lines, SPECS);
+  const found = extractLabeled(lines, SPECS, { splitAtLabels: true });
 
   // Repères sans étiquette (plaque, VIN) : cherchés dans tout le texte, confiance moindre.
   const anywhere = <T>(find: (line: string) => T | null): T | null => {
@@ -100,22 +119,24 @@ export function parseRegistrationText(lines: string[]): VehicleOcrFields {
   };
 
   const plateLabeled = found.immatriculation?.value ?? null;
-  const plate = plateLabeled ?? anywhere((line) => (ARABIC_LETTER.test(line) ? findPlate(line) : null));
+  const plate = plateLabeled ?? anywhere((line) => findPlate(line) ?? findPlatePartial(line));
   const vinLabeled = found.vin?.value ?? null;
   const vin = vinLabeled ?? anywhere(findVin);
 
-  const date = found.miseEnCirculation?.value ?? null;
+  const labeledDate = found.miseEnCirculation?.value ?? null;
+  // Repli sans étiquette lisible : la plus ancienne date plausible du document (la validité est postérieure).
+  const date = labeledDate ?? earliestDate(lines);
   const year = date ? Number(date.slice(0, 4)) : null;
   const fuel = found.carburant ? readFuel(found.carburant.value) : null;
   const places = found.places ? Number(found.places.value) : null;
 
   return {
-    immatriculation: plate ? { value: plate, confidence: plateLabeled ? 'medium' : 'low' } : { ...EMPTY },
+    immatriculation: plate ? { value: plate, confidence: 'medium' } : { ...EMPTY },
     vin: vin ? { value: vin, confidence: vinLabeled ? 'high' : 'medium' } : { ...EMPTY },
     marque: found.marque ? { value: found.marque.value, confidence: 'medium' } : { ...EMPTY },
     modele: found.modele ? { value: found.modele.value, confidence: 'medium' } : { ...EMPTY },
     finition: { ...EMPTY },
-    annee: year ? { value: year, confidence: 'high' } : { ...EMPTY },
+    annee: year ? { value: year, confidence: labeledDate ? 'high' : 'medium' } : { ...EMPTY },
     couleur: found.couleur ? { value: found.couleur.value, confidence: 'medium' } : { ...EMPTY },
     nombrePlaces: places ? { value: places, confidence: 'medium' } : { ...EMPTY },
     carburant: fuel ? { value: fuel, confidence: 'medium' } : { ...EMPTY },

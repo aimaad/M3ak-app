@@ -23,7 +23,10 @@ export type LicenceOcrFields = {
 /** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
 export type LicenceScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
 
-export type LicenceScanResult = { ok: true; fields: LicenceOcrFields } | { ok: false; error: LicenceScanErrorCode };
+/** `debugLines` : texte lu, fourni UNIQUEMENT dans une version de développement (jamais en production, jamais journalisé). */
+export type LicenceScanResult =
+  | { ok: true; fields: LicenceOcrFields; debugLines?: string[] }
+  | { ok: false; error: LicenceScanErrorCode };
 
 const EMPTY_FIELD = { value: null, confidence: 'low' } as const;
 const MAX_TEXT_LENGTH = 120;
@@ -179,5 +182,9 @@ export function hasAnyOcrValue(fields: LicenceOcrFields): boolean {
 export async function scanLicence(localUri: string): Promise<LicenceScanResult> {
   const recognized = await recognizeLines(localUri);
   if (!recognized.ok) return { ok: false, error: recognized.error };
-  return { ok: true, fields: normalizeLicenceFields(parseLicenceText(recognized.lines)) };
+  return {
+    ok: true,
+    fields: normalizeLicenceFields(parseLicenceText(recognized.lines)),
+    ...(__DEV__ ? { debugLines: recognized.lines } : {}),
+  };
 }

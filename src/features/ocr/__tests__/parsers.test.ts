@@ -1,7 +1,7 @@
 // Textes OCR SIMULÉS (fabriqués, aucune donnée réelle) : ces tests valident la logique de lecture
 // du texte, PAS la qualité de reconnaissance d'un vrai appareil (voir docs/OCR-CONFIDENTIALITE.md).
 import { parseLicenceText } from '../licence-parser';
-import { findPlate, findVin, parseRegistrationText } from '../registration-parser';
+import { findPlate, findPlatePartial, findVin, parseRegistrationText } from '../registration-parser';
 import { findDate, toLines } from '../text';
 
 describe('findDate', () => {
@@ -100,5 +100,33 @@ describe('parseRegistrationText', () => {
   it('ne renvoie rien quand le texte ne contient rien d’exploitable', () => {
     const f = parseRegistrationText(toLines(['@@@', '...']));
     expect(Object.values(f).every((field) => field.value === null)).toBe(true);
+  });
+
+  it('coupe les lignes qui mélangent plusieurs colonnes (étiquettes côte à côte)', () => {
+    const f = parseRegistrationText([
+      "Numéro d'immatriculation Première mise en circulation",
+      '8921 | ب | 14',
+      '15/03/2021',
+      'Marque Type / Modèle Genre',
+      'DACIA',
+      'LOGAN',
+      'VP',
+    ]);
+    expect(f.immatriculation.value).toBe('8921 | ب | 14');
+    expect(f.annee.value).toBe(2021);
+    expect(f.marque.value).toBe('DACIA');
+    expect(f.modele.value).toBe('LOGAN');
+  });
+
+  it("garde les chiffres de la plaque quand la lettre arabe n'est pas reconnue", () => {
+    expect(findPlatePartial('8921 | 14')).toBe('8921 |  | 14');
+    expect(findPlatePartial('8921 | u | 14')).toBe('8921 |  | 14');
+    const f = parseRegistrationText(["Numéro d'immatriculation", '8921 | 14', 'Première mise en circulation', '15/03/2021']);
+    expect(f.immatriculation).toEqual({ value: '8921 |  | 14', confidence: 'medium' });
+  });
+
+  it("retrouve l'année sans étiquette lisible (plus ancienne date passée)", () => {
+    const f = parseRegistrationText(['15/03/2021', 'Date de validité', '14/03/2031']);
+    expect(f.annee).toEqual({ value: 2021, confidence: 'medium' });
   });
 });
