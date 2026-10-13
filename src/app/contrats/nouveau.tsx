@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,7 +13,8 @@ import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useCreateContract } from '@/features/contracts/hooks';
 import { useCustomer, useDrivers } from '@/features/customers/hooks';
-import { useRental } from '@/features/rentals/hooks';
+import { getDriverById } from '@/features/rentals/drivers-api';
+import { useRental, useRentalAdditionalDrivers } from '@/features/rentals/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -24,6 +26,7 @@ export default function NouveauContratScreen() {
   const { data: vehicle, isError: isVehicleError } = useVehicle(rental?.vehicleId);
   const { data: customer, isError: isCustomerError } = useCustomer(rental?.customerId);
   const { data: drivers } = useDrivers(customer?.id);
+  const { data: additionalDrivers } = useRentalAdditionalDrivers(rental?.id);
   const createContract = useCreateContract();
 
   const [conditionsParticulieres, setConditionsParticulieres] = useState('');
@@ -34,6 +37,13 @@ export default function NouveauContratScreen() {
     () => (rental?.driverId ? (drivers ?? []).find((d) => d.id === rental.driverId) ?? null : null),
     [drivers, rental]
   );
+  // Un conducteur principal rattaché à un autre client n'est pas dans la liste des conducteurs du client réservant.
+  const { data: principalDriver } = useQuery({
+    queryKey: ['driver', rental?.driverId],
+    queryFn: () => getDriverById(rental?.driverId as string),
+    enabled: !!rental?.driverId && !driver,
+  });
+  const principalName = driver?.nomComplet ?? principalDriver?.nomComplet ?? null;
 
   const isLoading = isLoadingRental || agencyQuery.isLoading;
   const isError = isRentalError || isVehicleError || isCustomerError || agencyQuery.isError;
@@ -55,7 +65,8 @@ export default function NouveauContratScreen() {
           customerNom: customer.nomComplet,
           customerTelephone: customer.telephone,
           customerCin: customer.cinOuPasseport,
-          driverNom: driver?.nomComplet ?? null,
+          driverNom: principalName,
+          autresConducteurs: (additionalDrivers ?? []).map((d) => d.nomComplet),
           vehicleImmatriculation: vehicle.immatriculation,
           vehicleMarque: vehicle.marque,
           vehicleModele: vehicle.modele,
@@ -98,7 +109,7 @@ export default function NouveauContratScreen() {
               <ThemedText type="smallBold">{`${vehicle.marque} ${vehicle.modele} · ${vehicle.immatriculation}`}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {customer.nomComplet}
-                {driver ? ` · ${t('contract.driverLabel', { name: driver.nomComplet })}` : ''}
+                {principalName ? ` · ${t('contract.driverLabel', { name: principalName })}` : ''}
               </ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {rental.prixTotal != null ? `${rental.prixTotal.toLocaleString('fr-FR')} MAD` : '—'} · {t('locations.cautionBlocked')} {rental.cautionMontant.toLocaleString('fr-FR')} MAD

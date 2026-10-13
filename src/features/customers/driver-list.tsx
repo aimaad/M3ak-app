@@ -6,6 +6,8 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
+import { CustomerDocumentsSection } from './customer-documents-section';
+
 import { useCreateDriver, useDrivers, useRemoveDriver } from './hooks';
 import { isDriverFormValid, toDriverInput, validateDriverForm, type DriverFormValues } from './driver-validation';
 
@@ -31,6 +33,7 @@ export function DriverList({
   const removeDriver = useRemoveDriver(customerId);
 
   const [showForm, setShowForm] = useState(false);
+  const [documentsOpenFor, setDocumentsOpenFor] = useState<string | null>(null);
   const [values, setValues] = useState<DriverFormValues>(EMPTY_VALUES);
   const [touched, setTouched] = useState(false);
 
@@ -81,22 +84,39 @@ export function DriverList({
         </View>
       ) : (
         (driversQuery.data ?? []).map((driver) => (
-          <View
-            key={driver.id}
-            className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
-          >
-            <View>
-              <ThemedText type="smallBold">{driver.nomComplet}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                {[driver.telephone, driver.numeroPermis].filter(Boolean).join(' · ') || '—'}
-              </ThemedText>
-            </View>
-            {canRemove ? (
-              <Pressable onPress={() => handleRemove(driver.id)} hitSlop={8}>
-                <ThemedText type="small" style={{ color: '#DC2626' }}>
-                  {t('customer.removeDriver')}
+          <View key={driver.id} className="gap-3 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+            <View className="flex-row items-center justify-between">
+              <View className="flex-1">
+                <ThemedText type="smallBold">{driver.nomComplet}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {[driver.telephone, driver.numeroPermis].filter(Boolean).join(' · ') || '—'}
                 </ThemedText>
-              </Pressable>
+              </View>
+              <View className="items-end gap-1">
+                <Pressable
+                  onPress={() => setDocumentsOpenFor((prev) => (prev === driver.id ? null : driver.id))}
+                  hitSlop={8}
+                >
+                  <ThemedText type="small" themeColor="primary">
+                    {documentsOpenFor === driver.id ? t('customer.driverDocumentsHide') : t('customer.driverDocuments')}
+                  </ThemedText>
+                </Pressable>
+                {canRemove ? (
+                  <Pressable onPress={() => handleRemove(driver.id)} hitSlop={8}>
+                    <ThemedText type="small" style={{ color: '#DC2626' }}>
+                      {t('customer.removeDriver')}
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
+              </View>
+            </View>
+            {documentsOpenFor === driver.id ? (
+              <CustomerDocumentsSection
+                agencyId={agencyId}
+                owner={{ kind: 'driver', id: driver.id }}
+                canDelete={canRemove}
+                title={t('customer.driverDocumentsTitle', { name: driver.nomComplet })}
+              />
             ) : null}
           </View>
         ))

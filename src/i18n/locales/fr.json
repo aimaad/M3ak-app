@@ -10,7 +10,9 @@
     "cancel": "Annuler",
     "back": "Retour",
     "camera": "Caméra",
-    "gallery": "Galerie"
+    "gallery": "Galerie",
+    "yes": "Oui",
+    "no": "Non"
   },
   "auth": {
     "title": "Connexion",
@@ -168,6 +170,53 @@
     "errors": {
       "required": "Ce champ est obligatoire.",
       "invalid_email": "Entrez une adresse e-mail valide."
+    },
+    "ocr": {
+      "title": "Scan automatique des permis (IA)",
+      "statusOn": "Activé : les employés peuvent scanner un permis pour préremplir une fiche client.",
+      "statusOff": "Désactivé.",
+      "privacy": "Activer envoie la photo du permis à un fournisseur d'IA externe pour la lire. Elle contient des données personnelles : activez seulement si vos clients en sont informés.",
+      "enable": "Activer",
+      "disable": "Désactiver",
+      "confirmTitle": "Activer le scan des permis ?",
+      "confirmBody": "Les photos de permis seront envoyées à un fournisseur d'IA externe pour lecture (elles ne sont pas conservées par le service de lecture). Vous êtes responsable d'en informer vos clients.",
+      "error": "Impossible de modifier ce réglage."
+    },
+    "departurePolicy": {
+      "open": "Exigences avant départ",
+      "title": "Exigences avant départ",
+      "subtitle": "Documents à vérifier avant de remettre un véhicule",
+      "validationTitle": "À faire valider",
+      "validationBody": "Ces exigences sont des modèles proposés, pas des règles juridiques. Faites-les valider par votre agence ou un conseil avant de bloquer les départs.",
+      "block": {
+        "label": "Bloquer le départ si une exigence n'est pas satisfaite",
+        "hint": "Désactivé : la liste de contrôle s'affiche mais n'empêche rien."
+      },
+      "requirements": "Exigences",
+      "requireDriverLicence": {
+        "label": "Permis pour chaque conducteur",
+        "hint": "Le client (s'il conduit) et chaque conducteur associé doivent avoir un permis enregistré."
+      },
+      "requireLicenceValidUntilEnd": {
+        "label": "Permis valide jusqu'au retour",
+        "hint": "Un permis expirant avant la fin de la location bloque ; sinon simple avertissement."
+      },
+      "requireCustomerIdDocument": {
+        "label": "CIN ou passeport du client",
+        "hint": "Le client qui réserve doit avoir une CIN ou un passeport enregistré."
+      },
+      "requireManualConfirmation": {
+        "label": "Confirmation humaine",
+        "hint": "Un employé autorisé confirme avoir vérifié les documents originaux."
+      },
+      "confirmationRole": {
+        "label": "Qui peut confirmer la vérification ?",
+        "employee": "Tout employé",
+        "manager": "Responsables seulement"
+      },
+      "maxAdditional": "Conducteurs supplémentaires maximum par location",
+      "saved": "Exigences enregistrées.",
+      "saveError": "Impossible d'enregistrer."
     }
   },
   "flotte": {
@@ -419,7 +468,9 @@
       "cin": "Photo de la CIN",
       "permis": "Photo du permis",
       "passeport": "Photo du passeport",
-      "autre": "Autre justificatif"
+      "autre": "Autre justificatif",
+      "justificatif_domicile": "Photo du justificatif de domicile",
+      "autre_justificatif": "Photo de l'autre justificatif"
     },
     "type": {
       "particulier": "Particulier",
@@ -436,7 +487,8 @@
       "type": "Type de client",
       "documents": "Documents",
       "conducteurs": "Conducteurs associés",
-      "notes": "Notes internes"
+      "notes": "Notes internes",
+      "identifiers": "Numéros d'identification"
     },
     "form": {
       "newTitle": "Ajouter un client",
@@ -451,6 +503,116 @@
         "invalid_phone": "Entrez un numéro marocain valide (ex. +212 6XX XX XX XX).",
         "invalid_email": "Entrez une adresse e-mail valide.",
         "invalid_date": "Entrez une date valide (AAAA-MM-JJ)."
+      }
+    },
+    "afterCreateHint": "Après la création, vous pourrez ajouter d'autres documents, des notes internes et des conducteurs depuis la fiche du client.",
+    "documentTypes": {
+      "permis": "Permis de conduire",
+      "cin": "CIN marocaine",
+      "passeport": "Passeport",
+      "justificatif_domicile": "Justificatif de domicile",
+      "autre_justificatif": "Autre justificatif",
+      "autre": "Autre document"
+    },
+    "create": {
+      "subtitle": "Le plus rapide : scannez le permis, le reste se remplit tout seul.",
+      "scanTitle": "Scanner le permis de conduire",
+      "scanBody": "Prenez le permis en photo : le nom, le numéro, les dates et les catégories sont lus automatiquement. Vous vérifiez et corrigez avant d'enregistrer.",
+      "scanButton": "Scanner le permis",
+      "manualTitle": "Saisie manuelle",
+      "manualBody": "Si vous n'avez pas le document sous la main, ou si la lecture échoue, remplissez la fiche vous-même.",
+      "manualButton": "Saisir à la main",
+      "ocrDisabled": "Le scan automatique est désactivé pour votre agence. Demandez au propriétaire de l'activer, ou saisissez à la main.",
+      "ocrDisabledOwner": "Le scan automatique est désactivé. Vous pouvez l'activer dans « Mon entreprise ».",
+      "ocrEnable": "Activer dans Mon entreprise"
+    },
+    "ocr": {
+      "scanHint": "Placez le permis à plat, bien éclairé, en entier dans le cadre.",
+      "privacy": "La photo est envoyée à un fournisseur d'IA pour être lue, puis oubliée par le service de lecture (elle n'y est pas conservée). Elle ne remplace pas la vérification du document original.",
+      "analyzing": "Lecture du permis en cours…",
+      "retake": "Reprendre la photo",
+      "manual": "Saisie manuelle",
+      "errorDisabled": "Le scan automatique n'est pas activé pour votre agence. Saisissez les informations à la main.",
+      "errorNotConfigured": "Le scan automatique n'est pas configuré. Saisissez les informations à la main.",
+      "errorNothingRead": "Aucune information n'a pu être lue sur cette photo. Reprenez-la ou saisissez à la main.",
+      "errorFailed": "La lecture du permis a échoué. Reprenez la photo ou passez à la saisie manuelle.",
+      "bannerTitle": "Informations lues sur le permis",
+      "bannerBody": "Vérifiez chaque champ. Ceux marqués « à vérifier » étaient peu lisibles ; les champs vides n'ont pas pu être lus.",
+      "verifyField": "À vérifier : lecture peu certaine"
+    },
+    "documentForm": {
+      "type": "Type de document",
+      "customLabel": "Nom du document",
+      "customLabelPlaceholder": "Ex. carte professionnelle",
+      "file": "Photo ou fichier du document",
+      "reference": "Numéro de référence",
+      "issuingAuthority": "Pays ou autorité de délivrance",
+      "categories": "Catégories de permis",
+      "categoriesPlaceholder": "Ex. B, C",
+      "categoriesValue": "Catégories : {{list}}",
+      "dateDelivrance": "Date de délivrance",
+      "expiresAt": "Date d'expiration",
+      "notes": "Notes sur ce document",
+      "optional": "Facultatif",
+      "errors": {
+        "invalid_date": "Date invalide (AAAA-MM-JJ ou JJ/MM/AAAA).",
+        "dates_order": "L'expiration doit être après la délivrance.",
+        "required": "Ce champ est obligatoire."
+      }
+    },
+    "documentsManager": {
+      "empty": "Aucun document enregistré. Aucun document n'est obligatoire pour créer la fiche.",
+      "loadError": "Impossible de charger les documents.",
+      "addButton": "Ajouter un document",
+      "addTitle": "Nouveau document",
+      "add": "Ajouter",
+      "edit": "Modifier",
+      "replaceFile": "Remplacer le fichier",
+      "uploading": "Envoi en cours…",
+      "delete": "Supprimer",
+      "removePending": "Retirer",
+      "deleteConfirmTitle": "Supprimer ce document ?",
+      "deleteConfirmBody": "Le fichier sera effacé. La trace de l'ajout reste dans l'historique.",
+      "deleteError": "Suppression impossible : réservée aux responsables.",
+      "saveError": "Impossible d'enregistrer ce document. Réessayez.",
+      "uploadError": "Envoi du fichier impossible. Réessayez.",
+      "noFile": "Aucun fichier joint (numéro saisi à la main).",
+      "addedBy": "Ajouté par {{name}} le {{date}}",
+      "unknownMember": "un membre",
+      "optionalHint": "Aucun document n'est obligatoire pour créer la fiche. Les documents exigés avant un départ sont définis par l'agence.",
+      "status": {
+        "no_date": "Date à vérifier",
+        "ok": "Valide jusqu'au {{date}}",
+        "expiring_soon": "Expire le {{date}}",
+        "expired": "Expiré le {{date}}"
+      }
+    },
+    "driverDocuments": "Documents",
+    "driverDocumentsHide": "Masquer",
+    "driverDocumentsTitle": "Documents de {{name}}",
+    "notes": {
+      "title": "Notes internes",
+      "confidential": "Confidentiel : jamais visible sur les contrats ni par le client",
+      "empty": "Aucune note pour ce client.",
+      "addButton": "Ajouter une note",
+      "add": "Ajouter",
+      "placeholder": "Ex. préfère être appelé le matin",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "deleteConfirmTitle": "Supprimer cette note ?",
+      "deleteConfirmBody": "Elle disparaîtra de la fiche ; son historique est conservé.",
+      "byOn": "Par {{name}} le {{date}}",
+      "importedOn": "Note existante, reprise le {{date}}",
+      "edited": "modifiée le {{date}}",
+      "showHistory": "Voir l'historique",
+      "hideHistory": "Masquer l'historique",
+      "noHistory": "Aucune version précédente.",
+      "previousVersion": "Version de {{name}} avant le {{date}}",
+      "loadError": "Impossible de charger les notes.",
+      "saveError": "Action impossible. Réessayez ou vérifiez vos droits.",
+      "errors": {
+        "required": "Écrivez la note avant de l'enregistrer.",
+        "too_long": "Note trop longue (4000 caractères maximum)."
       }
     }
   },
@@ -577,6 +739,107 @@
       "filterByVehicle": "Véhicule",
       "allVehicles": "Tous les véhicules",
       "viewList": "Vue liste"
+    },
+    "drivers": {
+      "sectionTitle": "Conducteurs",
+      "contractCustomer": "Client (contrat et paiement)",
+      "principal": "Conducteur principal",
+      "theClient": "le client",
+      "theCustomer": "Le client",
+      "additionalTitle": "Conducteurs supplémentaires",
+      "noneAdditional": "Aucun conducteur supplémentaire.",
+      "edit": "Modifier les conducteurs",
+      "addDrivers": "Ajouter des conducteurs",
+      "question": "Y a-t-il d'autres conducteurs pour cette location ?",
+      "answer": {
+        "no": "Non",
+        "yes": "Oui, ajouter"
+      },
+      "clearTitle": "Retirer les conducteurs ?",
+      "clearBody": "Les conducteurs associés à cette réservation seront retirés (leurs fiches restent enregistrées).",
+      "clearConfirm": "Retirer",
+      "separationHint": "Le client qui réserve et paie peut être différent des personnes autorisées à conduire.",
+      "customerDrives": "Le client conduit lui-même",
+      "makePrincipal": "Définir comme principal",
+      "remove": "Retirer",
+      "additional": "Conducteurs supplémentaires ({{count}}/{{max}})",
+      "searchLabel": "Rechercher un conducteur ou un client",
+      "searchPlaceholder": "Nom ou numéro de téléphone",
+      "noResult": "Aucun résultat : ajoutez-le comme nouveau conducteur.",
+      "kindCustomer": "Client existant",
+      "kindNew": "Nouveau",
+      "driverOf": "Conducteur de {{name}}",
+      "licenceShort": "Permis {{number}}",
+      "newTitle": "Nouveau conducteur",
+      "addNewButton": "Ajouter un nouveau conducteur",
+      "addNew": "Ajouter",
+      "newDocumentsHint": "Vous pourrez ajouter le permis (photo, dates) depuis la fiche du client.",
+      "addErrors": {
+        "duplicate": "Cette personne est déjà associée à cette réservation.",
+        "is_customer": "Le client conduit déjà : il est le conducteur principal.",
+        "too_many": "Maximum {{max}} conducteurs supplémentaires."
+      },
+      "errors": {
+        "generic": "Impossible d'enregistrer les conducteurs. Réessayez.",
+        "duplicate_driver": "Un conducteur apparaît deux fois sur cette réservation.",
+        "too_many_additional_drivers": "Trop de conducteurs supplémentaires pour cette agence.",
+        "rental_drivers_locked": "La location a commencé : les conducteurs ne peuvent plus être modifiés.",
+        "rental_not_found": "Réservation introuvable.",
+        "agency_mismatch": "Ce conducteur n'appartient pas à votre agence."
+      }
+    },
+    "departureCheck": {
+      "title": "Vérification avant départ",
+      "loadError": "Impossible de charger la vérification.",
+      "summary": {
+        "blocked": "Exigences non satisfaites",
+        "confirmation_needed": "Confirmation de la vérification requise",
+        "ready_with_warnings": "Prêt, avec des points à vérifier",
+        "ready": "Prêt au départ"
+      },
+      "enforced": "Cette vérification bloque le départ (politique de l'agence).",
+      "informationOnly": "Information seulement : l'agence n'a pas activé le blocage du départ.",
+      "party": {
+        "client": "Client",
+        "conducteur_principal": "Conducteur principal",
+        "conducteur_supplementaire": "Conducteur supplémentaire"
+      },
+      "noDocuments": "Aucun document enregistré.",
+      "expiresOn": "expire le {{date}}",
+      "noExpiry": "date d'expiration inconnue",
+      "noFile": "sans fichier",
+      "nothingToReport": "Rien à signaler.",
+      "openCustomer": "Ouvrir la fiche client",
+      "openDrivers": "Ouvrir la fiche (conducteurs)",
+      "issues": {
+        "licence_missing": "Permis de conduire manquant",
+        "licence_no_file": "Permis enregistré sans fichier : vérifiez l'original",
+        "licence_expiry_unknown": "Date d'expiration du permis inconnue : à vérifier",
+        "licence_expired": "Permis expiré",
+        "licence_expires_before_end": "Le permis expire avant la fin de la location",
+        "id_missing": "CIN ou passeport manquant",
+        "id_expired": "Pièce d'identité expirée",
+        "id_expires_before_end": "La pièce d'identité expire avant la fin de la location"
+      },
+      "confirmationTitle": "Confirmation",
+      "confirm": "J'ai vérifié les documents originaux",
+      "reconfirm": "Reconfirmer la vérification",
+      "confirmation": {
+        "pending": "Pas encore confirmée.",
+        "confirmed": "Confirmée par {{name}} le {{date}}.",
+        "stale": "Confirmée par {{name}} le {{date}}, mais des documents ou conducteurs ont changé depuis : à reconfirmer."
+      },
+      "fixBlockingFirst": "Corrigez d'abord les exigences en rouge.",
+      "managerOnly": "Seul un responsable peut confirmer.",
+      "startBlocked": "Départ impossible : la vérification avant départ n'est pas satisfaite.",
+      "disclaimer": "La présence d'une photo ne prouve pas la validité d'un document, et la lecture automatique ne certifie ni son authenticité ni le droit de conduire. Seule la vérification du document original, confirmée ici, fait foi.",
+      "errors": {
+        "generic": "Action impossible. Réessayez.",
+        "departure_requirements_not_met": "Exigences avant départ non satisfaites.",
+        "confirmation_requires_manager": "Seul un responsable peut confirmer.",
+        "rental_not_ready_for_departure": "La location n'est pas prête pour le départ.",
+        "rental_not_found": "Réservation introuvable."
+      }
     }
   },
   "contract": {
@@ -646,7 +909,8 @@
       "errors": {
         "required": "Ce champ est obligatoire."
       }
-    }
+    },
+    "additionalDrivers": "Conducteurs supplémentaires"
   },
   "inspection": {
     "section": "Inspection",

@@ -1,5 +1,6 @@
 import { searchCustomers } from '../search';
 import type { Customer } from '../types';
+import { makeDocument } from '../testing';
 
 function makeCustomer(overrides: Partial<Customer>): Customer {
   return {
@@ -68,7 +69,7 @@ describe('searchCustomers', () => {
         id: '3',
         nomComplet: 'Client Avec Référence',
         documents: [
-          { type: 'cin', path: 'a', uploadedAt: '2026-01-01', uploadedBy: null, reference: 'REF-9988', dateDelivrance: null, expiresAt: null },
+          makeDocument({ type: 'cin', path: 'a', uploadedAt: '2026-01-01', reference: 'REF-9988', expiresAt: null }),
         ],
       }),
     ];

@@ -44,6 +44,8 @@ export type Contract = {
   customerTelephone: string | null;
   customerCin: string | null;
   driverNom: string | null;
+  /** Conducteurs supplémentaires au moment de la création du contrat (instantané). */
+  autresConducteurs: string[];
   vehicleImmatriculation: string;
   vehicleMarque: string;
   vehicleModele: string;

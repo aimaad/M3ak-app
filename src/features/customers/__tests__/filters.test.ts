@@ -6,6 +6,7 @@ import {
   filterCustomers,
 } from '../filters';
 import type { Customer } from '../types';
+import { makeDocument } from '../testing';
 
 function makeCustomer(overrides: Partial<Customer>): Customer {
   return {
@@ -89,14 +90,14 @@ describe('countExpiringSoonDocuments', () => {
       makeCustomer({
         id: '1',
         documents: [
-          { type: 'cin', path: 'a', uploadedAt: now.toISOString(), uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: '2026-01-10T00:00:00.000Z' },
+          makeDocument({ type: 'cin', path: 'a', uploadedAt: now.toISOString(), reference: null, expiresAt: '2026-01-10T00:00:00.000Z' }),
         ],
       }),
       makeCustomer({
         id: '2',
         archivedAt: '2025-12-01T00:00:00.000Z',
         documents: [
-          { type: 'permis', path: 'b', uploadedAt: now.toISOString(), uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: '2026-01-05T00:00:00.000Z' },
+          makeDocument({ type: 'permis', path: 'b', uploadedAt: now.toISOString(), reference: null, expiresAt: '2026-01-05T00:00:00.000Z' }),
         ],
       }),
     ];

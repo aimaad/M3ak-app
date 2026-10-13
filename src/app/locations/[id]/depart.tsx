@@ -12,7 +12,11 @@ import { useContractForRental, useRecordDeparture } from '@/features/contracts/h
 import { ACCESSORY_KEYS, VEHICLE_CONDITIONS } from '@/features/contracts/types';
 import type { AccessoryKey, VehicleCondition } from '@/features/contracts/types';
 import { validateDepartContractForm } from '@/features/contracts/validation';
+import { departureErrorKey } from '@/features/rentals/departure-check';
+import { DepartureChecklist } from '@/features/rentals/departure-checklist';
+import { useDepartureCheck, useRental } from '@/features/rentals/hooks';
 import { validateOdometerForm } from '@/features/rentals/validation';
+import { useMyAgency } from '@/features/agency/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -22,6 +26,11 @@ export default function DepartScreen() {
   const { data: vehicle } = useVehicle(vehicleId);
   const { data: contract, isLoading: isLoadingContract } = useContractForRental(id);
   const recordDeparture = useRecordDeparture();
+  const agencyQuery = useMyAgency();
+  const { data: rental } = useRental(id);
+  const departureCheck = useDepartureCheck(id);
+  // La politique de l'agence bloque le départ tant que la liste de contrôle n'est pas satisfaite (le serveur le refuse aussi).
+  const departureBlocked = !!departureCheck.data && departureCheck.data.enforced && !departureCheck.data.ok;
 
   const [kilometrage, setKilometrage] = useState(vehicle ? String(vehicle.kilometrage) : '');
   const [carburant, setCarburant] = useState('100');
@@ -61,8 +70,13 @@ export default function DepartScreen() {
         input: { etatDepart, accessoiresDepart: accessoires, observationsDepart: observations.trim() || null },
       });
       router.back();
-    } catch {
-      setError(t('locations.depart.error'));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      setError(
+        message.includes('departure_requirements_not_met')
+          ? t(departureErrorKey(err))
+          : t('locations.depart.error')
+      );
     }
   }
 
@@ -99,6 +113,10 @@ export default function DepartScreen() {
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('locations.depart.title')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
+          {rental && id ? (
+            <DepartureChecklist rentalId={id} customerId={rental.customerId} role={agencyQuery.data?.role ?? null} />
+          ) : null}
+
           <TextField
             label={t('locations.depart.kilometrage')}
             value={kilometrage}
@@ -181,7 +199,7 @@ export default function DepartScreen() {
           <Button
             label={recordDeparture.isPending ? t('locations.depart.saving') : t('locations.depart.save')}
             onPress={handleSubmit}
-            disabled={recordDeparture.isPending}
+            disabled={recordDeparture.isPending || departureBlocked}
             loading={recordDeparture.isPending}
             style={{ marginTop: 8 }}
           />

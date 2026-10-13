@@ -16,6 +16,7 @@ import {
   removeMember,
   resendAgencyInvite,
   revokeAgencyInvite,
+  setCustomerOcrEnabled,
   updateAgencyDetails,
   updateMemberRole,
   updateMyProfile,
@@ -204,5 +205,17 @@ export function useAuditLog(agencyId: string | undefined) {
     queryKey: ['audit-log', agencyId],
     queryFn: () => listAuditLog(agencyId as string),
     enabled: !!agencyId,
+  });
+}
+
+/** Interrupteur OCR des permis (propriétaire uniquement, vérifié côté serveur). */
+export function useSetCustomerOcrEnabled(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (enabled: boolean) => setCustomerOcrEnabled(agencyId as string, enabled),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+    },
   });
 }

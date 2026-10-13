@@ -289,6 +289,56 @@ Ces identifiants ne sont **jamais** dans l'app mobile : ils restent des secrets 
 configuration SMTP de Supabase Auth (e-mails de confirmation) est distincte : la fonction ne
 peut pas la réutiliser, d'où ces deux secrets.
 
+## Clients : documents, notes internes, conducteurs et vérification avant départ (migrations 0028 et 0029)
+
+À exécuter dans l'ordre, une par une, après 0027 :
+
+- `0028_customer_documents_and_notes.sql` — **documents clients multiples** (table
+  `customer_documents` : plusieurs documents par type, libellé libre, autorité, catégories de
+  permis, notes, auteur et date imposés par le serveur, suppression douce réservée aux
+  responsables) ; les documents existants (ancien champ JSON) sont **recopiés**, l'ancien champ
+  est conservé tel quel. **Notes internes** (`customer_notes` + historique des versions) :
+  l'ancienne note libre devient la première note. Colonne `agencies.customer_ocr_enabled`
+  (scan des permis **désactivé par défaut**).
+- `0029_drivers_and_departure_checks.sql` — conducteur = fiche client existante
+  (`drivers.linked_customer_id`, sans doublon), règles des conducteurs d'une réservation
+  (pas de doublon, maximum configurable, verrouillé une fois la location commencée, écriture
+  atomique `set_rental_drivers`), **politique de départ** de l'agence
+  (`agency_departure_policies`, inactive par défaut), liste de contrôle
+  `rental_departure_check`, confirmation humaine horodatée, et contrôle serveur dans
+  `start_rental_with_contract`. Ajoute `contracts.autres_conducteurs`.
+
+### Scan automatique du permis (fonction `scan-customer-document`)
+
+1. Le propriétaire active l'option dans l'app : **Mon entreprise → Scan automatique des
+   permis**. Tant qu'elle est désactivée, la fonction refuse (`ocr_disabled`) : la photo
+   d'un permis contient des données personnelles envoyées à un fournisseur d'IA externe.
+2. Le fournisseur est celui du scan de carte grise : secret `GEMINI_API_KEY` (gratuit) ou
+   `ANTHROPIC_API_KEY` (payant). Sans clé, la fonction répond `ocr_not_configured`.
+3. Déployez avec la CLI (la fonction partage du code avec `supabase/functions/_shared`, ce
+   que le collage dans l'éditeur du tableau de bord ne gère pas) :
+   `npx supabase functions deploy scan-customer-document`
+
+Seule l'image est envoyée au fournisseur (aucun nom d'agence, d'utilisateur ou de client) ;
+la fonction ne stocke ni ne journalise l'image ni les valeurs lues, et revalide chaque champ
+(format des dates, longueurs). Un champ illisible reste vide : jamais de valeur inventée.
+
+### Exigences avant départ
+
+**Mon entreprise → Exigences avant départ** (propriétaire) : permis par conducteur, permis
+valide jusqu'au retour, CIN/passeport du client, confirmation humaine, rôle autorisé à
+confirmer, nombre maximum de conducteurs supplémentaires. Ce sont des modèles d'exigences
+**métier à faire valider**, pas des règles juridiques ; tant que « Bloquer le départ » est
+désactivé, la liste de contrôle s'affiche sans rien empêcher.
+
+### Tests SQL reproductibles (sans Supabase)
+
+`supabase/tests/run-local.sh` crée des bases PostgreSQL de test vierges, rejoue **toutes** les
+migrations, puis exécute les scénarios `supabase/tests/*.test.sql` (permissions, isolation
+entre agences, notes, documents, conducteurs, départ, invitations, accès par filiale). Il
+nécessite un PostgreSQL local (extensions `btree_gist` et `pgcrypto`) et ne doit jamais être
+lancé contre un vrai projet.
+
 Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
 avant de reporter la correction sur le projet de production (via le SQL Editor, comme à
 l'étape 2).

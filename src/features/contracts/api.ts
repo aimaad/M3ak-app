@@ -22,6 +22,7 @@ type ContractRow = {
   customer_telephone: string | null;
   customer_cin: string | null;
   driver_nom: string | null;
+  autres_conducteurs: string[] | null;
   vehicle_immatriculation: string;
   vehicle_marque: string;
   vehicle_modele: string;
@@ -61,6 +62,7 @@ function fromRow(row: ContractRow): Contract {
     customerTelephone: row.customer_telephone,
     customerCin: row.customer_cin,
     driverNom: row.driver_nom,
+    autresConducteurs: row.autres_conducteurs ?? [],
     vehicleImmatriculation: row.vehicle_immatriculation,
     vehicleMarque: row.vehicle_marque,
     vehicleModele: row.vehicle_modele,
@@ -126,6 +128,7 @@ export async function createContract(
     customerTelephone: string | null;
     customerCin: string | null;
     driverNom: string | null;
+    autresConducteurs: string[];
     vehicleImmatriculation: string;
     vehicleMarque: string;
     vehicleModele: string;
@@ -146,6 +149,7 @@ export async function createContract(
       customer_telephone: snapshot.customerTelephone,
       customer_cin: snapshot.customerCin,
       driver_nom: snapshot.driverNom,
+      autres_conducteurs: snapshot.autresConducteurs,
       vehicle_immatriculation: snapshot.vehicleImmatriculation,
       vehicle_marque: snapshot.vehicleMarque,
       vehicle_modele: snapshot.vehicleModele,

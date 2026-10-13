@@ -97,6 +97,8 @@ export type AgencyDetails = {
   pays: string;
   devise: string;
   logoUrl: string | null;
+  /** Analyse automatique des permis par un fournisseur d'IA externe : désactivée par défaut, réservée au propriétaire. */
+  customerOcrEnabled: boolean;
   createdAt: string;
 };
 

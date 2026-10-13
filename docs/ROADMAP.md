@@ -40,3 +40,13 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 ## Étape 7 — Commercialisation
 - [ ] Abonnements (Starter 249 / Pro 499 / Business 899 MAD par mois), quotas d'inspections, essai 30 jours
 - [ ] Publication App Store / Google Play (EAS), page de présentation
+
+## Évolution — clients, OCR et conducteurs associés
+- [x] Création rapide d'un client par scan du permis (OCR sur option, champs douteux signalés, saisie manuelle possible)
+- [x] Documents multiples par client (permis, CIN, passeport, justificatif de domicile, autres), correction / remplacement / suppression selon les droits
+- [x] Notes internes confidentielles avec auteur, date et historique
+- [x] Conducteurs associés à une réservation (recherche d'un client ou conducteur existant, nouveau conducteur, principal distinct du client, sans doublon)
+- [x] Vérification avant départ configurable par l'agence, contrôlée côté serveur, avec confirmation humaine
+- [ ] Politique de conservation des documents (durée, purge) — à définir par l'agence
+- [ ] Importer un PDF comme document (nécessite `expo-document-picker`) — aujourd'hui : photo ou galerie
+

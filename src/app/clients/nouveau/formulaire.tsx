@@ -6,19 +6,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
+import { takeCustomerCreationDraft } from '@/features/customers/customer-creation-draft';
 import { CustomerForm } from '@/features/customers/customer-form';
-import { uploadCustomerDocument } from '@/features/customers/api';
-import { mergeDocuments } from '@/features/storage/documents';
-import { useCreateCustomer, useCustomers, useUpdateCustomerDocuments } from '@/features/customers/hooks';
+import { addPendingDocuments } from '@/features/customers/documents-api';
+import { useCreateCustomer, useCustomers } from '@/features/customers/hooks';
 import type { CustomerInput, PendingDocument } from '@/features/customers/types';
 import { useLanguage } from '@/i18n/use-language';
 
-export default function NouveauClientScreen() {
+/** Formulaire de création, prérempli par le scan du permis (modifiable) ou vide en saisie manuelle. */
+export default function FormulaireNouveauClientScreen() {
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
   const customersQuery = useCustomers();
   const createCustomer = useCreateCustomer();
-  const updateDocuments = useUpdateCustomerDocuments();
+  const [draft] = useState(() => takeCustomerCreationDraft());
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,24 +32,13 @@ export default function NouveauClientScreen() {
       const customer = await createCustomer.mutateAsync({ agencyId: agencyQuery.data.agencyId, input });
 
       if (pendingDocuments.length > 0) {
-        try {
-          const uploaded = await Promise.all(
-            pendingDocuments.map((doc) =>
-              uploadCustomerDocument(agencyQuery.data!.agencyId, customer.id, doc.type, doc.localUri, {
-                reference: doc.reference,
-                dateDelivrance: doc.dateDelivrance,
-                expiresAt: doc.expiresAt,
-              })
-            )
-          );
-          await updateDocuments.mutateAsync({
-            id: customer.id,
-            documents: mergeDocuments(customer.documents, uploaded),
-          });
-        } catch {
+        const { failed } = await addPendingDocuments(
+          agencyQuery.data.agencyId,
+          { kind: 'customer', id: customer.id },
+          pendingDocuments.map(({ localUri, ...documentInput }) => ({ input: documentInput, localUri }))
+        );
+        if (failed > 0) {
           Alert.alert(t('common.appName'), t('customer.form.uploadError'));
-          router.replace(`/clients/${customer.id}`);
-          return;
         }
       }
 
@@ -65,6 +55,8 @@ export default function NouveauClientScreen() {
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('customer.form.newTitle')} showBack />
         <CustomerForm
+          mode="create"
+          draft={draft}
           allCustomers={customersQuery.data ?? []}
           submitLabel={t('customer.form.save')}
           submittingLabel={t('customer.form.saving')}

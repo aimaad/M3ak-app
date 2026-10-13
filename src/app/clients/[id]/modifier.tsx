@@ -1,16 +1,14 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { uploadCustomerDocument } from '@/features/customers/api';
 import { CustomerForm } from '@/features/customers/customer-form';
-import { mergeDocuments } from '@/features/storage/documents';
-import { useCustomer, useCustomers, useUpdateCustomer, useUpdateCustomerDocuments } from '@/features/customers/hooks';
-import type { CustomerInput, PendingDocument } from '@/features/customers/types';
+import { useCustomer, useCustomers, useUpdateCustomer } from '@/features/customers/hooks';
+import type { CustomerInput } from '@/features/customers/types';
 import type { CustomerFormValues } from '@/features/customers/validation';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -20,38 +18,16 @@ export default function ModifierClientScreen() {
   const { data: customer, isLoading, isError } = useCustomer(id);
   const customersQuery = useCustomers();
   const updateCustomer = useUpdateCustomer();
-  const updateDocuments = useUpdateCustomerDocuments();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(input: CustomerInput, pendingDocuments: PendingDocument[]) {
+  async function handleSubmit(input: CustomerInput) {
     if (!customer) return;
     setSubmitError(null);
     setIsSubmitting(true);
 
     try {
       await updateCustomer.mutateAsync({ id: customer.id, input });
-
-      if (pendingDocuments.length > 0) {
-        try {
-          const uploaded = await Promise.all(
-            pendingDocuments.map((doc) =>
-              uploadCustomerDocument(customer.agencyId, customer.id, doc.type, doc.localUri, {
-                reference: doc.reference,
-                dateDelivrance: doc.dateDelivrance,
-                expiresAt: doc.expiresAt,
-              })
-            )
-          );
-          await updateDocuments.mutateAsync({
-            id: customer.id,
-            documents: mergeDocuments(customer.documents, uploaded),
-          });
-        } catch {
-          Alert.alert(t('common.appName'), t('customer.form.uploadError'));
-        }
-      }
-
       router.back();
     } catch {
       setSubmitError(t('customer.form.updateError'));
@@ -78,7 +54,6 @@ export default function ModifierClientScreen() {
         typeClient: customer.typeClient,
         raisonSociale: customer.raisonSociale ?? '',
         ice: customer.ice ?? '',
-        notes: customer.notes ?? '',
       }
     : undefined;
 
@@ -105,8 +80,8 @@ export default function ModifierClientScreen() {
         ) : (
           <CustomerForm
             key={customer.id}
+            mode="edit"
             initialValues={initialValues}
-            existingDocuments={customer.documents}
             existingCustomerId={customer.id}
             allCustomers={customersQuery.data ?? []}
             submitLabel={t('customer.form.save')}

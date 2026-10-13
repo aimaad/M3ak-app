@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import { Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -10,12 +10,14 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
-import { useCustomers, useDrivers } from '@/features/customers/hooks';
+import { useCustomers } from '@/features/customers/hooks';
 import { searchCustomers } from '@/features/customers/search';
-import type { Customer, Driver } from '@/features/customers/types';
+import type { Customer } from '@/features/customers/types';
 import { bookedDates, hasBookingConflict } from '@/features/rentals/availability';
 import { DateRangeCalendar, type DateRangeValue } from '@/features/rentals/date-range-calendar';
-import { useCreateRental, useVehicleRentals } from '@/features/rentals/hooks';
+import { useCreateRental, useDeparturePolicy, useSaveRentalDrivers, useVehicleRentals } from '@/features/rentals/hooks';
+import { EMPTY_DRIVERS_SELECTION, rentalDriversErrorKey, type RentalDriversSelection } from '@/features/rentals/rental-drivers';
+import { RentalDriversEditor } from '@/features/rentals/rental-drivers-editor';
 import { computeRentalPrice } from '@/features/rentals/pricing';
 import { RENTAL_CONFLICT_ERROR } from '@/features/rentals/api';
 import { isRentalFormValid, validateRentalForm } from '@/features/rentals/validation';
@@ -37,7 +39,7 @@ export default function NouvelleLocationScreen() {
 
   const [vehicle, setVehicle] = useState<Vehicle | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [driver, setDriver] = useState<Driver | null>(null);
+  const [driversSelection, setDriversSelection] = useState<RentalDriversSelection>(EMPTY_DRIVERS_SELECTION);
   const [range, setRange] = useState<DateRangeValue>({ start: null, end: null });
   const [heureDepart, setHeureDepart] = useState('09:00');
   const [heureRetour, setHeureRetour] = useState('18:00');
@@ -52,7 +54,8 @@ export default function NouvelleLocationScreen() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittingAs, setSubmittingAs] = useState<'en_attente_confirmation' | 'confirmee' | null>(null);
 
-  const driversQuery = useDrivers(customer?.id);
+  const policyQuery = useDeparturePolicy(agencyQuery.data?.agencyId);
+  const saveRentalDriversMutation = useSaveRentalDrivers();
 
   const vehicleRentalsQuery = useVehicleRentals(vehicle?.id);
   const disabledDates = useMemo(
@@ -72,7 +75,7 @@ export default function NouvelleLocationScreen() {
     {
       vehicleId: vehicle?.id ?? '',
       customerId: customer?.id ?? '',
-      driverId: driver?.id ?? null,
+      driverId: null,
       dateDebutPrevue: startISO ?? '',
       dateFinPrevue: endISO ?? '',
       lieuDepart,
@@ -112,7 +115,7 @@ export default function NouvelleLocationScreen() {
         input: {
           vehicleId: vehicle.id,
           customerId: customer.id,
-          driverId: driver?.id ?? null,
+          driverId: null,
           branchDepartId: null,
           branchRetourId: null,
           lieuDepart: lieuDepart.trim() || null,
@@ -127,6 +130,20 @@ export default function NouvelleLocationScreen() {
           statutInitial,
         },
       });
+      // Les conducteurs sont enregistrés juste après la réservation, d'un seul bloc (atomique) : les
+      // fiches existantes sont réutilisées, un nouveau conducteur est créé sous le client.
+      if (driversSelection.principal || driversSelection.additional.length > 0) {
+        try {
+          await saveRentalDriversMutation.mutateAsync({
+            agencyId: agencyQuery.data.agencyId,
+            customerId: customer.id,
+            rentalId: rental.id,
+            selection: driversSelection,
+          });
+        } catch (driversError) {
+          Alert.alert(t('common.appName'), t(rentalDriversErrorKey(driversError)));
+        }
+      }
       router.replace(`/locations/${rental.id}`);
     } catch (error) {
       setSubmitError(
@@ -175,31 +192,19 @@ export default function NouvelleLocationScreen() {
             filterItems={searchCustomers}
             onSelect={(c) => {
               setCustomer(c);
-              setDriver(null);
+              setDriversSelection(EMPTY_DRIVERS_SELECTION);
             }}
             error={showErrors && errors.customerId ? t(`locations.form.errors.${errors.customerId}`) : undefined}
           />
 
-          {customer && (driversQuery.data ?? []).length > 0 ? (
-            <PickerField
-              label={t('locations.driver')}
-              placeholder={t('locations.form.driverPlaceholder')}
-              searchPlaceholder={t('locations.form.driverSearch')}
-              items={driversQuery.data ?? []}
-              selectedItem={driver}
-              getId={(d) => d.id}
-              getLabel={(d) => d.nomComplet}
-              getSubLabel={(d) => d.telephone ?? undefined}
-              filterItems={(items, query) =>
-                items.filter((d) => d.nomComplet.toLowerCase().includes(query.toLowerCase()))
-              }
-              onSelect={setDriver}
-            />
-          ) : null}
           {customer ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              {driver ? t('locations.driverIsOther') : t('locations.driverIsCustomer')}
-            </ThemedText>
+            <RentalDriversEditor
+              customer={customer}
+              value={driversSelection}
+              onChange={setDriversSelection}
+              maxAdditional={policyQuery.data?.maxAdditionalDrivers}
+              disabled={submittingAs !== null}
+            />
           ) : null}
 
           {vehicle ? (

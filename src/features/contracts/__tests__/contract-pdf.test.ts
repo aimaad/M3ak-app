@@ -1,6 +1,10 @@
 import { assertContractIsComplete, buildContractHtml } from '../contract-pdf';
 import type { Contract } from '../types';
 
+// Tests exécutés par Jest (Node) : on lit les sources avec require, sans dépendre des types Node.
+declare const __dirname: string;
+declare function require(name: string): any;
+
 function makeContract(overrides: Partial<Contract> = {}): Contract {
   return {
     id: '1',
@@ -12,6 +16,7 @@ function makeContract(overrides: Partial<Contract> = {}): Contract {
     customerTelephone: '+212661234567',
     customerCin: 'BE482913',
     driverNom: null,
+    autresConducteurs: [],
     vehicleImmatriculation: '8921-أ-14',
     vehicleMarque: 'Dacia',
     vehicleModele: 'Logan',
@@ -73,5 +78,36 @@ describe('buildContractHtml', () => {
     const html = buildContractHtml(makeContract({ conditionsParticulieres: '<script>alert(1)</script>' }), 'Agence Demo');
     expect(html).not.toContain('<script>alert(1)</script>');
     expect(html).toContain('&lt;script&gt;');
+  });
+});
+
+describe('conducteurs et confidentialité du contrat', () => {
+  it('liste les conducteurs supplémentaires sur le contrat', () => {
+    const html = buildContractHtml(
+      makeContract({ driverNom: 'Sara Alaoui', autresConducteurs: ['Karim Benali', 'Omar <b>Test</b>'] }),
+      'Agence Test'
+    );
+    expect(html).toContain('Conducteur principal');
+    expect(html).toContain('Conducteurs supplémentaires');
+    expect(html).toContain('Karim Benali');
+    expect(html).toContain('Omar &lt;b&gt;Test&lt;/b&gt;');
+  });
+
+  it("n'affiche aucune section conducteurs supplémentaires quand il n'y en a pas", () => {
+    expect(buildContractHtml(makeContract(), 'Agence Test')).not.toContain('Conducteurs supplémentaires');
+  });
+
+  it('ne reprend jamais les notes internes (contrat ni fiche client) dans le document remis au client', () => {
+    const html = buildContractHtml(makeContract({ notes: 'NOTE-INTERNE-CONFIDENTIELLE' }), 'Agence Test');
+    expect(html).not.toContain('NOTE-INTERNE-CONFIDENTIELLE');
+  });
+
+  it("le module du PDF n'a aucun accès aux notes internes des clients (garde-fou structurel)", () => {
+    const fs = require('fs');
+    const path = require('path');
+    const source: string = fs.readFileSync(path.join(__dirname, '..', 'contract-pdf.ts'), 'utf8');
+    expect(source).not.toMatch(/customers\/notes|customer_notes|notes-api/);
+    const types: string = fs.readFileSync(path.join(__dirname, '..', 'types.ts'), 'utf8');
+    expect(types).not.toMatch(/customer_notes|customerNotes/);
   });
 });

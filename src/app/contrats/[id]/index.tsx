@@ -122,6 +122,9 @@ export default function ContratDetailScreen() {
             <InfoRow label={t('locations.vehicle')} value={`${contract.vehicleMarque} ${contract.vehicleModele} · ${contract.vehicleImmatriculation}`} />
             <InfoRow label={t('locations.customer')} value={contract.customerNom} />
             {contract.driverNom ? <InfoRow label={t('locations.driver')} value={contract.driverNom} /> : null}
+            {contract.autresConducteurs.length > 0 ? (
+              <InfoRow label={t('contract.additionalDrivers')} value={contract.autresConducteurs.join(', ')} />
+            ) : null}
             <InfoRow label={t('locations.period')} value={`${formatDateTime(contract.dateDebutPrevue)} → ${formatDateTime(contract.dateFinPrevue)}`} />
             <InfoRow label={t('locations.prixTotal')} value={contract.prixTotal != null ? `${contract.prixTotal.toLocaleString('fr-FR')} MAD` : '—'} />
             <View className="flex-row items-center justify-between py-3">

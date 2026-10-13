@@ -11,6 +11,10 @@ import {
   listRentalsForVehicle,
   updateRentalDates,
 } from './api';
+import { confirmDepartureCheck, getDeparturePolicy, getDepartureCheck, saveDeparturePolicy } from './departure-api';
+import type { DeparturePolicy } from './departure-check';
+import { listRentalAdditionalDrivers, saveRentalDrivers } from './drivers-api';
+import type { RentalDriversSelection } from './rental-drivers';
 import type { RentalInput } from './types';
 
 const rentalsKey = ['rentals'] as const;
@@ -117,5 +121,79 @@ export function useCheckAvailability(
     queryKey: ['rental-availability', vehicleId, startISO, endISO, excludeRentalId],
     queryFn: () => checkVehicleAvailability(vehicleId as string, startISO as string, endISO as string, excludeRentalId),
     enabled: !!vehicleId && !!startISO && !!endISO,
+  });
+}
+
+// ----------------------------------------------------------------------
+// Conducteurs d'une réservation
+// ----------------------------------------------------------------------
+
+export function useRentalAdditionalDrivers(rentalId: string | undefined) {
+  return useQuery({
+    queryKey: ['rental-drivers', rentalId],
+    queryFn: () => listRentalAdditionalDrivers(rentalId as string),
+    enabled: !!rentalId,
+  });
+}
+
+export function useSaveRentalDrivers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (args: {
+      agencyId: string;
+      customerId: string;
+      rentalId: string;
+      selection: RentalDriversSelection;
+    }) => saveRentalDrivers(args.agencyId, args.customerId, args.rentalId, args.selection),
+    onSuccess: (_data, args) => {
+      queryClient.invalidateQueries({ queryKey: ['rental-drivers', args.rentalId] });
+      queryClient.invalidateQueries({ queryKey: ['rentals'] });
+      queryClient.invalidateQueries({ queryKey: ['departure-check', args.rentalId] });
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+    },
+  });
+}
+
+// ----------------------------------------------------------------------
+// Vérification avant départ
+// ----------------------------------------------------------------------
+
+export function useDepartureCheck(rentalId: string | undefined) {
+  return useQuery({
+    queryKey: ['departure-check', rentalId],
+    queryFn: () => getDepartureCheck(rentalId as string),
+    enabled: !!rentalId,
+  });
+}
+
+export function useConfirmDepartureCheck(rentalId: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => confirmDepartureCheck(rentalId),
+    onSuccess: (check) => {
+      queryClient.setQueryData(['departure-check', rentalId], check);
+    },
+  });
+}
+
+export function useDeparturePolicy(agencyId: string | undefined) {
+  return useQuery({
+    queryKey: ['departure-policy', agencyId],
+    queryFn: () => getDeparturePolicy(agencyId as string),
+    enabled: !!agencyId,
+  });
+}
+
+export function useSaveDeparturePolicy(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (policy: DeparturePolicy) => saveDeparturePolicy(agencyId as string, policy),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['departure-policy', agencyId] });
+      queryClient.invalidateQueries({ queryKey: ['departure-check'] });
+    },
   });
 }

@@ -4,13 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card, PressableCard } from '@/components/card';
-import { DocumentPreview } from '@/components/document-preview';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
-import { DOCUMENTS_BUCKET } from '@/features/customers/api';
+import { CustomerDocumentsSection } from '@/features/customers/customer-documents-section';
+import { CustomerNotesSection } from '@/features/customers/customer-notes-section';
 import { DriverList } from '@/features/customers/driver-list';
 import {
   useArchiveCustomer,
@@ -18,13 +18,11 @@ import {
   useReactivateCustomer,
   useSetCustomerConsent,
 } from '@/features/customers/hooks';
-import { findDocument } from '@/features/storage/documents';
-import { DOCUMENT_TYPES } from '@/features/customers/types';
+import { useSession } from '@/features/auth/session-context';
 import { deriveRentalIncidents } from '@/features/rentals/incidents';
 import { useCustomerRentals } from '@/features/rentals/hooks';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useAllPayments } from '@/features/payments/hooks';
-import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 import { useLanguage } from '@/i18n/use-language';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -38,12 +36,6 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
-  ok: '#81778F',
-  bientot: M3akPalette.warning,
-  expire: M3akPalette.danger,
-};
-
 function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
@@ -52,6 +44,7 @@ export default function ClientDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
+  const { session } = useSession();
   const { data: customer, isLoading, isError } = useCustomer(id);
   const archiveCustomer = useArchiveCustomer();
   const reactivateCustomer = useReactivateCustomer();
@@ -178,46 +171,18 @@ export default function ClientDetailScreen() {
               </View>
             ) : null}
 
-            {customer.notes ? (
-              <View>
-                <ThemedText type="smallBold" className="mb-2">
-                  {t('customer.sections.notes')}
-                </ThemedText>
-                <Card>
-                  <ThemedText type="default">{customer.notes}</ThemedText>
-                </Card>
-              </View>
-            ) : null}
+            <CustomerDocumentsSection
+              agencyId={customer.agencyId}
+              owner={{ kind: 'customer', id: customer.id }}
+              canDelete={isManager}
+            />
 
-            <View className="gap-4">
-              <ThemedText type="smallBold">{t('customer.documentsSection')}</ThemedText>
-              {DOCUMENT_TYPES.map((type) => {
-                const doc = findDocument(customer.documents, type);
-                return (
-                  <View key={type} className="gap-1">
-                    <DocumentPreview
-                      label={t(`customer.documents.${type}`)}
-                      bucket={DOCUMENTS_BUCKET}
-                      path={doc?.path}
-                      emptyLabel={t('customer.noDocuments')}
-                    />
-                    {doc?.reference ? (
-                      <ThemedText type="small" themeColor="textSecondary">
-                        {t('customer.documentReference', { reference: doc.reference })}
-                      </ThemedText>
-                    ) : null}
-                    {doc?.expiresAt ? (
-                      <ThemedText
-                        type="small"
-                        style={{ color: URGENCY_COLOR[computeExpiryUrgency(doc.expiresAt) ?? 'ok'] }}
-                      >
-                        {t('vehicle.documentExpiry', { date: new Date(doc.expiresAt).toLocaleDateString('fr-FR') })}
-                      </ThemedText>
-                    ) : null}
-                  </View>
-                );
-              })}
-            </View>
+            <CustomerNotesSection
+              agencyId={customer.agencyId}
+              customerId={customer.id}
+              role={agencyQuery.data?.role ?? null}
+              userId={session?.user.id ?? null}
+            />
 
             <View className="gap-3">
               <ThemedText type="smallBold">{t('customer.sections.conducteurs')}</ThemedText>

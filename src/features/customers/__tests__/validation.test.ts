@@ -24,7 +24,6 @@ function makeValues(overrides: Partial<CustomerFormValues> = {}): CustomerFormVa
     typeClient: 'particulier',
     raisonSociale: '',
     ice: '',
-    notes: '',
     ...overrides,
   };
 }

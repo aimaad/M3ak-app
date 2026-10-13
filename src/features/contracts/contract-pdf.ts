@@ -55,12 +55,17 @@ export function buildContractHtml(contract: Contract, agencyName: string): strin
           <tr><td class="label">Immatriculation</td><td>${escapeHtml(contract.vehicleImmatriculation)}</td></tr>
         </table>
 
-        <h2>Client${contract.driverNom ? ' et conducteur' : ''}</h2>
+        <h2>Client${contract.driverNom || contract.autresConducteurs.length > 0 ? ' et conducteurs' : ''}</h2>
         <table>
           <tr><td class="label">Client</td><td>${escapeHtml(contract.customerNom)}</td></tr>
           ${contract.customerTelephone ? `<tr><td class="label">Téléphone</td><td>${escapeHtml(contract.customerTelephone)}</td></tr>` : ''}
           ${contract.customerCin ? `<tr><td class="label">CIN / Passeport</td><td>${escapeHtml(contract.customerCin)}</td></tr>` : ''}
           ${contract.driverNom ? `<tr><td class="label">Conducteur principal</td><td>${escapeHtml(contract.driverNom)}</td></tr>` : ''}
+          ${
+            contract.autresConducteurs.length > 0
+              ? `<tr><td class="label">Conducteurs supplémentaires</td><td>${contract.autresConducteurs.map((name) => escapeHtml(name)).join('<br />')}</td></tr>`
+              : ''
+          }
         </table>
 
         <h2>Période et tarif</h2>

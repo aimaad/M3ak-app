@@ -16,7 +16,10 @@ import { useInspectionForRental } from '@/features/inspections/hooks';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import { usePaymentsForRental } from '@/features/payments/hooks';
 import { ExtendRentalForm } from '@/features/rentals/extend-rental-form';
-import { useCancelRental, useConfirmRental, useRental } from '@/features/rentals/hooks';
+import { useMyAgency } from '@/features/agency/hooks';
+import { DepartureChecklist } from '@/features/rentals/departure-checklist';
+import { useCancelRental, useConfirmRental, useDepartureCheck, useDeparturePolicy, useRental } from '@/features/rentals/hooks';
+import { RentalDriversSection } from '@/features/rentals/rental-drivers-section';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -36,6 +39,11 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** La liste de contrôle n'a de sens que tant que le départ n'est pas enregistré. */
+function rentalConfirmedId(rental: { id: string; statut: string } | null | undefined): string | undefined {
+  return rental && (rental.statut === 'confirmee' || rental.statut === 'reservee') ? rental.id : undefined;
+}
+
 export default function LocationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { t } = useLanguage();
@@ -47,12 +55,18 @@ export default function LocationDetailScreen() {
   const { data: inspectionDepart } = useInspectionForRental(rental?.id, 'depart');
   const { data: inspectionRetour } = useInspectionForRental(rental?.id, 'retour');
   const { data: contract } = useContractForRental(rental?.id);
+  const agencyQuery = useMyAgency();
+  const departureCheck = useDepartureCheck(rentalConfirmedId(rental));
+  const policyQuery = useDeparturePolicy(rental?.agencyId);
   const cancelRental = useCancelRental();
   const confirmRental = useConfirmRental();
 
   const rentalConfirmed = rental?.statut === 'confirmee' || rental?.statut === 'reservee';
   const canCreateContract = rentalConfirmed && !contract;
-  const canStart = rentalConfirmed && contract?.statut === 'signe';
+  const departureBlocked = !!departureCheck.data && departureCheck.data.enforced && !departureCheck.data.ok;
+  const canStart = rentalConfirmed && contract?.statut === 'signe' && !departureBlocked;
+  const driversEditable =
+    rental?.statut === 'en_attente_confirmation' || rental?.statut === 'confirmee' || rental?.statut === 'reservee';
   const canConfirm = rental?.statut === 'en_attente_confirmation';
   const canCancel = rental?.statut === 'en_attente_confirmation' || rental?.statut === 'confirmee' || rental?.statut === 'reservee';
   const canExtend =
@@ -138,6 +152,17 @@ export default function LocationDetailScreen() {
 
           {canExtend ? <ExtendRentalForm rental={rental} /> : null}
 
+          <RentalDriversSection
+            rental={rental}
+            customer={customer ?? null}
+            maxAdditional={policyQuery.data?.maxAdditionalDrivers}
+            editable={driversEditable}
+          />
+
+          {rentalConfirmed ? (
+            <DepartureChecklist rentalId={rental.id} customerId={rental.customerId} role={agencyQuery.data?.role ?? null} />
+          ) : null}
+
           {canConfirm ? (
             <Button label={t('locations.confirmAction')} onPress={handleConfirm} loading={confirmRental.isPending} />
           ) : null}
@@ -201,6 +226,12 @@ export default function LocationDetailScreen() {
               </PressableCard>
             ) : null}
           </View>
+
+          {rentalConfirmed && contract?.statut === 'signe' && departureBlocked ? (
+            <ThemedText type="small" style={{ color: '#DC2626' }}>
+              {t('locations.departureCheck.startBlocked')}
+            </ThemedText>
+          ) : null}
 
           {canStart ? (
             <Button

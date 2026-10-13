@@ -17,7 +17,6 @@ export type CustomerFormValues = {
   typeClient: CustomerType;
   raisonSociale: string;
   ice: string;
-  notes: string;
 };
 
 export type CustomerFormErrorCode = 'required' | 'invalid_phone' | 'invalid_email' | 'invalid_date';
@@ -91,6 +90,5 @@ export function toCustomerInput(values: CustomerFormValues): CustomerInput {
     typeClient: values.typeClient,
     raisonSociale: values.typeClient === 'entreprise' ? emptyToNull(values.raisonSociale) : null,
     ice: values.typeClient === 'entreprise' ? emptyToNull(values.ice) : null,
-    notes: emptyToNull(values.notes),
   };
 }
