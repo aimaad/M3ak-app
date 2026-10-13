@@ -319,20 +319,14 @@ peut pas la réutiliser, d'où ces deux secrets.
 - `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
   taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.
 
-### Scan du permis et de la carte grise : OCR local + analyse Gemini optionnelle par entreprise
+### Lecture des documents (permis, carte grise) : Gemini avec la clé de chaque entreprise
 
-Par défaut la lecture se fait **sur le téléphone** (voir `docs/OCR-CONFIDENTIALITE.md`). L'analyse par
-Google Gemini est optionnelle et propre à chaque entreprise (fonction `scan-document`, migration `0032`) :
-la clé de l'entreprise est enregistrée par l'administrateur M3AK depuis la console web `admin-web/`, puis le propriétaire donne
-son accord dans l'app. Déploiement : `npx supabase functions deploy scan-document`. Pas de secret global
-(`GEMINI_API_KEY` n'est plus utilisé). Les anciennes fonctions `scan-customer-document` et
-`scan-vehicle-document` n'existent plus : supprimez-les du tableau de bord Supabase. La colonne
-`agencies.customer_ocr_enabled` est conservée mais n'est plus utilisée.
-
-### Scan de la carte grise : OCR local
-
-Voir la section précédente et `docs/OCR-CONFIDENTIALITE.md`. La photo n'est téléversée dans le
-bucket privé `vehicle-documents` que si l'employé coche « Enregistrer la photo dans le dossier ».
+Il n'y a **plus d'OCR sur le téléphone**. La lecture passe uniquement par la fonction `scan-document`, avec la clé
+Gemini de l'entreprise (enregistrée par l'administrateur M3AK dans la console web `admin-web/`) et l'accord de son
+propriétaire. Sans clé ou sans accord, la fonction est « non active » : l'app l'indique et propose la saisie manuelle.
+Déploiement : `npx supabase functions deploy scan-document` (aucun secret global ; `GEMINI_API_KEY` n'est plus utilisé).
+Voir `docs/OCR-CONFIDENTIALITE.md`. Les anciennes fonctions `scan-customer-document` et `scan-vehicle-document` n'existent
+plus : supprimez-les du tableau de bord Supabase. La colonne `agencies.customer_ocr_enabled` est conservée mais inutilisée.
 
 ## Mot de passe oublié (app mobile et console web)
 

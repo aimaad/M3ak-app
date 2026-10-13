@@ -43,7 +43,8 @@ l'accès par adresse IP si votre hébergeur le permet.
 ## Comment sont comptés l'usage et le coût
 - Chaque analyse envoyée à Gemini inscrit **une ligne de compteurs** (entreprise, type de document, succès/échec,
   nombre de tokens). **Jamais** l'image, ni les valeurs lues, ni la clé.
-- La lecture faite sur le téléphone n'est pas comptée (elle ne coûte rien).
+- Il n'y a plus d'OCR sur le téléphone : sans clé configurée (ou sans accord du propriétaire), la lecture automatique
+  est « non active » pour l'entreprise et ses employés saisissent à la main.
 - **Clé gratuite** : coût estimé 0. **Clé payante** : tokens × tarif que vous saisissez (par million de tokens,
   entrée et sortie). L'application ne connaît pas le tarif Google et n'en suppose aucun : tant que vous ne l'avez
   pas saisi, l'écran affiche « Tarif non configuré ».

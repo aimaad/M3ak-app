@@ -233,7 +233,7 @@ function renderDashboard(flash) {
   );
 
   render(
-    h('div', { class: 'toolbar' }, h('div', {}, h('h1', {}, 'Entreprises et utilisation de l’OCR'), h('p', { class: 'muted' }, 'Analyses envoyées à Gemini avec la clé de chaque entreprise. La lecture sur le téléphone n’est pas comptée (elle ne coûte rien).')), h('label', {}, 'Période', periodSelect)),
+    h('div', { class: 'toolbar' }, h('div', {}, h('h1', {}, 'Entreprises et utilisation de l’OCR'), h('p', { class: 'muted' }, 'Analyses envoyées à Gemini avec la clé de chaque entreprise. Sans clé (ou sans accord du propriétaire), la lecture automatique n’est pas active pour l’entreprise : ses employés saisissent à la main.')), h('label', {}, 'Période', periodSelect)),
     flash ? h('p', { class: 'ok-msg', role: 'status' }, flash) : null,
     h('div', { class: 'kpis' },
       kpi('Entreprises', formatInt(total.agencies)),

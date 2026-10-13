@@ -8,7 +8,7 @@ export type OcrSettings = {
   cloudEnabled: boolean;
 };
 
-export const DEVICE_ONLY_OCR_SETTINGS: OcrSettings = { cloudAvailable: false, cloudEnabled: false };
+export const NO_OCR_SETTINGS: OcrSettings = { cloudAvailable: false, cloudEnabled: false };
 
 export function parseOcrSettings(raw: unknown): OcrSettings {
   const source = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;

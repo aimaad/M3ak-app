@@ -378,7 +378,6 @@
       "viewExisting": "Voir ce véhicule",
       "manualTitle": "Ajouter manuellement",
       "manualSubtitle": "Sans document ni connexion",
-      "errorFailed": "La lecture du document a échoué. Reprenez la photo ou passez à la saisie manuelle.",
       "retake": "Reprendre la photo",
       "nothingDetected": "Aucune information n'a pu être lue avec certitude sur ce document. Vous pouvez les saisir manuellement.",
       "reviewHint": "Vérifiez les informations détectées avant de continuer.",
@@ -391,9 +390,7 @@
       "successTitle": "Véhicule ajouté !",
       "successBody": "{{plate}} a bien été enregistré dans votre flotte.",
       "viewVehicle": "Voir la voiture",
-      "addAnother": "Ajouter une autre voiture",
-      "privacy": "L'analyse du document est réalisée sur votre appareil. Si vous choisissez d'enregistrer le document, son image est transmise de manière sécurisée au backend M3AK.",
-      "errorUnavailable": "La lecture automatique n'est pas disponible sur cet appareil ou dans cette version de l'application. Entrez les informations manuellement."
+      "addAnother": "Ajouter une autre voiture"
     }
   },
   "clients": {
@@ -531,16 +528,12 @@
     },
     "ocr": {
       "scanHint": "Placez le permis à plat, bien éclairé, en entier dans le cadre. Étape 1 : scanner. Étape 2 : vérifier les informations. Étape 3 : enregistrer.",
-      "privacy": "L'analyse du document est réalisée sur votre appareil. Si vous choisissez d'enregistrer le document, son image est transmise de manière sécurisée au backend M3AK.",
       "analyzing": "Lecture du permis en cours…",
       "retake": "Reprendre la photo",
       "manual": "Saisie manuelle",
-      "errorNothingRead": "Aucune information n'a pu être lue sur cette photo. Reprenez-la ou saisissez à la main.",
-      "errorFailed": "La lecture du permis a échoué. Reprenez la photo ou passez à la saisie manuelle.",
       "bannerTitle": "Informations lues sur le permis",
       "bannerBody": "Vérifiez chaque champ. Ceux marqués « à vérifier » étaient peu lisibles ; les champs vides n'ont pas pu être lus.",
-      "verifyField": "À vérifier : lecture peu certaine",
-      "errorUnavailable": "La lecture automatique n'est pas disponible sur cet appareil ou dans cette version de l'application. Saisissez les informations à la main."
+      "verifyField": "À vérifier : lecture peu certaine"
     },
     "documentForm": {
       "type": "Type de document",
@@ -1096,18 +1089,29 @@
       "on": "La photo sera transmise de manière sécurisée à M3AK avec le dossier, et consultable par les personnes autorisées de votre agence.",
       "off": "La photo reste sur cet appareil et n'est pas enregistrée. Seules les informations que vous validez sont conservées."
     },
-    "debugTitle": "Texte lu par l'OCR (version de développement uniquement)",
     "privacyCloud": "Votre entreprise a activé l'analyse par Google Gemini : la photo est envoyée à Google, avec la clé d'API de votre entreprise, pour être lue. Si vous choisissez d'enregistrer le document, son image est aussi transmise de manière sécurisée au backend M3AK.",
-    "settingsTitle": "Lecture des documents (OCR)",
-    "settingsDevice": "Par défaut, la lecture des permis et des cartes grises se fait sur l'appareil : aucune photo n'est envoyée à un service d'analyse. Une photo n'est transmise (de façon sécurisée) à M3AK que si l'employé choisit de la conserver.",
-    "settingsCloudUnavailable": "L'analyse par Google Gemini n'est pas disponible pour votre entreprise : aucune clé d'API n'est configurée. Contactez M3AK pour la mettre en place.",
-    "settingsCloudOff": "Une clé d'API Gemini est configurée pour votre entreprise, mais l'analyse par Gemini est désactivée. La lecture reste sur l'appareil.",
-    "settingsCloudOn": "Analyse par Google Gemini activée : les photos scannées sont envoyées à Google avec la clé de votre entreprise. Si la clé est sur l'offre gratuite de Google, Google peut utiliser ces images ; pour des données confidentielles, utilisez une clé avec facturation activée.",
+    "settingsTitle": "Lecture automatique des documents (OCR)",
+    "settingsCloudUnavailable": "La lecture automatique n'est pas active pour votre entreprise : aucune clé d'API n'est configurée. Contactez M3AK pour la mettre en place. En attendant, les informations se saisissent à la main.",
+    "settingsCloudOff": "Une clé d'API Gemini est configurée pour votre entreprise, mais la lecture automatique est désactivée.",
+    "settingsCloudOn": "Lecture automatique activée : les photos scannées sont envoyées à Google Gemini avec la clé de votre entreprise. Si la clé est sur l'offre gratuite de Google, Google peut utiliser ces images ; pour des données confidentielles, utilisez une clé avec facturation activée.",
     "enable": "Activer l'analyse Gemini",
     "disable": "Désactiver l'analyse Gemini",
     "enableConfirmTitle": "Activer l'analyse par Gemini ?",
     "enableConfirmBody": "Les photos de permis et de cartes grises scannées seront envoyées à Google pour être lues, avec la clé d'API de votre entreprise. Elles contiennent des données personnelles : informez vos clients. Avec une clé gratuite, Google peut utiliser les images ; préférez une clé avec facturation activée.",
     "settingsError": "Impossible de modifier ce réglage. Réessayez.",
-    "ownerOnly": "Seul le propriétaire peut modifier ce réglage."
+    "ownerOnly": "Seul le propriétaire peut modifier ce réglage.",
+    "inactive": {
+      "noKey": "La lecture automatique des documents n'est pas active pour votre entreprise. Saisissez les informations à la main.",
+      "ownerCanEnable": "La lecture automatique des documents n'est pas encore activée pour votre entreprise. Vous pouvez l'activer dans « Mon entreprise », ou saisir à la main.",
+      "askOwner": "La lecture automatique des documents n'est pas encore activée pour votre entreprise. Demandez au propriétaire de l'activer, ou saisissez à la main.",
+      "openSettings": "Ouvrir Mon entreprise"
+    },
+    "errors": {
+      "inactive": "La lecture automatique n'est pas active pour votre entreprise. Saisissez les informations à la main.",
+      "timeout": "La lecture met trop de temps à répondre. Réessayez, ou saisissez à la main.",
+      "unavailable": "Le service de lecture est injoignable. Vérifiez votre connexion, ou saisissez à la main.",
+      "nothingRead": "Aucune information n'a pu être lue sur cette photo. Reprenez-la ou saisissez à la main.",
+      "failed": "La lecture du document a échoué. Reprenez la photo ou passez à la saisie manuelle."
+    }
   }
 }

@@ -1,6 +1,4 @@
 import { scanInCloud, type CloudErrorCode } from '@/features/ocr/cloud-ocr';
-import { recognizeLines } from '@/features/ocr/local-ocr';
-import { parseRegistrationText } from '@/features/ocr/registration-parser';
 
 import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type VehicleCategory } from './types';
 
@@ -20,13 +18,12 @@ export type VehicleOcrFields = {
   categorie: OcrField<VehicleCategory>;
 };
 
-/** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
-export type ScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
+/** Erreurs de l'analyse (voir cloud-ocr.ts) : `ocr_disabled` / `ocr_not_configured` = fonction non active pour l'entreprise. */
+export type ScanErrorCode = CloudErrorCode;
 
-/** `source` : où la lecture a eu lieu ; `cloudError` : l'analyse cloud demandée a échoué et la lecture a été refaite sur l'appareil. */
 export type ScanVehicleDocumentResult =
-  | { ok: true; fields: VehicleOcrFields; source: 'device' | 'cloud'; cloudError?: CloudErrorCode; debugLines?: string[] }
-  | { ok: false; error: ScanErrorCode; cloudError?: CloudErrorCode };
+  | { ok: true; fields: VehicleOcrFields }
+  | { ok: false; error: ScanErrorCode; detail?: string };
 
 const EMPTY = { value: null, confidence: 'low' } as const;
 
@@ -70,28 +67,12 @@ export function normalizeVehicleFields(raw: unknown): VehicleOcrFields {
 }
 
 /**
- * Lit la carte grise. Par défaut SUR L'APPAREIL (aucune image envoyée). Avec `useCloud` (clé Gemini de
- * l'entreprise + accord du propriétaire), l'image est d'abord analysée par Gemini ; si cela échoue,
- * on retombe sur la lecture locale — jamais sur un autre service. Le résultat reste à vérifier.
+ * Lit la carte grise par analyse Gemini avec la clé de l'entreprise (fonction `scan-document`). Sans clé ou sans
+ * accord du propriétaire, la fonction répond « non active » et rien n'est envoyé à Gemini. Aucun repli
+ * automatique : en cas d'échec, l'écran propose la saisie manuelle. Le résultat reste à vérifier.
  */
-export async function scanVehicleDocument(
-  localUri: string,
-  options: { useCloud?: boolean } = {}
-): Promise<ScanVehicleDocumentResult> {
-  let cloudError: CloudErrorCode | undefined;
-  if (options.useCloud) {
-    const cloud = await scanInCloud('carte_grise', localUri);
-    if (cloud.ok) return { ok: true, fields: normalizeVehicleFields(cloud.fields), source: 'cloud' };
-    cloudError = cloud.error;
-  }
-
-  const recognized = await recognizeLines(localUri);
-  if (!recognized.ok) return { ok: false, error: recognized.error, ...(cloudError ? { cloudError } : {}) };
-  return {
-    ok: true,
-    fields: parseRegistrationText(recognized.lines),
-    source: 'device',
-    ...(cloudError ? { cloudError } : {}),
-    ...(__DEV__ ? { debugLines: recognized.lines } : {}),
-  };
+export async function scanVehicleDocument(localUri: string): Promise<ScanVehicleDocumentResult> {
+  const cloud = await scanInCloud('carte_grise', localUri);
+  if (!cloud.ok) return { ok: false, error: cloud.error, ...(cloud.detail ? { detail: cloud.detail } : {}) };
+  return { ok: true, fields: normalizeVehicleFields(cloud.fields) };
 }

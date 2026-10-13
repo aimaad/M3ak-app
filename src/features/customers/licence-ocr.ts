@@ -1,6 +1,4 @@
 import { scanInCloud, type CloudErrorCode } from '@/features/ocr/cloud-ocr';
-import { recognizeLines } from '@/features/ocr/local-ocr';
-import { parseLicenceText } from '@/features/ocr/licence-parser';
 
 import { parseCategories, parseDateInput } from './documents';
 import type { PendingDocument } from './types';
@@ -21,13 +19,12 @@ export type LicenceOcrFields = {
   autorite: OcrField<string>;
 };
 
-/** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
-export type LicenceScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
+/** Erreurs de l'analyse (voir cloud-ocr.ts) : `ocr_disabled` / `ocr_not_configured` = fonction non active pour l'entreprise. */
+export type LicenceScanErrorCode = CloudErrorCode;
 
-/** `source` : où la lecture a eu lieu ; `cloudError` : l'analyse cloud demandée a échoué et la lecture a été refaite sur l'appareil. */
 export type LicenceScanResult =
-  | { ok: true; fields: LicenceOcrFields; source: 'device' | 'cloud'; cloudError?: CloudErrorCode; debugLines?: string[] }
-  | { ok: false; error: LicenceScanErrorCode; cloudError?: CloudErrorCode };
+  | { ok: true; fields: LicenceOcrFields }
+  | { ok: false; error: LicenceScanErrorCode; detail?: string };
 
 const EMPTY_FIELD = { value: null, confidence: 'low' } as const;
 const MAX_TEXT_LENGTH = 120;
@@ -177,25 +174,12 @@ export function hasAnyOcrValue(fields: LicenceOcrFields): boolean {
 }
 
 /**
- * Lit le permis. Par défaut SUR L'APPAREIL (aucune image envoyée). Avec `useCloud` (clé Gemini de
- * l'entreprise + accord du propriétaire), l'image est d'abord analysée par Gemini ; si cela échoue,
- * on retombe sur la lecture locale — jamais sur un autre service. Le résultat reste à vérifier.
+ * Lit le permis par analyse Gemini avec la clé de l'entreprise (fonction `scan-document`). Sans clé ou sans
+ * accord du propriétaire, la fonction répond « non active » et rien n'est envoyé à Gemini. Aucun repli
+ * automatique : en cas d'échec, l'écran propose la saisie manuelle. Le résultat reste à vérifier.
  */
-export async function scanLicence(localUri: string, options: { useCloud?: boolean } = {}): Promise<LicenceScanResult> {
-  let cloudError: CloudErrorCode | undefined;
-  if (options.useCloud) {
-    const cloud = await scanInCloud('permis', localUri);
-    if (cloud.ok) return { ok: true, fields: normalizeLicenceFields(cloud.fields), source: 'cloud' };
-    cloudError = cloud.error;
-  }
-
-  const recognized = await recognizeLines(localUri);
-  if (!recognized.ok) return { ok: false, error: recognized.error, ...(cloudError ? { cloudError } : {}) };
-  return {
-    ok: true,
-    fields: normalizeLicenceFields(parseLicenceText(recognized.lines)),
-    source: 'device',
-    ...(cloudError ? { cloudError } : {}),
-    ...(__DEV__ ? { debugLines: recognized.lines } : {}),
-  };
+export async function scanLicence(localUri: string): Promise<LicenceScanResult> {
+  const cloud = await scanInCloud('permis', localUri);
+  if (!cloud.ok) return { ok: false, error: cloud.error, ...(cloud.detail ? { detail: cloud.detail } : {}) };
+  return { ok: true, fields: normalizeLicenceFields(cloud.fields) };
 }

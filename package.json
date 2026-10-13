@@ -24,7 +24,6 @@
     "expo-splash-screen": "~57.0.9",
     "expo-status-bar": "~57.0.1",
     "expo-system-ui": "~57.0.4",
-    "expo-text-extractor": "^2.0.0",
     "i18next": "^26.4.2",
     "nativewind": "^4.2.7",
     "react": "19.2.3",

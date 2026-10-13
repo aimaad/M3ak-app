@@ -19,7 +19,9 @@ import {
   scanLicence,
   type LicenceScanErrorCode,
 } from '@/features/customers/licence-ocr';
+import { scanErrorMessageKey } from '@/features/ocr/availability';
 import { useOcrSettings } from '@/features/ocr/hooks';
+import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { useLanguage } from '@/i18n/use-language';
 
 type Status = 'idle' | 'processing' | 'error';
@@ -45,10 +47,8 @@ export default function ScannerPermisScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
-  const [debugLines, setDebugLines] = useState<string[] | null>(null);
-  const [debugSource, setDebugSource] = useState<string | null>(null);
-  const { settings: ocrSettings } = useOcrSettings();
-  const useCloud = ocrSettings.cloudEnabled;
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const { availability } = useOcrSettings();
 
   async function handlePick(source: 'library' | 'camera') {
     const uri = await pickImage(source);
@@ -56,15 +56,15 @@ export default function ScannerPermisScreen() {
     setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
+    setErrorDetail(null);
 
-    const result = await scanLicence(uri, { useCloud });
-    setDebugSource(result.ok ? `${result.source}${result.cloudError ? ` (cloud: ${result.cloudError})` : ''}` : (result.cloudError ?? null));
+    const result = await scanLicence(uri);
     if (!result.ok) {
       setErrorCode(result.error);
+      setErrorDetail(result.detail ?? null);
       setStatus('error');
       return;
     }
-    setDebugLines(result.debugLines ?? null);
     if (!hasAnyOcrValue(result.fields)) {
       setErrorCode('nothing_read');
       setStatus('error');
@@ -98,19 +98,23 @@ export default function ScannerPermisScreen() {
     router.replace('/clients/nouveau/formulaire');
   }
 
-  const errorMessageKey =
-    errorCode === 'ocr_unavailable'
-      ? 'customer.ocr.errorUnavailable'
-      : errorCode === 'nothing_read'
-        ? 'customer.ocr.errorNothingRead'
-        : 'customer.ocr.errorFailed';
+  const errorMessageKey = scanErrorMessageKey(errorCode);
 
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('customer.create.scanTitle')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10">
-          {status === 'idle' ? (
+          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={M3akPalette.mauve} /> : null}
+
+          {status === 'idle' && availability !== 'loading' && availability !== 'active' ? (
+            <Card className="gap-4">
+              <OcrInactiveNotice availability={availability} />
+              <Button label={t('customer.ocr.manual')} onPress={continueManually} />
+            </Card>
+          ) : null}
+
+          {status === 'idle' && availability === 'active' ? (
             <Card className="gap-4">
               <ThemedText type="small" themeColor="textSecondary">
                 {t('customer.ocr.scanHint')}
@@ -122,7 +126,7 @@ export default function ScannerPermisScreen() {
               <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
               <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
-                  {t(useCloud ? 'ocr.privacyCloud' : 'customer.ocr.privacy')}
+                  {t('ocr.privacyCloud')}
                 </ThemedText>
               </View>
             </Card>
@@ -130,15 +134,6 @@ export default function ScannerPermisScreen() {
 
           {localUri && status !== 'idle' ? (
             <Image source={{ uri: localUri }} className="h-48 w-full rounded-2xl" resizeMode="cover" />
-          ) : null}
-
-          {__DEV__ && (debugLines || debugSource) ? (
-            <Card className="gap-1">
-              <ThemedText type="smallBold">{t('ocr.debugTitle')}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" selectable>
-                {`source: ${debugSource ?? '—'}\n${(debugLines ?? []).join('\n')}`}
-              </ThemedText>
-            </Card>
           ) : null}
 
           {status === 'processing' ? (
@@ -153,6 +148,11 @@ export default function ScannerPermisScreen() {
           {status === 'error' ? (
             <Card className="gap-3">
               <ThemedText type="smallBold">{t(errorMessageKey)}</ThemedText>
+              {__DEV__ && errorDetail ? (
+                <ThemedText type="small" themeColor="textSecondary" selectable>
+                  {errorDetail}
+                </ThemedText>
+              ) : null}
               <View className="flex-row gap-2">
                 <Button
                   label={t('customer.ocr.retake')}

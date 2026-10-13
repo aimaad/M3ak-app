@@ -1,22 +1,17 @@
-// Ces tests utilisent un OCR SIMULÉ (texte fabriqué) : ils vérifient la transformation et les
-// garde-fous côté app, PAS la qualité d'une vraie lecture sur un appareil.
+// Ces tests utilisent des réponses d'analyse SIMULÉES : ils vérifient la transformation et les garde-fous
+// côté app, PAS la qualité d'une vraie lecture (voir orchestration.test.ts pour l'appel au serveur).
 import { isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from '../validation';
 import {
   EMPTY_CREATION_DRAFT,
   hasAnyOcrValue,
   licenceFieldsToDraft,
   normalizeLicenceFields,
-  scanLicence,
   type LicenceOcrFields,
 } from '../licence-ocr';
 
-const mockExtract = jest.fn();
+
 jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({ functions: { invoke: jest.fn() } }) }));
 jest.mock('expo-file-system', () => ({ File: class { base64() { return Promise.resolve('BASE64'); } } }));
-jest.mock('expo-text-extractor', () => ({
-  isSupported: true,
-  extractTextFromImage: (...args: unknown[]) => mockExtract(...args),
-}));
 
 const BASE_FORM: CustomerFormValues = {
   nomComplet: '',
@@ -146,25 +141,5 @@ describe("création manuelle quand l'OCR échoue", () => {
 
   it('une lecture sans aucune valeur exploitable est détectée (on propose la saisie manuelle)', () => {
     expect(hasAnyOcrValue(normalizeLicenceFields({ nom: { value: 'X', confidence: 'low' } }))).toBe(false);
-  });
-});
-
-describe('scanLicence (OCR local simulé)', () => {
-  beforeEach(() => mockExtract.mockReset());
-
-  it("lit le permis à partir du texte reconnu sur l'appareil", async () => {
-    mockExtract.mockResolvedValue(['ROYAUME DU MAROC', '1. ALAOUI', '2. Sara', '4a. 01.05.2019', '4b. 01.05.2029', '5. 12/345678', '9. B']);
-    const result = await scanLicence('file:///permis.jpg');
-    expect(mockExtract).toHaveBeenCalledWith('file:///permis.jpg');
-    expect(result.ok).toBe(true);
-    if (result.ok) {
-      expect(result.fields.nom.value).toBe('ALAOUI');
-      expect(result.fields.dateExpiration.value).toBe('2029-05-01');
-    }
-  });
-
-  it('renvoie une erreur claire (saisie manuelle) si la lecture locale échoue', async () => {
-    mockExtract.mockRejectedValue(new Error('native failure with /private/path/permis.jpg'));
-    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_failed' });
   });
 });

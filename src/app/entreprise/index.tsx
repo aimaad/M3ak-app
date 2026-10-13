@@ -129,9 +129,6 @@ function DocumentReadingSettings({ agencyId, isOwner }: { agencyId: string; isOw
     <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
       <ThemedText type="smallBold">{t('ocr.settingsTitle')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        {t('ocr.settingsDevice')}
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
         {!settings.cloudAvailable
           ? t('ocr.settingsCloudUnavailable')
           : settings.cloudEnabled

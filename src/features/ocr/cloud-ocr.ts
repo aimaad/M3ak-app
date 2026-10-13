@@ -4,9 +4,9 @@ import { File } from 'expo-file-system';
 import { getSupabase } from '@/lib/supabase';
 
 /**
- * Analyse OPTIONNELLE par Google Gemini, via la fonction serveur `scan-document`, avec la clé d'API
- * propre à l'entreprise (jamais dans l'app). Ce module n'est appelé que si l'entreprise a une clé ET
- * que son propriétaire a donné son accord (voir settings-api.ts) ; sinon la lecture reste sur l'appareil.
+ * Lecture des documents par Google Gemini, via la fonction serveur `scan-document`, avec la clé d'API
+ * propre à l'entreprise (jamais dans l'app). C'est le SEUL moteur de lecture : si l'entreprise n'a pas de clé
+ * ou si son propriétaire n'a pas donné son accord, le serveur répond « non active » sans rien envoyer à Gemini.
  */
 export type CloudDocumentType = 'permis' | 'carte_grise';
 

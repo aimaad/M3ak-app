@@ -1,18 +1,12 @@
-// Garde-fous statiques de confidentialité : l'OCR ne doit jamais appeler un service externe
-// ni écrire le texte lu dans les journaux. Ils échouent si quelqu'un réintroduit un tel appel.
+// Garde-fous statiques de confidentialité : la lecture des documents ne passe que par la fonction serveur
+// `scan-document` (clé de l'entreprise + accord du propriétaire), sans autre fournisseur ni journal du contenu.
 declare const __dirname: string;
 declare function require(name: string): any;
 const fs = require('node:fs');
 const path = require('node:path');
 
 const SRC = path.resolve(__dirname, '../../..');
-const OCR_FILES = [
-  'features/ocr/local-ocr.ts',
-  'features/ocr/text.ts',
-  'features/ocr/labeled.ts',
-  'features/ocr/licence-parser.ts',
-  'features/ocr/registration-parser.ts',
-];
+const OCR_FILES = ['features/ocr/availability.ts'];
 /** Fichiers qui NOMMENT l'option Gemini (commentaires, textes) : aucun n'appelle un service autre que scan-document. */
 const CLOUD_AWARE_FILES = [
   'features/ocr/cloud-ocr.ts',
@@ -33,6 +27,12 @@ function walk(dir: string): string[] {
 }
 
 describe("confidentialité de l'OCR", () => {
+  it("aucune bibliothèque d'OCR n'est embarquée dans l'app (la lecture passe uniquement par le serveur)", () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(SRC, '../package.json'), 'utf8'));
+    const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
+    expect(deps.filter((name: string) => /ocr|text-extract|mlkit|tesseract|text-recognition/i.test(name))).toEqual([]);
+  });
+
   it.each(OCR_FILES)("%s : aucun appel réseau, aucun journal", (file) => {
     const code = fs.readFileSync(path.join(SRC, file), 'utf8');
     expect(code).not.toMatch(FORBIDDEN_NETWORK);

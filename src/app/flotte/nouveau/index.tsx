@@ -15,6 +15,8 @@ import { useMyAgency } from '@/features/agency/hooks';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { findDuplicateVehicle } from '@/features/vehicles/api';
 import type { Vehicle } from '@/features/vehicles/types';
+import { useOcrSettings } from '@/features/ocr/hooks';
+import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { useLanguage } from '@/i18n/use-language';
 
 function OptionCard({
@@ -22,19 +24,21 @@ function OptionCard({
   title,
   subtitle,
   highlighted,
+  disabled,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   subtitle: string;
   highlighted?: boolean;
+  disabled?: boolean;
   onPress: () => void;
 }) {
   return (
     <PressableCard
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       className="flex-row items-center gap-3"
-      style={highlighted ? { borderColor: M3akPalette.mauve, borderWidth: 1.5 } : undefined}
+      style={[highlighted ? { borderColor: M3akPalette.mauve, borderWidth: 1.5 } : null, disabled ? { opacity: 0.5 } : null]}
     >
       <View
         className="h-12 w-12 items-center justify-center rounded-2xl"
@@ -56,6 +60,8 @@ function OptionCard({
 export default function NouveauVehiculeScreen() {
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
+  const { availability } = useOcrSettings();
+  const scanActive = availability === 'active';
 
   const [showPlateForm, setShowPlateForm] = useState(false);
   const [immatriculation, setImmatriculation] = useState('');
@@ -107,9 +113,11 @@ export default function NouveauVehiculeScreen() {
             icon="camera"
             title={t('vehicle.quickCreate.scanTitle')}
             subtitle={t('vehicle.quickCreate.scanSubtitle')}
-            highlighted
+            highlighted={scanActive}
+            disabled={!scanActive}
             onPress={goScan}
           />
+          <OcrInactiveNotice availability={availability} />
           <OptionCard
             icon="search"
             title={t('vehicle.quickCreate.plateTitle')}

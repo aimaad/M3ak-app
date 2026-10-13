@@ -14,7 +14,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
+import { scanErrorMessageKey } from '@/features/ocr/availability';
 import { useOcrSettings } from '@/features/ocr/hooks';
+import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { scanVehicleDocument, type OcrConfidence, type ScanErrorCode, type VehicleOcrFields } from '@/features/vehicles/ocr';
 import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type VehicleCategory } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -81,11 +83,9 @@ export default function ScannerCarteGriseScreen() {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
-  const [debugLines, setDebugLines] = useState<string[] | null>(null);
-  const [debugSource, setDebugSource] = useState<string | null>(null);
-  const { settings: ocrSettings } = useOcrSettings();
-  const useCloud = ocrSettings.cloudEnabled;
+  const { availability } = useOcrSettings();
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
 
@@ -99,16 +99,16 @@ export default function ScannerCarteGriseScreen() {
     setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
+    setErrorDetail(null);
 
-    const result = await scanVehicleDocument(uri, { useCloud });
-    setDebugSource(result.ok ? `${result.source}${result.cloudError ? ` (cloud: ${result.cloudError})` : ''}` : (result.cloudError ?? null));
+    const result = await scanVehicleDocument(uri);
     if (!result.ok) {
       setErrorCode(result.error);
+      setErrorDetail(result.detail ?? null);
       setStatus('error');
       return;
     }
 
-    setDebugLines(result.debugLines ?? null);
     setValues(fieldsToEditable(result.fields));
     setConfidences({
       immatriculation: result.fields.immatriculation.confidence,
@@ -150,7 +150,16 @@ export default function ScannerCarteGriseScreen() {
         <ScreenHeader title={t('vehicle.quickCreate.scanTitle')} showBack />
 
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-          {status === 'idle' ? (
+          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={M3akPalette.mauve} /> : null}
+
+          {status === 'idle' && availability !== 'loading' && availability !== 'active' ? (
+            <Card className="gap-4">
+              <OcrInactiveNotice availability={availability} />
+              <Button label={t('vehicle.quickCreate.manualTitle')} onPress={() => continueWithDraft(false)} />
+            </Card>
+          ) : null}
+
+          {status === 'idle' && availability === 'active' ? (
             <Card className="items-center gap-4 py-10">
               <ThemedText type="small" themeColor="textSecondary" className="text-center">
                 {t('vehicle.quickCreate.scanHint')}
@@ -168,7 +177,7 @@ export default function ScannerCarteGriseScreen() {
                 <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
                 <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                   <ThemedText type="small" themeColor="textSecondary">
-                    {t(useCloud ? 'ocr.privacyCloud' : 'vehicle.quickCreate.privacy')}
+                    {t('ocr.privacyCloud')}
                   </ThemedText>
                 </View>
               </View>
@@ -176,15 +185,6 @@ export default function ScannerCarteGriseScreen() {
           ) : null}
 
           {localUri ? <Image source={{ uri: localUri }} className="h-44 w-full rounded-2xl" resizeMode="cover" /> : null}
-
-          {__DEV__ && (debugLines || debugSource) ? (
-            <Card className="gap-1">
-              <ThemedText type="smallBold">{t('ocr.debugTitle')}</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary" selectable>
-                {`source: ${debugSource ?? '—'}\n${(debugLines ?? []).join('\n')}`}
-              </ThemedText>
-            </Card>
-          ) : null}
 
           {status === 'processing' ? (
             <Card className="items-center gap-3 py-8">
@@ -197,11 +197,12 @@ export default function ScannerCarteGriseScreen() {
 
           {status === 'error' ? (
             <Card className="gap-3">
-              <ThemedText type="smallBold">
-                {errorCode === 'ocr_unavailable'
-                  ? t('vehicle.quickCreate.errorUnavailable')
-                  : t('vehicle.quickCreate.errorFailed')}
-              </ThemedText>
+              <ThemedText type="smallBold">{t(scanErrorMessageKey(errorCode))}</ThemedText>
+              {__DEV__ && errorDetail ? (
+                <ThemedText type="small" themeColor="textSecondary" selectable>
+                  {errorDetail}
+                </ThemedText>
+              ) : null}
               <View className="flex-row gap-2">
                 <Button
                   label={t('vehicle.quickCreate.retake')}

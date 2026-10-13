@@ -8,12 +8,15 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { setCustomerCreationDraft } from '@/features/customers/customer-creation-draft';
+import { useOcrSettings } from '@/features/ocr/hooks';
+import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { EMPTY_CREATION_DRAFT } from '@/features/customers/licence-ocr';
 import { useLanguage } from '@/i18n/use-language';
 
 /** Point d'entrée de « Ajouter un client » : scanner le permis (mis en avant) ou saisir à la main. */
 export default function NouveauClientChoixScreen() {
   const { t } = useLanguage();
+  const { availability } = useOcrSettings();
   function goManual() {
     setCustomerCreationDraft(EMPTY_CREATION_DRAFT);
     router.push('/clients/nouveau/formulaire');
@@ -32,8 +35,10 @@ export default function NouveauClientChoixScreen() {
             <Button
               label={t('customer.create.scanButton')}
               icon="scan-outline"
+              disabled={availability !== 'active'}
               onPress={() => router.push('/clients/nouveau/scan')}
             />
+            <OcrInactiveNotice availability={availability} />
           </Card>
 
           <Card className="gap-3">
