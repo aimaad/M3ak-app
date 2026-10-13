@@ -36,6 +36,9 @@ function describeEntry(entry: AuditLogEntry, t: (key: string, params?: Record<st
       return t('journal.actions.member_role_changed', { actor, target: entry.targetLabel ?? '—' });
     case 'member_removed':
       return t('journal.actions.member_removed', { actor, target: entry.targetLabel ?? t('journal.unknownActor') });
+    case 'ocr_key_set':
+    case 'ocr_key_cleared':
+      return t(`journal.actions.${entry.action}`, { actor });
     default:
       return entry.action;
   }

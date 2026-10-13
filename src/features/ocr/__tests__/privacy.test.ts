@@ -20,6 +20,9 @@ const CLOUD_AWARE_FILES = [
   'features/customers/licence-ocr.ts',
   'features/vehicles/ocr.ts',
   'app/entreprise/index.tsx',
+  'app/admin/ocr.tsx',
+  'features/admin/ocr-keys.ts',
+  'features/admin/api.ts',
 ];
 const FORBIDDEN_NETWORK = /fetch\s*\(|XMLHttpRequest|WebSocket|functions\.invoke|@\/lib\/supabase|axios/;
 const FORBIDDEN_PROVIDERS = /gemini|generativelanguage|anthropic|openai|googleapis|vision\.google|(?<![a-z])textract|azure|cognitive|mistral/i;
@@ -52,6 +55,11 @@ describe("confidentialité de l'OCR", () => {
     const code = fs.readFileSync(path.join(SRC, 'features/ocr/cloud-ocr.ts'), 'utf8');
     expect(code).toContain("functions.invoke('scan-document'");
     expect(code).not.toMatch(/fetch\s*\(|console\./);
+  });
+
+  it("l'app ne lit ni n'écrit jamais la table des clés : tout passe par des fonctions serveur contrôlées", () => {
+    const offenders = walk(SRC).filter((file: string) => /agency_ocr_settings|gemini_api_key|platform_admins/.test(fs.readFileSync(file, 'utf8')));
+    expect(offenders).toEqual([]);
   });
 
   it("la fonction serveur n'utilise que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {

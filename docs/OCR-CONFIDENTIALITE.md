@@ -50,27 +50,31 @@ l'employé la saisit) ; une photo floue ou de travers donne moins de champs ; un
   fonction `send-invite` (e-mail d'invitation via SMTP Gmail, sans document). Aucun outil d'analytics
   ni de suivi d'erreurs n'est installé (`package.json` vérifié).
 
-### Configurer la clé d'une entreprise (opérateur M3AK)
+### Configurer la clé d'une entreprise (administrateur M3AK) — depuis l'app
 
-Dans Supabase → SQL Editor (accès administrateur ; ne jamais le faire depuis l'app) :
+Une interface dédiée existe dans l'app : **Profil → « Administration M3AK : clés OCR »** (migration `0033`).
+Elle liste toutes les entreprises ; pour chacune : **Configurer / Remplacer / Retirer la clé**.
 
-```sql
--- 1. Trouver l'entreprise
-select id, nom from public.agencies order by created_at desc;
+- **Qui y a accès :** uniquement les comptes présents dans la table `platform_admins`. Aucun utilisateur
+  d'entreprise, même propriétaire, ne peut s'y ajouter ni voir cet écran (contrôle côté serveur, pas seulement
+  dans l'app). Pour vous déclarer administrateur, une seule fois, dans Supabase → SQL Editor :
+  ```sql
+  insert into public.platform_admins (user_id)
+  select id from auth.users where email = '<VOTRE_EMAIL>';
+  ```
+- **Écriture seule :** une fois enregistrée, la clé ne peut plus être relue ni affichée ; l'écran montre seulement
+  « configurée » et ses 4 derniers caractères. Pour la changer, on la remplace.
+- **Droits limités :** l'administrateur plateforme n'obtient aucun accès aux clients, véhicules ou locations des
+  entreprises (testé).
+- **Transparence :** chaque ajout ou retrait est inscrit au **journal de l'entreprise** (« Administration M3AK a
+  configuré la clé… »), sans la clé.
+- **Ensuite :** le propriétaire de l'entreprise active l'analyse dans Mon entreprise → Lecture des documents.
+  Retirer la clé retire aussi son accord.
 
--- 2. Enregistrer (ou remplacer) la clé Gemini de cette entreprise
-insert into public.agency_ocr_settings (agency_id, gemini_api_key)
-values ('<ID_ENTREPRISE>', '<CLE_API_GEMINI>')
-on conflict (agency_id) do update set gemini_api_key = excluded.gemini_api_key;
-
--- 3. Retirer la clé (retire aussi l'accord du propriétaire)
-update public.agency_ocr_settings set gemini_api_key = null where agency_id = '<ID_ENTREPRISE>';
-```
-
-Le propriétaire active ensuite l'analyse dans **Mon entreprise → Lecture des documents (OCR)**.
 Déployer la fonction : `npx supabase functions deploy scan-document` (aucun secret global à définir).
 Hygiène : ne collez jamais une clé dans un chat ou une capture d'écran ; en cas de fuite, révoquez-la chez Google
-et remplacez-la. Durcissement possible plus tard : stocker les clés dans Supabase Vault.
+et remplacez-la depuis l'écran d'administration. Durcissement possible plus tard : stocker les clés dans Supabase Vault
+et ajouter un bouton « tester la clé ».
 
 ## 3. Protection au transfert et au stockage
 
@@ -123,6 +127,7 @@ Côté Supabase : exécuter `supabase/migrations/0031_document_buckets_limits.sq
 | Aucune image envoyée sans clé + accord du propriétaire ; seul appel possible : `scan-document` ; repli = lecture locale (tests) | PASS |
 | La fonction serveur n'utilise que la clé de l'entreprise (pas de variable d'environnement globale, pas d'autre fournisseur) (test) | PASS |
 | La clé Gemini n'est lisible/écrivable par aucun utilisateur de l'app ; accord réservé au propriétaire ; isolation entre entreprises (tests SQL) | PASS |
+| Administration plateforme : accès réservé, clé en écriture seule, traces au journal, pas d'accès aux données clients (tests SQL) | PASS |
 | Appel réel à Gemini avec une clé d'entreprise (déploiement + test sur appareil) | NOT VERIFIED |
 | Code natif de `expo-text-extractor` relu : aucun appel réseau | PASS (relecture manuelle) |
 | Texte OCR / champs absents des journaux (aucun `console.*` dans le code OCR) | PASS (test automatique) |

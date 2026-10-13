@@ -414,6 +414,37 @@ select pg_temp.ck('OCR cloud : retirer la clé retire aussi l''accord',
   (select cloud_enabled = false from agency_ocr_settings where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
 set role authenticated;
 
+-- ===== Administration plateforme (0033) =====
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-0000000000c9', 'platform-admin@x.test');
+insert into platform_admins (user_id) values ('00000000-0000-0000-0000-0000000000c9');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.ck('admin : un propriétaire n''est pas administrateur plateforme', not public.is_platform_admin(), '');
+select pg_temp.try('admin : un propriétaire ne peut pas lister les entreprises', $$select public.admin_list_ocr_agencies()$$, 'not_allowed');
+select pg_temp.try('admin : un propriétaire ne peut pas enregistrer une clé', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', 'AQ.fake-test-key-0123456789abcdef')$$, 'not_allowed');
+select pg_temp.try('admin : un propriétaire ne peut pas retirer une clé', $$select public.admin_clear_ocr_key('aaaaaaaa-0000-0000-0000-000000000001')$$, 'not_allowed');
+select pg_temp.try('admin : un propriétaire ne peut pas s''ajouter administrateur', $$insert into platform_admins (user_id) values ('00000000-0000-0000-0000-0000000000a1')$$, 'permission denied');
+select pg_temp.try('admin : la liste des administrateurs est illisible', $$select * from platform_admins$$, 'permission denied');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c9');
+select pg_temp.ck('admin : l''administrateur plateforme est reconnu', public.is_platform_admin(), '');
+select pg_temp.try('admin : clé trop courte refusée', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', 'court')$$, 'invalid_key_format');
+select pg_temp.try('admin : clé avec espaces refusée', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', 'AQ.cle avec des espaces dedans 123456')$$, 'invalid_key_format');
+select pg_temp.try('admin : entreprise inconnue refusée', $$select public.admin_set_ocr_key('99999999-0000-0000-0000-000000000009', 'AQ.fake-test-key-0123456789abcdef')$$, 'agency_not_found');
+select pg_temp.try('admin : enregistre la clé d''une entreprise', $$select public.admin_set_ocr_key('aaaaaaaa-0000-0000-0000-000000000001', '  AQ.fake-test-key-0123456789abcdef  ')$$);
+select pg_temp.ck('admin : la liste montre toutes les entreprises, l''état et les 4 derniers caractères, jamais la clé',
+  (select count(*) from jsonb_array_elements(public.admin_list_ocr_agencies()) e where e->>'agency_id' in ('aaaaaaaa-0000-0000-0000-000000000001', 'bbbbbbbb-0000-0000-0000-000000000002')) = 2
+  and (select (e->>'key_set')::boolean and e->>'key_last4' = 'cdef' from jsonb_array_elements(public.admin_list_ocr_agencies()) e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001')
+  and public.admin_list_ocr_agencies()::text not like '%AQ.fake%', '');
+select pg_temp.try('admin : l''administrateur plateforme ne lit pas les clients d''une entreprise', $$select 1/(case when (select count(*) from customers) = 0 then 1 else 0 end)$$);
+select pg_temp.try('admin : retire la clé', $$select public.admin_clear_ocr_key('aaaaaaaa-0000-0000-0000-000000000001')$$);
+reset role;
+select pg_temp.ck('admin : retirer la clé efface aussi l''accord et laisse une trace au journal de l''entreprise',
+  (select gemini_api_key is null and cloud_enabled = false from agency_ocr_settings where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001')
+  and (select count(*) = 2 from agency_audit_log where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001' and action in ('ocr_key_set', 'ocr_key_cleared'))
+  and not exists (select 1 from agency_audit_log where details::text like '%AQ.fake-test%'), '');
+set role authenticated;
+
 reset role;
 select pg_temp.ck('OCR : valeur par défaut = désactivé', (select column_default = 'false' from information_schema.columns where table_name = 'agencies' and column_name = 'customer_ocr_enabled'), '');
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;
