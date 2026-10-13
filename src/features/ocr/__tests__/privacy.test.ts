@@ -12,8 +12,14 @@ const OCR_FILES = [
   'features/ocr/labeled.ts',
   'features/ocr/licence-parser.ts',
   'features/ocr/registration-parser.ts',
+];
+/** Fichiers qui NOMMENT l'option Gemini (commentaires, textes) : aucun n'appelle un service autre que scan-document. */
+const CLOUD_AWARE_FILES = [
+  'features/ocr/cloud-ocr.ts',
+  'features/ocr/settings-api.ts',
   'features/customers/licence-ocr.ts',
   'features/vehicles/ocr.ts',
+  'app/entreprise/index.tsx',
 ];
 const FORBIDDEN_NETWORK = /fetch\s*\(|XMLHttpRequest|WebSocket|functions\.invoke|@\/lib\/supabase|axios/;
 const FORBIDDEN_PROVIDERS = /gemini|generativelanguage|anthropic|openai|googleapis|vision\.google|(?<![a-z])textract|azure|cognitive|mistral/i;
@@ -33,19 +39,29 @@ describe("confidentialité de l'OCR", () => {
     expect(code).not.toMatch(/console\./);
   });
 
-  it("aucune référence à un fournisseur d'OCR ou d'IA externe dans le code de l'app", () => {
-    const offenders = walk(SRC).filter((file) => FORBIDDEN_PROVIDERS.test(fs.readFileSync(file, 'utf8')));
+  it("aucune référence à un fournisseur d'OCR ou d'IA dans le code de l'app, sauf le module d'analyse optionnelle", () => {
+    const offenders = walk(SRC)
+      .filter((file: string) => !CLOUD_AWARE_FILES.some((allowed) => file.replace(/\\/g, '/').endsWith(allowed)))
+      .filter((file: string) => FORBIDDEN_PROVIDERS.test(fs.readFileSync(file, 'utf8')));
     expect(offenders).toEqual([]);
   });
 
-  it('aucune fonction serveur de lecture de documents ne subsiste', () => {
+  it("seul le module d'analyse optionnelle appelle le serveur, et seulement la fonction scan-document", () => {
+    const callers = walk(SRC).filter((file: string) => /functions\.invoke\(\s*'scan-/.test(fs.readFileSync(file, 'utf8')));
+    expect(callers.map((file: string) => file.replace(/\\/g, '/').split('/src/')[1])).toEqual(['features/ocr/cloud-ocr.ts']);
+    const code = fs.readFileSync(path.join(SRC, 'features/ocr/cloud-ocr.ts'), 'utf8');
+    expect(code).toContain("functions.invoke('scan-document'");
+    expect(code).not.toMatch(/fetch\s*\(|console\./);
+  });
+
+  it("la fonction serveur n'utilise que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    const names = fs.readdirSync(functionsDir);
-    expect(names.filter((name: string) => /scan|ocr|vision/i.test(name))).toEqual([]);
-  });
-
-  it("l'app n'invoque aucune fonction serveur de lecture de documents", () => {
-    const offenders = walk(SRC).filter((file) => /scan-(customer|vehicle)-document/.test(fs.readFileSync(file, 'utf8')));
-    expect(offenders).toEqual([]);
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['scan-document', 'send-invite']);
+    const code = fs.readFileSync(path.join(functionsDir, 'scan-document/index.ts'), 'utf8');
+    expect(code).toContain("from('agency_ocr_settings')");
+    expect(code).toContain('settings.cloud_enabled');
+    expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
+    expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
+    expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64)/);
   });
 });

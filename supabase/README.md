@@ -309,45 +309,20 @@ peut pas la réutiliser, d'où ces deux secrets.
   `start_rental_with_contract`. Ajoute `contracts.autres_conducteurs`.
 - `0030_block_archive_vehicle_with_active_rentals.sql` — un véhicule réservé ou en location ne
   peut pas être archivé (contrôle serveur).
+- `0032_agency_ocr_settings.sql` — réglage OCR **par entreprise** : clé d'API Gemini (renseignée par
+  l'opérateur, illisible depuis l'app) et accord du propriétaire. Voir `docs/OCR-CONFIDENTIALITE.md`.
 - `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
   taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.
 
-### Scan du permis et de la carte grise : OCR local (aucune fonction serveur)
+### Scan du permis et de la carte grise : OCR local + analyse Gemini optionnelle par entreprise
 
-Depuis la migration `0031`, la lecture des permis et des cartes grises se fait **sur le
-téléphone** (voir `docs/OCR-CONFIDENTIALITE.md`). Il n'y a plus de fonction serveur
-`scan-customer-document` / `scan-vehicle-document`, plus de clé `GEMINI_API_KEY` ni
-`ANTHROPIC_API_KEY`. La colonne `agencies.customer_ocr_enabled` est conservée (aucune
-suppression de donnée) mais n'est plus utilisée par l'app.
-
-### Exigences avant départ
-
-**Mon entreprise → Exigences avant départ** (propriétaire) : permis par conducteur, permis
-valide jusqu'au retour, CIN/passeport du client, confirmation humaine, rôle autorisé à
-confirmer, nombre maximum de conducteurs supplémentaires. Ce sont des modèles d'exigences
-**métier à faire valider**, pas des règles juridiques ; tant que « Bloquer le départ » est
-désactivé, la liste de contrôle s'affiche sans rien empêcher.
-
-### Tests SQL reproductibles (sans Supabase)
-
-`supabase/tests/run-local.sh` crée des bases PostgreSQL de test vierges, rejoue **toutes** les
-migrations, puis exécute les scénarios `supabase/tests/*.test.sql` (permissions, isolation
-entre agences, notes, documents, conducteurs, départ, invitations, accès par filiale). Il
-nécessite un PostgreSQL local (extensions `btree_gist` et `pgcrypto`) et ne doit jamais être
-lancé contre un vrai projet.
-
-Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
-avant de reporter la correction sur le projet de production (via le SQL Editor, comme à
-l'étape 2).
-
-## Création rapide de véhicule et scan de carte grise (migration 0027)
-
-- `0027_vehicle_vin_and_finition.sql` — ajoute `vin` et `finition` sur `vehicles`, avec un
-  `vin` unique par agence quand renseigné (plusieurs véhicules sans VIN restent possibles).
-  À exécuter dans le SQL Editor comme les précédentes.
-
-`scripts/vehicle-rls-audit.mjs` a été complété avec le contrôle du VIN en double (refusé
-dans la même agence, autorisé si aucun VIN n'est renseigné sur plusieurs véhicules).
+Par défaut la lecture se fait **sur le téléphone** (voir `docs/OCR-CONFIDENTIALITE.md`). L'analyse par
+Google Gemini est optionnelle et propre à chaque entreprise (fonction `scan-document`, migration `0032`) :
+la clé de l'entreprise est enregistrée par l'opérateur dans `agency_ocr_settings`, puis le propriétaire donne
+son accord dans l'app. Déploiement : `npx supabase functions deploy scan-document`. Pas de secret global
+(`GEMINI_API_KEY` n'est plus utilisé). Les anciennes fonctions `scan-customer-document` et
+`scan-vehicle-document` n'existent plus : supprimez-les du tableau de bord Supabase. La colonne
+`agencies.customer_ocr_enabled` est conservée mais n'est plus utilisée.
 
 ### Scan de la carte grise : OCR local
 

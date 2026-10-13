@@ -11,6 +11,8 @@ import {
 } from '../licence-ocr';
 
 const mockExtract = jest.fn();
+jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({ functions: { invoke: jest.fn() } }) }));
+jest.mock('expo-file-system', () => ({ File: class { base64() { return Promise.resolve('BASE64'); } } }));
 jest.mock('expo-text-extractor', () => ({
   isSupported: true,
   extractTextFromImage: (...args: unknown[]) => mockExtract(...args),

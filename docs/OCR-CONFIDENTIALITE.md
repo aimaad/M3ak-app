@@ -26,9 +26,22 @@ l'employé la saisit) ; une photo floue ou de travers donne moins de champs ; un
 
 ## 2. Qui reçoit les images
 
-- **Analyse OCR : personne.** Aucune image ni aucun texte lu n'est envoyé à un service d'analyse.
-  Les anciennes fonctions serveur `scan-customer-document` / `scan-vehicle-document` (qui
-  envoyaient les photos à Gemini / Anthropic) et leur code partagé ont été **supprimées**.
+- **Par défaut : personne.** La lecture se fait sur le téléphone ; aucune image ni aucun texte lu n'est
+  envoyé à un service d'analyse.
+- **Option par entreprise : Google Gemini, avec la clé d'API de l'entreprise** (migration `0032`, fonction
+  `scan-document`). Une image n'est envoyée à Google que si **les trois conditions** sont vraies :
+  1. l'opérateur M3AK a enregistré une clé Gemini pour cette entreprise (table `agency_ocr_settings`, jamais
+     lisible depuis l'app : aucune policy, droits retirés à `anon` / `authenticated`) ;
+  2. le **propriétaire** de l'entreprise a donné son accord dans « Mon entreprise » (refusé côté serveur tant
+     qu'il n'y a pas de clé, et pour tout autre rôle) ;
+  3. l'utilisateur est authentifié et membre de cette entreprise.
+  Pas de clé globale, pas de secours vers un autre fournisseur. Si l'analyse cloud échoue, l'app **retombe sur
+  la lecture locale**, jamais sur un autre service. L'écran de scan affiche alors un message qui dit
+  explicitement que la photo est envoyée à Google.
+- **Clé gratuite vs payante :** avec une clé de l'offre gratuite de Google, Google peut utiliser les images
+  envoyées. Pour des données confidentielles en production, l'entreprise doit utiliser une clé dont la
+  facturation est activée. L'app ne peut pas détecter l'offre de la clé : l'avertissement est affiché au
+  propriétaire à l'activation, et la responsabilité du choix de la clé revient à l'opérateur et à l'entreprise.
 - **Conservation (optionnelle)** : seulement si l'employé laisse cochée « Enregistrer la photo dans
   le dossier », l'image est envoyée au **backend M3AK (Supabase)**, dans un bucket privé
   (`client-documents` pour les permis, `vehicle-documents` pour les cartes grises). Décochée, la
@@ -36,6 +49,28 @@ l'employé la saisit) ; une photo floue ou de travers donne moins de champs ; un
 - Autres flux sortants de l'app (inchangés, sans lien avec l'OCR) : Supabase (base, auth, stockage),
   fonction `send-invite` (e-mail d'invitation via SMTP Gmail, sans document). Aucun outil d'analytics
   ni de suivi d'erreurs n'est installé (`package.json` vérifié).
+
+### Configurer la clé d'une entreprise (opérateur M3AK)
+
+Dans Supabase → SQL Editor (accès administrateur ; ne jamais le faire depuis l'app) :
+
+```sql
+-- 1. Trouver l'entreprise
+select id, nom from public.agencies order by created_at desc;
+
+-- 2. Enregistrer (ou remplacer) la clé Gemini de cette entreprise
+insert into public.agency_ocr_settings (agency_id, gemini_api_key)
+values ('<ID_ENTREPRISE>', '<CLE_API_GEMINI>')
+on conflict (agency_id) do update set gemini_api_key = excluded.gemini_api_key;
+
+-- 3. Retirer la clé (retire aussi l'accord du propriétaire)
+update public.agency_ocr_settings set gemini_api_key = null where agency_id = '<ID_ENTREPRISE>';
+```
+
+Le propriétaire active ensuite l'analyse dans **Mon entreprise → Lecture des documents (OCR)**.
+Déployer la fonction : `npx supabase functions deploy scan-document` (aucun secret global à définir).
+Hygiène : ne collez jamais une clé dans un chat ou une capture d'écran ; en cas de fuite, révoquez-la chez Google
+et remplacez-la. Durcissement possible plus tard : stocker les clés dans Supabase Vault.
 
 ## 3. Protection au transfert et au stockage
 
@@ -48,7 +83,7 @@ l'employé la saisit) ; une photo floue ou de travers donne moins de champs ; un
   et de types imposées par le serveur (un appel REST direct est aussi refusé).
 - Suppression : réservée aux responsables (suppression douce du document, fichier détaché/retiré,
   historique conservé). L'employé ne peut effacer qu'un fichier orphelin.
-- Journaux : aucun `console.*` dans le code OCR ; le texte lu n'est jamais écrit (test automatique).
+- Journaux : aucun `console.*` dans le code de lecture locale ; la fonction `scan-document` ne journalise ni l'image, ni les valeurs lues, ni la clé (test automatique + relecture).
 
 ## 4. Conservation des documents (politique)
 
@@ -84,9 +119,11 @@ Côté Supabase : exécuter `supabase/migrations/0031_document_buckets_limits.sq
 
 | Vérification | Résultat |
 |---|---|
-| Aucun appel réseau / service externe dans les modules OCR de l'app (test automatique) | PASS |
-| Aucune référence à Gemini, Anthropic, OpenAI, Google Cloud Vision, Textract, Azure dans le code de l'app (test) | PASS |
-| Fonctions serveur de lecture supprimées, plus appelées par l'app (test) | PASS |
+| Aucun appel réseau dans les modules de lecture locale (test automatique) | PASS |
+| Aucune image envoyée sans clé + accord du propriétaire ; seul appel possible : `scan-document` ; repli = lecture locale (tests) | PASS |
+| La fonction serveur n'utilise que la clé de l'entreprise (pas de variable d'environnement globale, pas d'autre fournisseur) (test) | PASS |
+| La clé Gemini n'est lisible/écrivable par aucun utilisateur de l'app ; accord réservé au propriétaire ; isolation entre entreprises (tests SQL) | PASS |
+| Appel réel à Gemini avec une clé d'entreprise (déploiement + test sur appareil) | NOT VERIFIED |
 | Code natif de `expo-text-extractor` relu : aucun appel réseau | PASS (relecture manuelle) |
 | Texte OCR / champs absents des journaux (aucun `console.*` dans le code OCR) | PASS (test automatique) |
 | Lecture des champs sur textes OCR simulés (permis, carte grise spécimen, mises en page variées) | PASS (21 tests) |

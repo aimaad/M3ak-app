@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -21,6 +21,7 @@ import {
   validateAgencyDetailsForm,
   type AgencyDetailsFormValues,
 } from '@/features/agency/validation';
+import { useOcrSettings, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import type { AgencyDetails } from '@/features/agency/types';
 import { useSignedUrl } from '@/features/storage/hooks';
@@ -100,15 +101,59 @@ export default function EntrepriseScreen() {
   );
 }
 
-/** Information (lecture seule) : l'analyse des documents se fait sur l'appareil, rien à activer. */
-function DocumentPrivacyNote() {
+/**
+ * Lecture des documents : sur l'appareil par défaut. L'analyse par Gemini n'existe que si l'opérateur M3AK
+ * a configuré une clé pour l'entreprise ; le propriétaire doit alors l'autoriser explicitement.
+ */
+function DocumentReadingSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
   const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetOcrCloudEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.cloudEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.enableConfirmTitle'), t('ocr.enableConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
   return (
     <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
-      <ThemedText type="smallBold">{t('entreprise.ocr.title')}</ThemedText>
+      <ThemedText type="smallBold">{t('ocr.settingsTitle')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        {t('entreprise.ocr.privacy')}
+        {t('ocr.settingsDevice')}
       </ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable
+          ? t('ocr.settingsCloudUnavailable')
+          : settings.cloudEnabled
+            ? t('ocr.settingsCloudOn')
+            : t('ocr.settingsCloudOff')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.cloudEnabled ? t('ocr.disable') : t('ocr.enable')}
+            variant={settings.cloudEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
     </View>
   );
 }
@@ -268,7 +313,7 @@ function EntrepriseForm({
         </View>
       )}
 
-      <DocumentPrivacyNote />
+      <DocumentReadingSettings agencyId={agencyId} isOwner={isOwner} />
 
       {isOwner ? (
         <Button

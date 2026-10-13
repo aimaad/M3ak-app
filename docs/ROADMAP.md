@@ -43,6 +43,7 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 
 ## Évolution — clients, OCR et conducteurs associés
 - [x] Création rapide d'un client par scan du permis (OCR local sur l'appareil, champs douteux signalés, saisie manuelle possible)
+- [x] OCR par entreprise : lecture locale par défaut, analyse Gemini optionnelle avec la clé de l'entreprise + accord du propriétaire (migration 0032)
 - [x] OCR confidentiel : permis et carte grise lus sur le téléphone (expo-text-extractor), plus aucun fournisseur externe ; limites serveur des buckets (migration 0031)
 - [x] Documents multiples par client (permis, CIN, passeport, justificatif de domicile, autres), correction / remplacement / suppression selon les droits
 - [x] Notes internes confidentielles avec auteur, date et historique

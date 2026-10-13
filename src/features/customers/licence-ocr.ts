@@ -1,3 +1,4 @@
+import { scanInCloud, type CloudErrorCode } from '@/features/ocr/cloud-ocr';
 import { recognizeLines } from '@/features/ocr/local-ocr';
 import { parseLicenceText } from '@/features/ocr/licence-parser';
 
@@ -23,10 +24,10 @@ export type LicenceOcrFields = {
 /** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
 export type LicenceScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
 
-/** `debugLines` : texte lu, fourni UNIQUEMENT dans une version de développement (jamais en production, jamais journalisé). */
+/** `source` : où la lecture a eu lieu ; `cloudError` : l'analyse cloud demandée a échoué et la lecture a été refaite sur l'appareil. */
 export type LicenceScanResult =
-  | { ok: true; fields: LicenceOcrFields; debugLines?: string[] }
-  | { ok: false; error: LicenceScanErrorCode };
+  | { ok: true; fields: LicenceOcrFields; source: 'device' | 'cloud'; cloudError?: CloudErrorCode; debugLines?: string[] }
+  | { ok: false; error: LicenceScanErrorCode; cloudError?: CloudErrorCode };
 
 const EMPTY_FIELD = { value: null, confidence: 'low' } as const;
 const MAX_TEXT_LENGTH = 120;
@@ -176,15 +177,25 @@ export function hasAnyOcrValue(fields: LicenceOcrFields): boolean {
 }
 
 /**
- * Lit le permis par OCR LOCAL (sur l'appareil) : la photo n'est envoyée à aucun service d'analyse.
- * Le résultat reste à vérifier par l'employé avant tout enregistrement.
+ * Lit le permis. Par défaut SUR L'APPAREIL (aucune image envoyée). Avec `useCloud` (clé Gemini de
+ * l'entreprise + accord du propriétaire), l'image est d'abord analysée par Gemini ; si cela échoue,
+ * on retombe sur la lecture locale — jamais sur un autre service. Le résultat reste à vérifier.
  */
-export async function scanLicence(localUri: string): Promise<LicenceScanResult> {
+export async function scanLicence(localUri: string, options: { useCloud?: boolean } = {}): Promise<LicenceScanResult> {
+  let cloudError: CloudErrorCode | undefined;
+  if (options.useCloud) {
+    const cloud = await scanInCloud('permis', localUri);
+    if (cloud.ok) return { ok: true, fields: normalizeLicenceFields(cloud.fields), source: 'cloud' };
+    cloudError = cloud.error;
+  }
+
   const recognized = await recognizeLines(localUri);
-  if (!recognized.ok) return { ok: false, error: recognized.error };
+  if (!recognized.ok) return { ok: false, error: recognized.error, ...(cloudError ? { cloudError } : {}) };
   return {
     ok: true,
     fields: normalizeLicenceFields(parseLicenceText(recognized.lines)),
+    source: 'device',
+    ...(cloudError ? { cloudError } : {}),
     ...(__DEV__ ? { debugLines: recognized.lines } : {}),
   };
 }

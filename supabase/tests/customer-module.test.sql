@@ -386,6 +386,34 @@ do $$ declare n int; begin update agencies set customer_ocr_enabled = true where
   perform pg_temp.ck('OCR : le propriétaire peut l''activer', n = 1, n::text); end $$;
 select pg_temp.ck('OCR : désactivé par défaut pour une nouvelle agence', (select customer_ocr_enabled = false from agencies where id = 'bbbbbbbb-0000-0000-0000-000000000002') or true, '');
 
+-- ===== Réglage OCR par entreprise (0032) : la clé Gemini n'est jamais lisible depuis l'app =====
+reset role;
+insert into agency_ocr_settings (agency_id, gemini_api_key) values ('aaaaaaaa-0000-0000-0000-000000000001', 'AQ.fake-test-key-0123456789abcdef');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.try('clé OCR : le propriétaire ne peut pas lire la table', $$select * from agency_ocr_settings$$, 'permission denied');
+select pg_temp.try('clé OCR : le propriétaire ne peut pas écrire la table', $$update agency_ocr_settings set gemini_api_key = 'x'$$, 'permission denied');
+select pg_temp.try('clé OCR : le propriétaire ne peut pas insérer sa propre clé', $$insert into agency_ocr_settings (agency_id, gemini_api_key) values ('bbbbbbbb-0000-0000-0000-000000000002', 'AQ.fake-test-key-0123456789abcdef')$$, 'permission denied');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.ck('OCR cloud : un employé voit « clé disponible » mais pas activée, sans jamais voir la clé',
+  (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') = '{"cloud_available": true, "cloud_enabled": false}'::jsonb)
+  and public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text not like '%AQ.fake%', public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text);
+select pg_temp.try('OCR cloud : un employé ne peut pas donner l''accord', $$select public.set_ocr_cloud_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.try('OCR cloud : un responsable ne peut pas donner l''accord', $$select public.set_ocr_cloud_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000b2');
+select pg_temp.try('OCR cloud : une autre entreprise ne voit pas les réglages', $$select public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')$$, 'not_allowed');
+select pg_temp.try('OCR cloud : une autre entreprise ne peut pas donner l''accord pour A', $$select public.set_ocr_cloud_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.try('OCR cloud : accord impossible sans clé configurée', $$select public.set_ocr_cloud_enabled('bbbbbbbb-0000-0000-0000-000000000002', true)$$, 'ocr_key_missing');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.ck('OCR cloud : le propriétaire donne l''accord', (public.set_ocr_cloud_enabled('aaaaaaaa-0000-0000-0000-000000000001', true) ->> 'cloud_enabled') = 'true', '');
+reset role;
+update agency_ocr_settings set gemini_api_key = null where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select pg_temp.ck('OCR cloud : retirer la clé retire aussi l''accord',
+  (select cloud_enabled = false from agency_ocr_settings where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+set role authenticated;
+
 reset role;
 select pg_temp.ck('OCR : valeur par défaut = désactivé', (select column_default = 'false' from information_schema.columns where table_name = 'agencies' and column_name = 'customer_ocr_enabled'), '');
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

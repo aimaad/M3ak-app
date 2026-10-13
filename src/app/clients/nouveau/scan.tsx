@@ -19,6 +19,7 @@ import {
   scanLicence,
   type LicenceScanErrorCode,
 } from '@/features/customers/licence-ocr';
+import { useOcrSettings } from '@/features/ocr/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
 type Status = 'idle' | 'processing' | 'error';
@@ -45,6 +46,9 @@ export default function ScannerPermisScreen() {
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
   const [debugLines, setDebugLines] = useState<string[] | null>(null);
+  const [debugSource, setDebugSource] = useState<string | null>(null);
+  const { settings: ocrSettings } = useOcrSettings();
+  const useCloud = ocrSettings.cloudEnabled;
 
   async function handlePick(source: 'library' | 'camera') {
     const uri = await pickImage(source);
@@ -53,7 +57,8 @@ export default function ScannerPermisScreen() {
     setStatus('processing');
     setErrorCode(null);
 
-    const result = await scanLicence(uri);
+    const result = await scanLicence(uri, { useCloud });
+    setDebugSource(result.ok ? `${result.source}${result.cloudError ? ` (cloud: ${result.cloudError})` : ''}` : (result.cloudError ?? null));
     if (!result.ok) {
       setErrorCode(result.error);
       setStatus('error');
@@ -117,7 +122,7 @@ export default function ScannerPermisScreen() {
               <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
               <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
-                  {t('customer.ocr.privacy')}
+                  {t(useCloud ? 'ocr.privacyCloud' : 'customer.ocr.privacy')}
                 </ThemedText>
               </View>
             </Card>
@@ -127,11 +132,11 @@ export default function ScannerPermisScreen() {
             <Image source={{ uri: localUri }} className="h-48 w-full rounded-2xl" resizeMode="cover" />
           ) : null}
 
-          {__DEV__ && debugLines ? (
+          {__DEV__ && (debugLines || debugSource) ? (
             <Card className="gap-1">
               <ThemedText type="smallBold">{t('ocr.debugTitle')}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary" selectable>
-                {debugLines.join('\n')}
+                {`source: ${debugSource ?? '—'}\n${(debugLines ?? []).join('\n')}`}
               </ThemedText>
             </Card>
           ) : null}

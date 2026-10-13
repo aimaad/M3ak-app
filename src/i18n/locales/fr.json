@@ -171,10 +171,6 @@
       "required": "Ce champ est obligatoire.",
       "invalid_email": "Entrez une adresse e-mail valide."
     },
-    "ocr": {
-      "title": "Confidentialité des documents (OCR)",
-      "privacy": "La lecture des permis et des cartes grises se fait sur l'appareil de l'employé : aucune photo n'est envoyée à un service d'analyse externe. Rien à activer. Une photo n'est transmise (de façon sécurisée) à M3AK que si l'employé choisit de la conserver dans le dossier."
-    },
     "departurePolicy": {
       "open": "Exigences avant départ",
       "title": "Exigences avant départ",
@@ -1083,6 +1079,18 @@
       "on": "La photo sera transmise de manière sécurisée à M3AK avec le dossier, et consultable par les personnes autorisées de votre agence.",
       "off": "La photo reste sur cet appareil et n'est pas enregistrée. Seules les informations que vous validez sont conservées."
     },
-    "debugTitle": "Texte lu par l'OCR (version de développement uniquement)"
+    "debugTitle": "Texte lu par l'OCR (version de développement uniquement)",
+    "privacyCloud": "Votre entreprise a activé l'analyse par Google Gemini : la photo est envoyée à Google, avec la clé d'API de votre entreprise, pour être lue. Si vous choisissez d'enregistrer le document, son image est aussi transmise de manière sécurisée au backend M3AK.",
+    "settingsTitle": "Lecture des documents (OCR)",
+    "settingsDevice": "Par défaut, la lecture des permis et des cartes grises se fait sur l'appareil : aucune photo n'est envoyée à un service d'analyse. Une photo n'est transmise (de façon sécurisée) à M3AK que si l'employé choisit de la conserver.",
+    "settingsCloudUnavailable": "L'analyse par Google Gemini n'est pas disponible pour votre entreprise : aucune clé d'API n'est configurée. Contactez M3AK pour la mettre en place.",
+    "settingsCloudOff": "Une clé d'API Gemini est configurée pour votre entreprise, mais l'analyse par Gemini est désactivée. La lecture reste sur l'appareil.",
+    "settingsCloudOn": "Analyse par Google Gemini activée : les photos scannées sont envoyées à Google avec la clé de votre entreprise. Si la clé est sur l'offre gratuite de Google, Google peut utiliser ces images ; pour des données confidentielles, utilisez une clé avec facturation activée.",
+    "enable": "Activer l'analyse Gemini",
+    "disable": "Désactiver l'analyse Gemini",
+    "enableConfirmTitle": "Activer l'analyse par Gemini ?",
+    "enableConfirmBody": "Les photos de permis et de cartes grises scannées seront envoyées à Google pour être lues, avec la clé d'API de votre entreprise. Elles contiennent des données personnelles : informez vos clients. Avec une clé gratuite, Google peut utiliser les images ; préférez une clé avec facturation activée.",
+    "settingsError": "Impossible de modifier ce réglage. Réessayez.",
+    "ownerOnly": "Seul le propriétaire peut modifier ce réglage."
   }
 }

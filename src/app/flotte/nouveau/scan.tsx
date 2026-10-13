@@ -14,6 +14,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
+import { useOcrSettings } from '@/features/ocr/hooks';
 import { scanVehicleDocument, type OcrConfidence, type ScanErrorCode, type VehicleOcrFields } from '@/features/vehicles/ocr';
 import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type VehicleCategory } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -82,6 +83,9 @@ export default function ScannerCarteGriseScreen() {
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
   const [debugLines, setDebugLines] = useState<string[] | null>(null);
+  const [debugSource, setDebugSource] = useState<string | null>(null);
+  const { settings: ocrSettings } = useOcrSettings();
+  const useCloud = ocrSettings.cloudEnabled;
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
 
@@ -96,7 +100,8 @@ export default function ScannerCarteGriseScreen() {
     setStatus('processing');
     setErrorCode(null);
 
-    const result = await scanVehicleDocument(uri);
+    const result = await scanVehicleDocument(uri, { useCloud });
+    setDebugSource(result.ok ? `${result.source}${result.cloudError ? ` (cloud: ${result.cloudError})` : ''}` : (result.cloudError ?? null));
     if (!result.ok) {
       setErrorCode(result.error);
       setStatus('error');
@@ -163,7 +168,7 @@ export default function ScannerCarteGriseScreen() {
                 <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
                 <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                   <ThemedText type="small" themeColor="textSecondary">
-                    {t('vehicle.quickCreate.privacy')}
+                    {t(useCloud ? 'ocr.privacyCloud' : 'vehicle.quickCreate.privacy')}
                   </ThemedText>
                 </View>
               </View>
@@ -172,11 +177,11 @@ export default function ScannerCarteGriseScreen() {
 
           {localUri ? <Image source={{ uri: localUri }} className="h-44 w-full rounded-2xl" resizeMode="cover" /> : null}
 
-          {__DEV__ && debugLines ? (
+          {__DEV__ && (debugLines || debugSource) ? (
             <Card className="gap-1">
               <ThemedText type="smallBold">{t('ocr.debugTitle')}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary" selectable>
-                {debugLines.join('\n')}
+                {`source: ${debugSource ?? '—'}\n${(debugLines ?? []).join('\n')}`}
               </ThemedText>
             </Card>
           ) : null}
