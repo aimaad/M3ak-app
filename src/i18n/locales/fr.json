@@ -538,7 +538,8 @@
       "errorFailed": "La lecture du permis a échoué. Reprenez la photo ou passez à la saisie manuelle.",
       "bannerTitle": "Informations lues sur le permis",
       "bannerBody": "Vérifiez chaque champ. Ceux marqués « à vérifier » étaient peu lisibles ; les champs vides n'ont pas pu être lus.",
-      "verifyField": "À vérifier : lecture peu certaine"
+      "verifyField": "À vérifier : lecture peu certaine",
+      "errorNotDeployed": "Le service de lecture n'est pas installé sur le serveur (fonction scan-customer-document introuvable). Saisissez à la main ou demandez son déploiement."
     },
     "documentForm": {
       "type": "Type de document",

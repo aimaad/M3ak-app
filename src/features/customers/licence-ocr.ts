@@ -29,6 +29,7 @@ export type LicenceScanErrorCode =
   | 'not_authenticated'
   | 'invalid_image'
   | 'image_too_large'
+  | 'function_not_deployed'
   | 'unavailable';
 
 export type LicenceScanResult =
@@ -201,6 +202,8 @@ export async function scanLicence(localUri: string): Promise<LicenceScanResult> 
 
   if (error) {
     if (error instanceof FunctionsHttpError) {
+      // 404 : la fonction serveur n'est pas déployée sur ce projet Supabase.
+      if (error.context.status === 404) return { ok: false, error: 'function_not_deployed' };
       const parsed = (await error.context.json().catch(() => null)) as {
         error?: LicenceScanErrorCode;
         detail?: string;

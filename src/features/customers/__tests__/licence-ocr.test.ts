@@ -183,6 +183,12 @@ describe('scanLicence (fonction serveur simulée)', () => {
     expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'image_too_large', detail: undefined });
   });
 
+  it("signale clairement une fonction serveur non déployée (404) au lieu d'un échec de lecture", async () => {
+    const response = new Response(JSON.stringify({ code: 'NOT_FOUND', message: 'Requested function was not found' }), { status: 404 });
+    mockInvoke.mockResolvedValue({ data: null, error: new FunctionsHttpError(response) });
+    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'function_not_deployed' });
+  });
+
   it('signale « indisponible » avec la cause quand la fonction est injoignable', async () => {
     const error = Object.assign(new Error('Failed to send a request to the Edge Function'), { context: new Error('Network request failed') });
     mockInvoke.mockResolvedValue({ data: null, error });
