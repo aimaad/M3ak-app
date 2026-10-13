@@ -307,21 +307,18 @@ peut pas la réutiliser, d'où ces deux secrets.
   (`agency_departure_policies`, inactive par défaut), liste de contrôle
   `rental_departure_check`, confirmation humaine horodatée, et contrôle serveur dans
   `start_rental_with_contract`. Ajoute `contracts.autres_conducteurs`.
+- `0030_block_archive_vehicle_with_active_rentals.sql` — un véhicule réservé ou en location ne
+  peut pas être archivé (contrôle serveur).
+- `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
+  taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.
 
-### Scan automatique du permis (fonction `scan-customer-document`)
+### Scan du permis et de la carte grise : OCR local (aucune fonction serveur)
 
-1. Le propriétaire active l'option dans l'app : **Mon entreprise → Scan automatique des
-   permis**. Tant qu'elle est désactivée, la fonction refuse (`ocr_disabled`) : la photo
-   d'un permis contient des données personnelles envoyées à un fournisseur d'IA externe.
-2. Le fournisseur est celui du scan de carte grise : secret `GEMINI_API_KEY` (gratuit) ou
-   `ANTHROPIC_API_KEY` (payant). Sans clé, la fonction répond `ocr_not_configured`.
-3. Déployez avec la CLI (la fonction partage du code avec `supabase/functions/_shared`, ce
-   que le collage dans l'éditeur du tableau de bord ne gère pas) :
-   `npx supabase functions deploy scan-customer-document`
-
-Seule l'image est envoyée au fournisseur (aucun nom d'agence, d'utilisateur ou de client) ;
-la fonction ne stocke ni ne journalise l'image ni les valeurs lues, et revalide chaque champ
-(format des dates, longueurs). Un champ illisible reste vide : jamais de valeur inventée.
+Depuis la migration `0031`, la lecture des permis et des cartes grises se fait **sur le
+téléphone** (voir `docs/OCR-CONFIDENTIALITE.md`). Il n'y a plus de fonction serveur
+`scan-customer-document` / `scan-vehicle-document`, plus de clé `GEMINI_API_KEY` ni
+`ANTHROPIC_API_KEY`. La colonne `agencies.customer_ocr_enabled` est conservée (aucune
+suppression de donnée) mais n'est plus utilisée par l'app.
 
 ### Exigences avant départ
 
@@ -352,32 +349,7 @@ l'étape 2).
 `scripts/vehicle-rls-audit.mjs` a été complété avec le contrôle du VIN en double (refusé
 dans la même agence, autorisé si aucun VIN n'est renseigné sur plusieurs véhicules).
 
-### Scan automatique de la carte grise par IA (optionnel)
+### Scan de la carte grise : OCR local
 
-L'écran « Ajouter un véhicule » propose de scanner la carte grise pour préremplir le
-formulaire. Cette lecture passe par la fonction serveur `scan-vehicle-document`
-(`supabase/functions/scan-vehicle-document`), qui appelle l'API Anthropic (Claude) côté
-serveur — la clé n'est **jamais** dans l'app mobile.
-
-Sans cette fonction déployée ou sans clé configurée, tout fonctionne quand même : l'écran
-l'indique clairement et renvoie vers la saisie par plaque/VIN ou la saisie manuelle.
-
-1. **Gratuit (recommandé)** : créez une clé sur [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-   (offre gratuite Google Gemini, avec des limites de débit et de volume par jour).
-   Dans Supabase → Edge Functions → Secrets, ajoutez `GEMINI_API_KEY` avec cette clé.
-   Optionnel : `GEMINI_MODEL` pour changer de modèle (par défaut `gemini-2.5-flash`).
-   *Confidentialité* : sur l'offre gratuite, Google peut utiliser les images envoyées pour
-   améliorer ses produits, et des personnes peuvent les relire. Une carte grise contient
-   le nom et l'adresse du titulaire : à réserver aux véhicules de l'agence. Activer la
-   facturation côté Google (usage quasi nul) retire cette réserve.
-2. *Payant (alternative)* : une clé Anthropic dans le secret `ANTHROPIC_API_KEY`
-   ([console.anthropic.com](https://console.anthropic.com), quelques centimes par scan). Elle
-   n'est utilisée que si `GEMINI_API_KEY` est absent.
-3. Déployez la fonction : `npx supabase functions deploy scan-vehicle-document`, ou
-   créez-la depuis le tableau de bord en collant le contenu de
-   `supabase/functions/scan-vehicle-document/index.ts`.
-
-La photo de la carte grise n'est jamais stockée par cette fonction : elle est envoyée à
-au fournisseur d'IA pour extraction puis oubliée. Si l'employé choisit de la garder comme
-document du véhicule, elle est envoyée séparément vers le bucket `vehicle-documents`,
-comme n'importe quel autre document.
+Voir la section précédente et `docs/OCR-CONFIDENTIALITE.md`. La photo n'est téléversée dans le
+bucket privé `vehicle-documents` que si l'employé coche « Enregistrer la photo dans le dossier ».

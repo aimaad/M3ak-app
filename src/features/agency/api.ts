@@ -32,7 +32,6 @@ type AgencyRow = {
   pays: string;
   devise: string;
   logo_url: string | null;
-  customer_ocr_enabled: boolean;
   created_at: string;
 };
 
@@ -48,7 +47,6 @@ function agencyFromRow(row: AgencyRow): AgencyDetails {
     pays: row.pays,
     devise: row.devise,
     logoUrl: row.logo_url,
-    customerOcrEnabled: row.customer_ocr_enabled ?? false,
     createdAt: row.created_at,
   };
 }
@@ -309,19 +307,6 @@ export async function updateAgencyDetails(
       pays: input.pays,
       devise: input.devise,
     })
-    .eq('id', agencyId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return agencyFromRow(data as AgencyRow);
-}
-
-/** Réservé au propriétaire (RLS agencies_update) : active l'envoi des photos de permis à un fournisseur d'IA. */
-export async function setCustomerOcrEnabled(agencyId: string, enabled: boolean): Promise<AgencyDetails> {
-  const { data, error } = await getSupabase()
-    .from('agencies')
-    .update({ customer_ocr_enabled: enabled })
     .eq('id', agencyId)
     .select()
     .single();

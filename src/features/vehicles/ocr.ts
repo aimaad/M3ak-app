@@ -1,7 +1,5 @@
-import { FunctionsHttpError } from '@supabase/supabase-js';
-import { File } from 'expo-file-system';
-
-import { getSupabase } from '@/lib/supabase';
+import { recognizeLines } from '@/features/ocr/local-ocr';
+import { parseRegistrationText } from '@/features/ocr/registration-parser';
 
 import type { FuelType, VehicleCategory } from './types';
 
@@ -21,49 +19,17 @@ export type VehicleOcrFields = {
   categorie: OcrField<VehicleCategory>;
 };
 
-export type ScanErrorCode =
-  | 'ocr_not_configured'
-  | 'ocr_failed'
-  | 'not_authenticated'
-  | 'invalid_image'
-  | 'image_too_large'
-  | 'unavailable';
+/** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
+export type ScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
 
-export type ScanVehicleDocumentResult =
-  | { ok: true; fields: VehicleOcrFields }
-  | { ok: false; error: ScanErrorCode; detail?: string };
+export type ScanVehicleDocumentResult = { ok: true; fields: VehicleOcrFields } | { ok: false; error: ScanErrorCode };
 
-function guessMimeType(uri: string): string {
-  const extension = uri.split('.').pop()?.split('?')[0]?.toLowerCase();
-  return extension === 'png' ? 'image/png' : 'image/jpeg';
-}
-
+/**
+ * Lit la carte grise par OCR LOCAL (sur l'appareil) : la photo n'est envoyée à aucun service d'analyse.
+ * Le résultat reste à vérifier par l'employé avant tout enregistrement.
+ */
 export async function scanVehicleDocument(localUri: string): Promise<ScanVehicleDocumentResult> {
-  const imageBase64 = await new File(localUri).base64();
-  const mimeType = guessMimeType(localUri);
-
-  const { data, error } = await getSupabase().functions.invoke('scan-vehicle-document', {
-    body: { imageBase64, mimeType },
-  });
-
-  if (error) {
-    if (error instanceof FunctionsHttpError) {
-      const parsed = (await error.context.json().catch(() => null)) as {
-        error?: ScanErrorCode;
-        detail?: string;
-      } | null;
-      return { ok: false, error: parsed?.error ?? 'ocr_failed', detail: parsed?.detail };
-    }
-    // FunctionsFetchError : la requête n'est pas partie / n'a pas abouti. La vraie cause
-    // (réseau coupé, délai dépassé, corps trop gros…) est dans error.context.
-    const cause = (error as { context?: unknown }).context;
-    const causeMessage = cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : '';
-    return {
-      ok: false,
-      error: 'unavailable',
-      detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''} (image ${Math.round(imageBase64.length / 1024)} Ko)`,
-    };
-  }
-
-  return data as ScanVehicleDocumentResult;
+  const recognized = await recognizeLines(localUri);
+  if (!recognized.ok) return { ok: false, error: recognized.error };
+  return { ok: true, fields: parseRegistrationText(recognized.lines) };
 }

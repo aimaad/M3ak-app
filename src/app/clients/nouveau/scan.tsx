@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { KeepPhotoChoice } from '@/components/keep-photo-choice';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -15,7 +16,6 @@ import {
   EMPTY_CREATION_DRAFT,
   hasAnyOcrValue,
   licenceFieldsToDraft,
-  normalizeLicenceFields,
   scanLicence,
   type LicenceScanErrorCode,
 } from '@/features/customers/licence-ocr';
@@ -32,8 +32,8 @@ async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
 
   const result =
     source === 'library'
-      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.5 })
-      : await ImagePicker.launchCameraAsync({ quality: 0.5 });
+      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 })
+      : await ImagePicker.launchCameraAsync({ quality: 0.8 });
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
@@ -43,7 +43,7 @@ export default function ScannerPermisScreen() {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
-  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [keepPhoto, setKeepPhoto] = useState(true);
 
   async function handlePick(source: 'library' | 'camera') {
     const uri = await pickImage(source);
@@ -51,12 +51,10 @@ export default function ScannerPermisScreen() {
     setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
-    setErrorDetail(null);
 
     const result = await scanLicence(uri);
     if (!result.ok) {
       setErrorCode(result.error);
-      setErrorDetail(result.detail ?? null);
       setStatus('error');
       return;
     }
@@ -66,7 +64,7 @@ export default function ScannerPermisScreen() {
       return;
     }
 
-    setCustomerCreationDraft(licenceFieldsToDraft(normalizeLicenceFields(result.fields), uri));
+    setCustomerCreationDraft(licenceFieldsToDraft(result.fields, keepPhoto ? uri : null));
     router.replace('/clients/nouveau/formulaire');
   }
 
@@ -74,7 +72,7 @@ export default function ScannerPermisScreen() {
   function continueManually() {
     setCustomerCreationDraft({
       ...EMPTY_CREATION_DRAFT,
-      pendingDocuments: localUri
+      pendingDocuments: localUri && keepPhoto
         ? [
             {
               type: 'permis',
@@ -94,17 +92,11 @@ export default function ScannerPermisScreen() {
   }
 
   const errorMessageKey =
-    errorCode === 'ocr_disabled'
-      ? 'customer.ocr.errorDisabled'
-      : errorCode === 'ocr_not_configured'
-        ? 'customer.ocr.errorNotConfigured'
-        : errorCode === 'function_not_deployed'
-          ? 'customer.ocr.errorNotDeployed'
-        : errorCode === 'ocr_timeout'
-          ? 'customer.ocr.errorTimeout'
-        : errorCode === 'nothing_read'
-          ? 'customer.ocr.errorNothingRead'
-          : 'customer.ocr.errorFailed';
+    errorCode === 'ocr_unavailable'
+      ? 'customer.ocr.errorUnavailable'
+      : errorCode === 'nothing_read'
+        ? 'customer.ocr.errorNothingRead'
+        : 'customer.ocr.errorFailed';
 
   return (
     <ThemedView className="flex-1">
@@ -120,6 +112,7 @@ export default function ScannerPermisScreen() {
                 <Button label={t('common.camera')} icon="camera-outline" style={{ flex: 1 }} onPress={() => handlePick('camera')} />
                 <Button label={t('common.gallery')} variant="secondary" icon="images-outline" style={{ flex: 1 }} onPress={() => handlePick('library')} />
               </View>
+              <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
               <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('customer.ocr.privacy')}
@@ -144,11 +137,6 @@ export default function ScannerPermisScreen() {
           {status === 'error' ? (
             <Card className="gap-3">
               <ThemedText type="smallBold">{t(errorMessageKey)}</ThemedText>
-              {errorDetail ? (
-                <ThemedText type="small" themeColor="textSecondary" selectable>
-                  {errorDetail}
-                </ThemedText>
-              ) : null}
               <View className="flex-row gap-2">
                 <Button
                   label={t('customer.ocr.retake')}

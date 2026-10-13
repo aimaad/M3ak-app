@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -12,7 +12,6 @@ import { ThemedView } from '@/components/themed-view';
 import {
   useAgencyDetails,
   useMyAgency,
-  useSetCustomerOcrEnabled,
   useUpdateAgencyDetails,
   useUploadAgencyLogo,
 } from '@/features/agency/hooks';
@@ -101,45 +100,15 @@ export default function EntrepriseScreen() {
   );
 }
 
-/**
- * Analyse automatique des permis par un fournisseur d'IA externe : désactivée par défaut, car la photo
- * d'un permis contient des données personnelles envoyées à un tiers. Seul le propriétaire l'active.
- */
-function CustomerOcrToggle({ agencyId, enabled }: { agencyId: string; enabled: boolean }) {
+/** Information (lecture seule) : l'analyse des documents se fait sur l'appareil, rien à activer. */
+function DocumentPrivacyNote() {
   const { t } = useLanguage();
-  const setEnabled = useSetCustomerOcrEnabled(agencyId);
-
-  function handleToggle() {
-    if (enabled) {
-      setEnabled.mutate(false, { onError: () => Alert.alert(t('common.appName'), t('entreprise.ocr.error')) });
-      return;
-    }
-    Alert.alert(t('entreprise.ocr.confirmTitle'), t('entreprise.ocr.confirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('entreprise.ocr.enable'),
-        onPress: () => setEnabled.mutate(true, { onError: () => Alert.alert(t('common.appName'), t('entreprise.ocr.error')) }),
-      },
-    ]);
-  }
-
   return (
     <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
       <ThemedText type="smallBold">{t('entreprise.ocr.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
-        {enabled ? t('entreprise.ocr.statusOn') : t('entreprise.ocr.statusOff')}
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
         {t('entreprise.ocr.privacy')}
       </ThemedText>
-      <Button
-        label={enabled ? t('entreprise.ocr.disable') : t('entreprise.ocr.enable')}
-        variant={enabled ? 'danger' : 'primary'}
-        size="sm"
-        disabled={setEnabled.isPending}
-        loading={setEnabled.isPending}
-        onPress={handleToggle}
-      />
     </View>
   );
 }
@@ -299,7 +268,7 @@ function EntrepriseForm({
         </View>
       )}
 
-      {isOwner ? <CustomerOcrToggle agencyId={agencyId} enabled={details.customerOcrEnabled} /> : null}
+      <DocumentPrivacyNote />
 
       {isOwner ? (
         <Button

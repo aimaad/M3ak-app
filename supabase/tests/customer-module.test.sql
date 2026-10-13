@@ -133,6 +133,22 @@ do $$ declare n int; begin
   perform pg_temp.ck('fichiers : une autre agence ne peut rien effacer', n = 0, n::text);
 end $$;
 
+-- Lecture des fichiers : une autre agence ne voit AUCUN objet du bucket (le téléchargement exige un lien signé que RLS refuse)
+reset role;
+insert into storage.objects (bucket_id, name) values
+  ('client-documents', 'aaaaaaaa-0000-0000-0000-000000000001/c1000000-0000-0000-0000-000000000001/permis-lecture.jpg');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000b2');
+select pg_temp.ck('fichiers : une autre agence ne VOIT aucun fichier du bucket client-documents',
+  (select count(*) = 0 from storage.objects where bucket_id = 'client-documents'), (select count(*)::text from storage.objects where bucket_id = 'client-documents'));
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.ck('fichiers : un membre de l''agence voit ses fichiers',
+  (select count(*) >= 1 from storage.objects where bucket_id = 'client-documents' and name like '%/permis-lecture.jpg'), '');
+reset role;
+select pg_temp.ck('buckets : client-documents et vehicle-documents sont privés, limités en taille et en types',
+  (select count(*) = 2 from storage.buckets where id in ('client-documents', 'vehicle-documents') and public = false and file_size_limit = 15 * 1024 * 1024
+     and allowed_mime_types @> array['image/jpeg', 'image/png', 'application/pdf'] and cardinality(allowed_mime_types) = 3), '');
+set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000b2');
 select pg_temp.ck('isolation : une autre agence ne voit aucun document', (select count(*) = 0 from customer_documents), (select count(*)::text from customer_documents));
 select pg_temp.try('isolation : une autre agence ne peut pas insérer sur un client d''A',

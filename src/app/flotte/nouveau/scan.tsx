@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { KeepPhotoChoice } from '@/components/keep-photo-choice';
 import { ChipGroup } from '@/components/chip-group';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
@@ -69,8 +70,8 @@ async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
 
   const result =
     source === 'library'
-      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.5 })
-      : await ImagePicker.launchCameraAsync({ quality: 0.5 });
+      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 })
+      : await ImagePicker.launchCameraAsync({ quality: 0.8 });
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
@@ -79,7 +80,7 @@ export default function ScannerCarteGriseScreen() {
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
-  const [errorDetail, setErrorDetail] = useState<string | null>(null);
+  const [keepPhoto, setKeepPhoto] = useState(true);
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
 
@@ -93,12 +94,10 @@ export default function ScannerCarteGriseScreen() {
     setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
-    setErrorDetail(null);
 
     const result = await scanVehicleDocument(uri);
     if (!result.ok) {
       setErrorCode(result.error);
-      setErrorDetail(result.detail ?? null);
       setStatus('error');
       return;
     }
@@ -131,7 +130,7 @@ export default function ScannerCarteGriseScreen() {
       nombrePlaces: useValues && values.nombrePlaces.trim() ? Number(values.nombrePlaces) : undefined,
       carburant: useValues ? (values.carburant ?? undefined) : undefined,
       categorie: useValues ? (values.categorie ?? undefined) : undefined,
-      carteGrisePendingDocument: localUri ? { type: 'carte_grise', localUri, expiresAt: null } : undefined,
+      carteGrisePendingDocument: localUri && keepPhoto ? { type: 'carte_grise', localUri, expiresAt: null } : undefined,
     });
     router.replace('/flotte/nouveau/finaliser');
   }
@@ -158,6 +157,14 @@ export default function ScannerCarteGriseScreen() {
                   style={{ flex: 1 }}
                 />
               </View>
+              <View className="w-full gap-3">
+                <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
+                <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('vehicle.quickCreate.privacy')}
+                  </ThemedText>
+                </View>
+              </View>
             </Card>
           ) : null}
 
@@ -175,15 +182,10 @@ export default function ScannerCarteGriseScreen() {
           {status === 'error' ? (
             <Card className="gap-3">
               <ThemedText type="smallBold">
-                {errorCode === 'ocr_not_configured'
-                  ? t('vehicle.quickCreate.errorNotConfigured')
+                {errorCode === 'ocr_unavailable'
+                  ? t('vehicle.quickCreate.errorUnavailable')
                   : t('vehicle.quickCreate.errorFailed')}
               </ThemedText>
-              {errorDetail ? (
-                <ThemedText type="small" themeColor="textSecondary" selectable>
-                  {errorDetail}
-                </ThemedText>
-              ) : null}
               <View className="flex-row gap-2">
                 <Button
                   label={t('vehicle.quickCreate.retake')}

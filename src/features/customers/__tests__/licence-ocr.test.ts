@@ -1,7 +1,5 @@
-// Ces tests utilisent un OCR SIMULÉ (réponses de fonction serveur fabriquées) : ils vérifient la
-// transformation et les garde-fous côté app, PAS la qualité d'une vraie lecture par un fournisseur.
-import { FunctionsHttpError } from '@supabase/supabase-js';
-
+// Ces tests utilisent un OCR SIMULÉ (texte fabriqué) : ils vérifient la transformation et les
+// garde-fous côté app, PAS la qualité d'une vraie lecture sur un appareil.
 import { isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from '../validation';
 import {
   EMPTY_CREATION_DRAFT,
@@ -12,16 +10,10 @@ import {
   type LicenceOcrFields,
 } from '../licence-ocr';
 
-const mockInvoke = jest.fn();
-jest.mock('@/lib/supabase', () => ({
-  getSupabase: () => ({ functions: { invoke: (...args: unknown[]) => mockInvoke(...args) } }),
-}));
-jest.mock('expo-file-system', () => ({
-  File: class {
-    base64() {
-      return Promise.resolve('BASE64DATA');
-    }
-  },
+const mockExtract = jest.fn();
+jest.mock('expo-text-extractor', () => ({
+  isSupported: true,
+  extractTextFromImage: (...args: unknown[]) => mockExtract(...args),
 }));
 
 const BASE_FORM: CustomerFormValues = {
@@ -155,62 +147,22 @@ describe("création manuelle quand l'OCR échoue", () => {
   });
 });
 
-describe('scanLicence (fonction serveur simulée)', () => {
-  beforeEach(() => mockInvoke.mockReset());
+describe('scanLicence (OCR local simulé)', () => {
+  beforeEach(() => mockExtract.mockReset());
 
-  it('envoie uniquement le type de document et l’image', async () => {
-    mockInvoke.mockResolvedValue({ data: { ok: true, fields: SIMULATED_OCR_RESPONSE }, error: null });
+  it("lit le permis à partir du texte reconnu sur l'appareil", async () => {
+    mockExtract.mockResolvedValue(['ROYAUME DU MAROC', '1. ALAOUI', '2. Sara', '4a. 01.05.2019', '4b. 01.05.2029', '5. 12/345678', '9. B']);
     const result = await scanLicence('file:///permis.jpg');
-    expect(mockInvoke).toHaveBeenCalledWith('scan-customer-document', {
-      body: { documentType: 'permis', imageBase64: 'BASE64DATA', mimeType: 'image/jpeg' },
-    });
+    expect(mockExtract).toHaveBeenCalledWith('file:///permis.jpg');
     expect(result.ok).toBe(true);
-  });
-
-  it("renvoie l'erreur « OCR désactivé » sans rien inventer", async () => {
-    mockInvoke.mockResolvedValue({ data: { ok: false, error: 'ocr_disabled' }, error: null });
-    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_disabled' });
-  });
-
-  it("renvoie « OCR non configuré » quand aucun fournisseur n'est configuré côté serveur", async () => {
-    mockInvoke.mockResolvedValue({ data: { ok: false, error: 'ocr_not_configured' }, error: null });
-    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_not_configured' });
-  });
-
-  it('lit le code d’erreur d’une réponse HTTP en échec', async () => {
-    const response = new Response(JSON.stringify({ ok: false, error: 'image_too_large' }), { status: 400 });
-    mockInvoke.mockResolvedValue({ data: null, error: new FunctionsHttpError(response) });
-    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'image_too_large', detail: undefined });
-  });
-
-  it("signale clairement une fonction serveur non déployée (404) au lieu d'un échec de lecture", async () => {
-    const response = new Response(JSON.stringify({ code: 'NOT_FOUND', message: 'Requested function was not found' }), { status: 404 });
-    mockInvoke.mockResolvedValue({ data: null, error: new FunctionsHttpError(response) });
-    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'function_not_deployed' });
-  });
-
-  it("abandonne avec une erreur claire quand le serveur ne répond pas à temps", async () => {
-    jest.useFakeTimers();
-    mockInvoke.mockReturnValue(new Promise(() => undefined)); // ne se résout jamais
-    const pending = scanLicence('file:///permis.jpg');
-    await jest.advanceTimersByTimeAsync(71_000);
-    expect(await pending).toEqual({ ok: false, error: 'ocr_timeout', detail: 'stage:app' });
-    jest.useRealTimers();
-  });
-
-  it('transmet le détail d\'une erreur serveur (étape bloquée)', async () => {
-    mockInvoke.mockResolvedValue({ data: { ok: false, error: 'ocr_timeout', detail: 'stage:provider' }, error: null });
-    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_timeout', detail: 'stage:provider' });
-  });
-
-  it('signale « indisponible » avec la cause quand la fonction est injoignable', async () => {
-    const error = Object.assign(new Error('Failed to send a request to the Edge Function'), { context: new Error('Network request failed') });
-    mockInvoke.mockResolvedValue({ data: null, error });
-    const result = await scanLicence('file:///permis.jpg');
-    expect(result.ok).toBe(false);
-    if (!result.ok) {
-      expect(result.error).toBe('unavailable');
-      expect(result.detail).toContain('Network request failed');
+    if (result.ok) {
+      expect(result.fields.nom.value).toBe('ALAOUI');
+      expect(result.fields.dateExpiration.value).toBe('2029-05-01');
     }
+  });
+
+  it('renvoie une erreur claire (saisie manuelle) si la lecture locale échoue', async () => {
+    mockExtract.mockRejectedValue(new Error('native failure with /private/path/permis.jpg'));
+    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_failed' });
   });
 });

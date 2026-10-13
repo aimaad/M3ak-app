@@ -1,7 +1,5 @@
-import { FunctionsHttpError } from '@supabase/supabase-js';
-import { File } from 'expo-file-system';
-
-import { getSupabase } from '@/lib/supabase';
+import { recognizeLines } from '@/features/ocr/local-ocr';
+import { parseLicenceText } from '@/features/ocr/licence-parser';
 
 import { parseCategories, parseDateInput } from './documents';
 import type { PendingDocument } from './types';
@@ -22,23 +20,10 @@ export type LicenceOcrFields = {
   autorite: OcrField<string>;
 };
 
-export type LicenceScanErrorCode =
-  | 'ocr_not_configured'
-  | 'ocr_disabled'
-  | 'ocr_failed'
-  | 'not_authenticated'
-  | 'invalid_image'
-  | 'image_too_large'
-  | 'function_not_deployed'
-  | 'ocr_timeout'
-  | 'unavailable';
+/** `ocr_unavailable` : module d'OCR local absent (ex. Expo Go) ; `ocr_failed` : la lecture locale a échoué. */
+export type LicenceScanErrorCode = 'ocr_unavailable' | 'ocr_failed';
 
-export type LicenceScanResult =
-  | { ok: true; fields: LicenceOcrFields }
-  | { ok: false; error: LicenceScanErrorCode; detail?: string };
-
-/** Au-delà, on abandonne et on propose la saisie manuelle (le serveur répond lui-même avant 60 s). */
-const SCAN_TIMEOUT_MS = 70_000;
+export type LicenceScanResult = { ok: true; fields: LicenceOcrFields } | { ok: false; error: LicenceScanErrorCode };
 
 const EMPTY_FIELD = { value: null, confidence: 'low' } as const;
 const MAX_TEXT_LENGTH = 120;
@@ -187,48 +172,12 @@ export function hasAnyOcrValue(fields: LicenceOcrFields): boolean {
   return Object.values(fields).some((field) => field.value !== null && field.confidence !== 'low');
 }
 
-function guessMimeType(uri: string): string {
-  const extension = uri.split('.').pop()?.split('?')[0]?.toLowerCase();
-  return extension === 'png' ? 'image/png' : 'image/jpeg';
-}
-
 /**
- * Envoie la photo du permis à la fonction serveur `scan-customer-document`, qui porte la clé du
- * fournisseur (jamais dans l'app). Rien d'autre que l'image n'est transmis.
+ * Lit le permis par OCR LOCAL (sur l'appareil) : la photo n'est envoyée à aucun service d'analyse.
+ * Le résultat reste à vérifier par l'employé avant tout enregistrement.
  */
 export async function scanLicence(localUri: string): Promise<LicenceScanResult> {
-  const imageBase64 = await new File(localUri).base64();
-  const mimeType = guessMimeType(localUri);
-
-  // Sans délai côté app, un blocage serveur ferait attendre jusqu'au 504 de la plateforme (150 s).
-  const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), SCAN_TIMEOUT_MS));
-  const outcome = await Promise.race([
-    getSupabase().functions.invoke('scan-customer-document', {
-      body: { documentType: 'permis', imageBase64, mimeType },
-    }),
-    timeout,
-  ]);
-  if (outcome === 'timeout') return { ok: false, error: 'ocr_timeout', detail: 'stage:app' };
-  const { data, error } = outcome;
-
-  if (error) {
-    if (error instanceof FunctionsHttpError) {
-      // 404 : la fonction serveur n'est pas déployée sur ce projet Supabase.
-      if (error.context.status === 404) return { ok: false, error: 'function_not_deployed' };
-      const parsed = (await error.context.json().catch(() => null)) as {
-        error?: LicenceScanErrorCode;
-        detail?: string;
-      } | null;
-      return { ok: false, error: parsed?.error ?? 'ocr_failed', detail: parsed?.detail };
-    }
-    const cause = (error as { context?: unknown }).context;
-    const causeMessage = cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : '';
-    return { ok: false, error: 'unavailable', detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''}` };
-  }
-
-  const payload = data as { ok?: boolean; error?: LicenceScanErrorCode; fields?: unknown; detail?: string };
-  if (payload.ok && payload.fields) {
-    return { ok: true, fields: normalizeLicenceFields(payload.fields) };
-  }
-  return { ok: false, error: payload.error ?? 'ocr_failed', ...(payload.detail ? { detail: payload.detail } : {}) };
+  const recognized = await recognizeLines(localUri);
+  if (!recognized.ok) return { ok: false, error: recognized.error };
+  return { ok: true, fields: normalizeLicenceFields(parseLicenceText(recognized.lines)) };
 }

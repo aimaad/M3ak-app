@@ -172,15 +172,8 @@
       "invalid_email": "Entrez une adresse e-mail valide."
     },
     "ocr": {
-      "title": "Scan automatique des permis (IA)",
-      "statusOn": "Activé : les employés peuvent scanner un permis pour préremplir une fiche client.",
-      "statusOff": "Désactivé.",
-      "privacy": "Activer envoie la photo du permis à un fournisseur d'IA externe pour la lire. Elle contient des données personnelles : activez seulement si vos clients en sont informés.",
-      "enable": "Activer",
-      "disable": "Désactiver",
-      "confirmTitle": "Activer le scan des permis ?",
-      "confirmBody": "Les photos de permis seront envoyées à un fournisseur d'IA externe pour lecture (elles ne sont pas conservées par le service de lecture). Vous êtes responsable d'en informer vos clients.",
-      "error": "Impossible de modifier ce réglage."
+      "title": "Confidentialité des documents (OCR)",
+      "privacy": "La lecture des permis et des cartes grises se fait sur l'appareil de l'employé : aucune photo n'est envoyée à un service d'analyse externe. Rien à activer. Une photo n'est transmise (de façon sécurisée) à M3AK que si l'employé choisit de la conserver dans le dossier."
     },
     "departurePolicy": {
       "open": "Exigences avant départ",
@@ -374,7 +367,6 @@
       "viewExisting": "Voir ce véhicule",
       "manualTitle": "Ajouter manuellement",
       "manualSubtitle": "Sans document ni connexion",
-      "errorNotConfigured": "Le scan automatique n'est pas encore activé pour votre agence. Entrez les informations manuellement.",
       "errorFailed": "La lecture du document a échoué. Reprenez la photo ou passez à la saisie manuelle.",
       "retake": "Reprendre la photo",
       "nothingDetected": "Aucune information n'a pu être lue avec certitude sur ce document. Vous pouvez les saisir manuellement.",
@@ -388,7 +380,9 @@
       "successTitle": "Véhicule ajouté !",
       "successBody": "{{plate}} a bien été enregistré dans votre flotte.",
       "viewVehicle": "Voir la voiture",
-      "addAnother": "Ajouter une autre voiture"
+      "addAnother": "Ajouter une autre voiture",
+      "privacy": "L'analyse du document est réalisée sur votre appareil. Si vous choisissez d'enregistrer le document, son image est transmise de manière sécurisée au backend M3AK.",
+      "errorUnavailable": "La lecture automatique n'est pas disponible sur cet appareil ou dans cette version de l'application. Entrez les informations manuellement."
     }
   },
   "clients": {
@@ -522,26 +516,20 @@
       "scanButton": "Scanner le permis",
       "manualTitle": "Saisie manuelle",
       "manualBody": "Si vous n'avez pas le document sous la main, ou si la lecture échoue, remplissez la fiche vous-même.",
-      "manualButton": "Saisir à la main",
-      "ocrDisabled": "Le scan automatique est désactivé pour votre agence. Demandez au propriétaire de l'activer, ou saisissez à la main.",
-      "ocrDisabledOwner": "Le scan automatique est désactivé. Vous pouvez l'activer dans « Mon entreprise ».",
-      "ocrEnable": "Activer dans Mon entreprise"
+      "manualButton": "Saisir à la main"
     },
     "ocr": {
-      "scanHint": "Placez le permis à plat, bien éclairé, en entier dans le cadre.",
-      "privacy": "La photo est envoyée à un fournisseur d'IA pour être lue, puis oubliée par le service de lecture (elle n'y est pas conservée). Elle ne remplace pas la vérification du document original.",
+      "scanHint": "Placez le permis à plat, bien éclairé, en entier dans le cadre. Étape 1 : scanner. Étape 2 : vérifier les informations. Étape 3 : enregistrer.",
+      "privacy": "L'analyse du document est réalisée sur votre appareil. Si vous choisissez d'enregistrer le document, son image est transmise de manière sécurisée au backend M3AK.",
       "analyzing": "Lecture du permis en cours…",
       "retake": "Reprendre la photo",
       "manual": "Saisie manuelle",
-      "errorDisabled": "Le scan automatique n'est pas activé pour votre agence. Saisissez les informations à la main.",
-      "errorNotConfigured": "Le scan automatique n'est pas configuré. Saisissez les informations à la main.",
       "errorNothingRead": "Aucune information n'a pu être lue sur cette photo. Reprenez-la ou saisissez à la main.",
       "errorFailed": "La lecture du permis a échoué. Reprenez la photo ou passez à la saisie manuelle.",
       "bannerTitle": "Informations lues sur le permis",
       "bannerBody": "Vérifiez chaque champ. Ceux marqués « à vérifier » étaient peu lisibles ; les champs vides n'ont pas pu être lus.",
       "verifyField": "À vérifier : lecture peu certaine",
-      "errorNotDeployed": "Le service de lecture n'est pas installé sur le serveur (fonction scan-customer-document introuvable). Saisissez à la main ou demandez son déploiement.",
-      "errorTimeout": "La lecture met trop de temps à répondre. Réessayez, ou saisissez à la main."
+      "errorUnavailable": "La lecture automatique n'est pas disponible sur cet appareil ou dans cette version de l'application. Saisissez les informations à la main."
     },
     "documentForm": {
       "type": "Type de document",
@@ -1087,6 +1075,13 @@
       "member_joined": "{{actor}} a rejoint l'agence",
       "member_role_changed": "{{actor}} a changé le rôle de « {{target}} »",
       "member_removed": "{{actor}} a retiré « {{target}} » de l'agence"
+    }
+  },
+  "ocr": {
+    "keepPhoto": {
+      "label": "Enregistrer la photo dans le dossier",
+      "on": "La photo sera transmise de manière sécurisée à M3AK avec le dossier, et consultable par les personnes autorisées de votre agence.",
+      "off": "La photo reste sur cet appareil et n'est pas enregistrée. Seules les informations que vous validez sont conservées."
     }
   }
 }

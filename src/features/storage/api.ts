@@ -6,7 +6,20 @@ export const MAX_UPLOAD_SIZE_BYTES = 15 * 1024 * 1024;
 
 const ALLOWED_CONTENT_TYPES = ['image/jpeg', 'image/png', 'application/pdf'];
 
+/** Liens temporaires de consultation : courts (10 min) car ils donnent accès à des documents d'identité. */
+export const SIGNED_URL_TTL_SECONDS = 600;
+
 export class UploadValidationError extends Error {}
+
+const startsWith = (bytes: Uint8Array, signature: number[]) => signature.every((value, index) => bytes[index] === value);
+
+/** Le contenu réel doit correspondre au type annoncé (JPEG, PNG ou PDF) : une extension ne suffit pas. */
+export function contentMatchesType(bytes: Uint8Array, contentType: string): boolean {
+  if (contentType === 'image/jpeg') return startsWith(bytes, [0xff, 0xd8, 0xff]);
+  if (contentType === 'image/png') return startsWith(bytes, [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  if (contentType === 'application/pdf') return startsWith(bytes, [0x25, 0x50, 0x44, 0x46]);
+  return false;
+}
 
 export async function uploadFile(
   bucket: string,
@@ -28,6 +41,10 @@ export async function uploadFile(
     throw new UploadValidationError('file_empty');
   }
 
+  if (!contentMatchesType(new Uint8Array(arrayBuffer, 0, Math.min(8, arrayBuffer.byteLength)), contentType)) {
+    throw new UploadValidationError('content_type_mismatch');
+  }
+
   const { error } = await getSupabase()
     .storage.from(bucket)
     .upload(path, arrayBuffer, { contentType, upsert: true });
@@ -35,7 +52,7 @@ export async function uploadFile(
   if (error) throw error;
 }
 
-export async function getSignedUrl(bucket: string, path: string, expiresInSeconds = 3600): Promise<string> {
+export async function getSignedUrl(bucket: string, path: string, expiresInSeconds = SIGNED_URL_TTL_SECONDS): Promise<string> {
   const { data, error } = await getSupabase().storage.from(bucket).createSignedUrl(path, expiresInSeconds);
   if (error) throw error;
   return data.signedUrl;
