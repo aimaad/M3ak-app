@@ -27,8 +27,9 @@ function asCode(raw: unknown): CloudErrorCode {
 }
 
 export async function scanInCloud(documentType: CloudDocumentType, localUri: string): Promise<CloudScanResult> {
+  let imageBase64 = '';
   try {
-    const imageBase64 = await new File(localUri).base64();
+    imageBase64 = await new File(localUri).base64();
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), CLOUD_TIMEOUT_MS));
     const outcome = await Promise.race([
       getSupabase().functions.invoke('scan-document', {
@@ -45,7 +46,15 @@ export async function scanInCloud(documentType: CloudDocumentType, localUri: str
         const parsed = (await error.context.json().catch(() => null)) as { error?: unknown; detail?: unknown } | null;
         return { ok: false, error: asCode(parsed?.error), detail: typeof parsed?.detail === 'string' ? parsed.detail : undefined };
       }
-      return { ok: false, error: 'unavailable', detail: error.message };
+      // FunctionsFetchError : la requête n'est pas partie ou n'a pas abouti. La vraie cause (réseau coupé,
+      // domaine introuvable, connexion coupée, corps trop gros…) est dans error.context ; on ajoute la taille envoyée.
+      const cause = (error as { context?: unknown }).context;
+      const causeMessage = cause instanceof Error ? cause.message : typeof cause === 'string' ? cause : '';
+      return {
+        ok: false,
+        error: 'unavailable',
+        detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''} (image ${Math.round(imageBase64.length / 1024)} Ko)`,
+      };
     }
 
     const payload = data as { ok?: boolean; error?: unknown; fields?: unknown; detail?: unknown } | null;

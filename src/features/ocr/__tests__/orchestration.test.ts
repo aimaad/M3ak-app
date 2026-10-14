@@ -79,6 +79,15 @@ describe('permis : lecture', () => {
     expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_failed', detail: 'provider_429' });
   });
 
+  it("un échec d'envoi donne « indisponible » avec la vraie cause et la taille de l'image (aucune donnée du document)", async () => {
+    const error = Object.assign(new Error('Failed to send a request to the Edge Function'), { context: new TypeError('Network request failed') });
+    mockInvoke.mockResolvedValue({ data: null, error });
+    const result = await scanLicence('file:///permis.jpg');
+    expect(result).toMatchObject({ ok: false, error: 'unavailable' });
+    expect(result.ok === false && result.detail).toContain('Network request failed');
+    expect(result.ok === false && result.detail).toMatch(/image \d+ Ko/);
+  });
+
   it('un réseau coupé donne « indisponible »', async () => {
     mockInvoke.mockRejectedValue(new Error('Network request failed'));
     const result = await scanLicence('file:///permis.jpg');
