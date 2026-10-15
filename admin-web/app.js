@@ -340,7 +340,7 @@ keyForm.addEventListener('submit', async (event) => {
     const problem = validateKey(typed);
     if (problem) {
       keySave.disabled = false;
-      keyError.textContent = 'Clé invalide : 20 à 200 caractères, sans espace.';
+      keyError.textContent = 'Clé invalide : vérifiez qu’elle est copiée en entier, sans espace.';
       keyError.hidden = false;
       return;
     }

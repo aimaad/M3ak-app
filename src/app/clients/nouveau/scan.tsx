@@ -47,7 +47,6 @@ export default function ScannerPermisScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
-  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const { availability } = useOcrSettings();
 
   async function handlePick(source: 'library' | 'camera') {
@@ -56,12 +55,10 @@ export default function ScannerPermisScreen() {
     setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
-    setErrorDetail(null);
 
     const result = await scanLicence(uri);
     if (!result.ok) {
       setErrorCode(result.error);
-      setErrorDetail(result.detail ?? null);
       setStatus('error');
       return;
     }
@@ -148,11 +145,6 @@ export default function ScannerPermisScreen() {
           {status === 'error' ? (
             <Card className="gap-3">
               <ThemedText type="smallBold">{t(errorMessageKey)}</ThemedText>
-              {__DEV__ && errorDetail ? (
-                <ThemedText type="small" themeColor="textSecondary" selectable>
-                  {errorDetail}
-                </ThemedText>
-              ) : null}
               <View className="flex-row gap-2">
                 <Button
                   label={t('customer.ocr.retake')}

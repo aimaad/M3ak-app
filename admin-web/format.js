@@ -73,14 +73,15 @@ export function costLabel(agency, usdToMad) {
 
 export function adminErrorMessage(error) {
   const message = String(error?.message ?? '');
-  if (message.includes('invalid_key_format')) return 'Clé invalide : 20 à 200 caractères, sans espace.';
+  if (message.includes('invalid_key_format')) return 'Clé invalide : vérifiez qu’elle est copiée en entier, sans espace.';
   if (message.includes('agency_not_found')) return 'Entreprise introuvable.';
   if (message.includes('invalid_tier')) return "Offre inconnue (choisissez gratuite ou payante).";
   if (message.includes('key_not_set')) return "Aucune clé en place : saisissez une clé.";
   if (message.includes('invalid_pricing')) return 'Tarif invalide (nombres positifs).';
   if (message.includes('not_allowed')) return 'Accès réservé aux administrateurs M3AK.';
   if (message.includes('Invalid login')) return 'E-mail ou mot de passe incorrect.';
-  return "L'opération a échoué. Vérifiez la connexion et que les migrations 0032 à 0034 sont appliquées.";
+  if (/network|fetch|internet/i.test(message)) return 'Connexion impossible. Vérifiez votre connexion internet, puis réessayez.';
+  return "L'opération n'a pas fonctionné. Réessayez ; si le problème continue, vérifiez que la base de données est à jour.";
 }
 
 /** Mot de passe de la console : 8 caractères minimum (plus strict que l'app, car ce compte administre la plateforme). */

@@ -16,6 +16,7 @@ import { useCreateAgency, useMyAgency, useRedeemInvite } from '@/features/agency
 import { formatInviteCode, isValidInviteCode, normalizeInviteCode } from '@/features/agency/invite-code';
 import { inviteErrorKey } from '@/features/agency/invite-errors';
 import { useLanguage } from '@/i18n/use-language';
+import { friendlyErrorKey } from '@/lib/user-errors';
 
 type Mode = 'create' | 'join';
 
@@ -57,8 +58,7 @@ export default function OnboardingScreen() {
       router.replace('/accueil');
     } catch (err) {
       console.error('Échec de création d\'agence :', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`${t('onboarding.createError')} (${message})`);
+      setError(t(friendlyErrorKey(err, 'onboarding.createError')));
     }
   }
 

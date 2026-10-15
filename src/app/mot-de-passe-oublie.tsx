@@ -17,6 +17,7 @@ import {
   validatePasswordChangeForm,
 } from '@/features/auth/validation';
 import { useLanguage } from '@/i18n/use-language';
+import { friendlyErrorKey } from '@/lib/user-errors';
 
 /** Mot de passe oublié : 1) saisir l'e-mail, 2) saisir le code reçu et choisir un nouveau mot de passe. */
 export default function ForgotPasswordScreen() {
@@ -45,9 +46,9 @@ export default function ForgotPasswordScreen() {
       await requestPasswordReset(email);
       setStep('code');
       setInfo(t('auth.forgot.codeSent'));
-    } catch {
+    } catch (err) {
       // Message volontairement générique : on ne révèle pas si l'adresse correspond à un compte.
-      setError(t('auth.forgot.sendError'));
+      setError(t(friendlyErrorKey(err, 'auth.forgot.sendError')));
     } finally {
       setBusy(false);
     }

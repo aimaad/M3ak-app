@@ -11,6 +11,7 @@ import { TextField } from '@/components/text-field';
 import { M3akPalette } from '@/constants/theme';
 import { signInWithEmail } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
+import { friendlyErrorKey } from '@/lib/user-errors';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -34,8 +35,7 @@ export default function LoginScreen() {
       await signInWithEmail(email.trim(), password);
     } catch (err) {
       console.error('Échec de connexion Supabase :', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`${t('auth.invalidCredentials')} (${message})`);
+      setError(t(friendlyErrorKey(err)));
     } finally {
       setIsSubmitting(false);
     }

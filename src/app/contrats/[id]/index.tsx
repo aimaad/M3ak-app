@@ -15,6 +15,7 @@ import { ContractStatusBadge } from '@/features/contracts/contract-status-badge'
 import { useCancelContract, useContract, useMarkReadyToSign, useSignContract, useUploadContractPdf } from '@/features/contracts/hooks';
 import { useRental } from '@/features/rentals/hooks';
 import { useLanguage } from '@/i18n/use-language';
+import { friendlyErrorKey } from '@/lib/user-errors';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -55,7 +56,7 @@ export default function ContratDetailScreen() {
         await Sharing.shareAsync(localUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
       }
     } catch (error) {
-      setPdfError(error instanceof Error ? error.message : t('contract.pdfError'));
+      setPdfError(t(friendlyErrorKey(error, 'contract.pdfError')));
     } finally {
       setIsGeneratingPdf(false);
     }
