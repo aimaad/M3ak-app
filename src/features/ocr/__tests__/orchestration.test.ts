@@ -50,6 +50,7 @@ describe('disponibilité de la lecture automatique', () => {
     expect(scanErrorMessageKey('ocr_disabled')).toBe('ocr.errors.inactive');
     expect(scanErrorMessageKey('ocr_not_configured')).toBe('ocr.errors.inactive');
     expect(scanErrorMessageKey('ocr_timeout')).toBe('ocr.errors.timeout');
+    expect(scanErrorMessageKey('ocr_busy')).toBe('ocr.errors.busy');
     expect(scanErrorMessageKey('unavailable')).toBe('ocr.errors.unavailable');
     expect(scanErrorMessageKey('nothing_read')).toBe('ocr.errors.nothingRead');
     expect(scanErrorMessageKey('ocr_failed')).toBe('ocr.errors.failed');
@@ -86,6 +87,11 @@ describe('permis : lecture', () => {
     expect(result).toMatchObject({ ok: false, error: 'unavailable' });
     expect(result.ok === false && result.detail).toContain('Network request failed');
     expect(result.ok === false && result.detail).toMatch(/image \d+ Ko/);
+  });
+
+  it('un service saturé (503) donne un message « réessayez » distinct, sans résultat inventé', async () => {
+    mockInvoke.mockResolvedValue({ data: { ok: false, error: 'ocr_busy', detail: 'provider_503: high demand' }, error: null });
+    expect(await scanLicence('file:///permis.jpg')).toEqual({ ok: false, error: 'ocr_busy', detail: 'provider_503: high demand' });
   });
 
   it('un réseau coupé donne « indisponible »', async () => {

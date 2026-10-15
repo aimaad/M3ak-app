@@ -21,8 +21,12 @@ const CORS_HEADERS = {
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-const PROVIDER_TIMEOUT_MS = 45_000;
-const GEMINI_MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.0-flash'];
+// Plusieurs modèles : si l'un est saturé (503), sans quota (429) ou introuvable (404), on essaie le suivant.
+const GEMINI_MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash'];
+const RETRYABLE_STATUSES = new Set([404, 429, 500, 502, 503, 504]);
+/** Durée totale maximale des essais : l'app abandonne à 70 s, donc on répond bien avant. */
+const PROVIDER_DEADLINE_MS = 50_000;
+const PER_CALL_TIMEOUT_MS = 25_000;
 
 const FUEL_VALUES = ['essence', 'diesel', 'hybride', 'electrique'];
 const CATEGORY_VALUES = ['economique', 'compacte', 'berline', 'suv', 'utilitaire', 'minibus', 'luxe'];
@@ -185,13 +189,13 @@ function parseJson(text: string): unknown {
 type Usage = { inputTokens: number; outputTokens: number };
 type ProviderResult = { json: unknown; usage: Usage; model: string };
 
-async function callGeminiModel(apiKey: string, model: string, prompt: string, imageBase64: string, mimeType: string): Promise<ProviderResult> {
+async function callGeminiModel(apiKey: string, model: string, prompt: string, imageBase64: string, mimeType: string, timeoutMs: number): Promise<ProviderResult> {
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-goog-api-key': apiKey },
-      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: prompt }] },
         contents: [{ role: 'user', parts: [{ inlineData: { mimeType, data: imageBase64 } }, { text: 'Extrais les champs de ce document, au format JSON demandé.' }] }],
@@ -234,15 +238,30 @@ async function callGeminiModel(apiKey: string, model: string, prompt: string, im
   return { json: parseJson(text), usage, model };
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Appelle Gemini en essayant plusieurs modèles : une surcharge passagère (503) ou un quota atteint (429) sur un
+ * modèle n'empêche pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux,
+ * dans une durée totale bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
+ */
 async function callGemini(apiKey: string, prompt: string, imageBase64: string, mimeType: string): Promise<ProviderResult> {
+  const started = Date.now();
   let lastError: unknown = null;
-  for (const model of GEMINI_MODEL_CANDIDATES) {
-    try {
-      return await callGeminiModel(apiKey, model, prompt, imageBase64, mimeType);
-    } catch (error) {
-      lastError = error;
-      if (!(error instanceof ProviderHttpError && error.status === 404)) break; // seul « modèle inconnu » justifie d'essayer le suivant
+  for (let round = 0; round < 2; round++) {
+    for (const model of GEMINI_MODEL_CANDIDATES) {
+      const remaining = PROVIDER_DEADLINE_MS - (Date.now() - started);
+      if (remaining < 4_000) throw lastError ?? new StageTimeoutError('provider');
+      try {
+        return await callGeminiModel(apiKey, model, prompt, imageBase64, mimeType, Math.min(PER_CALL_TIMEOUT_MS, remaining));
+      } catch (error) {
+        lastError = error;
+        const retryable = error instanceof ProviderHttpError && RETRYABLE_STATUSES.has(error.status);
+        const timedOut = error instanceof StageTimeoutError;
+        if (!retryable && !timedOut) throw error; // clé refusée (400/401/403), réponse illisible… : inutile d'insister
+      }
     }
+    if (round === 0) await sleep(1_500);
   }
   throw lastError;
 }
@@ -353,6 +372,8 @@ Deno.serve(async (request: Request) => {
     const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
     console.error("Échec de l'analyse du document :", detail.slice(0, 160));
     await recordUsage(admin, { agencyId, documentType, ok: false, errorCode: error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed' });
-    return json({ ok: false, error: 'ocr_failed', detail: detail.slice(0, 200) });
+    // Saturé (503) ou quota atteint (429) après tous les essais : message dédié (« réessayez dans un instant »).
+    const busy = error instanceof ProviderHttpError && (error.status === 503 || error.status === 429);
+    return json({ ok: false, error: busy ? 'ocr_busy' : 'ocr_failed', detail: detail.slice(0, 200) });
   }
 });

@@ -30,6 +30,8 @@ export function scanErrorMessageKey(code: string | null): string {
       return 'ocr.errors.inactive';
     case 'ocr_timeout':
       return 'ocr.errors.timeout';
+    case 'ocr_busy':
+      return 'ocr.errors.busy';
     case 'unavailable':
       return 'ocr.errors.unavailable';
     case 'nothing_read':

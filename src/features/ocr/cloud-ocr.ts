@@ -10,7 +10,7 @@ import { getSupabase } from '@/lib/supabase';
  */
 export type CloudDocumentType = 'permis' | 'carte_grise';
 
-export type CloudErrorCode = 'ocr_disabled' | 'ocr_not_configured' | 'ocr_failed' | 'ocr_timeout' | 'unavailable';
+export type CloudErrorCode = 'ocr_disabled' | 'ocr_not_configured' | 'ocr_failed' | 'ocr_timeout' | 'ocr_busy' | 'unavailable';
 
 export type CloudScanResult = { ok: true; fields: unknown } | { ok: false; error: CloudErrorCode; detail?: string };
 
@@ -23,7 +23,7 @@ function guessMimeType(uri: string): string {
 }
 
 function asCode(raw: unknown): CloudErrorCode {
-  return raw === 'ocr_disabled' || raw === 'ocr_not_configured' || raw === 'ocr_timeout' ? raw : 'ocr_failed';
+  return raw === 'ocr_disabled' || raw === 'ocr_not_configured' || raw === 'ocr_timeout' || raw === 'ocr_busy' ? raw : 'ocr_failed';
 }
 
 export async function scanInCloud(documentType: CloudDocumentType, localUri: string): Promise<CloudScanResult> {

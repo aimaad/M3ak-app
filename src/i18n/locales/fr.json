@@ -1111,7 +1111,8 @@
       "timeout": "La lecture met trop de temps à répondre. Réessayez, ou saisissez à la main.",
       "unavailable": "Le service de lecture est injoignable. Vérifiez votre connexion, ou saisissez à la main.",
       "nothingRead": "Aucune information n'a pu être lue sur cette photo. Reprenez-la ou saisissez à la main.",
-      "failed": "La lecture du document a échoué. Reprenez la photo ou passez à la saisie manuelle."
+      "failed": "La lecture du document a échoué. Reprenez la photo ou passez à la saisie manuelle.",
+      "busy": "Le service de lecture est momentanément saturé (ou le quota gratuit est atteint). Réessayez dans un instant, ou saisissez à la main."
     }
   }
 }
