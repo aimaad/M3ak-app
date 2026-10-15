@@ -21,8 +21,12 @@ const CORS_HEADERS = {
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-// Plusieurs modèles : si l'un est saturé (503), sans quota (429) ou introuvable (404), on essaie le suivant.
-const GEMINI_MODEL_CANDIDATES = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest', 'gemini-2.0-flash'];
+// Les noms de modèles Gemini changent et les anciens sont retirés : on ne dépend pas d'une liste écrite à la main.
+// Ordre d'essai : l'alias « gemini-flash-latest » (toujours le plus récent), puis les modèles « flash » que Google
+// annonce disponibles pour CETTE clé (plus récents d'abord), puis deux noms de secours si la liste est inaccessible.
+const LATEST_ALIAS = 'gemini-flash-latest';
+const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const MAX_MODELS_TRIED = 5;
 const RETRYABLE_STATUSES = new Set([404, 429, 500, 502, 503, 504]);
 /** Durée totale maximale des essais : l'app abandonne à 70 s, donc on répond bien avant. */
 const PROVIDER_DEADLINE_MS = 50_000;
@@ -202,8 +206,10 @@ async function callGeminiModel(apiKey: string, model: string, prompt: string, im
         generationConfig: {
           responseMimeType: 'application/json',
           temperature: 0,
-          maxOutputTokens: 8192,
-          ...(model.includes('2.5-flash') ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          // Les modèles 2.5 acceptent « pas de réflexion » (plus rapide, moins cher). Pour les autres on ne force
+          // rien (paramètre non garanti) et on laisse plus de marge de sortie.
+          maxOutputTokens: /^gemini-2\.5-flash/.test(model) ? 8192 : 16384,
+          ...(/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         },
       }),
     });
@@ -240,22 +246,61 @@ async function callGeminiModel(apiKey: string, model: string, prompt: string, im
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const modelCache = new Map<string, { at: number; models: string[] }>();
+const MODEL_CACHE_MS = 10 * 60 * 1000;
+
+/** Version d'un nom « gemini-2.5-flash » → 2.5 ; sert à classer les modèles du plus récent au plus ancien. */
+function versionOf(model: string): number {
+  return Number(/^gemini-(\d+(?:\.\d+)?)-/.exec(model)?.[1] ?? 0);
+}
+
+/** Modèles « flash » (hors préversions) que Google annonce utilisables pour cette clé. Liste vide en cas d'échec. */
+async function discoverModels(apiKey: string): Promise<string[]> {
+  const cached = modelCache.get(apiKey);
+  if (cached && Date.now() - cached.at < MODEL_CACHE_MS) return cached.models;
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', {
+      headers: { 'x-goog-api-key': apiKey },
+      signal: AbortSignal.timeout(8_000),
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { models?: { name?: string; supportedGenerationMethods?: string[] }[] };
+    const models = (data.models ?? [])
+      .filter((model) => model.supportedGenerationMethods?.includes('generateContent'))
+      .map((model) => (model.name ?? '').replace(/^models\//, ''))
+      .filter((name) => /^gemini-\d+(\.\d+)?-flash(-lite)?$/.test(name))
+      .sort((a, b) => versionOf(b) - versionOf(a) || Number(a.includes('lite')) - Number(b.includes('lite')));
+    modelCache.set(apiKey, { at: Date.now(), models });
+    return models;
+  } catch {
+    return [];
+  }
+}
+
+async function candidateModels(apiKey: string): Promise<string[]> {
+  const discovered = await discoverModels(apiKey);
+  return [...new Set([LATEST_ALIAS, ...discovered, ...FALLBACK_MODELS])].slice(0, MAX_MODELS_TRIED);
+}
+
 /**
- * Appelle Gemini en essayant plusieurs modèles : une surcharge passagère (503) ou un quota atteint (429) sur un
- * modèle n'empêche pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux,
- * dans une durée totale bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
+ * Appelle Gemini en essayant plusieurs modèles : un modèle retiré (404), saturé (503) ou sans quota (429) n'empêche
+ * pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux, dans une durée totale
+ * bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
  */
 async function callGemini(apiKey: string, prompt: string, imageBase64: string, mimeType: string): Promise<ProviderResult> {
   const started = Date.now();
+  const models = await candidateModels(apiKey);
   let lastError: unknown = null;
+  let busyError: ProviderHttpError | null = null; // 503/429 vu au moins une fois : plus parlant qu'un 404 final
   for (let round = 0; round < 2; round++) {
-    for (const model of GEMINI_MODEL_CANDIDATES) {
+    for (const model of models) {
       const remaining = PROVIDER_DEADLINE_MS - (Date.now() - started);
-      if (remaining < 4_000) throw lastError ?? new StageTimeoutError('provider');
+      if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
       try {
         return await callGeminiModel(apiKey, model, prompt, imageBase64, mimeType, Math.min(PER_CALL_TIMEOUT_MS, remaining));
       } catch (error) {
         lastError = error;
+        if (error instanceof ProviderHttpError && (error.status === 503 || error.status === 429)) busyError = error;
         const retryable = error instanceof ProviderHttpError && RETRYABLE_STATUSES.has(error.status);
         const timedOut = error instanceof StageTimeoutError;
         if (!retryable && !timedOut) throw error; // clé refusée (400/401/403), réponse illisible… : inutile d'insister
@@ -263,7 +308,7 @@ async function callGemini(apiKey: string, prompt: string, imageBase64: string, m
     }
     if (round === 0) await sleep(1_500);
   }
-  throw lastError;
+  throw busyError ?? lastError;
 }
 
 type AdminClient = ReturnType<typeof createClient>;

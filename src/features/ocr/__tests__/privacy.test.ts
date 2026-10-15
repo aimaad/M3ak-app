@@ -67,7 +67,9 @@ describe("confidentialité de l'OCR", () => {
     expect(code).toContain('settings.cloud_enabled');
     // surcharge passagère : plusieurs modèles Gemini et un nouvel essai, jamais un autre fournisseur
     expect(code).toMatch(/RETRYABLE_STATUSES = new Set\(\[[^\]]*503/);
-    expect(code).toMatch(/GEMINI_MODEL_CANDIDATES = \[[^\]]*'gemini-2\.5-flash-lite'/);
+    expect(code).toContain("LATEST_ALIAS = 'gemini-flash-latest'");
+    expect(code).toContain('discoverModels'); // les noms de modèles ne sont pas figés : liste demandée à Google
+    expect(code).not.toContain('gemini-2.0-flash'); // modèle retiré par Google
     expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
     expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
     expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64)/);
