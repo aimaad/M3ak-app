@@ -11,6 +11,8 @@ const OCR_FILES = ['features/ocr/availability.ts'];
 const CLOUD_AWARE_FILES = [
   'features/ocr/cloud-ocr.ts',
   'features/ocr/settings-api.ts',
+  'features/ocr/scan-cache.ts',
+  'features/ocr/cached-scan.ts',
   'features/customers/licence-ocr.ts',
   'features/vehicles/ocr.ts',
   'app/entreprise/index.tsx',

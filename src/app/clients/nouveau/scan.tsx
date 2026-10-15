@@ -47,7 +47,7 @@ export default function ScannerPermisScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
-  const { availability } = useOcrSettings();
+  const { availability, agencyId } = useOcrSettings();
 
   async function handlePick(source: 'library' | 'camera') {
     const uri = await pickImage(source);
@@ -56,7 +56,7 @@ export default function ScannerPermisScreen() {
     setStatus('processing');
     setErrorCode(null);
 
-    const result = await scanLicence(uri);
+    const result = await scanLicence(uri, { agencyId });
     if (!result.ok) {
       setErrorCode(result.error);
       setStatus('error');

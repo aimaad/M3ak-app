@@ -1,3 +1,4 @@
+import { clearDeviceScanCache } from '@/features/ocr/cached-scan';
 import { getSupabase } from '@/lib/supabase';
 
 import type { PersonName } from './names';
@@ -23,6 +24,7 @@ export async function signUpWithEmail(
 }
 
 export async function signOut(): Promise<void> {
+  await clearDeviceScanCache(); // aucune lecture de document ne reste sur l'appareil après la déconnexion
   const { error } = await getSupabase().auth.signOut();
   if (error) throw error;
 }

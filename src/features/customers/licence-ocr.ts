@@ -1,4 +1,5 @@
-import { scanInCloud, type CloudErrorCode } from '@/features/ocr/cloud-ocr';
+import type { CloudErrorCode } from '@/features/ocr/cloud-ocr';
+import { scanCloudCached } from '@/features/ocr/cached-scan';
 
 import { parseCategories, parseDateInput } from './documents';
 import type { PendingDocument } from './types';
@@ -23,7 +24,7 @@ export type LicenceOcrFields = {
 export type LicenceScanErrorCode = CloudErrorCode;
 
 export type LicenceScanResult =
-  | { ok: true; fields: LicenceOcrFields }
+  | { ok: true; fields: LicenceOcrFields; fromCache?: boolean }
   | { ok: false; error: LicenceScanErrorCode; detail?: string };
 
 const EMPTY_FIELD = { value: null, confidence: 'low' } as const;
@@ -178,8 +179,8 @@ export function hasAnyOcrValue(fields: LicenceOcrFields): boolean {
  * accord du propriétaire, la fonction répond « non active » et rien n'est envoyé à Gemini. Aucun repli
  * automatique : en cas d'échec, l'écran propose la saisie manuelle. Le résultat reste à vérifier.
  */
-export async function scanLicence(localUri: string): Promise<LicenceScanResult> {
-  const cloud = await scanInCloud('permis', localUri);
+export async function scanLicence(localUri: string, options: { agencyId?: string } = {}): Promise<LicenceScanResult> {
+  const cloud = await scanCloudCached('permis', localUri, options.agencyId);
   if (!cloud.ok) return { ok: false, error: cloud.error, ...(cloud.detail ? { detail: cloud.detail } : {}) };
-  return { ok: true, fields: normalizeLicenceFields(cloud.fields) };
+  return { ok: true, fields: normalizeLicenceFields(cloud.fields), ...(cloud.fromCache ? { fromCache: true } : {}) };
 }

@@ -1,4 +1,5 @@
-import { scanInCloud, type CloudErrorCode } from '@/features/ocr/cloud-ocr';
+import type { CloudErrorCode } from '@/features/ocr/cloud-ocr';
+import { scanCloudCached } from '@/features/ocr/cached-scan';
 
 import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type VehicleCategory } from './types';
 
@@ -22,7 +23,7 @@ export type VehicleOcrFields = {
 export type ScanErrorCode = CloudErrorCode;
 
 export type ScanVehicleDocumentResult =
-  | { ok: true; fields: VehicleOcrFields }
+  | { ok: true; fields: VehicleOcrFields; fromCache?: boolean }
   | { ok: false; error: ScanErrorCode; detail?: string };
 
 const EMPTY = { value: null, confidence: 'low' } as const;
@@ -71,8 +72,8 @@ export function normalizeVehicleFields(raw: unknown): VehicleOcrFields {
  * accord du propriétaire, la fonction répond « non active » et rien n'est envoyé à Gemini. Aucun repli
  * automatique : en cas d'échec, l'écran propose la saisie manuelle. Le résultat reste à vérifier.
  */
-export async function scanVehicleDocument(localUri: string): Promise<ScanVehicleDocumentResult> {
-  const cloud = await scanInCloud('carte_grise', localUri);
+export async function scanVehicleDocument(localUri: string, options: { agencyId?: string } = {}): Promise<ScanVehicleDocumentResult> {
+  const cloud = await scanCloudCached('carte_grise', localUri, options.agencyId);
   if (!cloud.ok) return { ok: false, error: cloud.error, ...(cloud.detail ? { detail: cloud.detail } : {}) };
-  return { ok: true, fields: normalizeVehicleFields(cloud.fields) };
+  return { ok: true, fields: normalizeVehicleFields(cloud.fields), ...(cloud.fromCache ? { fromCache: true } : {}) };
 }

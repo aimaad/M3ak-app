@@ -14,6 +14,9 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
+import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
+import { findDuplicateInList } from '@/features/vehicles/duplicates';
+import { useVehicles } from '@/features/vehicles/hooks';
 import { scanErrorMessageKey } from '@/features/ocr/availability';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
@@ -84,7 +87,10 @@ export default function ScannerCarteGriseScreen() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
-  const { availability } = useOcrSettings();
+  const { availability, agencyId } = useOcrSettings();
+  const vehiclesQuery = useVehicles();
+  const [fromCache, setFromCache] = useState(false);
+  const [duplicateDismissed, setDuplicateDismissed] = useState(false);
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
 
@@ -99,13 +105,16 @@ export default function ScannerCarteGriseScreen() {
     setStatus('processing');
     setErrorCode(null);
 
-    const result = await scanVehicleDocument(uri);
+    setFromCache(false);
+    setDuplicateDismissed(false);
+    const result = await scanVehicleDocument(uri, { agencyId });
     if (!result.ok) {
       setErrorCode(result.error);
       setStatus('error');
       return;
     }
 
+    setFromCache(result.fromCache === true);
     setValues(fieldsToEditable(result.fields));
     setConfidences({
       immatriculation: result.fields.immatriculation.confidence,
@@ -139,6 +148,7 @@ export default function ScannerCarteGriseScreen() {
     router.replace('/flotte/nouveau/finaliser');
   }
 
+  const scanDuplicate = findDuplicateInList(vehiclesQuery.data ?? [], { immatriculation: values.immatriculation, vin: values.vin });
   const hasAnyDetectedValue = Object.values(values).some((v) => (typeof v === 'string' ? v.trim() !== '' : v !== null));
 
   return (
@@ -227,6 +237,16 @@ export default function ScannerCarteGriseScreen() {
                   {t('vehicle.quickCreate.reviewHint')}
                 </ThemedText>
               )}
+
+              {fromCache ? (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('ocr.fromCache')}
+                </ThemedText>
+              ) : null}
+
+              {scanDuplicate && !duplicateDismissed ? (
+                <DuplicateVehicleCard duplicate={scanDuplicate} onContinue={() => setDuplicateDismissed(true)} />
+              ) : null}
 
               <ReviewField
                 label={t('vehicle.fields.immatriculation')}

@@ -42,6 +42,12 @@ sont affichés), et de suivre l'utilisation (analyses, échecs, tokens) avec un 
 - Chaque ajout/retrait de clé est inscrit au journal de l'entreprise (sans la clé).
 - Mot de passe oublié : code reçu par e-mail (voir `supabase/README.md`).
 
+### Cache des lectures (sur l'appareil)
+Si la **même photo** est relue pour la même entreprise, le résultat est repris du cache de l'appareil : aucun nouvel envoi à
+Gemini, aucun quota ni coût consommé. Le cache ne sert que pour une lecture réussie (jamais une lecture vide ni un échec), reste
+**sur l'appareil** (rien n'est stocké sur le serveur), dure **24 h**, contient au plus **20** lectures, est lié à l'entreprise, et
+est **effacé à la déconnexion**. Il contient des données personnelles (noms, numéro de permis) : c'est pourquoi sa durée est courte.
+
 ## 4. Protection au transfert et au stockage
 
 - HTTPS vers Supabase ; utilisateur authentifié ; accès aux fichiers décidé **côté serveur** par les politiques RLS du stockage,

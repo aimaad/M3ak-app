@@ -34,6 +34,8 @@ import {
   type Vehicle,
   type VehicleStatus,
 } from '@/features/vehicles/types';
+import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
+import { findDuplicateInList } from '@/features/vehicles/duplicates';
 import { duplicateVehicleField, toVehicleInput } from '@/features/vehicles/validation';
 import { VehiclePhotoPicker } from '@/features/vehicles/vehicle-photo-picker';
 import { useLanguage } from '@/i18n/use-language';
@@ -150,8 +152,12 @@ export default function FinaliserVehiculeScreen() {
     };
   }, [agencyId, values.immatriculation, values.vin]);
 
-  // Une plaque effacée après détection d'un doublon ne doit plus bloquer l'enregistrement.
-  const activeDuplicateWarning = values.immatriculation.trim() ? duplicateWarning : null;
+  // Comparaison locale tolérante (espaces, barres, casse) + contrôle serveur ; une plaque effacée ne bloque plus.
+  const localDuplicate = useMemo(
+    () => findDuplicateInList(vehiclesQuery.data ?? [], { immatriculation: values.immatriculation, vin: values.vin }),
+    [vehiclesQuery.data, values.immatriculation, values.vin]
+  );
+  const activeDuplicateWarning = values.immatriculation.trim() ? (localDuplicate ?? duplicateWarning) : null;
 
   async function handleSubmit() {
     setTouched(true);
@@ -276,21 +282,7 @@ export default function FinaliserVehiculeScreen() {
             error={touched && missing.immatriculation ? t('vehicle.form.errors.required') : undefined}
           />
 
-          {activeDuplicateWarning ? (
-            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
-                {activeDuplicateWarning.field === 'vin'
-                  ? t('vehicle.quickCreate.duplicateVin')
-                  : t('vehicle.quickCreate.duplicatePlate')}
-              </ThemedText>
-              <Button
-                label={t('vehicle.quickCreate.viewExisting')}
-                variant="secondary"
-                size="sm"
-                onPress={() => router.push(`/flotte/${activeDuplicateWarning.vehicle.id}`)}
-              />
-            </View>
-          ) : null}
+          {activeDuplicateWarning ? <DuplicateVehicleCard duplicate={activeDuplicateWarning} /> : null}
 
           <TextField
             label={t('vehicle.fields.marque')}
