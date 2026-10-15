@@ -20,7 +20,8 @@ import {
 } from './creation';
 import { DocumentForm } from './document-form';
 import { documentLabel, EMPTY_DOCUMENT_FORM, validateDocumentForm } from './documents';
-import { findPotentialDuplicates } from './duplicates';
+import { DuplicateCustomerCard } from './duplicate-customer-card';
+import { findDuplicateMatches } from './duplicates';
 import { EMPTY_CREATION_DRAFT, type CustomerCreationDraft } from './licence-ocr';
 import { CUSTOMER_TYPES, PREFERRED_LANGUAGES } from './types';
 import type { Customer, CustomerInput, CustomerType, PendingDocument, PreferredLanguage } from './types';
@@ -85,14 +86,21 @@ export function CustomerForm({
   const isEntreprise = values.typeClient === 'entreprise';
   const uncertain = new Set<string>(draft.uncertainFields);
 
+  const permisReference = entries.find((entry) => entry.values.type === 'permis')?.values.reference ?? '';
   const duplicates = useMemo(
     () =>
-      findPotentialDuplicates(
+      findDuplicateMatches(
         allCustomers,
-        { telephone: values.telephone, cinOuPasseport: values.cinOuPasseport },
+        {
+          telephone: values.telephone,
+          cinOuPasseport: values.cinOuPasseport,
+          numeroPermis: values.numeroPermis || permisReference,
+          nomComplet: values.nomComplet,
+          dateNaissance: values.dateNaissance,
+        },
         existingCustomerId
       ),
-    [allCustomers, values.telephone, values.cinOuPasseport, existingCustomerId]
+    [allCustomers, values.telephone, values.cinOuPasseport, values.numeroPermis, permisReference, values.nomComplet, values.dateNaissance, existingCustomerId]
   );
 
   function update<K extends keyof CustomerFormValues>(key: K, value: CustomerFormValues[K]) {
@@ -132,8 +140,15 @@ export function CustomerForm({
           <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
             {t('customer.ocr.bannerBody')}
           </ThemedText>
+          {draft.fromCache ? (
+            <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
+              {t('ocr.fromCache')}
+            </ThemedText>
+          ) : null}
         </View>
       ) : null}
+
+      <DuplicateCustomerCard matches={duplicates} />
 
       <CollapsibleSection title={t('customer.sections.general')} defaultOpen>
         <TextField
@@ -165,13 +180,6 @@ export function CustomerForm({
           placeholder="+212 6XX XX XX XX"
           error={showErrors && errors.telephone ? t(`customer.form.errors.${errors.telephone}`) : undefined}
         />
-        {duplicates.length > 0 ? (
-          <View className="rounded-2xl bg-[#FEF3C7] px-4 py-3">
-            <ThemedText type="small" style={{ color: '#B45309' }}>
-              {t('customer.duplicateWarning', { count: duplicates.length, name: duplicates[0].nomComplet })}
-            </ThemedText>
-          </View>
-        ) : null}
       </CollapsibleSection>
 
       {mode === 'create' ? (

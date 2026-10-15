@@ -446,7 +446,6 @@
     "archiveConfirmTitle": "Archiver ce client ?",
     "archiveConfirmBody": "Il n'apparaîtra plus dans la liste active, mais son historique reste conservé. Vous pourrez le réactiver à tout moment.",
     "archiveError": "Impossible de modifier l'archivage de ce client.",
-    "duplicateWarning": "{{count}} client(s) avec un téléphone ou un document similaire, dont « {{name}} ». Vérifiez avant de continuer.",
     "documentReferencePlaceholder": "Référence / numéro, facultatif",
     "documentExpiryPlaceholder": "Date d'expiration (AAAA-MM-JJ), facultatif",
     "documentReference": "Référence : {{reference}}",
@@ -618,6 +617,18 @@
       "errors": {
         "required": "Écrivez la note avant de l'enregistrer.",
         "too_long": "Note trop longue (4000 caractères maximum)."
+      }
+    },
+    "duplicate": {
+      "title": "Ce client semble déjà enregistré",
+      "view": "Ouvrir sa fiche",
+      "more": "… et {{count}} autre(s) fiche(s) semblable(s).",
+      "decide": "Vérifiez avant de continuer : si c'est bien une autre personne, vous pouvez poursuivre l'enregistrement.",
+      "reasons": {
+        "phone": "Même téléphone",
+        "identity_document": "Même CIN ou passeport",
+        "licence_number": "Même numéro de permis",
+        "name_and_birth": "Même nom et même date de naissance"
       }
     }
   },

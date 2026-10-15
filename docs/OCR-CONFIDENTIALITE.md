@@ -48,6 +48,14 @@ Gemini, aucun quota ni coût consommé. Le cache ne sert que pour une lecture r�
 **sur l'appareil** (rien n'est stocké sur le serveur), dure **24 h**, contient au plus **20** lectures, est lié à l'entreprise, et
 est **effacé à la déconnexion**. Il contient des données personnelles (noms, numéro de permis) : c'est pourquoi sa durée est courte.
 
+### Quand l'administrateur change une clé dans la console
+- La clé est lue **par le serveur à chaque lecture** (jamais copiée dans l'app) : une clé ajoutée, remplacée ou retirée dans la
+  console s'applique **au scan suivant**, sans mise à jour de l'app ni redéploiement.
+- Remplacer une clé **garde l'accord du propriétaire** ; la retirer retire aussi l'accord (il faudra le redonner avec la nouvelle clé).
+- Passer une clé de « gratuite » à « payante » (ou l'inverse) ne change que le **calcul du coût estimé** dans la console ; l'app mobile n'est pas touchée.
+- L'écran de l'app relit l'état de l'entreprise à chaque ouverture des écrans concernés ; si la clé a été retirée entre-temps, le
+  scan répond « non active » et l'app l'indique.
+
 ## 4. Protection au transfert et au stockage
 
 - HTTPS vers Supabase ; utilisateur authentifié ; accès aux fichiers décidé **côté serveur** par les politiques RLS du stockage,

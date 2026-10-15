@@ -88,6 +88,8 @@ export type CustomerCreationDraft = {
   uncertainDocumentFields: ('reference' | 'dateDelivrance' | 'expiresAt' | 'categories' | 'issuingAuthority')[];
   /** Vrai si les champs ont été préremplis par une lecture automatique. */
   fromOcr: boolean;
+  /** Vrai si le résultat vient du cache de l'appareil (même photo déjà lue : aucun nouvel envoi). */
+  fromCache?: boolean;
 };
 
 export const EMPTY_CREATION_DRAFT: CustomerCreationDraft = {
@@ -103,7 +105,11 @@ export const EMPTY_CREATION_DRAFT: CustomerCreationDraft = {
  * suffisante sont préremplis ; les champs « medium » sont signalés à vérifier ; « low » ou
  * absents restent vides — l'employé les saisit.
  */
-export function licenceFieldsToDraft(fields: LicenceOcrFields, localUri: string | null): CustomerCreationDraft {
+export function licenceFieldsToDraft(
+  fields: LicenceOcrFields,
+  localUri: string | null,
+  options: { fromCache?: boolean } = {}
+): CustomerCreationDraft {
   const values: Partial<CustomerFormValues> = {};
   const uncertainFields: CustomerFormFieldKey[] = [];
   const uncertainDocumentFields: CustomerCreationDraft['uncertainDocumentFields'] = [];
@@ -166,7 +172,7 @@ export function licenceFieldsToDraft(fields: LicenceOcrFields, localUri: string 
       ]
     : [];
 
-  return { values, pendingDocuments, uncertainFields, uncertainDocumentFields, fromOcr: true };
+  return { values, pendingDocuments, uncertainFields, uncertainDocumentFields, fromOcr: true, ...(options.fromCache ? { fromCache: true } : {}) };
 }
 
 /** Vrai si au moins un champ a pu être lu : sinon on propose directement la saisie manuelle. */

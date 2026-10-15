@@ -68,7 +68,7 @@ export default function ScannerPermisScreen() {
       return;
     }
 
-    setCustomerCreationDraft(licenceFieldsToDraft(result.fields, keepPhoto ? uri : null));
+    setCustomerCreationDraft(licenceFieldsToDraft(result.fields, keepPhoto ? uri : null, { fromCache: result.fromCache }));
     router.replace('/clients/nouveau/formulaire');
   }
 
