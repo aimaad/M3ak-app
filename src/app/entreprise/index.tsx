@@ -425,6 +425,15 @@ function EntrepriseForm({
 
       {isOwner ? (
         <Button
+          label={t('contractTemplate.open')}
+          variant="secondary"
+          icon="document-text-outline"
+          onPress={() => router.push('/entreprise/modele-contrat')}
+        />
+      ) : null}
+
+      {isOwner ? (
+        <Button
           label={t('entreprise.departurePolicy.open')}
           variant="secondary"
           icon="shield-checkmark-outline"

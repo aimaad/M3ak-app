@@ -10,8 +10,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
-import { CONTRACT_ACCEPTANCE, contractArticles } from '@/features/contracts/contract-terms';
+import { contractTemplateContext, contractTemplateValues, resolveTemplate } from '@/features/contracts/contract-pdf';
 import { useContract, useSignContract } from '@/features/contracts/hooks';
+import { hasLanguageToggle, readingSections } from '@/features/contracts/template';
+import { useContractTemplate } from '@/features/contracts/template-hooks';
 import { useSignature } from '@/features/signatures/hooks';
 import { buildSignature, isSignatureDrawn } from '@/features/signatures/signature';
 import { SignaturePad, SignatureView } from '@/features/signatures/signature-pad';
@@ -36,6 +38,7 @@ export default function SignerContratScreen() {
   const detailsQuery = useAgencyDetails(agencyId);
   const profileQuery = useMyProfile(agencyId);
   const myStaffSignature = useSignature(profileQuery.data?.signaturePath);
+  const storedTemplate = useContractTemplate(agencyId);
   const { data: contract, isLoading } = useContract(id);
   const signContract = useSignContract();
 
@@ -67,13 +70,13 @@ export default function SignerContratScreen() {
     if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 48) setReachedEnd(true);
   }
 
-  if (isLoading || !contract) {
+  if (isLoading || !contract || storedTemplate.isLoading) {
     return (
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.sign.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            {isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
+            {isLoading || storedTemplate.isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -96,10 +99,21 @@ export default function SignerContratScreen() {
     );
   }
 
+  const agencyInfo = {
+    nom: detailsQuery.data?.nom ?? agencyQuery.data?.agencyName ?? '',
+    raisonSociale: detailsQuery.data?.raisonSociale,
+    adresse: detailsQuery.data?.adresse,
+    ville: detailsQuery.data?.ville,
+    telephone: detailsQuery.data?.telephone,
+    email: detailsQuery.data?.email,
+  };
+  const customTemplate = storedTemplate.data?.template ?? null;
+  const allSections = readingSections(resolveTemplate(contract, agencyInfo, customTemplate), contractTemplateValues(contract, agencyInfo), contractTemplateContext(contract));
+  const toggle = hasLanguageToggle(allSections);
+  const sections = toggle ? allSections.filter((section) => !section.lang || section.lang === lang) : allSections;
   const isAr = lang === 'ar';
   const direction = { writingDirection: isAr ? ('rtl' as const) : ('ltr' as const), textAlign: isAr ? ('right' as const) : ('left' as const) };
   const money = (value: number) => `${value.toLocaleString('fr-FR')} MAD`;
-  const articles = contractArticles({ caution: money(contract.cautionMontant), city: detailsQuery.data?.ville ?? '' });
   const staffSignature = myStaffSignature.data ?? null;
   const staffMissing = !!profileQuery.data && !profileQuery.data.signaturePath;
   const clientDrawn = isSignatureDrawn(paths) && size.width > 0;
@@ -114,6 +128,7 @@ export default function SignerContratScreen() {
         contract: { id: contract.id, agencyId: contract.agencyId },
         clientSignature: buildSignature(paths, size.width, size.height),
         agencySignature: staffSignature,
+        terms: customTemplate,
       });
       router.replace({ pathname: '/contrats/[id]', params: { id: contract.id } });
     } catch (e) {
@@ -139,7 +154,7 @@ export default function SignerContratScreen() {
 
         {step === 'read' ? (
           <View className="flex-1">
-            <View className="flex-row gap-2 px-6 pb-3">
+            <View className="flex-row gap-2 px-6 pb-3" style={{ display: toggle ? 'flex' : 'none' }}>
               {(['fr', 'ar'] as Lang[]).map((option) => (
                 <Pressable
                   key={option}
@@ -175,31 +190,20 @@ export default function SignerContratScreen() {
                 ))}
               </Card>
 
-              {contract.conditionsParticulieres ? (
-                <View className="gap-1">
-                  <ThemedText type="smallBold" style={direction}>
-                    {t('contract.fields.conditionsParticulieres')}
-                  </ThemedText>
-                  <ThemedText type="default" style={direction}>
-                    {contract.conditionsParticulieres}
-                  </ThemedText>
-                </View>
-              ) : null}
-
-              {articles.map((article, index) => (
-                <View key={article.id} className="gap-1">
-                  <ThemedText type="smallBold" style={direction}>
-                    {isAr ? `المادة ${index + 1} — ${article.ar.title}` : `Article ${index + 1} — ${article.fr.title}`}
-                  </ThemedText>
-                  <ThemedText type="default" style={direction}>
-                    {isAr ? article.ar.body : article.fr.body}
-                  </ThemedText>
+              {sections.map((section, index) => (
+                <View key={index} className="gap-1">
+                  {section.title ? (
+                    <ThemedText type="smallBold" style={{ writingDirection: section.rtl ? 'rtl' : 'ltr', textAlign: section.rtl ? 'right' : 'left' }}>
+                      {section.title}
+                    </ThemedText>
+                  ) : null}
+                  {section.text ? (
+                    <ThemedText type="default" style={{ writingDirection: section.rtl ? 'rtl' : 'ltr', textAlign: section.rtl ? 'right' : 'left' }}>
+                      {section.text}
+                    </ThemedText>
+                  ) : null}
                 </View>
               ))}
-
-              <ThemedText type="smallBold" style={direction}>
-                {CONTRACT_ACCEPTANCE[lang]}
-              </ThemedText>
             </ScrollView>
 
             <View className="gap-3 border-t border-[#EAE5F2] bg-white px-6 py-4">

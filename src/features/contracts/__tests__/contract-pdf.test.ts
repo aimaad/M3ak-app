@@ -31,6 +31,7 @@ function makeContract(overrides: Partial<Contract> = {}): Contract {
     clientSignaturePath: null,
     agencySignaturePath: null,
     clientSignedAt: null,
+    termsSnapshot: null,
     etatDepart: null,
     accessoiresDepart: [],
     observationsDepart: null,

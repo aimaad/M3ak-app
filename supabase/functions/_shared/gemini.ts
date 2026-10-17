@@ -33,7 +33,7 @@ export function parseJson(text: string): unknown {
   return JSON.parse(text.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim());
 }
 
-async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number): Promise<ProviderResult> {
+async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number, maxOutput?: number): Promise<ProviderResult> {
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -48,7 +48,7 @@ async function callGeminiModel(apiKey: string, model: string, systemPrompt: stri
           temperature: 0,
           // Les modèles 2.5 acceptent « pas de réflexion » (plus rapide, moins cher). Pour les autres on ne force
           // rien (paramètre non garanti) et on laisse plus de marge de sortie.
-          maxOutputTokens: /^gemini-2\.5-flash/.test(model) ? 8192 : 16384,
+          maxOutputTokens: maxOutput ?? (/^gemini-2\.5-flash/.test(model) ? 8192 : 16384),
           ...(/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         },
       }),
@@ -127,17 +127,22 @@ async function candidateModels(apiKey: string): Promise<string[]> {
  * pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux, dans une durée totale
  * bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
  */
-export async function callGeminiJson(apiKey: string, systemPrompt: string, parts: GeminiPart[]): Promise<ProviderResult> {
+export async function callGeminiJson(
+  apiKey: string,
+  systemPrompt: string,
+  parts: GeminiPart[],
+  options: { maxOutputTokens?: number; deadlineMs?: number } = {}
+): Promise<ProviderResult> {
   const started = Date.now();
   const models = await candidateModels(apiKey);
   let lastError: unknown = null;
   let busyError: ProviderHttpError | null = null; // 503/429 vu au moins une fois : plus parlant qu'un 404 final
   for (let round = 0; round < 2; round++) {
     for (const model of models) {
-      const remaining = PROVIDER_DEADLINE_MS - (Date.now() - started);
+      const remaining = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
       if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
       try {
-        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(PER_CALL_TIMEOUT_MS, remaining));
+        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(options.maxOutputTokens ? 90_000 : PER_CALL_TIMEOUT_MS, remaining), options.maxOutputTokens);
       } catch (error) {
         lastError = error;
         if (error instanceof ProviderHttpError && (error.status === 503 || error.status === 429)) busyError = error;

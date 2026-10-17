@@ -82,13 +82,16 @@ export function useSignContract() {
       contract,
       clientSignature,
       agencySignature,
+      terms,
     }: {
       contract: { id: string; agencyId: string };
       clientSignature: HandwrittenSignature;
       agencySignature: HandwrittenSignature | null;
+      /** Modèle de contrat de l'agence au moment de la signature (figé sur le contrat). */
+      terms: unknown | null;
     }) => {
       const paths = await saveContractSignatures(contract.agencyId, contract.id, clientSignature, agencySignature);
-      return signContract(contract.id, paths);
+      return signContract(contract.id, paths, terms);
     },
     onSuccess: (contract) => invalidate(contract),
   });

@@ -63,6 +63,8 @@ export type Contract = {
   clientSignaturePath: string | null;
   agencySignaturePath: string | null;
   clientSignedAt: string | null;
+  /** Modèle de contrat figé à la signature (null = modèle M3ak standard ou contrat non encore signé). */
+  termsSnapshot: unknown | null;
 
   etatDepart: VehicleCondition | null;
   accessoiresDepart: AccessoryKey[];

@@ -9,7 +9,7 @@ const KNOWN_ACTIONS = new Set([
   'customer_created', 'customer_updated', 'customer_archived', 'customer_reactivated',
   'customer_document_added', 'customer_document_deleted', 'customer_note_added', 'customer_note_edited', 'customer_note_deleted',
   'vehicle_created', 'vehicle_archived', 'vehicle_reactivated', 'vehicle_price_changed',
-  'contract_created', 'contract_signed', 'contract_closed', 'contract_cancelled', 'contract_status_changed',
+  'contract_created', 'contract_signed', 'contract_closed', 'contract_cancelled', 'contract_status_changed', 'contract_template_saved', 'contract_template_removed',
   'deposit_blocked', 'deposit_resolved',
   'maintenance_created', 'maintenance_started', 'maintenance_completed',
   'inspection_created', 'inspection_completed', 'departure_check_confirmed',

@@ -10,6 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAgencyDetails, useAgencyMembers, useMyAgency } from '@/features/agency/hooks';
+import { useContractTemplate } from '@/features/contracts/template-hooks';
 import { generateContractPdf } from '@/features/contracts/contract-pdf';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPdf } from '@/features/contracts/hooks';
@@ -44,6 +45,7 @@ export default function ContratDetailScreen() {
   const { data: contract, isLoading, isError } = useContract(id);
   const { data: rental } = useRental(contract?.rentalId);
   const detailsQuery = useAgencyDetails(agencyQuery.data?.agencyId);
+  const templateQuery = useContractTemplate(agencyQuery.data?.agencyId);
   const membersQuery = useAgencyMembers(agencyQuery.data?.agencyId);
   const clientSignature = useSignature(contract?.clientSignaturePath);
   const agencySignature = useSignature(contract?.agencySignaturePath);
@@ -60,10 +62,11 @@ export default function ContratDetailScreen() {
     try {
       const details = detailsQuery.data;
       const signer = membersQuery.data?.find((member) => member.userId === contract.signedBy);
-      const [client, agency, stampDataUri] = await Promise.all([
+      const [client, agency, stampDataUri, logoDataUri] = await Promise.all([
         loadSignature(contract.clientSignaturePath),
         loadSignature(contract.agencySignaturePath),
         downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.stampPath).catch(() => null),
+        downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null),
       ]);
       const localUri = await generateContractPdf(
         contract,
@@ -75,7 +78,8 @@ export default function ContratDetailScreen() {
           telephone: details?.telephone,
           email: details?.email,
         },
-        { client, agency, stampDataUri, agencySignerName: signer?.nomComplet ?? null }
+        { client, agency, stampDataUri, logoDataUri, agencySignerName: signer?.nomComplet ?? null },
+        templateQuery.data?.template
       );
       await uploadPdf.mutateAsync({ agencyId: contract.agencyId, contractId: contract.id, localUri });
       if (await Sharing.isAvailableAsync()) {

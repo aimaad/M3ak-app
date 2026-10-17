@@ -1,5 +1,15 @@
 # Contrat complet et signatures manuscrites
 
+## Le contrat de chaque agence (modèle personnalisé)
+Chaque agence a son propre contrat. Dans **Mon entreprise → Modèle de contrat de l'agence** (propriétaire), on envoie **une seule fois** un exemple de son contrat (PDF ou photos de toutes les pages, vierge ou déjà rempli) :
+1. Gemini (avec la clé de l'entreprise, après accord du propriétaire) lit l'exemple et reconstruit un **modèle vierge** : textes, ordre des rubriques, tableaux, colonnes, encadrés, zones de signature/cachet, en-tête et logo. Les informations propres à une location (client, CIN, plaque, dates, montants, adresse de l'agence…) sont remplacées par des **champs automatiques** ; si l'exemple est rempli, rien du vrai client n'est conservé.
+2. Le propriétaire **relit** le résultat, corrige les textes si besoin, regarde un **aperçu PDF** et enregistre.
+3. Ensuite, **chaque contrat ne fait que remplir ce modèle** sur le téléphone : aucune IA, aucun délai, aucune consommation. L'IA n'est appelée qu'à l'envoi de l'exemple (limite : 10 analyses par jour).
+4. Le client lit ce même texte avant de signer. À la signature, le modèle utilisé est **figé sur le contrat** : modifier le modèle plus tard ne change jamais un contrat déjà signé.
+Sans modèle personnalisé (ou sans clé Gemini), l'app utilise le modèle M3ak standard ci-dessous. « Revenir au modèle standard » est possible à tout moment.
+
+**Limites honnêtes :** la ressemblance porte sur le contenu, l'ordre, les tableaux, les colonnes, les encadrés, les alignements, les tailles relatives et le logo. Les polices et les décorations fines ne sont pas reproduites à l'identique. Une information sans champ équivalent (ex. numéro de permis) devient une ligne de points à remplir à la main.
+
 ## Signature du personnel (propriétaire, responsable, employé)
 Profil → **Ajouter ma signature** : un petit écran s'ouvre, on signe au doigt, **Enregistrer**. La signature est ensuite collée automatiquement sur tous les contrats que cette personne fait signer. Elle peut être modifiée ou retirée à tout moment depuis le profil.
 
@@ -9,7 +19,7 @@ Sur un contrat « Prêt à signer » → **Faire signer le client** :
 2. **Signature** : le client signe au doigt dans un cadre. La signature de l'agence (profil de l'employé connecté) s'affiche à côté ; si l'employé n'en a pas, l'app propose de l'ajouter.
 3. **Valider** : les deux signatures sont enregistrées, le contrat passe à « Signé » (horodaté, avec l'auteur).
 
-## Contrat PDF
+## Contrat PDF (modèle M3ak standard)
 Bilingue français / arabe : agence (nom, adresse, ville, téléphone, e-mail), locataire et conducteurs, véhicule, période, prix, caution, **état des lieux de départ** (s'il existe), conditions particulières, **14 articles** (objet, durée, prix, caution, conducteurs, usage, état du véhicule, carburant/kilométrage, assurance, accident/vol/panne, infractions, résiliation, données personnelles – loi 09-08, droit applicable), mention « lu et approuvé », puis les deux signatures avec nom et date.
 
 ⚠️ Les conditions générales sont un **modèle standard non validé par un juriste** : à faire relire avant usage commercial (`src/features/contracts/contract-terms.ts`).

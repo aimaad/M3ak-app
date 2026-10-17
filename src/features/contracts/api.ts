@@ -37,6 +37,7 @@ type ContractRow = {
   client_signature_path: string | null;
   agency_signature_path: string | null;
   client_signed_at: string | null;
+  terms_snapshot: unknown | null;
   etat_depart: VehicleCondition | null;
   accessoires_depart: AccessoryKey[];
   observations_depart: string | null;
@@ -80,6 +81,7 @@ function fromRow(row: ContractRow): Contract {
     clientSignaturePath: row.client_signature_path,
     agencySignaturePath: row.agency_signature_path,
     clientSignedAt: row.client_signed_at,
+    termsSnapshot: row.terms_snapshot ?? null,
     etatDepart: row.etat_depart,
     accessoiresDepart: row.accessoires_depart ?? [],
     observationsDepart: row.observations_depart,
@@ -184,7 +186,7 @@ export async function markReadyToSign(id: string): Promise<Contract> {
  * Signature : le client a signé à l'écran (copie figée déposée avant), l'employé a sa propre signature collée.
  * Toujours horodatée et attribuée ; la base refuse « signé » sans signature du client.
  */
-export async function signContract(id: string, signatures: { clientPath: string; agencyPath: string | null }): Promise<Contract> {
+export async function signContract(id: string, signatures: { clientPath: string; agencyPath: string | null }, terms: unknown | null = null): Promise<Contract> {
   const userId = await getCurrentUserId();
   const now = new Date().toISOString();
   const { data, error } = await getSupabase()
@@ -196,6 +198,7 @@ export async function signContract(id: string, signatures: { clientPath: string;
       client_signature_path: signatures.clientPath,
       agency_signature_path: signatures.agencyPath,
       client_signed_at: now,
+      terms_snapshot: terms,
     })
     .eq('id', id)
     .select()
