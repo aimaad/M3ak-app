@@ -179,3 +179,23 @@ describe('contrat complet (conditions, parties, signatures)', () => {
     expect(html).not.toContain('<script>x');
   });
 });
+
+describe('cachet de l\'agence', () => {
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+
+  it('appose le cachet à côté de la signature de l\'agence', () => {
+    const html = buildContractHtml(makeContract(), 'Agence Test', { stampDataUri: png });
+    expect(html).toContain('class="stamp"');
+    expect(html).toContain(png);
+  });
+
+  it('ne met aucun cachet quand il n\'y en a pas', () => {
+    expect(buildContractHtml(makeContract(), 'Agence Test')).not.toContain('class="stamp"');
+  });
+
+  it('ignore toute valeur qui n\'est pas une image png/jpeg encodée', () => {
+    for (const evil of ['javascript:alert(1)', 'data:text/html;base64,PHNjcmlwdD4=', 'data:image/svg+xml;base64,AAAA', `${png}" onerror="x`, 'https://evil.test/x.png']) {
+      expect(buildContractHtml(makeContract(), 'Agence Test', { stampDataUri: evil })).not.toContain('class="stamp"');
+    }
+  });
+});

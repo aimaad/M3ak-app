@@ -257,6 +257,11 @@ export default function SignerContratScreen() {
               </Card>
             </View>
 
+            {detailsQuery.data && !detailsQuery.data.stampPath ? (
+              <ThemedText type="small" style={{ color: M3akPalette.warning }}>
+                {t('contract.sign.stampMissing')}
+              </ThemedText>
+            ) : null}
             {error ? (
               <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                 {error}

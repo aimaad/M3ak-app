@@ -221,6 +221,14 @@
       "maxAdditional": "Conducteurs supplémentaires maximum par location",
       "saved": "Exigences enregistrées.",
       "saveError": "Impossible d'enregistrer."
+    },
+    "stamp": {
+      "title": "Cachet de l'agence",
+      "none": "Aucun cachet enregistré. Il sera apposé sur les contrats PDF.",
+      "loading": "Chargement du cachet…",
+      "help": "Photographiez votre cachet sur une feuille blanche bien éclairée, ou choisissez une image dans la galerie. Il sera apposé à côté de la signature de l'agence sur chaque contrat.",
+      "remove": "Retirer le cachet",
+      "error": "Impossible d'enregistrer le cachet. Réessayez."
     }
   },
   "flotte": {
@@ -948,7 +956,8 @@
       "error": "Impossible d'enregistrer la signature. Vérifiez votre connexion et réessayez.",
       "signatures": "Signatures",
       "clientLabel": "Client",
-      "agencyLabel": "Agence"
+      "agencyLabel": "Agence",
+      "stampMissing": "Le propriétaire n'a pas encore ajouté le cachet de l'agence (Mon entreprise) : le contrat PDF sera généré sans cachet."
     }
   },
   "inspection": {

@@ -90,6 +90,8 @@ export type AgencyDetails = {
   pays: string;
   devise: string;
   logoUrl: string | null;
+  /** Cachet de l'agence apposé sur les contrats (chemin dans le bucket privé). */
+  stampPath: string | null;
   /** Analyse automatique des permis par un fournisseur d'IA externe : désactivée par défaut, réservée au propriétaire. */
   createdAt: string;
 };

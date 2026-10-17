@@ -19,6 +19,8 @@ import {
   updateMemberRole,
   updateMyProfile,
   uploadAgencyLogo,
+  uploadAgencyStamp,
+  removeAgencyStamp,
   uploadMemberAvatar,
 } from './api';
 import type { AgencyDetailsInput, AgencyRole, CreateInviteInput, MemberProfileInput } from './types';
@@ -132,6 +134,29 @@ export function useUploadAgencyLogo() {
   return useMutation({
     mutationFn: ({ agencyId, localUri }: { agencyId: string; localUri: string }) =>
       uploadAgencyLogo(agencyId, localUri),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+    },
+  });
+}
+
+export function useUploadAgencyStamp() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ agencyId, localUri }: { agencyId: string; localUri: string }) => uploadAgencyStamp(agencyId, localUri),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['signed-url'] });
+    },
+  });
+}
+
+export function useRemoveAgencyStamp() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (agencyId: string) => removeAgencyStamp(agencyId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
     },

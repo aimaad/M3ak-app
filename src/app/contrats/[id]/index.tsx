@@ -14,6 +14,8 @@ import { generateContractPdf } from '@/features/contracts/contract-pdf';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPdf } from '@/features/contracts/hooks';
 import { useRental } from '@/features/rentals/hooks';
+import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
+import { downloadImageAsDataUri } from '@/features/storage/api';
 import { loadSignature } from '@/features/signatures/api';
 import { useSignature } from '@/features/signatures/hooks';
 import { SignatureView } from '@/features/signatures/signature-pad';
@@ -58,9 +60,10 @@ export default function ContratDetailScreen() {
     try {
       const details = detailsQuery.data;
       const signer = membersQuery.data?.find((member) => member.userId === contract.signedBy);
-      const [client, agency] = await Promise.all([
+      const [client, agency, stampDataUri] = await Promise.all([
         loadSignature(contract.clientSignaturePath),
         loadSignature(contract.agencySignaturePath),
+        downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.stampPath).catch(() => null),
       ]);
       const localUri = await generateContractPdf(
         contract,
@@ -72,7 +75,7 @@ export default function ContratDetailScreen() {
           telephone: details?.telephone,
           email: details?.email,
         },
-        { client, agency, agencySignerName: signer?.nomComplet ?? null }
+        { client, agency, stampDataUri, agencySignerName: signer?.nomComplet ?? null }
       );
       await uploadPdf.mutateAsync({ agencyId: contract.agencyId, contractId: contract.id, localUri });
       if (await Sharing.isAvailableAsync()) {

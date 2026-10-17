@@ -57,3 +57,25 @@ export async function getSignedUrl(bucket: string, path: string, expiresInSecond
   if (error) throw error;
   return data.signedUrl;
 }
+
+/** Octets → base64 (par blocs, pour ne pas saturer la pile sur une image de quelques centaines de Ko). */
+export function bytesToBase64(bytes: Uint8Array): string {
+  let binary = '';
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+/** Image d'un bucket privé → data URI (pour l'intégrer dans un PDF). Null si absente, trop lourde ou d'un autre type. */
+export async function downloadImageAsDataUri(bucket: string, path: string | null | undefined): Promise<string | null> {
+  if (!path) return null;
+  const response = await fetch(await getSignedUrl(bucket, path));
+  if (!response.ok) return null;
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.length === 0 || bytes.length > 3 * 1024 * 1024) return null;
+  if (contentMatchesType(bytes, 'image/png')) return `data:image/png;base64,${bytesToBase64(bytes)}`;
+  if (contentMatchesType(bytes, 'image/jpeg')) return `data:image/jpeg;base64,${bytesToBase64(bytes)}`;
+  return null;
+}

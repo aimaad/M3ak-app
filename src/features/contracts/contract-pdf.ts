@@ -42,6 +42,8 @@ export type ContractAgencyInfo = {
 export type ContractSignatures = {
   client?: HandwrittenSignature | null;
   agency?: HandwrittenSignature | null;
+  /** Cachet de l'agence en data URI (png/jpeg uniquement ; toute autre valeur est ignorée). */
+  stampDataUri?: string | null;
   /** Nom de la personne de l'agence qui signe. */
   agencySignerName?: string | null;
 };
@@ -64,11 +66,21 @@ function row(labelFr: string, labelAr: string, value: string): string {
   return `<tr><td class="label">${escapeHtml(labelFr)}<span class="ar"> · ${escapeHtml(labelAr)}</span></td><td>${value}</td></tr>`;
 }
 
-function signatureBlock(titleFr: string, titleAr: string, signature: HandwrittenSignature | null | undefined, name: string | null | undefined, when: string | null | undefined): string {
+const STAMP_PATTERN = /^data:image\/(png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+function signatureBlock(
+  titleFr: string,
+  titleAr: string,
+  signature: HandwrittenSignature | null | undefined,
+  name: string | null | undefined,
+  when: string | null | undefined,
+  stampDataUri?: string | null
+): string {
   const svg = signature ? signatureToSvg(signature, 70) : '';
+  const stamp = stampDataUri && STAMP_PATTERN.test(stampDataUri) ? `<img class="stamp" src="${stampDataUri}" />` : '';
   return `<div class="sign-box">
     <div class="sign-title">${escapeHtml(titleFr)} <span class="ar">· ${escapeHtml(titleAr)}</span></div>
-    <div class="sign-area">${svg}</div>
+    <div class="sign-area">${svg}${stamp}</div>
     ${name ? `<div class="sign-name">${escapeHtml(name)}</div>` : ''}
     ${when ? `<div class="sign-date">${escapeHtml(when)}</div>` : ''}
   </div>`;
@@ -112,6 +124,7 @@ export function buildContractHtml(contract: Contract, agency: string | ContractA
           .sign-box { width: 47%; border: 1px solid #EAE5F2; border-radius: 6px; padding: 8px; font-size: 11px; text-align: center; }
           .sign-title { font-weight: bold; }
           .sign-area { height: 76px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #211A2E; margin: 6px 0 4px; }
+          .stamp { height: 70px; max-width: 110px; object-fit: contain; margin-inline-start: 8px; }
           .sign-name { font-weight: bold; }
           .sign-date { color: #81778F; font-size: 10px; }
           .notice { margin-top: 20px; font-size: 9px; color: #B3A6C2; border-top: 1px solid #EAE5F2; padding-top: 8px; }
@@ -179,7 +192,7 @@ export function buildContractHtml(contract: Contract, agency: string | ContractA
 
         <div class="signatures">
           ${signatureBlock('Le locataire', 'المكتري', signatures.client, contract.customerNom, contract.clientSignedAt ? formatDateTime(contract.clientSignedAt) : null)}
-          ${signatureBlock("Pour l'agence", 'عن الوكالة', signatures.agency, signatures.agencySignerName ?? info.nom, contract.signedAt ? formatDateTime(contract.signedAt) : null)}
+          ${signatureBlock("Pour l'agence", 'عن الوكالة', signatures.agency, signatures.agencySignerName ?? info.nom, contract.signedAt ? formatDateTime(contract.signedAt) : null, signatures.stampDataUri)}
         </div>
 
         <p class="notice">

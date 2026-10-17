@@ -5,6 +5,7 @@ import { ActivityIndicator, Alert, Image, Pressable, ScrollView, View } from 're
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -13,7 +14,9 @@ import {
   useAgencyDetails,
   useMyAgency,
   useUpdateAgencyDetails,
+  useRemoveAgencyStamp,
   useUploadAgencyLogo,
+  useUploadAgencyStamp,
 } from '@/features/agency/hooks';
 import {
   isAgencyDetailsFormValid,
@@ -202,6 +205,65 @@ function AiInsightsSettings({ agencyId, isOwner }: { agencyId: string; isOwner: 
   );
 }
 
+function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: string; isOwner: boolean; details: AgencyDetails }) {
+  const { t } = useLanguage();
+  const uploadStamp = useUploadAgencyStamp();
+  const removeStamp = useRemoveAgencyStamp();
+  const { data: stampUrl } = useSignedUrl(AGENCY_ASSETS_BUCKET, details.stampPath ?? undefined);
+
+  async function pick(source: 'library' | 'camera') {
+    const permission =
+      source === 'library' ? await ImagePicker.requestMediaLibraryPermissionsAsync() : await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) return;
+    const result =
+      source === 'library'
+        ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 })
+        : await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    const uri = result.canceled ? null : result.assets[0]?.uri;
+    if (!uri) return;
+    try {
+      await uploadStamp.mutateAsync({ agencyId, localUri: uri });
+    } catch {
+      Alert.alert(t('common.appName'), t('entreprise.stamp.error'));
+    }
+  }
+
+  return (
+    <View className="gap-2">
+      <ThemedText type="smallBold">{t('entreprise.stamp.title')}</ThemedText>
+      <Card className="items-center gap-3">
+        {stampUrl ? (
+          <Image source={{ uri: stampUrl }} style={{ width: 140, height: 140 }} resizeMode="contain" />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary" className="text-center">
+            {details.stampPath ? t('entreprise.stamp.loading') : t('entreprise.stamp.none')}
+          </ThemedText>
+        )}
+        {isOwner ? (
+          <>
+            <ThemedText type="small" themeColor="textSecondary" className="text-center">
+              {t('entreprise.stamp.help')}
+            </ThemedText>
+            <View className="flex-row flex-wrap justify-center gap-2">
+              <Button label={t('common.camera')} variant="secondary" size="sm" disabled={uploadStamp.isPending} onPress={() => pick('camera')} />
+              <Button label={t('common.gallery')} variant="secondary" size="sm" disabled={uploadStamp.isPending} onPress={() => pick('library')} />
+              {details.stampPath ? (
+                <Button
+                  label={t('entreprise.stamp.remove')}
+                  variant="ghost"
+                  size="sm"
+                  disabled={removeStamp.isPending}
+                  onPress={() => removeStamp.mutate(agencyId, { onError: () => Alert.alert(t('common.appName'), t('entreprise.stamp.error')) })}
+                />
+              ) : null}
+            </View>
+          </>
+        ) : null}
+      </Card>
+    </View>
+  );
+}
+
 function EntrepriseForm({
   agencyId,
   isOwner,
@@ -357,6 +419,7 @@ function EntrepriseForm({
         </View>
       )}
 
+      <AgencyStampSettings agencyId={agencyId} isOwner={isOwner} details={details} />
       <DocumentReadingSettings agencyId={agencyId} isOwner={isOwner} />
       <AiInsightsSettings agencyId={agencyId} isOwner={isOwner} />
 

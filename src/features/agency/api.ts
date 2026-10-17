@@ -31,6 +31,7 @@ type AgencyRow = {
   pays: string;
   devise: string;
   logo_url: string | null;
+  stamp_path: string | null;
   created_at: string;
 };
 
@@ -46,6 +47,7 @@ function agencyFromRow(row: AgencyRow): AgencyDetails {
     pays: row.pays,
     devise: row.devise,
     logoUrl: row.logo_url,
+    stampPath: row.stamp_path,
     createdAt: row.created_at,
   };
 }
@@ -328,6 +330,25 @@ export async function uploadAgencyLogo(agencyId: string, localUri: string): Prom
     .select()
     .single();
 
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+/** Cachet de l'agence (photo ou scan du tampon). Réservé au propriétaire (RLS + déclencheur de chemin). */
+export async function uploadAgencyStamp(agencyId: string, localUri: string): Promise<AgencyDetails> {
+  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase();
+  const isPng = extension === 'png';
+  const path = `${agencyId}/stamp.${isPng ? 'png' : 'jpg'}`;
+
+  await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, isPng ? 'image/png' : 'image/jpeg');
+
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: path }).eq('id', agencyId).select().single();
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+export async function removeAgencyStamp(agencyId: string): Promise<AgencyDetails> {
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: null }).eq('id', agencyId).select().single();
   if (error) throw error;
   return agencyFromRow(data as AgencyRow);
 }
