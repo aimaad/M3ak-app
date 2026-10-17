@@ -33,7 +33,14 @@ export function parseJson(text: string): unknown {
   return JSON.parse(text.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim());
 }
 
-async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number, maxOutput?: number): Promise<ProviderResult> {
+/** Réflexion coupée (ou minimale) : une lecture de document n'en a pas besoin et elle multiplie la durée. */
+function thinkingConfigFor(model: string): Record<string, unknown> {
+  if (/^gemini-2\.5-flash/.test(model)) return { thinkingConfig: { thinkingBudget: 0 } };
+  if (versionOf(model) >= 3) return { thinkingConfig: { thinkingLevel: 'minimal' } };
+  return {};
+}
+
+async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number, maxOutput?: number, forceNoThinkingConfig = false): Promise<ProviderResult> {
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -49,7 +56,7 @@ async function callGeminiModel(apiKey: string, model: string, systemPrompt: stri
           // Les modèles 2.5 acceptent « pas de réflexion » (plus rapide, moins cher). Pour les autres on ne force
           // rien (paramètre non garanti) et on laisse plus de marge de sortie.
           maxOutputTokens: maxOutput ?? (/^gemini-2\.5-flash/.test(model) ? 8192 : 16384),
-          ...(/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+          ...(forceNoThinkingConfig ? {} : thinkingConfigFor(model)),
         },
       }),
     });
@@ -131,7 +138,7 @@ export async function callGeminiJson(
   apiKey: string,
   systemPrompt: string,
   parts: GeminiPart[],
-  options: { maxOutputTokens?: number; deadlineMs?: number; preferModels?: string[] } = {}
+  options: { maxOutputTokens?: number; deadlineMs?: number; preferModels?: string[]; perCallMs?: number; trace?: string[] } = {}
 ): Promise<ProviderResult> {
   const started = Date.now();
   const models = [...new Set([...(options.preferModels ?? []), ...(await candidateModels(apiKey))])];
@@ -141,10 +148,28 @@ export async function callGeminiJson(
     for (const model of models) {
       const remaining = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
       if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
+      const perCall = Math.min(options.perCallMs ?? (options.maxOutputTokens ? 70_000 : PER_CALL_TIMEOUT_MS), remaining);
+      const callStart = Date.now();
+      const note = (outcome: string) => options.trace?.push(`${model}: ${outcome} (${Math.round((Date.now() - callStart) / 1000)} s)`);
       try {
-        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(options.maxOutputTokens ? 100_000 : PER_CALL_TIMEOUT_MS, remaining), options.maxOutputTokens);
+        try {
+          const result = await callGeminiModel(apiKey, model, systemPrompt, parts, perCall, options.maxOutputTokens);
+          note('ok');
+          return result;
+        } catch (error) {
+          // Paramètre de réflexion refusé par ce modèle : on réessaie le même modèle sans ce paramètre.
+          if (error instanceof ProviderHttpError && error.status === 400 && /thinking/i.test(error.message)) {
+            const left = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
+            if (left < 4_000) throw error;
+            const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(perCall, left), options.maxOutputTokens, true);
+            note('ok sans réflexion');
+            return result;
+          }
+          throw error;
+        }
       } catch (error) {
         lastError = error;
+        note(error instanceof StageTimeoutError ? 'trop lent' : error instanceof ProviderHttpError ? `erreur ${error.status}` : 'échec');
         if (error instanceof ProviderHttpError && (error.status === 503 || error.status === 429)) busyError = error;
         const retryable = error instanceof ProviderHttpError && RETRYABLE_STATUSES.has(error.status);
         const timedOut = error instanceof StageTimeoutError;

@@ -239,7 +239,7 @@ export default function ModeleContratScreen() {
                 </ThemedText>
                 {errorDetail ? (
                   <ThemedText type="small" themeColor="textSecondary" selectable style={{ fontSize: 11 }}>
-                    {t('contractTemplate.supportDetail', { detail: errorDetail.slice(0, 200) })}
+                    {t('contractTemplate.supportDetail', { detail: errorDetail.slice(0, 240) })}
                   </ThemedText>
                 ) : null}
               </View>
