@@ -28,6 +28,7 @@ create table storage.objects (id uuid primary key default gen_random_uuid(), buc
 alter table storage.objects enable row level security;
 grant select, insert, update, delete on storage.objects, storage.buckets to authenticated;
 create function storage.foldername(name text) returns text[] language sql as $$ select string_to_array(name, '/') $$;
+create function storage.filename(name text) returns text language sql as $$ select (string_to_array(name, '/'))[array_length(string_to_array(name, '/'), 1)] $$;
 grant usage on schema public, auth, storage, extensions to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to authenticated, service_role;
 alter default privileges in schema public grant all on sequences to authenticated, service_role;

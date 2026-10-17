@@ -9,11 +9,14 @@ import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useMyAgency } from '@/features/agency/hooks';
+import { useAgencyDetails, useAgencyMembers, useMyAgency } from '@/features/agency/hooks';
 import { generateContractPdf } from '@/features/contracts/contract-pdf';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
-import { useCancelContract, useContract, useMarkReadyToSign, useSignContract, useUploadContractPdf } from '@/features/contracts/hooks';
+import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPdf } from '@/features/contracts/hooks';
 import { useRental } from '@/features/rentals/hooks';
+import { loadSignature } from '@/features/signatures/api';
+import { useSignature } from '@/features/signatures/hooks';
+import { SignatureView } from '@/features/signatures/signature-pad';
 import { useLanguage } from '@/i18n/use-language';
 import { friendlyErrorKey } from '@/lib/user-errors';
 
@@ -38,8 +41,11 @@ export default function ContratDetailScreen() {
   const agencyQuery = useMyAgency();
   const { data: contract, isLoading, isError } = useContract(id);
   const { data: rental } = useRental(contract?.rentalId);
+  const detailsQuery = useAgencyDetails(agencyQuery.data?.agencyId);
+  const membersQuery = useAgencyMembers(agencyQuery.data?.agencyId);
+  const clientSignature = useSignature(contract?.clientSignaturePath);
+  const agencySignature = useSignature(contract?.agencySignaturePath);
   const markReadyToSign = useMarkReadyToSign();
-  const signContract = useSignContract();
   const cancelContract = useCancelContract();
   const uploadPdf = useUploadContractPdf();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -50,7 +56,24 @@ export default function ContratDetailScreen() {
     setPdfError(null);
     setIsGeneratingPdf(true);
     try {
-      const localUri = await generateContractPdf(contract, agencyQuery.data.agencyName);
+      const details = detailsQuery.data;
+      const signer = membersQuery.data?.find((member) => member.userId === contract.signedBy);
+      const [client, agency] = await Promise.all([
+        loadSignature(contract.clientSignaturePath),
+        loadSignature(contract.agencySignaturePath),
+      ]);
+      const localUri = await generateContractPdf(
+        contract,
+        {
+          nom: details?.nom ?? agencyQuery.data.agencyName,
+          raisonSociale: details?.raisonSociale,
+          adresse: details?.adresse,
+          ville: details?.ville ?? agencyQuery.data.agencyCity,
+          telephone: details?.telephone,
+          email: details?.email,
+        },
+        { client, agency, agencySignerName: signer?.nomComplet ?? null }
+      );
       await uploadPdf.mutateAsync({ agencyId: contract.agencyId, contractId: contract.id, localUri });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(localUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
@@ -70,20 +93,6 @@ export default function ContratDetailScreen() {
         text: t('contract.cancelAction'),
         style: 'destructive',
         onPress: () => cancelContract.mutate(contract.id),
-      },
-    ]);
-  }
-
-  function handleSign() {
-    if (!contract) return;
-    Alert.alert(t('contract.signConfirmTitle'), t('contract.signConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('contract.signAction'),
-        onPress: () =>
-          signContract.mutate(contract.id, {
-            onError: () => Alert.alert(t('common.appName'), t('contract.signError')),
-          }),
       },
     ]);
   }
@@ -151,6 +160,28 @@ export default function ContratDetailScreen() {
             </ThemedText>
           ) : null}
 
+          {contract.clientSignaturePath ? (
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('contract.sign.signatures')}</ThemedText>
+              <Card className="flex-row items-center justify-around gap-3">
+                <View className="items-center gap-1">
+                  {clientSignature.data ? <SignatureView signature={clientSignature.data} height={70} /> : <ActivityIndicator color="#7C3AED" />}
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('contract.sign.clientLabel')}
+                  </ThemedText>
+                </View>
+                {contract.agencySignaturePath ? (
+                  <View className="items-center gap-1">
+                    {agencySignature.data ? <SignatureView signature={agencySignature.data} height={70} /> : <ActivityIndicator color="#7C3AED" />}
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('contract.sign.agencyLabel')}
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </Card>
+            </View>
+          ) : null}
+
           <View className="gap-2">
             {canMarkReady ? (
               <Button
@@ -162,10 +193,8 @@ export default function ContratDetailScreen() {
             ) : null}
             {canSign ? (
               <Button
-                label={t('contract.signAction')}
-                onPress={handleSign}
-                disabled={signContract.isPending}
-                loading={signContract.isPending}
+                label={t('contract.sign.start')}
+                onPress={() => router.push({ pathname: '/contrats/[id]/signer', params: { id: contract.id } })}
               />
             ) : null}
             {contract.statut === 'signe' && rental ? (

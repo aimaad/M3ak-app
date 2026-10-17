@@ -67,6 +67,8 @@ export type MemberProfile = {
   nom: string | null;
   nomComplet: string | null;
   photoPath: string | null;
+  /** Signature manuscrite enregistrée par le membre (null tant qu'il n'en a pas ajouté). */
+  signaturePath: string | null;
   branchId: string | null;
   branchNom: string | null;
   createdAt: string;

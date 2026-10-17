@@ -34,6 +34,9 @@ type ContractRow = {
   notes: string | null;
   signed_at: string | null;
   signed_by: string | null;
+  client_signature_path: string | null;
+  agency_signature_path: string | null;
+  client_signed_at: string | null;
   etat_depart: VehicleCondition | null;
   accessoires_depart: AccessoryKey[];
   observations_depart: string | null;
@@ -74,6 +77,9 @@ function fromRow(row: ContractRow): Contract {
     notes: row.notes,
     signedAt: row.signed_at,
     signedBy: row.signed_by,
+    clientSignaturePath: row.client_signature_path,
+    agencySignaturePath: row.agency_signature_path,
+    clientSignedAt: row.client_signed_at,
     etatDepart: row.etat_depart,
     accessoiresDepart: row.accessoires_depart ?? [],
     observationsDepart: row.observations_depart,
@@ -174,12 +180,23 @@ export async function markReadyToSign(id: string): Promise<Contract> {
   return fromRow(data as ContractRow);
 }
 
-/** Signature manuelle documentée : jamais automatique, toujours horodatée et attribuée. */
-export async function signContract(id: string): Promise<Contract> {
+/**
+ * Signature : le client a signé à l'écran (copie figée déposée avant), l'employé a sa propre signature collée.
+ * Toujours horodatée et attribuée ; la base refuse « signé » sans signature du client.
+ */
+export async function signContract(id: string, signatures: { clientPath: string; agencyPath: string | null }): Promise<Contract> {
   const userId = await getCurrentUserId();
+  const now = new Date().toISOString();
   const { data, error } = await getSupabase()
     .from('contracts')
-    .update({ statut: 'signe', signed_at: new Date().toISOString(), signed_by: userId })
+    .update({
+      statut: 'signe',
+      signed_at: now,
+      signed_by: userId,
+      client_signature_path: signatures.clientPath,
+      agency_signature_path: signatures.agencyPath,
+      client_signed_at: now,
+    })
     .eq('id', id)
     .select()
     .single();

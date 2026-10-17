@@ -1,5 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { saveContractSignatures } from '@/features/signatures/api';
+import type { HandwrittenSignature } from '@/features/signatures/signature';
+
 import {
   cancelContract,
   createContract,
@@ -75,7 +78,18 @@ export function useMarkReadyToSign() {
 export function useSignContract() {
   const invalidate = useInvalidateContracts();
   return useMutation({
-    mutationFn: (id: string) => signContract(id),
+    mutationFn: async ({
+      contract,
+      clientSignature,
+      agencySignature,
+    }: {
+      contract: { id: string; agencyId: string };
+      clientSignature: HandwrittenSignature;
+      agencySignature: HandwrittenSignature | null;
+    }) => {
+      const paths = await saveContractSignatures(contract.agencyId, contract.id, clientSignature, agencySignature);
+      return signContract(contract.id, paths);
+    },
     onSuccess: (contract) => invalidate(contract),
   });
 }

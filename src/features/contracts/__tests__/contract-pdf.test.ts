@@ -28,6 +28,9 @@ function makeContract(overrides: Partial<Contract> = {}): Contract {
     notes: null,
     signedAt: null,
     signedBy: null,
+    clientSignaturePath: null,
+    agencySignaturePath: null,
+    clientSignedAt: null,
     etatDepart: null,
     accessoiresDepart: [],
     observationsDepart: null,
@@ -109,5 +112,70 @@ describe('conducteurs et confidentialité du contrat', () => {
     expect(source).not.toMatch(/customers\/notes|customer_notes|notes-api/);
     const types: string = fs.readFileSync(path.join(__dirname, '..', 'types.ts'), 'utf8');
     expect(types).not.toMatch(/customer_notes|customerNotes/);
+  });
+});
+
+describe('contrat complet (conditions, parties, signatures)', () => {
+  const sig = { v: 1 as const, width: 300, height: 150, paths: ['M 10 10 L 50 60 L 90 20 L 130 70 L 170 30 L 210 80 L 250 40'] };
+  const agency = { nom: 'Agence Atlas', adresse: '12 rue Hassan II', ville: 'Marrakech', telephone: '+212600000000', email: 'contact@atlas.ma' };
+
+  it('contient toutes les conditions générales en français ET en arabe', () => {
+    const html = buildContractHtml(makeContract(), agency);
+    expect(html).toContain('Article 1');
+    expect(html).toContain('Article 14');
+    expect(html).toContain('Dépôt de garantie');
+    expect(html).toContain('المادة 14');
+    expect(html).toContain('الضمانة');
+    expect(html).toContain('loi n° 09-08');
+    expect(html).toContain('Marrakech');
+  });
+
+  it('indique le montant de la caution dans les conditions', () => {
+    expect(buildContractHtml(makeContract({ cautionMontant: 2500 }), agency).replace(/\s/g, ' ')).toMatch(/caution de 2.500 MAD/);
+  });
+
+  it('affiche les coordonnées de l\'agence', () => {
+    const html = buildContractHtml(makeContract(), agency);
+    expect(html).toContain('12 rue Hassan II');
+    expect(html).toContain('+212600000000');
+    expect(html).toContain('contact@atlas.ma');
+  });
+
+  it('insère les deux signatures manuscrites, le nom du signataire et la date', () => {
+    const html = buildContractHtml(
+      makeContract({ signedAt: '2026-03-09T10:00:00.000Z', clientSignedAt: '2026-03-09T10:00:00.000Z' }),
+      agency,
+      { client: sig, agency: sig, agencySignerName: 'Sara Alaoui' }
+    );
+    expect(html.match(/<svg/g)?.length).toBe(2);
+    expect(html).toContain('Sara Alaoui');
+    expect(html).toContain('M 10 10 L 50 60');
+  });
+
+  it('laisse les cadres vides tant que rien n\'est signé', () => {
+    expect(buildContractHtml(makeContract(), agency)).not.toContain('<svg');
+  });
+
+  it('refuse d\'insérer une signature falsifiée (aucun code ne peut passer)', () => {
+    const evil = { ...sig, paths: ['M 1 1"/><script>alert(1)</script>'] };
+    const html = buildContractHtml(makeContract(), agency, { client: evil, agency: evil });
+    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('<svg');
+  });
+
+  it('reprend l\'état des lieux de départ quand il existe', () => {
+    const html = buildContractHtml(
+      makeContract({ etatDepart: 'bon', accessoiresDepart: ['cric', 'extincteur'], observationsDepart: 'Rayure <b>pare-choc</b>' }),
+      agency
+    );
+    expect(html).toContain('État des lieux au départ');
+    expect(html).toContain('Cric, Extincteur');
+    expect(html).toContain('Rayure &lt;b&gt;pare-choc&lt;/b&gt;');
+    expect(buildContractHtml(makeContract(), agency)).not.toContain('État des lieux au départ');
+  });
+
+  it('échappe aussi les champs de l\'agence', () => {
+    const html = buildContractHtml(makeContract(), { nom: 'A<script>x</script>' });
+    expect(html).not.toContain('<script>x');
   });
 });

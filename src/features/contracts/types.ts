@@ -59,6 +59,10 @@ export type Contract = {
 
   signedAt: string | null;
   signedBy: string | null;
+  /** Signatures manuscrites (copies figées dans le bucket privé « signatures »). */
+  clientSignaturePath: string | null;
+  agencySignaturePath: string | null;
+  clientSignedAt: string | null;
 
   etatDepart: VehicleCondition | null;
   accessoiresDepart: AccessoryKey[];

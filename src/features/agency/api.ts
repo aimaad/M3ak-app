@@ -362,6 +362,7 @@ type MemberProfileRow = {
   nom: string | null;
   nom_complet: string | null;
   photo_path: string | null;
+  signature_path: string | null;
   branch_id: string | null;
   branch: { nom: string } | { nom: string }[] | null;
   created_at: string;
@@ -378,6 +379,7 @@ function profileFromRow(row: MemberProfileRow): MemberProfile {
     nom: row.nom,
     nomComplet: row.nom_complet,
     photoPath: row.photo_path,
+    signaturePath: row.signature_path,
     branchId: row.branch_id,
     branchNom: branch?.nom ?? null,
     createdAt: row.created_at,
@@ -390,7 +392,7 @@ export async function getMyMemberProfile(agencyId: string): Promise<MemberProfil
 
   const { data, error } = await getSupabase()
     .from('agency_members')
-    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, signature_path, branch_id, branch:branches(nom), created_at')
     .eq('agency_id', agencyId)
     .eq('user_id', userId)
     .maybeSingle<MemberProfileRow>();
@@ -406,7 +408,7 @@ export async function updateMyProfile(memberId: string, input: MemberProfileInpu
     .from('agency_members')
     .update({ prenom: input.prenom.trim() || null, nom: input.nom.trim() || null, nom_complet: nomComplet || null })
     .eq('id', memberId)
-    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, signature_path, branch_id, branch:branches(nom), created_at')
     .single<MemberProfileRow>();
 
   if (error) throw error;
@@ -425,7 +427,7 @@ export async function uploadMemberAvatar(agencyId: string, memberId: string, loc
     .from('agency_members')
     .update({ photo_path: path })
     .eq('id', memberId)
-    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, signature_path, branch_id, branch:branches(nom), created_at')
     .single<MemberProfileRow>();
 
   if (error) throw error;

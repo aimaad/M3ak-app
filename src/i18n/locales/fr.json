@@ -928,7 +928,28 @@
         "required": "Ce champ est obligatoire."
       }
     },
-    "additionalDrivers": "Conducteurs supplémentaires"
+    "additionalDrivers": "Conducteurs supplémentaires",
+    "sign": {
+      "start": "Faire signer le client",
+      "title": "Signature du contrat",
+      "readTitle": "Lire le contrat",
+      "signTitle": "Signer le contrat",
+      "notReady": "Ce contrat n'est pas prêt à être signé.",
+      "scrollHint": "Faites défiler jusqu'à la fin du contrat pour pouvoir continuer.",
+      "accept": "J'ai lu le contrat en entier et j'accepte ses conditions.",
+      "continue": "Passer à la signature",
+      "clientSignature": "Signature du client",
+      "clientHelp": "{{name}}, signez avec le doigt dans le cadre ci-dessous.",
+      "padPlaceholder": "Le client signe ici",
+      "agencySignature": "Signature de l'agence",
+      "staffMissing": "Vous n'avez pas encore enregistré votre signature. Ajoutez-la une fois, elle servira pour tous les contrats.",
+      "confirm": "Valider la signature",
+      "backToReading": "Relire le contrat",
+      "error": "Impossible d'enregistrer la signature. Vérifiez votre connexion et réessayez.",
+      "signatures": "Signatures",
+      "clientLabel": "Client",
+      "agencyLabel": "Agence"
+    }
   },
   "inspection": {
     "section": "Inspection",
@@ -1175,7 +1196,23 @@
     "updateSuccess": "Profil mis à jour.",
     "changePassword": "Modifier le mot de passe",
     "passwordError": "Impossible de modifier le mot de passe.",
-    "passwordSuccess": "Mot de passe modifié."
+    "passwordSuccess": "Mot de passe modifié.",
+    "signature": {
+      "section": "Ma signature",
+      "none": "Vous n'avez pas encore de signature. Elle sera ajoutée automatiquement aux contrats que vous faites signer.",
+      "add": "Ajouter ma signature",
+      "change": "Modifier ma signature",
+      "remove": "Retirer ma signature",
+      "title": "Ma signature",
+      "help": "Signez avec le doigt dans le cadre. Cette signature sera collée automatiquement sur les contrats que vous faites signer.",
+      "placeholder": "Signez ici",
+      "clear": "Effacer",
+      "tooShort": "La signature est trop courte. Signez comme sur papier.",
+      "save": "Enregistrer ma signature",
+      "saved": "Votre signature est enregistrée.",
+      "saveError": "Impossible d'enregistrer la signature. Vérifiez votre connexion et réessayez.",
+      "ok": "D'accord"
+    }
   },
   "journal": {
     "title": "Traçabilité",

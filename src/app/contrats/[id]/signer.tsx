@@ -1,0 +1,264 @@
+import { router, useLocalSearchParams } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+
+import { Button } from '@/components/button';
+import { Card } from '@/components/card';
+import { ScreenHeader } from '@/components/screen-header';
+import { ThemedText } from '@/components/themed-text';
+import { ThemedView } from '@/components/themed-view';
+import { M3akPalette } from '@/constants/theme';
+import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import { CONTRACT_ACCEPTANCE, contractArticles } from '@/features/contracts/contract-terms';
+import { useContract, useSignContract } from '@/features/contracts/hooks';
+import { useSignature } from '@/features/signatures/hooks';
+import { buildSignature, isSignatureDrawn } from '@/features/signatures/signature';
+import { SignaturePad, SignatureView } from '@/features/signatures/signature-pad';
+import { useLanguage } from '@/i18n/use-language';
+import { friendlyErrorKey } from '@/lib/user-errors';
+
+type Lang = 'fr' | 'ar';
+
+function formatDateTime(iso: string, lang: Lang): string {
+  return new Date(iso).toLocaleString(lang === 'ar' ? 'ar' : 'fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+/**
+ * Deux étapes remises au client : 1) lire le contrat en entier, 2) signer à la main.
+ * La signature de l'employé (profil) est ajoutée automatiquement ; sans elle, on propose de la créer.
+ */
+export default function SignerContratScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { t, language } = useLanguage();
+  const agencyQuery = useMyAgency();
+  const agencyId = agencyQuery.data?.agencyId;
+  const detailsQuery = useAgencyDetails(agencyId);
+  const profileQuery = useMyProfile(agencyId);
+  const myStaffSignature = useSignature(profileQuery.data?.signaturePath);
+  const { data: contract, isLoading } = useContract(id);
+  const signContract = useSignContract();
+
+  const [step, setStep] = useState<'read' | 'sign'>('read');
+  const [lang, setLang] = useState<Lang>(language === 'ar' ? 'ar' : 'fr');
+  const [reachedEnd, setReachedEnd] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [paths, setPaths] = useState<string[]>([]);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleDrawing = useCallback((drawing: boolean) => setScrollEnabled(!drawing), []);
+
+  const handlePadChange = useCallback((next: string[], nextSize: { width: number; height: number }) => {
+    setPaths(next);
+    setSize(nextSize);
+  }, []);
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
+    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 48) setReachedEnd(true);
+  }
+
+  if (isLoading || !contract) {
+    return (
+      <ThemedView className="flex-1">
+        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+          <ScreenHeader title={t('contract.sign.title')} showBack />
+          <View className="flex-1 items-center justify-center">
+            {isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
+          </View>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+
+  if (contract.statut !== 'pret_a_signer') {
+    return (
+      <ThemedView className="flex-1">
+        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+          <ScreenHeader title={t('contract.sign.title')} showBack />
+          <View className="flex-1 items-center justify-center px-8 gap-4">
+            <ThemedText themeColor="textSecondary" className="text-center">
+              {t('contract.sign.notReady')}
+            </ThemedText>
+            <Button label={t('common.back')} variant="secondary" onPress={() => router.back()} />
+          </View>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+
+  const isAr = lang === 'ar';
+  const direction = { writingDirection: isAr ? ('rtl' as const) : ('ltr' as const), textAlign: isAr ? ('right' as const) : ('left' as const) };
+  const money = (value: number) => `${value.toLocaleString('fr-FR')} MAD`;
+  const articles = contractArticles({ caution: money(contract.cautionMontant), city: detailsQuery.data?.ville ?? '' });
+  const staffSignature = myStaffSignature.data ?? null;
+  const staffMissing = !!profileQuery.data && !profileQuery.data.signaturePath;
+  const clientDrawn = isSignatureDrawn(paths) && size.width > 0;
+  const canSign = clientDrawn && !!staffSignature && !signContract.isPending;
+
+  async function handleSign() {
+    if (!contract || !canSign || !staffSignature) return;
+    setError(null);
+    try {
+      await signContract.mutateAsync({
+        contract: { id: contract.id, agencyId: contract.agencyId },
+        clientSignature: buildSignature(paths, size.width, size.height),
+        agencySignature: staffSignature,
+      });
+      router.replace({ pathname: '/contrats/[id]', params: { id: contract.id } });
+    } catch (e) {
+      setError(t(friendlyErrorKey(e, 'contract.sign.error')));
+    }
+  }
+
+  const summaryRows: [string, string][] = [
+    [t('locations.customer'), contract.customerNom],
+    [t('locations.vehicle'), `${contract.vehicleMarque} ${contract.vehicleModele} · ${contract.vehicleImmatriculation}`],
+    [t('locations.period'), `${formatDateTime(contract.dateDebutPrevue, lang)} → ${formatDateTime(contract.dateFinPrevue, lang)}`],
+    [t('locations.prixTotal'), contract.prixTotal != null ? money(contract.prixTotal) : '—'],
+    [t('locations.cautionBlocked'), money(contract.cautionMontant)],
+  ];
+
+  return (
+    <ThemedView className="flex-1">
+      <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
+        <ScreenHeader title={step === 'read' ? t('contract.sign.readTitle') : t('contract.sign.signTitle')} subtitle={contract.numero} showBack />
+
+        {step === 'read' ? (
+          <View className="flex-1">
+            <View className="flex-row gap-2 px-6 pb-3">
+              {(['fr', 'ar'] as Lang[]).map((option) => (
+                <Pressable
+                  key={option}
+                  onPress={() => setLang(option)}
+                  className={`rounded-full border px-4 py-2 ${lang === option ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
+                >
+                  <ThemedText type="small" style={{ color: lang === option ? '#ffffff' : '#211A2E' }}>
+                    {option === 'fr' ? 'Français' : 'العربية'}
+                  </ThemedText>
+                </Pressable>
+              ))}
+            </View>
+
+            <ScrollView
+              className="flex-1"
+              contentContainerClassName="gap-4 px-6 pb-6"
+              onScroll={handleScroll}
+              scrollEventThrottle={64}
+              onContentSizeChange={(_, height) => {
+                if (height < 400) setReachedEnd(true);
+              }}
+            >
+              <Card padded={false} className="px-4">
+                {summaryRows.map(([label, value]) => (
+                  <View key={label} className="border-b border-[#EAE5F2] py-3 last:border-b-0">
+                    <ThemedText type="small" themeColor="textSecondary" style={direction}>
+                      {label}
+                    </ThemedText>
+                    <ThemedText type="smallBold" style={direction}>
+                      {value}
+                    </ThemedText>
+                  </View>
+                ))}
+              </Card>
+
+              {contract.conditionsParticulieres ? (
+                <View className="gap-1">
+                  <ThemedText type="smallBold" style={direction}>
+                    {t('contract.fields.conditionsParticulieres')}
+                  </ThemedText>
+                  <ThemedText type="default" style={direction}>
+                    {contract.conditionsParticulieres}
+                  </ThemedText>
+                </View>
+              ) : null}
+
+              {articles.map((article, index) => (
+                <View key={article.id} className="gap-1">
+                  <ThemedText type="smallBold" style={direction}>
+                    {isAr ? `المادة ${index + 1} — ${article.ar.title}` : `Article ${index + 1} — ${article.fr.title}`}
+                  </ThemedText>
+                  <ThemedText type="default" style={direction}>
+                    {isAr ? article.ar.body : article.fr.body}
+                  </ThemedText>
+                </View>
+              ))}
+
+              <ThemedText type="smallBold" style={direction}>
+                {CONTRACT_ACCEPTANCE[lang]}
+              </ThemedText>
+            </ScrollView>
+
+            <View className="gap-3 border-t border-[#EAE5F2] bg-white px-6 py-4">
+              {!reachedEnd ? (
+                <ThemedText type="small" themeColor="textSecondary" className="text-center">
+                  {t('contract.sign.scrollHint')}
+                </ThemedText>
+              ) : null}
+              <Pressable
+                onPress={() => reachedEnd && setAccepted((value) => !value)}
+                disabled={!reachedEnd}
+                className="flex-row items-center gap-3"
+                style={{ opacity: reachedEnd ? 1 : 0.4 }}
+              >
+                <View
+                  className={`h-6 w-6 items-center justify-center rounded-md border-2 ${accepted ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#B3A6C2] bg-white'}`}
+                >
+                  {accepted ? <ThemedText style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
+                </View>
+                <ThemedText type="small" style={{ flex: 1 }}>
+                  {t('contract.sign.accept')}
+                </ThemedText>
+              </Pressable>
+              <Button label={t('contract.sign.continue')} onPress={() => setStep('sign')} disabled={!accepted} />
+            </View>
+          </View>
+        ) : (
+          <ScrollView scrollEnabled={scrollEnabled} contentContainerClassName="gap-5 px-6 pb-10">
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('contract.sign.clientSignature')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('contract.sign.clientHelp', { name: contract.customerNom })}
+              </ThemedText>
+              <SignaturePad
+                height={220}
+                clearLabel={t('profil.signature.clear')}
+                placeholder={t('contract.sign.padPlaceholder')}
+                onChange={handlePadChange}
+                onDrawingChange={handleDrawing}
+              />
+            </View>
+
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('contract.sign.agencySignature')}</ThemedText>
+              <Card className="items-center gap-3">
+                {staffSignature ? (
+                  <SignatureView signature={staffSignature} />
+                ) : staffMissing ? (
+                  <>
+                    <ThemedText type="small" style={{ color: M3akPalette.warning }} className="text-center">
+                      {t('contract.sign.staffMissing')}
+                    </ThemedText>
+                    <Button label={t('profil.signature.add')} variant="secondary" size="sm" onPress={() => router.push('/profil/signature')} />
+                  </>
+                ) : (
+                  <ActivityIndicator color={M3akPalette.mauve} />
+                )}
+              </Card>
+            </View>
+
+            {error ? (
+              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                {error}
+              </ThemedText>
+            ) : null}
+            <Button label={t('contract.sign.confirm')} onPress={handleSign} disabled={!canSign} loading={signContract.isPending} />
+            <Button label={t('contract.sign.backToReading')} variant="ghost" onPress={() => setStep('read')} disabled={signContract.isPending} />
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </ThemedView>
+  );
+}

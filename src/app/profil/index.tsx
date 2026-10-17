@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +16,8 @@ import { useMyAgency, useMyProfile, useUpdateMyProfile, useUploadMemberAvatar } 
 import type { MemberProfile } from '@/features/agency/types';
 import { signOut, updateMyPassword } from '@/features/auth/api';
 import { isPasswordChangeFormValid, validatePasswordChangeForm } from '@/features/auth/validation';
+import { useRemoveMySignature, useSignature } from '@/features/signatures/hooks';
+import { SignatureView } from '@/features/signatures/signature-pad';
 import { getInitials } from '@/lib/initials';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -68,6 +71,8 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
   const { t } = useLanguage();
   const updateProfile = useUpdateMyProfile(agencyId);
   const uploadAvatar = useUploadMemberAvatar(agencyId);
+  const signatureQuery = useSignature(profile.signaturePath);
+  const removeSignature = useRemoveMySignature(agencyId);
 
   const [prenom, setPrenom] = useState(profile.prenom ?? '');
   const [nom, setNom] = useState(profile.nom ?? '');
@@ -199,6 +204,35 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           disabled={updateProfile.isPending}
           loading={updateProfile.isPending}
         />
+      </View>
+
+      <View className="gap-3">
+        <ThemedText type="smallBold">{t('profil.signature.section')}</ThemedText>
+        <Card className="items-center gap-3">
+          {profile.signaturePath && signatureQuery.data ? (
+            <SignatureView signature={signatureQuery.data} />
+          ) : profile.signaturePath && signatureQuery.isLoading ? (
+            <ActivityIndicator color={M3akPalette.mauve} />
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary" className="text-center">
+              {t('profil.signature.none')}
+            </ThemedText>
+          )}
+          <Button
+            label={profile.signaturePath ? t('profil.signature.change') : t('profil.signature.add')}
+            variant="secondary"
+            onPress={() => router.push('/profil/signature')}
+          />
+          {profile.signaturePath ? (
+            <Button
+              label={t('profil.signature.remove')}
+              variant="ghost"
+              size="sm"
+              disabled={removeSignature.isPending}
+              onPress={() => removeSignature.mutate(profile.id, { onError: () => Alert.alert(t('common.appName'), t('profil.signature.saveError')) })}
+            />
+          ) : null}
+        </Card>
       </View>
 
       <View className="gap-4">
