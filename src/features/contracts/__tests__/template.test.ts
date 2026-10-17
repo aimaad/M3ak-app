@@ -55,7 +55,7 @@ describe('validation du modèle (liste blanche stricte)', () => {
 
   it('borne les tailles', () => {
     const many = { blocks: Array.from({ length: 500 }, () => ({ type: 'rule' })) };
-    expect(parseTemplate(many)?.blocks.length).toBeLessThanOrEqual(160);
+    expect(parseTemplate(many)?.blocks.length).toBeLessThanOrEqual(400);
     const long = parseTemplate({ blocks: [{ type: 'paragraph', text: 'a'.repeat(50_000) }] });
     expect((long?.blocks[0] as { text: string }).text.length).toBeLessThanOrEqual(8000);
   });

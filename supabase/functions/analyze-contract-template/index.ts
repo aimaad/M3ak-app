@@ -1,7 +1,7 @@
 // M3ak — analyse UNIQUE d'un exemple de contrat par Google Gemini, avec la clé d'API PROPRE À L'ENTREPRISE.
 //
-// Le propriétaire envoie une fois un contrat (PDF ou photos, vierge ou rempli). Gemini en extrait un MODÈLE VIERGE
-// (blocs de mise en page + champs automatiques) que l'app enregistre. Ensuite chaque contrat ne fait que remplir ce
+// Le propriétaire envoie une fois un contrat (PDF ou photos, vierge ou rempli). Gemini RECOPIE son texte (champs variables
+// remplacés par des champs automatiques) ; l’app le met en forme localement et l’enregistre. Ensuite chaque contrat ne fait que remplir ce
 // modèle sur le téléphone : cette fonction n'est PAS appelée à chaque réservation.
 //
 // Conditions pour qu'un fichier parte vers Gemini (comme scan-document) :
@@ -34,38 +34,25 @@ const PLACEHOLDERS = [
   'etat_depart', 'accessoires_depart', 'observations_depart', 'conditions_particulieres',
 ];
 
-const PROMPT = `Tu analyses un exemple de contrat de location de voiture d'une agence (Maroc), fourni en PDF ou en photos, vierge ou déjà rempli.
-Ta mission : reconstruire un MODÈLE VIERGE qui reproduit le plus fidèlement possible la mise en page et TOUT le texte de ce contrat, pour pouvoir le regénérer pour chaque location.
+const PROMPT = `Tu es un copiste. Tu recopies FIDÈLEMENT et INTÉGRALEMENT un contrat de location de voiture (PDF ou photos, vierge ou déjà rempli) pour en faire un modèle réutilisable.
 
-Réponds UNIQUEMENT avec un objet JSON valide (aucun texte autour, aucune balise markdown) :
-{
-  "direction": "ltr" ou "rtl" (sens principal du document),
-  "blocks": [ ...blocs dans l'ordre exact du document... ]
-}
-
-Types de blocs autorisés (aucun autre) :
-- {"type":"header","logo":"left"|"center"|"right"|"none","left":"texte","center":"texte","right":"texte"}  en-tête : à utiliser pour le bandeau du haut (nom de l'agence, adresse, téléphone…). Mets logo à la position où un logo est visible.
-- {"type":"heading","text":"…","size":"xs|sm|md|lg|xl","align":"left|center|right","bold":true,"underline":false,"uppercase":false,"border":"none|bottom|box","rtl":false}
-- {"type":"paragraph","text":"…","size":"…","align":"…","bold":false,"italic":false,"border":"none|box","rtl":false,"color":"default|muted|accent"}   retours à la ligne avec \\n
-- {"type":"list","items":["…"],"numbered":true,"rtl":false}
-- {"type":"fields","columns":1 ou 2,"bordered":true,"rows":[{"label":"Nom du locataire","value":"{{client_nom}}","optional":false}]}   tableau « libellé : valeur »
-- {"type":"columns","bordered":true,"cells":[{"title":"…","text":"…","align":"…","rtl":false,"lang":"fr"|"ar"}]}   2 ou 3 colonnes de texte côte à côte (ex. français | arabe)
-- {"type":"signatures","boxes":[{"role":"client","label":"Le locataire"},{"role":"agency","label":"Pour l'agence"}]}   zones de signature (role "client" ou "agency")
-- {"type":"rule"}  trait horizontal ; {"type":"spacer","size":"sm|md|lg"} ; {"type":"pageBreak"}
-- Option "showIf" sur n'importe quel bloc : "hasDrivers" (conducteurs supplémentaires), "hasConditions" (conditions particulières), "hasDeparture" (état des lieux au départ).
+Réponds UNIQUEMENT avec le texte du contrat, sans commentaire, sans introduction, sans bloc de code, avec ces conventions très simples :
+- "# Titre" : le titre principal du contrat.
+- "## Titre" : un titre d'article ou de rubrique ; "### Titre" : un sous-titre.
+- "> texte" : chaque ligne du bandeau d'en-tête du haut (nom de l'agence, adresse, téléphone…).
+- "- texte" : élément d'une liste à puces ; "1. texte" : élément d'une liste numérotée.
+- "Libellé : valeur" : une information à remplir (ex. "Nom du locataire : {{client_nom}}"), une par ligne.
+- "---" : un trait de séparation.
+- Une ligne vide sépare deux paragraphes.
+- "[SIGNATURES: libellé gauche | libellé droite]" à l'endroit des zones de signature et de cachet (ex. [SIGNATURES: Le locataire | Pour l'agence]).
 
 RÈGLES STRICTES
-1. Recopie fidèlement TOUT le texte fixe du contrat (articles, clauses, mentions légales), dans sa langue d'origine (français et/ou arabe), sans résumer, sans traduire, sans corriger.
-2. Chaque information propre à UNE location doit devenir un champ automatique parmi cette liste EXACTE : ${PLACEHOLDERS.map((p) => `{{${p}}}`).join(' ')}.
-   - Si l'exemple est déjà rempli, REMPLACE toutes les données personnelles ou spécifiques (nom du client, CIN, téléphone, plaque, dates, montants, adresse du client, numéro de contrat) par le champ qui convient. N'écris JAMAIS le nom, le CIN, le téléphone ou l'adresse d'un vrai client dans le modèle.
-   - Les informations de l'agence elle-même (nom, adresse, téléphone, e-mail) doivent aussi devenir {{agence_nom}}, {{agence_adresse}}, etc.
-   - Une information à remplir qui n'a pas de champ dans la liste (ex. numéro de permis, heure précise) : laisse une ligne de points « …………… » à sa place. N'invente aucun nom de champ.
-3. Les rubriques facultatives (ex. conducteur supplémentaire, observations) : "optional": true dans fields.
-4. Reproduis la structure : ordre des rubriques, titres, alignements, tableaux, colonnes, encadrés, taille relative du texte, zones de signature et de cachet. Si le contrat est bilingue en colonnes, utilise "columns" avec "lang".
-5. Si une zone « signature / cachet » est présente, utilise un bloc "signatures" avec les libellés du contrat.
-6. N'invente aucune clause. Si un passage est illisible, laisse « …… ».
-7. Maximum 150 blocs.
-8. Sois ÉCONOME : JSON compact sur une seule ligne, sans espaces ni retours à la ligne inutiles, sans propriété à sa valeur par défaut (n'écris pas "bold":false, "rtl":false, "border":"none"…).`;
+1. Recopie TOUT le texte du contrat, mot pour mot, dans sa langue d'origine (français et/ou arabe) : chaque article, chaque clause, chaque mention légale, chaque ligne de bas de page. N'en résume rien, n'en omets rien, ne traduis rien, ne corrige rien. Si le contrat est en deux colonnes (ex. français | arabe), recopie d'abord toute une colonne, puis l'autre.
+2. Chaque information propre à UNE location devient un champ de cette liste EXACTE : ${PLACEHOLDERS.map((p) => `{{${p}}}`).join(' ')}.
+   - Si l'exemple est déjà rempli, REMPLACE les données personnelles ou spécifiques (nom du client, CIN, téléphone, adresse du client, plaque, dates, montants, numéro de contrat) par le champ qui convient. N'écris JAMAIS le nom, le CIN, le téléphone ou l'adresse d'un vrai client.
+   - Les informations de l'agence (nom, adresse, téléphone, e-mail) deviennent {{agence_nom}}, {{agence_adresse}}, {{agence_telephone}}, etc.
+   - Une information à remplir sans champ correspondant (ex. numéro de permis, heure) : laisse une ligne de points « …………… ». N'invente aucun nom de champ.
+3. N'invente aucune clause. Un passage illisible devient « …… ».`
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
@@ -186,15 +173,15 @@ Deno.serve(async (request: Request) => {
   const trace: string[] = [];
   console.log(`analyse du modèle : ${files.length} fichier(s), ${Math.round(totalBytes / 1024)} Ko`);
   try {
-    const result = await callGeminiJson(apiKey, PROMPT, parts, { maxOutputTokens: 24_000, deadlineMs: 120_000, perCallMs: 70_000, trace, preferModels: ['gemini-2.5-flash', 'gemini-2.5-flash-lite'] });
-    const template = (result.json ?? null) as { blocks?: unknown } | null;
-    if (!template || typeof template !== 'object' || !Array.isArray(template.blocks) || template.blocks.length === 0) {
+    const result = await callGeminiJson(apiKey, PROMPT, parts, { maxOutputTokens: 24_000, deadlineMs: 120_000, perCallMs: 60_000, trace, plainText: true, preferModels: ['gemini-2.5-flash-lite', 'gemini-2.5-flash'] });
+    const transcription = typeof result.json === 'string' ? result.json.trim() : '';
+    if (transcription.length < 40) {
       await recordUsage(admin, { agencyId, ok: false, errorCode: 'template_unreadable', model: result.model, inputTokens: result.usage.inputTokens, outputTokens: result.usage.outputTokens });
       return json({ ok: false, error: 'template_unreadable' });
     }
     console.log(`analyse du modèle terminée en ${Math.round((Date.now() - startedAt) / 1000)} s (${result.model}, ${result.usage.outputTokens} tokens)`);
     await recordUsage(admin, { agencyId, ok: true, model: result.model, inputTokens: result.usage.inputTokens, outputTokens: result.usage.outputTokens });
-    return json({ ok: true, template });
+    return json({ ok: true, text: transcription.slice(0, 120_000) });
   } catch (error) {
     if (error instanceof StageTimeoutError) {
       console.error(`analyse du modèle : délai dépassé (étape ${error.stage}) après ${Math.round((Date.now() - startedAt) / 1000)} s — ${trace.join(' ; ')}`);

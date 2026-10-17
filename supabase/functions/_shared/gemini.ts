@@ -40,7 +40,7 @@ function thinkingConfigFor(model: string): Record<string, unknown> {
   return {};
 }
 
-async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number, maxOutput?: number, forceNoThinkingConfig = false): Promise<ProviderResult> {
+async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number, maxOutput?: number, forceNoThinkingConfig = false, plainText = false): Promise<ProviderResult> {
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -51,7 +51,7 @@ async function callGeminiModel(apiKey: string, model: string, systemPrompt: stri
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts }],
         generationConfig: {
-          responseMimeType: 'application/json',
+          ...(plainText ? {} : { responseMimeType: 'application/json' }),
           temperature: 0,
           // Les modèles 2.5 acceptent « pas de réflexion » (plus rapide, moins cher). Pour les autres on ne force
           // rien (paramètre non garanti) et on laisse plus de marge de sortie.
@@ -88,7 +88,7 @@ async function callGeminiModel(apiKey: string, model: string, systemPrompt: stri
   const text = candidate?.content?.parts?.map((part) => part.text ?? '').join('');
   if (!text) throw new Error('provider_empty_response');
   if (candidate?.finishReason === 'MAX_TOKENS') throw new Error('provider_response_truncated');
-  return { json: parseJson(text), usage, model };
+  return { json: plainText ? text : parseJson(text), usage, model };
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -138,7 +138,7 @@ export async function callGeminiJson(
   apiKey: string,
   systemPrompt: string,
   parts: GeminiPart[],
-  options: { maxOutputTokens?: number; deadlineMs?: number; preferModels?: string[]; perCallMs?: number; trace?: string[] } = {}
+  options: { maxOutputTokens?: number; deadlineMs?: number; preferModels?: string[]; perCallMs?: number; trace?: string[]; plainText?: boolean } = {}
 ): Promise<ProviderResult> {
   const started = Date.now();
   const models = [...new Set([...(options.preferModels ?? []), ...(await candidateModels(apiKey))])];
@@ -153,7 +153,7 @@ export async function callGeminiJson(
       const note = (outcome: string) => options.trace?.push(`${model}: ${outcome} (${Math.round((Date.now() - callStart) / 1000)} s)`);
       try {
         try {
-          const result = await callGeminiModel(apiKey, model, systemPrompt, parts, perCall, options.maxOutputTokens);
+          const result = await callGeminiModel(apiKey, model, systemPrompt, parts, perCall, options.maxOutputTokens, false, options.plainText);
           note('ok');
           return result;
         } catch (error) {
@@ -161,7 +161,7 @@ export async function callGeminiJson(
           if (error instanceof ProviderHttpError && error.status === 400 && /thinking/i.test(error.message)) {
             const left = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
             if (left < 4_000) throw error;
-            const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(perCall, left), options.maxOutputTokens, true);
+            const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(perCall, left), options.maxOutputTokens, true, options.plainText);
             note('ok sans réflexion');
             return result;
           }

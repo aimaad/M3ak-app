@@ -5,6 +5,7 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import { getSupabase } from '@/lib/supabase';
 
 import { ensureSignatures, parseTemplate, type ContractTemplate } from './template';
+import { templateFromTranscription } from './template-from-text';
 
 export type StoredTemplate = { template: ContractTemplate; sourceName: string | null; updatedAt: string };
 
@@ -90,10 +91,11 @@ export async function analyzeContractFiles(files: TemplateSourceFile[]): Promise
       return { ok: false, error: 'unavailable', detail: error.message };
     }
 
-    const result = data as { ok?: boolean; error?: unknown; template?: unknown; detail?: unknown } | null;
+    const result = data as { ok?: boolean; error?: unknown; text?: unknown; detail?: unknown } | null;
     if (result?.ok) {
-      const template = parseTemplate(result.template);
-      return template ? { ok: true, template: ensureSignatures(template) } : { ok: false, error: 'template_unreadable' };
+      // L'IA a seulement recopié le texte : la mise en forme est faite ici, sans nouvel appel.
+      const template = typeof result.text === 'string' ? templateFromTranscription(result.text) : null;
+      return template && parseTemplate(template) ? { ok: true, template } : { ok: false, error: 'template_unreadable' };
     }
     return { ok: false, error: asCode(result?.error), detail: typeof result?.detail === 'string' ? result.detail : undefined };
   } catch (error) {

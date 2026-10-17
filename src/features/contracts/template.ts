@@ -54,7 +54,7 @@ export const PLACEHOLDERS = [
 export type Placeholder = (typeof PLACEHOLDERS)[number];
 const PLACEHOLDER_SET = new Set<string>(PLACEHOLDERS);
 
-export const LIMITS = { blocks: 160, text: 8000, items: 80, rows: 60, cells: 3, label: 200 } as const;
+export const LIMITS = { blocks: 400, text: 8000, items: 80, rows: 60, cells: 3, label: 200 } as const;
 
 const BLANK = '…………………';
 
