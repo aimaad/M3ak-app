@@ -63,6 +63,25 @@ select pg_temp.try('stockage : impossible de déposer dans le dossier signature 
 select pg_temp.try('stockage : impossible de déposer dans une autre agence',
   $$insert into storage.objects (bucket_id, name) values ('signatures', 'bbbbbbbb-0000-0000-0000-000000000002/staff/00000000-0000-0000-0000-0000000000a3.json')$$, 'row-level security');
 
+-- Cachet : obligatoire pour signer
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('contrat : refus de signer sans cachet de l''agence',
+  $$update contracts set client_signature_path = 'aaaaaaaa-0000-0000-0000-000000000001/contracts/c0000000-0000-0000-0000-0000000000c1/client-1.json',
+      client_signed_at = now(), statut = 'signe', signed_at = now(), signed_by = '00000000-0000-0000-0000-0000000000a3'
+    where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_agency_stamp_required');
+select pg_temp.ck('contrat : toujours non signé après le refus', (select statut = 'pret_a_signer' and client_signature_path is null from contracts where id = 'c0000000-0000-0000-0000-0000000000c1'), '');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.try('cachet : le propriétaire référence le cachet de son agence',
+  $$update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/stamp.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$);
+select pg_temp.ck('cachet : enregistré', (select stamp_path is not null from agencies where id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+select pg_temp.try('cachet : refus d''un chemin d''une autre agence',
+  $$update agencies set stamp_path = 'bbbbbbbb-0000-0000-0000-000000000002/stamp.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'invalid_stamp_path');
+select pg_temp.try('cachet : refus d''un fichier qui n''est pas une image de cachet',
+  $$update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/../x.svg' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'invalid_stamp_path');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+update agencies set stamp_path = null where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select pg_temp.ck('cachet : un employé ne peut pas le modifier', (select stamp_path is not null from agencies where id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+
 -- Contrat : la signature du client est obligatoire
 select pg_temp.try('contrat : refus de signer sans signature du client',
   $$update contracts set statut = 'signe', signed_at = now(), signed_by = '00000000-0000-0000-0000-0000000000a3' where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_client_signature_required');
@@ -88,19 +107,6 @@ select pg_temp.try('stockage : la copie figée ne peut pas être supprimée',
 select pg_temp.ck('stockage : la copie figée est toujours là', (select count(*) = 1 from storage.objects where name like '%/contracts/%'), '');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000b1');
 select pg_temp.ck('isolation : une autre agence ne voit aucune signature', (select count(*) = 0 from storage.objects where bucket_id = 'signatures'), (select count(*)::text from storage.objects));
-
--- Cachet de l'agence
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
-select pg_temp.try('cachet : le propriétaire référence le cachet de son agence',
-  $$update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/stamp.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$);
-select pg_temp.ck('cachet : enregistré', (select stamp_path is not null from agencies where id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
-select pg_temp.try('cachet : refus d''un chemin d''une autre agence',
-  $$update agencies set stamp_path = 'bbbbbbbb-0000-0000-0000-000000000002/stamp.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'invalid_stamp_path');
-select pg_temp.try('cachet : refus d''un fichier qui n''est pas une image de cachet',
-  $$update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/../x.svg' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'invalid_stamp_path');
-select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
-update agencies set stamp_path = null where id = 'aaaaaaaa-0000-0000-0000-000000000001';
-select pg_temp.ck('cachet : un employé ne peut pas le modifier', (select stamp_path is not null from agencies where id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
 
 reset role;
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

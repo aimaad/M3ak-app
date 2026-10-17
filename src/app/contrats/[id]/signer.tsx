@@ -103,7 +103,8 @@ export default function SignerContratScreen() {
   const staffSignature = myStaffSignature.data ?? null;
   const staffMissing = !!profileQuery.data && !profileQuery.data.signaturePath;
   const clientDrawn = isSignatureDrawn(paths) && size.width > 0;
-  const canSign = clientDrawn && !!staffSignature && !signContract.isPending;
+  const stampMissing = !!detailsQuery.data && !detailsQuery.data.stampPath;
+  const canSign = clientDrawn && !!staffSignature && !stampMissing && !signContract.isPending;
 
   async function handleSign() {
     if (!contract || !canSign || !staffSignature) return;
@@ -116,7 +117,8 @@ export default function SignerContratScreen() {
       });
       router.replace({ pathname: '/contrats/[id]', params: { id: contract.id } });
     } catch (e) {
-      setError(t(friendlyErrorKey(e, 'contract.sign.error')));
+      const stampRefused = e instanceof Error ? /contract_agency_stamp_required/.test(e.message) : /contract_agency_stamp_required/.test(JSON.stringify(e));
+      setError(t(stampRefused ? 'contract.sign.stampMissing' : friendlyErrorKey(e, 'contract.sign.error')));
     }
   }
 
@@ -257,10 +259,13 @@ export default function SignerContratScreen() {
               </Card>
             </View>
 
-            {detailsQuery.data && !detailsQuery.data.stampPath ? (
-              <ThemedText type="small" style={{ color: M3akPalette.warning }}>
-                {t('contract.sign.stampMissing')}
+            {stampMissing ? (
+              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.stampMissingOwner' : 'contract.sign.stampMissing')}
               </ThemedText>
+            ) : null}
+            {stampMissing && agencyQuery.data?.role === 'owner' ? (
+              <Button label={t('entreprise.stamp.add')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />
             ) : null}
             {error ? (
               <ThemedText type="small" style={{ color: M3akPalette.danger }}>
