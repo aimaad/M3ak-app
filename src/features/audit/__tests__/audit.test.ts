@@ -3,7 +3,7 @@ import fr from '@/i18n/locales/fr.json';
 import { buildAuditHtml, escapeHtml } from '../audit-pdf';
 import { describeAuditEntry } from '../describe';
 import { toAuditQuery } from '../hooks';
-import { auditRange, auditRangeLabel, type AuditEntry } from '../types';
+import { auditRange, auditRangeLabel, isAuditRangeValid, parseFrDate, type AuditEntry } from '../types';
 
 jest.mock('expo-print', () => ({ printToFileAsync: jest.fn() }));
 jest.mock('@/lib/supabase', () => ({ getSupabase: jest.fn() }));
@@ -94,6 +94,30 @@ describe('PDF', () => {
   });
 });
 
+describe('dates précises', () => {
+  const now = new Date(2026, 9, 17);
+  it('analyse JJ/MM/AAAA et refuse les dates inexistantes', () => {
+    expect(parseFrDate('05/03/2026')).toEqual(new Date(2026, 2, 5));
+    expect(parseFrDate('5-3-2026')).toEqual(new Date(2026, 2, 5));
+    expect(parseFrDate('31/02/2026')).toBeNull();
+    expect(parseFrDate('2026-03-05')).toBeNull();
+    expect(parseFrDate('')).toBeNull();
+  });
+
+  it('inclut le dernier jour choisi et refuse un intervalle inversé ou incomplet', () => {
+    const r = auditRange({ granularity: 'custom', offset: 0, customFrom: '01/10/2026', customTo: '15/10/2026' }, now);
+    expect(new Date(r.from as string)).toEqual(new Date(2026, 9, 1));
+    expect(new Date(r.to as string)).toEqual(new Date(2026, 9, 16));
+    expect(isAuditRangeValid({ granularity: 'custom', customFrom: '15/10/2026', customTo: '01/10/2026' })).toBe(false);
+    expect(isAuditRangeValid({ granularity: 'custom', customFrom: '15/10/2026', customTo: '' })).toBe(false);
+    expect(isAuditRangeValid({ granularity: 'month', customFrom: '', customTo: '' })).toBe(true);
+  });
+
+  it('libellé de l\'intervalle', () => {
+    expect(auditRangeLabel({ granularity: 'custom', offset: 0, customFrom: '01/10/2026', customTo: '15/10/2026' }, 'fr-FR', now)).toMatch(/→/);
+  });
+});
+
 describe('période', () => {
   const now = new Date(2026, 9, 17, 15, 30);
   const d = (iso: string | null) => (iso ? new Date(iso) : null);
@@ -134,7 +158,7 @@ describe('période', () => {
   });
 
   it('transforme les filtres en requête', () => {
-    const q = toAuditQuery('a1', { granularity: 'day', offset: 0, actorId: 'u1', category: 'payment' }, now);
+    const q = toAuditQuery('a1', { granularity: 'day', offset: 0, customFrom: '', customTo: '', actorId: 'u1', category: 'payment' }, now);
     expect(q).toEqual({ agencyId: 'a1', from: new Date(2026, 9, 17).toISOString(), to: new Date(2026, 9, 18).toISOString(), actorId: 'u1', category: 'payment' });
   });
 });

@@ -1,7 +1,7 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { getActivitySummary, listAuditEntries, type AuditQuery } from './api';
-import { auditRange, type AuditFilters } from './types';
+import { auditRange, isAuditRangeValid, type AuditFilters } from './types';
 
 export const AUDIT_PAGE_SIZE = 30;
 
@@ -14,7 +14,7 @@ export function toAuditQuery(agencyId: string, filters: AuditFilters, now: Date 
 export function useAuditEntries(agencyId: string | undefined, filters: AuditFilters) {
   return useInfiniteQuery({
     queryKey: ['audit-entries', agencyId, filters],
-    enabled: !!agencyId,
+    enabled: !!agencyId && isAuditRangeValid(filters),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => listAuditEntries(toAuditQuery(agencyId as string, filters), pageParam, AUDIT_PAGE_SIZE),
     getNextPageParam: (lastPage, pages) => (lastPage.length === AUDIT_PAGE_SIZE ? pages.length * AUDIT_PAGE_SIZE : undefined),
@@ -23,8 +23,8 @@ export function useAuditEntries(agencyId: string | undefined, filters: AuditFilt
 
 export function useActivitySummary(agencyId: string | undefined, filters: AuditFilters) {
   return useQuery({
-    queryKey: ['audit-summary', agencyId, filters.granularity, filters.offset],
-    enabled: !!agencyId,
+    queryKey: ['audit-summary', agencyId, filters.granularity, filters.offset, filters.customFrom, filters.customTo],
+    enabled: !!agencyId && isAuditRangeValid(filters),
     queryFn: () => {
       const { from, to } = auditRange(filters);
       return getActivitySummary(agencyId as string, from, to);

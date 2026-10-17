@@ -1193,7 +1193,12 @@
       "all": "Tout l'historique",
       "previous": "Précédent",
       "next": "Suivant",
-      "allLabel": "Tout l'historique"
+      "allLabel": "Tout l'historique",
+      "custom": "Dates précises",
+      "from": "Du",
+      "to": "Au",
+      "datePlaceholder": "JJ/MM/AAAA",
+      "customHelp": "Saisissez deux dates valides au format JJ/MM/AAAA (la première avant la seconde)."
     },
     "filters": {
       "employee": "Employé",

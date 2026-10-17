@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ActivityIndicator, FlatList, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { TextField } from '@/components/text-field';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ChipGroup } from '@/components/chip-group';
@@ -16,7 +17,7 @@ import { listAuditEntriesForExport } from '@/features/audit/api';
 import { generateAuditPdf } from '@/features/audit/audit-pdf';
 import { actorLabel, describeAuditEntry } from '@/features/audit/describe';
 import { toAuditQuery, useActivitySummary, useAuditEntries } from '@/features/audit/hooks';
-import { AUDIT_CATEGORIES, AUDIT_GRANULARITIES, auditRangeLabel, type AuditCategory, type AuditFilters, type AuditGranularity } from '@/features/audit/types';
+import { AUDIT_CATEGORIES, AUDIT_GRANULARITIES, auditRangeLabel, isAuditRangeValid, type AuditCategory, type AuditFilters, type AuditGranularity } from '@/features/audit/types';
 import { useLanguage } from '@/i18n/use-language';
 
 function formatDateTime(iso: string, locale: string): string {
@@ -32,7 +33,7 @@ export default function JournalScreen() {
   const agencyId = agencyQuery.data?.agencyId;
   const membersQuery = useAgencyMembers(agencyId);
 
-  const [filters, setFilters] = useState<AuditFilters>({ granularity: 'month', offset: 0, actorId: null, category: null });
+  const [filters, setFilters] = useState<AuditFilters>({ granularity: 'month', offset: 0, customFrom: '', customTo: '', actorId: null, category: null });
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -48,7 +49,7 @@ export default function JournalScreen() {
   const people = (membersQuery.data ?? []).filter((m) => m.userId);
   const nameOf = (userId: string) => people.find((m) => m.userId === userId)?.nomComplet?.trim() || t('journal.unknownActor');
 
-  const rangeLabel = auditRangeLabel(filters, locale) ?? t('journal.period.allLabel');
+  const rangeLabel = auditRangeLabel(filters, locale) ?? t(filters.granularity === 'custom' ? 'journal.period.custom' : 'journal.period.allLabel');
   const filterLabels = [
     rangeLabel,
     filters.actorId ? nameOf(filters.actorId) : t('journal.filters.allEmployees'),
@@ -56,7 +57,7 @@ export default function JournalScreen() {
   ];
 
   async function handleExport() {
-    if (!agencyId || !agencyQuery.data) return;
+    if (!agencyId || !agencyQuery.data || !isAuditRangeValid(filters)) return;
     setExporting(true);
     setExportError(null);
     try {
@@ -91,7 +92,34 @@ export default function JournalScreen() {
           getLabel={(g) => t(`journal.period.${g}`)}
           onSelect={(granularity) => setFilters((f) => ({ ...f, granularity, offset: 0 }))}
         />
-        {filters.granularity !== 'all' ? (
+        {filters.granularity === 'custom' ? (
+          <View className="flex-row gap-3">
+            <View className="flex-1">
+              <TextField
+                label={t('journal.period.from')}
+                placeholder={t('journal.period.datePlaceholder')}
+                value={filters.customFrom}
+                onChangeText={(customFrom) => setFilters((f) => ({ ...f, customFrom }))}
+                keyboardType="numbers-and-punctuation"
+              />
+            </View>
+            <View className="flex-1">
+              <TextField
+                label={t('journal.period.to')}
+                placeholder={t('journal.period.datePlaceholder')}
+                value={filters.customTo}
+                onChangeText={(customTo) => setFilters((f) => ({ ...f, customTo }))}
+                keyboardType="numbers-and-punctuation"
+              />
+            </View>
+          </View>
+        ) : null}
+        {filters.granularity === 'custom' && !isAuditRangeValid(filters) ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('journal.period.customHelp')}
+          </ThemedText>
+        ) : null}
+        {filters.granularity !== 'all' && filters.granularity !== 'custom' ? (
           <View className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-2 py-1">
             <Button
               label={isRtl ? '›' : '‹'}
@@ -165,7 +193,7 @@ export default function JournalScreen() {
         )}
       </View>
 
-      <Button label={exporting ? t('journal.exporting') : t('journal.export')} onPress={handleExport} disabled={exporting} loading={exporting} />
+      <Button label={exporting ? t('journal.exporting') : t('journal.export')} onPress={handleExport} disabled={exporting || !isAuditRangeValid(filters)} loading={exporting} />
       {exportError ? (
         <ThemedText type="small" style={{ color: M3akPalette.danger }}>
           {exportError}

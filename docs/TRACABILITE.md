@@ -16,7 +16,7 @@ Chaque ligne : auteur (imposé par la session, non falsifiable), rôle, date, ac
 - Une panne du journal ne bloque jamais l'action de l'employé.
 
 ## Écran
-Période au choix : un **jour**, un **mois**, une **année** ou tout l'historique, avec flèches pour revenir aux périodes passées, employé, type d'action ; synthèse « activité par personne » ; liste paginée ; bouton **Exporter en PDF** (jusqu'à 2000 lignes, avertissement au-delà), partagé via la feuille de partage du téléphone.
+Période au choix : un **jour**, un **mois**, une **année**, des **dates précises** (du JJ/MM/AAAA au JJ/MM/AAAA, jour de fin inclus) ou tout l'historique, avec flèches pour revenir aux périodes passées, employé, type d'action ; synthèse « activité par personne » ; liste paginée ; bouton **Exporter en PDF** (jusqu'à 2000 lignes, avertissement au-delà), partagé via la feuille de partage du téléphone.
 
 ## À définir
 Durée de conservation du journal (aujourd'hui : illimitée).
