@@ -3,7 +3,7 @@ import fr from '@/i18n/locales/fr.json';
 import { buildAuditHtml, escapeHtml } from '../audit-pdf';
 import { describeAuditEntry } from '../describe';
 import { toAuditQuery } from '../hooks';
-import { auditPeriodStart, type AuditEntry } from '../types';
+import { auditRange, auditRangeLabel, type AuditEntry } from '../types';
 
 jest.mock('expo-print', () => ({ printToFileAsync: jest.fn() }));
 jest.mock('@/lib/supabase', () => ({ getSupabase: jest.fn() }));
@@ -96,15 +96,45 @@ describe('PDF', () => {
 
 describe('période', () => {
   const now = new Date(2026, 9, 17, 15, 30);
-  it('calcule le début de chaque période', () => {
-    expect(auditPeriodStart('all', now)).toBeNull();
-    expect(new Date(auditPeriodStart('today', now) as string)).toEqual(new Date(2026, 9, 17));
-    expect(new Date(auditPeriodStart('7d', now) as string)).toEqual(new Date(2026, 9, 11));
-    expect(new Date(auditPeriodStart('30d', now) as string)).toEqual(new Date(2026, 8, 18));
+  const d = (iso: string | null) => (iso ? new Date(iso) : null);
+
+  it('tout l\'historique : aucune borne', () => {
+    expect(auditRange({ granularity: 'all', offset: 0 }, now)).toEqual({ from: null, to: null, start: null });
+  });
+
+  it('jour : aujourd\'hui et les jours précédents', () => {
+    const today = auditRange({ granularity: 'day', offset: 0 }, now);
+    expect(d(today.from)).toEqual(new Date(2026, 9, 17));
+    expect(d(today.to)).toEqual(new Date(2026, 9, 18));
+    expect(d(auditRange({ granularity: 'day', offset: -17 }, now).from)).toEqual(new Date(2026, 8, 30));
+  });
+
+  it('mois : mois en cours, précédent, et passage d\'année', () => {
+    const cur = auditRange({ granularity: 'month', offset: 0 }, now);
+    expect(d(cur.from)).toEqual(new Date(2026, 9, 1));
+    expect(d(cur.to)).toEqual(new Date(2026, 10, 1));
+    expect(d(auditRange({ granularity: 'month', offset: -10 }, now).from)).toEqual(new Date(2025, 11, 1));
+  });
+
+  it('année : année en cours et précédente', () => {
+    const cur = auditRange({ granularity: 'year', offset: 0 }, now);
+    expect(d(cur.from)).toEqual(new Date(2026, 0, 1));
+    expect(d(cur.to)).toEqual(new Date(2027, 0, 1));
+    expect(d(auditRange({ granularity: 'year', offset: -1 }, now).from)).toEqual(new Date(2025, 0, 1));
+  });
+
+  it('ignore un décalage positif (jamais dans le futur)', () => {
+    expect(d(auditRange({ granularity: 'month', offset: 3 }, now).from)).toEqual(new Date(2026, 9, 1));
+  });
+
+  it('libellés', () => {
+    expect(auditRangeLabel({ granularity: 'year', offset: -1 }, 'fr-FR', now)).toBe('2025');
+    expect(auditRangeLabel({ granularity: 'month', offset: 0 }, 'fr-FR', now)).toMatch(/octobre 2026/);
+    expect(auditRangeLabel({ granularity: 'all', offset: 0 }, 'fr-FR', now)).toBeNull();
   });
 
   it('transforme les filtres en requête', () => {
-    const q = toAuditQuery('a1', { period: 'today', actorId: 'u1', category: 'payment' }, now);
-    expect(q).toEqual({ agencyId: 'a1', from: new Date(2026, 9, 17).toISOString(), actorId: 'u1', category: 'payment' });
+    const q = toAuditQuery('a1', { granularity: 'day', offset: 0, actorId: 'u1', category: 'payment' }, now);
+    expect(q).toEqual({ agencyId: 'a1', from: new Date(2026, 9, 17).toISOString(), to: new Date(2026, 9, 18).toISOString(), actorId: 'u1', category: 'payment' });
   });
 });

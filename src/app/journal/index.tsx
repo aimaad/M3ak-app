@@ -16,7 +16,7 @@ import { listAuditEntriesForExport } from '@/features/audit/api';
 import { generateAuditPdf } from '@/features/audit/audit-pdf';
 import { actorLabel, describeAuditEntry } from '@/features/audit/describe';
 import { toAuditQuery, useActivitySummary, useAuditEntries } from '@/features/audit/hooks';
-import { AUDIT_CATEGORIES, AUDIT_PERIODS, type AuditCategory, type AuditFilters, type AuditPeriod } from '@/features/audit/types';
+import { AUDIT_CATEGORIES, AUDIT_GRANULARITIES, auditRangeLabel, type AuditCategory, type AuditFilters, type AuditGranularity } from '@/features/audit/types';
 import { useLanguage } from '@/i18n/use-language';
 
 function formatDateTime(iso: string, locale: string): string {
@@ -26,12 +26,13 @@ function formatDateTime(iso: string, locale: string): string {
 /** Traçabilité : réservée au propriétaire (écran ET base de données). Filtres, synthèse par personne, export PDF. */
 export default function JournalScreen() {
   const { t, language } = useLanguage();
+  const isRtl = language === 'ar';
   const locale = language === 'ar' ? 'ar' : 'fr-FR';
   const agencyQuery = useMyAgency();
   const agencyId = agencyQuery.data?.agencyId;
   const membersQuery = useAgencyMembers(agencyId);
 
-  const [filters, setFilters] = useState<AuditFilters>({ period: '7d', actorId: null, category: null });
+  const [filters, setFilters] = useState<AuditFilters>({ granularity: 'month', offset: 0, actorId: null, category: null });
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
@@ -47,8 +48,9 @@ export default function JournalScreen() {
   const people = (membersQuery.data ?? []).filter((m) => m.userId);
   const nameOf = (userId: string) => people.find((m) => m.userId === userId)?.nomComplet?.trim() || t('journal.unknownActor');
 
+  const rangeLabel = auditRangeLabel(filters, locale) ?? t('journal.period.allLabel');
   const filterLabels = [
-    t(`journal.period.${filters.period}`),
+    rangeLabel,
     filters.actorId ? nameOf(filters.actorId) : t('journal.filters.allEmployees'),
     filters.category ? t(`journal.categories.${filters.category}`) : t('journal.filters.allCategories'),
   ];
@@ -83,12 +85,32 @@ export default function JournalScreen() {
     <View className="gap-4 pb-3">
       <View className="gap-2">
         <ThemedText type="smallBold">{t('journal.period.label')}</ThemedText>
-        <ChipGroup<AuditPeriod>
-          options={AUDIT_PERIODS}
-          selected={filters.period}
-          getLabel={(p) => t(`journal.period.${p}`)}
-          onSelect={(period) => setFilters((f) => ({ ...f, period }))}
+        <ChipGroup<AuditGranularity>
+          options={AUDIT_GRANULARITIES}
+          selected={filters.granularity}
+          getLabel={(g) => t(`journal.period.${g}`)}
+          onSelect={(granularity) => setFilters((f) => ({ ...f, granularity, offset: 0 }))}
         />
+        {filters.granularity !== 'all' ? (
+          <View className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-2 py-1">
+            <Button
+              label={isRtl ? '›' : '‹'}
+              variant="ghost"
+              size="sm"
+              accessibilityLabel={t('journal.period.previous')}
+              onPress={() => setFilters((f) => ({ ...f, offset: f.offset - 1 }))}
+            />
+            <ThemedText type="smallBold">{rangeLabel}</ThemedText>
+            <Button
+              label={isRtl ? '‹' : '›'}
+              variant="ghost"
+              size="sm"
+              accessibilityLabel={t('journal.period.next')}
+              disabled={filters.offset >= 0}
+              onPress={() => setFilters((f) => ({ ...f, offset: Math.min(0, f.offset + 1) }))}
+            />
+          </View>
+        ) : null}
       </View>
 
       <View className="gap-2">

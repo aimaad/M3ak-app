@@ -20,6 +20,7 @@ const COLUMNS = 'id, actor_id, actor_name, actor_role, category, action, target_
 export type AuditQuery = {
   agencyId: string;
   from: string | null;
+  to: string | null;
   actorId: string | null;
   category: AuditCategory | null;
 };
@@ -47,6 +48,7 @@ export async function listAuditEntries(query: AuditQuery, offset: number, limit:
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
   if (query.from) request = request.gte('created_at', query.from);
+  if (query.to) request = request.lt('created_at', query.to);
   if (query.actorId) request = request.eq('actor_id', query.actorId);
   if (query.category) request = request.eq('category', query.category);
 
@@ -69,8 +71,8 @@ export async function listAuditEntriesForExport(query: AuditQuery): Promise<{ en
   return { entries, truncated: true };
 }
 
-export async function getActivitySummary(agencyId: string, from: string | null): Promise<ActivitySummaryRow[]> {
-  const { data, error } = await getSupabase().rpc('audit_activity_summary', { p_agency_id: agencyId, p_from: from, p_to: null });
+export async function getActivitySummary(agencyId: string, from: string | null, to: string | null): Promise<ActivitySummaryRow[]> {
+  const { data, error } = await getSupabase().rpc('audit_activity_summary', { p_agency_id: agencyId, p_from: from, p_to: to });
   if (error) throw error;
   return (Array.isArray(data) ? data : []).map((row: Record<string, unknown>) => ({
     actorId: typeof row.actor_id === 'string' ? row.actor_id : null,

@@ -1187,10 +1187,13 @@
     "disabled": "désactivée",
     "period": {
       "label": "Période",
-      "today": "Aujourd'hui",
-      "7d": "7 jours",
-      "30d": "30 jours",
-      "all": "Tout"
+      "day": "Jour",
+      "month": "Mois",
+      "year": "Année",
+      "all": "Tout l'historique",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "allLabel": "Tout l'historique"
     },
     "filters": {
       "employee": "Employé",

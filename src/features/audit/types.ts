@@ -24,21 +24,46 @@ export type ActivitySummaryRow = {
   categories: Record<string, number>;
 };
 
-export type AuditPeriod = 'today' | '7d' | '30d' | 'all';
-export const AUDIT_PERIODS: AuditPeriod[] = ['today', '7d', '30d', 'all'];
+/** Jour, mois ou année civils, ou tout l'historique. */
+export type AuditGranularity = 'day' | 'month' | 'year' | 'all';
+export const AUDIT_GRANULARITIES: AuditGranularity[] = ['day', 'month', 'year', 'all'];
 
 export type AuditFilters = {
-  period: AuditPeriod;
+  granularity: AuditGranularity;
+  /** 0 = jour / mois / année en cours, -1 = le précédent, etc. Jamais positif. */
+  offset: number;
   /** Identifiant de l'employé, ou null pour tous. */
   actorId: string | null;
   category: AuditCategory | null;
 };
 
-/** Début (inclus) de la période choisie, en ISO ; null = depuis le début. */
-export function auditPeriodStart(period: AuditPeriod, now: Date = new Date()): string | null {
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (period === 'today') return startOfToday.toISOString();
-  if (period === '7d') return new Date(startOfToday.getTime() - 6 * 86_400_000).toISOString();
-  if (period === '30d') return new Date(startOfToday.getTime() - 29 * 86_400_000).toISOString();
-  return null;
+export type AuditRange = { from: string | null; to: string | null; start: Date | null };
+
+/** Bornes [from, to[ en ISO de la période choisie (calendrier local) ; null = sans borne. */
+export function auditRange(filters: Pick<AuditFilters, 'granularity' | 'offset'>, now: Date = new Date()): AuditRange {
+  const offset = Math.min(0, Math.trunc(filters.offset));
+  let start: Date;
+  let end: Date;
+  if (filters.granularity === 'day') {
+    start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset);
+    end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + offset + 1);
+  } else if (filters.granularity === 'month') {
+    start = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+    end = new Date(now.getFullYear(), now.getMonth() + offset + 1, 1);
+  } else if (filters.granularity === 'year') {
+    start = new Date(now.getFullYear() + offset, 0, 1);
+    end = new Date(now.getFullYear() + offset + 1, 0, 1);
+  } else {
+    return { from: null, to: null, start: null };
+  }
+  return { from: start.toISOString(), to: end.toISOString(), start };
+}
+
+/** Libellé lisible de la période choisie : « 17 oct. 2026 », « octobre 2026 », « 2026 ». Null pour tout l'historique. */
+export function auditRangeLabel(filters: Pick<AuditFilters, 'granularity' | 'offset'>, locale: string, now: Date = new Date()): string | null {
+  const { start } = auditRange(filters, now);
+  if (!start) return null;
+  if (filters.granularity === 'day') return start.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+  if (filters.granularity === 'month') return start.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
+  return String(start.getFullYear());
 }

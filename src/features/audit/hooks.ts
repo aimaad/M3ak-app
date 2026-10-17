@@ -1,13 +1,14 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 
 import { getActivitySummary, listAuditEntries, type AuditQuery } from './api';
-import { auditPeriodStart, type AuditFilters } from './types';
+import { auditRange, type AuditFilters } from './types';
 
 export const AUDIT_PAGE_SIZE = 30;
 
 /** Convertit les filtres de l'écran en requête ; `from` est calculé une fois par rendu de filtre. */
 export function toAuditQuery(agencyId: string, filters: AuditFilters, now: Date = new Date()): AuditQuery {
-  return { agencyId, from: auditPeriodStart(filters.period, now), actorId: filters.actorId, category: filters.category };
+  const { from, to } = auditRange(filters, now);
+  return { agencyId, from, to, actorId: filters.actorId, category: filters.category };
 }
 
 export function useAuditEntries(agencyId: string | undefined, filters: AuditFilters) {
@@ -22,8 +23,11 @@ export function useAuditEntries(agencyId: string | undefined, filters: AuditFilt
 
 export function useActivitySummary(agencyId: string | undefined, filters: AuditFilters) {
   return useQuery({
-    queryKey: ['audit-summary', agencyId, filters.period],
+    queryKey: ['audit-summary', agencyId, filters.granularity, filters.offset],
     enabled: !!agencyId,
-    queryFn: () => getActivitySummary(agencyId as string, auditPeriodStart(filters.period)),
+    queryFn: () => {
+      const { from, to } = auditRange(filters);
+      return getActivitySummary(agencyId as string, from, to);
+    },
   });
 }
