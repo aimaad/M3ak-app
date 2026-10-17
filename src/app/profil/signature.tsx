@@ -1,6 +1,6 @@
-import { router } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
+import { router, Stack } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, BackHandler, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -24,15 +24,22 @@ export default function MaSignatureScreen() {
 
   const [paths, setPaths] = useState<string[]>([]);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [drawing, setDrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleDrawing = useCallback((drawing: boolean) => setScrollEnabled(!drawing), []);
+  const handleDrawing = useCallback((value: boolean) => setDrawing(value), []);
 
   const handleChange = useCallback((next: string[], nextSize: { width: number; height: number }) => {
     setPaths(next);
     setSize(nextSize);
   }, []);
+
+  // Pendant le tracé, le bouton « retour » (Android) est ignoré.
+  useEffect(() => {
+    if (!drawing) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => subscription.remove();
+  }, [drawing]);
 
   const canSave = isSignatureDrawn(paths) && size.width > 0;
 
@@ -49,6 +56,8 @@ export default function MaSignatureScreen() {
 
   return (
     <ThemedView className="flex-1">
+      {/* Le glissement « retour » (iOS) est désactivé : il se déclenchait en signant près du bord. */}
+      <Stack.Screen options={{ gestureEnabled: false }} />
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title={t('profil.signature.title')} showBack />
         {profileQuery.isLoading ? (
@@ -56,12 +65,11 @@ export default function MaSignatureScreen() {
             <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : (
-          <ScrollView scrollEnabled={scrollEnabled} contentContainerClassName="gap-4 px-6 pb-10">
+          <View className="flex-1 gap-4 px-6 pb-6">
             <ThemedText type="default" themeColor="textSecondary">
               {t('profil.signature.help')}
             </ThemedText>
             <SignaturePad
-              height={220}
               clearLabel={t('profil.signature.clear')}
               placeholder={t('profil.signature.placeholder')}
               onChange={handleChange}
@@ -78,7 +86,7 @@ export default function MaSignatureScreen() {
               </ThemedText>
             ) : null}
             <Button label={t('profil.signature.save')} onPress={handleSave} disabled={!canSave || save.isPending} loading={save.isPending} />
-          </ScrollView>
+          </View>
         )}
       </SafeAreaView>
     </ThemedView>

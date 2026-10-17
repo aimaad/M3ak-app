@@ -8,6 +8,7 @@ import { M3akPalette } from '@/constants/theme';
 import { strokeToPath, type HandwrittenSignature, type Point } from './signature';
 
 type PadProps = {
+  /** Hauteur fixe ; sans valeur, le cadre occupe tout l'espace disponible (écran sans défilement). */
   height?: number;
   clearLabel: string;
   placeholder: string;
@@ -18,14 +19,17 @@ type PadProps = {
 };
 
 /** Zone de signature à main levée : un doigt = un trait, bouton Effacer. */
-export function SignaturePad({ height = 200, clearLabel, placeholder, onChange, onDrawingChange }: PadProps) {
+export function SignaturePad({ height, clearLabel, placeholder, onChange, onDrawingChange }: PadProps) {
   const [strokes, setStrokes] = useState<Point[][]>([]);
   const [width, setWidth] = useState(0);
+  const [measuredHeight, setMeasuredHeight] = useState(height ?? 0);
 
   const responder = useMemo(
     () =>
       PanResponder.create({
         onStartShouldSetPanResponder: () => true,
+        onStartShouldSetPanResponderCapture: () => true,
+        onMoveShouldSetPanResponderCapture: () => true,
         onMoveShouldSetPanResponder: () => true,
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (event) => {
@@ -50,15 +54,18 @@ export function SignaturePad({ height = 200, clearLabel, placeholder, onChange, 
   const paths = useMemo(() => strokes.map(strokeToPath).filter(Boolean), [strokes]);
 
   useEffect(() => {
-    onChange(paths, { width, height });
-  }, [paths, width, height, onChange]);
+    onChange(paths, { width, height: measuredHeight });
+  }, [paths, width, measuredHeight, onChange]);
 
   return (
-    <View className="gap-2">
+    <View className={height ? 'gap-2' : 'flex-1 gap-2'}>
       <View
         {...responder.panHandlers}
-        onLayout={(event) => setWidth(Math.round(event.nativeEvent.layout.width))}
-        style={{ height }}
+        onLayout={(event) => {
+          setWidth(Math.round(event.nativeEvent.layout.width));
+          setMeasuredHeight(Math.round(event.nativeEvent.layout.height));
+        }}
+        style={height ? { height } : { flex: 1, minHeight: 160 }}
         className="overflow-hidden rounded-2xl border-2 border-dashed border-[#B3A6C2] bg-white"
       >
         <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>

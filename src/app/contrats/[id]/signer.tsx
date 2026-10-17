@@ -1,6 +1,6 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -45,15 +45,22 @@ export default function SignerContratScreen() {
   const [accepted, setAccepted] = useState(false);
   const [paths, setPaths] = useState<string[]>([]);
   const [size, setSize] = useState({ width: 0, height: 0 });
-  const [scrollEnabled, setScrollEnabled] = useState(true);
+  const [drawing, setDrawing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleDrawing = useCallback((drawing: boolean) => setScrollEnabled(!drawing), []);
+  const handleDrawing = useCallback((value: boolean) => setDrawing(value), []);
 
   const handlePadChange = useCallback((next: string[], nextSize: { width: number; height: number }) => {
     setPaths(next);
     setSize(nextSize);
   }, []);
+
+  // Pendant le tracé, le bouton « retour » (Android) est ignoré.
+  useEffect(() => {
+    if (!drawing) return;
+    const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
+    return () => subscription.remove();
+  }, [drawing]);
 
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
@@ -123,6 +130,8 @@ export default function SignerContratScreen() {
 
   return (
     <ThemedView className="flex-1">
+      {/* Pendant la signature, le glissement « retour » (iOS) est désactivé : il se déclenchait en signant près du bord. */}
+      <Stack.Screen options={{ gestureEnabled: step === 'read' }} />
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title={step === 'read' ? t('contract.sign.readTitle') : t('contract.sign.signTitle')} subtitle={contract.numero} showBack />
 
@@ -216,14 +225,13 @@ export default function SignerContratScreen() {
             </View>
           </View>
         ) : (
-          <ScrollView scrollEnabled={scrollEnabled} contentContainerClassName="gap-5 px-6 pb-10">
-            <View className="gap-2">
+          <View className="flex-1 gap-4 px-6 pb-6">
+            <View className="flex-1 gap-2">
               <ThemedText type="smallBold">{t('contract.sign.clientSignature')}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">
                 {t('contract.sign.clientHelp', { name: contract.customerNom })}
               </ThemedText>
               <SignaturePad
-                height={220}
                 clearLabel={t('profil.signature.clear')}
                 placeholder={t('contract.sign.padPlaceholder')}
                 onChange={handlePadChange}
@@ -235,7 +243,7 @@ export default function SignerContratScreen() {
               <ThemedText type="smallBold">{t('contract.sign.agencySignature')}</ThemedText>
               <Card className="items-center gap-3">
                 {staffSignature ? (
-                  <SignatureView signature={staffSignature} />
+                  <SignatureView signature={staffSignature} height={56} />
                 ) : staffMissing ? (
                   <>
                     <ThemedText type="small" style={{ color: M3akPalette.warning }} className="text-center">
@@ -255,8 +263,8 @@ export default function SignerContratScreen() {
               </ThemedText>
             ) : null}
             <Button label={t('contract.sign.confirm')} onPress={handleSign} disabled={!canSign} loading={signContract.isPending} />
-            <Button label={t('contract.sign.backToReading')} variant="ghost" onPress={() => setStep('read')} disabled={signContract.isPending} />
-          </ScrollView>
+            <Button label={t('contract.sign.backToReading')} variant="ghost" size="sm" onPress={() => setStep('read')} disabled={signContract.isPending} />
+          </View>
         )}
       </SafeAreaView>
     </ThemedView>
