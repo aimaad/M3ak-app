@@ -50,6 +50,8 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Notes internes confidentielles avec auteur, date et historique
 - [x] Conducteurs associés à une réservation (recherche d'un client ou conducteur existant, nouveau conducteur, principal distinct du client, sans doublon)
 - [x] Vérification avant départ configurable par l'agence, contrôlée côté serveur, avec confirmation humaine
+- [x] Traçabilité réservée au propriétaire : qui a fait quoi (locations, paiements, clients, véhicules, contrats, cautions, entretien, inspections, équipe, réglages), filtres période / employé / type, synthèse par personne, export PDF — voir `docs/TRACABILITE.md` (migration 0036)
+- [ ] Politique de conservation du journal de traçabilité (durée, purge) — à définir
 - [ ] Politique de conservation des documents (durée, purge) — à définir par l'agence
 - [ ] Importer un PDF comme document (nécessite `expo-document-picker`) — aujourd'hui : photo ou galerie
 

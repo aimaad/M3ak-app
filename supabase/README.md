@@ -317,6 +317,7 @@ peut pas la réutiliser, d'où ces deux secrets.
   uniquement), tarif saisi par l'administrateur, offre gratuite/payante des clés, vue d'ensemble pour la
   console web `admin-web/`.
 - `0035_ai_insights.sql` — recommandations IA de l'accueil : accord distinct du propriétaire
+- `0036_activity_traceability.sql` — traçabilité : déclencheurs d'audit sur les tables métier, catégories, résumé par employé (propriétaire uniquement, journal en ajout seul)
   (`insights_enabled`), suivi « insights » dans l'utilisation, console web. Voir `docs/ACCUEIL-RAPPORTS.md`.
 - `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
   taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.

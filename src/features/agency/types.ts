@@ -77,15 +77,6 @@ export type MemberProfileInput = {
   nom: string;
 };
 
-export type AuditLogEntry = {
-  id: string;
-  actorName: string | null;
-  action: string;
-  targetLabel: string | null;
-  details: Record<string, unknown> | null;
-  createdAt: string;
-};
-
 export type AgencyDetails = {
   id: string;
   nom: string;

@@ -11,7 +11,6 @@ import type {
   AgencyMember,
   AgencyMembership,
   AgencyRole,
-  AuditLogEntry,
   CreateInviteInput,
   InviteResult,
   MemberProfile,
@@ -431,27 +430,4 @@ export async function uploadMemberAvatar(agencyId: string, memberId: string, loc
 
   if (error) throw error;
   return profileFromRow(data);
-}
-
-// ======================================================================
-// Journal d'audit (owner uniquement, lecture seule — RLS le garantit)
-// ======================================================================
-
-export async function listAuditLog(agencyId: string): Promise<AuditLogEntry[]> {
-  const { data, error } = await getSupabase()
-    .from('agency_audit_log')
-    .select('id, actor_name, action, target_label, details, created_at')
-    .eq('agency_id', agencyId)
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    actorName: row.actor_name,
-    action: row.action,
-    targetLabel: row.target_label,
-    details: row.details,
-    createdAt: row.created_at,
-  }));
 }

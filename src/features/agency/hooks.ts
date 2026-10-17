@@ -11,7 +11,6 @@ import {
   getMyMemberProfile,
   listAgencyInvites,
   listAgencyMembers,
-  listAuditLog,
   redeemInvite,
   removeMember,
   resendAgencyInvite,
@@ -196,13 +195,5 @@ export function useUploadMemberAvatar(agencyId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['my-profile', agencyId] });
       queryClient.invalidateQueries({ queryKey: ['agency-members', agencyId] });
     },
-  });
-}
-
-export function useAuditLog(agencyId: string | undefined) {
-  return useQuery({
-    queryKey: ['audit-log', agencyId],
-    queryFn: () => listAuditLog(agencyId as string),
-    enabled: !!agencyId,
   });
 }
