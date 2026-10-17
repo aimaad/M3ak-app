@@ -316,6 +316,8 @@ peut pas la réutiliser, d'où ces deux secrets.
 - `0034_ocr_usage_and_web_admin.sql` — suivi d'utilisation de l'OCR cloud (`ocr_usage_events`, compteurs
   uniquement), tarif saisi par l'administrateur, offre gratuite/payante des clés, vue d'ensemble pour la
   console web `admin-web/`.
+- `0035_ai_insights.sql` — recommandations IA de l'accueil : accord distinct du propriétaire
+  (`insights_enabled`), suivi « insights » dans l'utilisation, console web. Voir `docs/ACCUEIL-RAPPORTS.md`.
 - `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
   taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.
 

@@ -34,7 +34,8 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [ ] Questions types : qui avait la voiture à une date, prochaine vidange, pourquoi une voiture rapporte moins
 
 ## Étape 6 — Intelligence et multi-agences
-- [ ] Recommandations (demande en hausse, véhicules sous-utilisés, rentabilité par voiture)
+- [x] Accueil par rôle (propriétaire / responsable / employé) avec indicateurs financiers, flotte, activité, performance et recommandations IA (clé de l'entreprise + accord du propriétaire) — voir `docs/ACCUEIL-RAPPORTS.md`
+- [ ] Recommandations IA avancées (demande en hausse par période, prévisions)
 - [ ] Plusieurs agences physiques, droits par agence
 
 ## Étape 7 — Commercialisation

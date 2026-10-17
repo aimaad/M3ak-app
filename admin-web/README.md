@@ -3,7 +3,7 @@
 Page web **réservée à l'administrateur de la plateforme** (vous, l'opérateur M3AK). Elle permet de :
 - voir **toutes les entreprises** créées (nom, ville, date de création, nombre de membres) ;
 - **configurer, modifier ou retirer la clé d'API Gemini** de chaque entreprise (écriture seule : la clé ne peut plus être relue) ;
-- voir pour chaque entreprise l'**utilisation de l'OCR cloud** (analyses, échecs, tokens, dernière analyse) sur le mois, 30 jours ou depuis le début ;
+- voir pour chaque entreprise l'**utilisation de l'IA** : documents lus, échecs, **rapports IA** de l'accueil (recommandations), tokens, dernière analyse sur le mois, 30 jours ou depuis le début ;
 - voir le **coût estimé** en USD et en MAD, à partir du tarif Google que vous saisissez.
 
 Elle ne donne **aucun accès** aux clients, véhicules ou locations des entreprises.
@@ -11,14 +11,14 @@ Elle ne donne **aucun accès** aux clients, véhicules ou locations des entrepri
 ## Mise en route (une seule fois)
 
 1. **Base de données** — dans Supabase → SQL Editor, exécutez (si ce n'est pas déjà fait) les migrations
-   `0032_agency_ocr_settings.sql`, `0033_platform_admin_ocr_keys.sql` puis `0034_ocr_usage_and_web_admin.sql`
+   `0032_agency_ocr_settings.sql`, `0033_platform_admin_ocr_keys.sql`, `0034_ocr_usage_and_web_admin.sql` puis `0035_ai_insights.sql`
    (« Copy raw file » pour éviter les troncatures ; **jamais** les fichiers de tests SQL).
 2. **Vous déclarer administrateur** (SQL Editor, avec l'e-mail de votre compte M3AK) :
    ```sql
    insert into public.platform_admins (user_id)
    select id from auth.users where email = 'VOTRE_EMAIL';
    ```
-3. **Déployer la fonction** qui enregistre l'utilisation : `npx supabase functions deploy scan-document`.
+3. **Déployer les fonctions** : `npx supabase functions deploy scan-document` et `npx supabase functions deploy generate-insights` (la seconde produit les recommandations de l'accueil).
 4. **Configurer la console** : copiez `config.example.js` en `config.js`, puis renseignez l'URL de votre projet
    et la clé « anon » (Supabase → Project Settings → API). Jamais la clé « service_role ».
 5. **Lancer** (depuis le dossier du projet) :

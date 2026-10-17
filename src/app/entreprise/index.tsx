@@ -21,7 +21,7 @@ import {
   validateAgencyDetailsForm,
   type AgencyDetailsFormValues,
 } from '@/features/agency/validation';
-import { useOcrSettings, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
+import { useOcrSettings, useSetAiInsightsEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import type { AgencyDetails } from '@/features/agency/types';
 import { useSignedUrl } from '@/features/storage/hooks';
@@ -140,6 +140,53 @@ function DocumentReadingSettings({ agencyId, isOwner }: { agencyId: string; isOw
           <Button
             label={settings.cloudEnabled ? t('ocr.disable') : t('ocr.enable')}
             variant={settings.cloudEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
+    </View>
+  );
+}
+
+/** Recommandations IA de l'accueil : mêmes règles (clé configurée par M3AK + accord du propriétaire), accord distinct. */
+function AiInsightsSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
+  const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetAiInsightsEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.insightsEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.insights.confirmTitle'), t('ocr.insights.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.insights.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
+  return (
+    <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+      <ThemedText type="smallBold">{t('ocr.insights.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable ? t('ocr.insights.unavailable') : settings.insightsEnabled ? t('ocr.insights.on') : t('ocr.insights.off')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.insightsEnabled ? t('ocr.insights.disable') : t('ocr.insights.enable')}
+            variant={settings.insightsEnabled ? 'danger' : 'primary'}
             size="sm"
             disabled={setEnabled.isPending}
             loading={setEnabled.isPending}
@@ -311,6 +358,7 @@ function EntrepriseForm({
       )}
 
       <DocumentReadingSettings agencyId={agencyId} isOwner={isOwner} />
+      <AiInsightsSettings agencyId={agencyId} isOwner={isOwner} />
 
       {isOwner ? (
         <Button

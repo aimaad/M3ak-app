@@ -1,10 +1,11 @@
 import { File } from 'expo-file-system';
 
+import { clearInsightsCache } from '@/features/dashboard/insights-cache';
 import { scanInCloud, type CloudDocumentType, type CloudScanResult } from './cloud-ocr';
 import { clearScanCache, hasAnyFieldValue, readScanCache, scanCacheKey, writeScanCache, type KeyValueStorage } from './scan-cache';
 
 /** Stockage local de l'appareil ; absent (tests, web) → pas de cache, la lecture fonctionne quand même. */
-function deviceStorage(): KeyValueStorage | null {
+export function deviceStorage(): KeyValueStorage | null {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const module = require('@react-native-async-storage/async-storage') as { default?: KeyValueStorage } & KeyValueStorage;
@@ -50,8 +51,10 @@ export async function scanCloudCached(
   return result;
 }
 
-/** À la déconnexion : aucune donnée de lecture ne reste sur l'appareil. */
+/** À la déconnexion : aucune lecture de document ni recommandation ne reste sur l'appareil. */
 export async function clearDeviceScanCache(): Promise<void> {
   const storage = deviceStorage();
-  if (storage) await clearScanCache(storage);
+  if (!storage) return;
+  await clearScanCache(storage);
+  await clearInsightsCache(storage);
 }

@@ -3,7 +3,7 @@
 import { scanLicence } from '@/features/customers/licence-ocr';
 import { scanVehicleDocument } from '@/features/vehicles/ocr';
 
-import { inactiveMessageKey, ocrAvailability, scanErrorMessageKey } from '../availability';
+import { inactiveMessageKey, insightsAvailability, ocrAvailability, scanErrorMessageKey } from '../availability';
 import { parseOcrSettings } from '../settings-api';
 
 const mockInvoke = jest.fn();
@@ -22,16 +22,17 @@ beforeEach(() => mockInvoke.mockReset());
 
 describe("réglage OCR de l'entreprise", () => {
   it('ne renvoie jamais de clé et ignore un accord sans clé', () => {
-    expect(parseOcrSettings({ cloud_available: false, cloud_enabled: true })).toEqual({ cloudAvailable: false, cloudEnabled: false });
-    expect(parseOcrSettings({ cloud_available: true, cloud_enabled: true, gemini_api_key: 'secret' })).toEqual({ cloudAvailable: true, cloudEnabled: true });
-    expect(parseOcrSettings(null)).toEqual({ cloudAvailable: false, cloudEnabled: false });
+    expect(parseOcrSettings({ cloud_available: false, cloud_enabled: true })).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false });
+    expect(parseOcrSettings({ cloud_available: true, cloud_enabled: true, insights_enabled: true, gemini_api_key: 'secret' })).toEqual({ cloudAvailable: true, cloudEnabled: true, insightsEnabled: true });
+    expect(parseOcrSettings({ cloud_available: false, insights_enabled: true }).insightsEnabled).toBe(false);
+    expect(parseOcrSettings(null)).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false });
   });
 });
 
 describe('disponibilité de la lecture automatique', () => {
-  const none = { cloudAvailable: false, cloudEnabled: false };
-  const keyOnly = { cloudAvailable: true, cloudEnabled: false };
-  const on = { cloudAvailable: true, cloudEnabled: true };
+  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false };
+  const keyOnly = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: false };
+  const on = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false };
 
   it('active seulement avec une clé ET l\'accord du propriétaire', () => {
     expect(ocrAvailability(on, false, 'employee')).toBe('active');
@@ -55,6 +56,22 @@ describe('disponibilité de la lecture automatique', () => {
     expect(scanErrorMessageKey('nothing_read')).toBe('ocr.errors.nothingRead');
     expect(scanErrorMessageKey('ocr_failed')).toBe('ocr.errors.failed');
     expect(scanErrorMessageKey(null)).toBe('ocr.errors.failed');
+  });
+});
+
+describe("disponibilité des recommandations IA", () => {
+  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false };
+  const keyOnly = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false };
+  const on = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: true };
+
+  it('réservées au propriétaire et au responsable, avec clé ET accord du propriétaire', () => {
+    expect(insightsAvailability(on, false, 'owner')).toBe('active');
+    expect(insightsAvailability(on, false, 'manager')).toBe('active');
+    expect(insightsAvailability(on, false, 'employee')).toBe('role_not_allowed');
+    expect(insightsAvailability(none, false, 'owner')).toBe('no_key');
+    expect(insightsAvailability(keyOnly, false, 'owner')).toBe('owner_can_enable');
+    expect(insightsAvailability(keyOnly, false, 'manager')).toBe('ask_owner');
+    expect(insightsAvailability(on, true, 'owner')).toBe('loading');
   });
 });
 

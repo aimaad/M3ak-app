@@ -396,7 +396,7 @@ select pg_temp.try('clé OCR : le propriétaire ne peut pas écrire la table', $
 select pg_temp.try('clé OCR : le propriétaire ne peut pas insérer sa propre clé', $$insert into agency_ocr_settings (agency_id, gemini_api_key) values ('bbbbbbbb-0000-0000-0000-000000000002', 'AQ.fake-test-key-0123456789abcdef')$$, 'permission denied');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
 select pg_temp.ck('OCR cloud : un employé voit « clé disponible » mais pas activée, sans jamais voir la clé',
-  (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') = '{"cloud_available": true, "cloud_enabled": false}'::jsonb)
+  (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') = '{"cloud_available": true, "cloud_enabled": false, "insights_enabled": false}'::jsonb)
   and public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text not like '%AQ.fake%', public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text);
 select pg_temp.try('OCR cloud : un employé ne peut pas donner l''accord', $$select public.set_ocr_cloud_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
@@ -478,6 +478,41 @@ select pg_temp.ck('usage : une clé gratuite coûte 0 même avec des tokens',
 select pg_temp.try('usage : changer l''offre sans clé en place est refusé', $$select public.admin_set_ocr_key_tier('aaaaaaaa-0000-0000-0000-000000000001', 'free')$$);
 select pg_temp.ck('usage : la vue d''ensemble ne contient jamais de clé complète',
   public.admin_ocr_overview()::text not like '%AQ.fake%', '');
+set role authenticated;
+
+-- ===== Recommandations IA (0035) =====
+reset role;
+update agency_ocr_settings set gemini_api_key = 'AQ.fake-test-key-0123456789abcdef', cloud_enabled = false, insights_enabled = false where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.ck('IA : un employé voit que la clé existe mais pas les recommandations activées, sans jamais voir la clé',
+  (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') ->> 'insights_enabled') = 'false'
+  and public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text not like '%AQ.fake%', '');
+select pg_temp.try('IA : un employé ne peut pas activer les recommandations', $$select public.set_ai_insights_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.try('IA : un responsable ne peut pas activer les recommandations', $$select public.set_ai_insights_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000b2');
+select pg_temp.try('IA : une autre entreprise ne peut pas activer pour A', $$select public.set_ai_insights_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
+reset role;
+update agency_ocr_settings set gemini_api_key = null where agency_id = 'bbbbbbbb-0000-0000-0000-000000000002';
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000b1');
+select pg_temp.try('IA : accord impossible sans clé configurée', $$select public.set_ai_insights_enabled('bbbbbbbb-0000-0000-0000-000000000002', true)$$, 'ocr_key_missing');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.ck('IA : le propriétaire active les recommandations (sans activer la lecture des documents)',
+  (public.set_ai_insights_enabled('aaaaaaaa-0000-0000-0000-000000000001', true) ->> 'insights_enabled') = 'true'
+  and (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') ->> 'cloud_enabled') = 'false', '');
+reset role;
+insert into ocr_usage_events (agency_id, document_type, ok, input_tokens, output_tokens) values ('aaaaaaaa-0000-0000-0000-000000000001', 'insights', true, 1000, 500);
+select pg_temp.ck('IA : le suivi accepte le type « insights »', (select count(*) = 1 from ocr_usage_events where document_type = 'insights'), '');
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000c9');
+select pg_temp.ck('IA : la console compte les rapports IA à part des documents lus',
+  (select (e->>'insights_calls')::int = 1 from jsonb_array_elements(public.admin_ocr_overview() -> 'agencies') e where e->>'agency_id' = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+reset role;
+update agency_ocr_settings set gemini_api_key = null where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select pg_temp.ck('IA : retirer la clé retire aussi les deux accords',
+  (select cloud_enabled = false and insights_enabled = false from agency_ocr_settings where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
 set role authenticated;
 
 reset role;

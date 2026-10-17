@@ -40,3 +40,21 @@ export function scanErrorMessageKey(code: string | null): string {
       return 'ocr.errors.failed';
   }
 }
+
+/**
+ * Disponibilité des recommandations IA de l'accueil : mêmes règles que la lecture des documents (clé de l'entreprise
+ * configurée par M3AK + accord du propriétaire), et réservées au propriétaire et au responsable.
+ */
+export type InsightsAvailability = 'loading' | 'active' | 'no_key' | 'owner_can_enable' | 'ask_owner' | 'role_not_allowed';
+
+export function insightsAvailability(
+  settings: OcrSettings,
+  isLoading: boolean,
+  role: AgencyRole | null | undefined
+): InsightsAvailability {
+  if (role !== 'owner' && role !== 'manager') return 'role_not_allowed';
+  if (isLoading) return 'loading';
+  if (settings.insightsEnabled) return 'active';
+  if (!settings.cloudAvailable) return 'no_key';
+  return role === 'owner' ? 'owner_can_enable' : 'ask_owner';
+}

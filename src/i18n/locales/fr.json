@@ -968,11 +968,104 @@
     "fleetTotalCount_other": "{{count}} véhicules enregistrés",
     "utilizationRate": "Taux d'utilisation",
     "revenueThisMonth": "Chiffre d'affaires (mois)",
-    "revenueChartTitle": "Revenus des {{days}} derniers jours",
     "documentAlertsSection": "Documents à renouveler",
     "maintenanceSection": "Échéances de maintenance",
     "maintenanceEmpty": "Aucune échéance à venir.",
-    "seeAll": "Voir tout"
+    "seeAll": "Voir tout",
+    "roleView": {
+      "owner": "Vue propriétaire : toute votre agence en un coup d'œil",
+      "manager": "Vue responsable : exploitation et flotte",
+      "employee": "Vue comptoir : votre travail du jour"
+    },
+    "financial": {
+      "title": "Finances",
+      "revenueMonth": "Encaissé ce mois",
+      "vsLastMonth": "{{pct}} % par rapport au mois dernier",
+      "noPreviousMonth": "Pas de mois précédent à comparer",
+      "outstanding": "Reste à encaisser",
+      "outstandingHint": "{{count}} location(s) non soldée(s)",
+      "profit30d": "Résultat sur 30 jours",
+      "profitHint": "Encaissé moins frais d'entretien",
+      "maintenanceCost": "Entretien ce mois",
+      "averageBasket": "Panier moyen par location",
+      "cancellationRate": "Taux d'annulation",
+      "cancelledHint": "{{count}} annulation(s) ce mois",
+      "trendTitle": "Encaissements des 6 derniers mois"
+    },
+    "fleet": {
+      "utilizationNow": "En location maintenant",
+      "occupancyMonth": "Occupation du mois",
+      "occupancyHint": "Jours loués sur jours disponibles"
+    },
+    "operations": {
+      "title": "Activité des locations",
+      "departuresToday": "Départs aujourd'hui",
+      "returnsToday": "Retours aujourd'hui",
+      "lateReturns": "Retours en retard",
+      "pendingConfirmation": "À confirmer",
+      "upcoming7Days": "Départs dans les 7 jours",
+      "activeRentals": "Locations en cours",
+      "averageDuration": "Durée moyenne",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours",
+      "newCustomers": "Nouveaux clients ce mois"
+    },
+    "counter": {
+      "title": "Aujourd'hui au comptoir",
+      "toCollect": "Soldes à encaisser aujourd'hui",
+      "toCollectHint": "Retours prévus aujourd'hui ou en retard avec un reste à payer",
+      "availableNow": "Véhicules disponibles",
+      "newRental": "Nouvelle location",
+      "newCustomer": "Nouveau client"
+    },
+    "performance": {
+      "title": "Performance de la flotte (30 jours)",
+      "top": "Véhicules qui rapportent le plus",
+      "underused": "Véhicules peu loués (moins de {{pct}} % d'occupation)",
+      "noData": "Pas encore assez de données.",
+      "noneUnderused": "Aucun véhicule sous-utilisé.",
+      "occupancy": "{{pct}} % d'occupation"
+    },
+    "maintenanceSummary": {
+      "overdue": "Entretiens en retard",
+      "due": "Entretiens à faire"
+    },
+    "ai": {
+      "title": "Analyse et recommandations IA",
+      "indicatorsTitle": "Indicateurs proposés par l'IA",
+      "recommendationsTitle": "Recommandations de l'IA",
+      "refresh": "Actualiser",
+      "cooldown": "Patientez quelques minutes avant de relancer l'analyse.",
+      "loading": "Analyse en cours…",
+      "analysedAt": "Analyse du {{time}}",
+      "disclaimer": "Suggestions générées par une IA à partir de statistiques sans aucun nom de client. À vérifier avant d'agir : elles ne remplacent pas votre jugement.",
+      "openSettings": "Ouvrir Mon entreprise",
+      "priority": {
+        "high": "Prioritaire",
+        "medium": "À planifier",
+        "low": "Facultatif"
+      },
+      "area": {
+        "revenue": "Revenus",
+        "fleet": "Flotte",
+        "maintenance": "Entretien",
+        "operations": "Exploitation",
+        "customers": "Clients"
+      },
+      "unavailable": {
+        "noKey": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore configurée pour votre entreprise. Contactez M3AK pour la mettre en place.",
+        "ownerCanEnable": "Cet indicateur ne peut pas être affiché : l'IA est configurée mais pas encore activée. Vous pouvez l'activer dans « Mon entreprise ».",
+        "askOwner": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore activée pour votre entreprise. Demandez au propriétaire de l'activer."
+      },
+      "errors": {
+        "busy": "L'IA est très sollicitée en ce moment. Réessayez dans quelques instants.",
+        "timeout": "L'analyse prend trop de temps. Réessayez dans un instant.",
+        "limit": "Vous avez atteint le nombre d'analyses autorisées pour aujourd'hui. Réessayez demain.",
+        "inactive": "L'IA n'est pas active pour votre entreprise.",
+        "unavailable": "Impossible de joindre le service d'analyse. Vérifiez votre connexion internet, puis réessayez.",
+        "failed": "L'analyse n'a pas fonctionné. Réessayez dans un instant."
+      }
+    }
   },
   "maintenance": {
     "title": "Maintenance",
@@ -1135,7 +1228,17 @@
       "failed": "La lecture du document n'a pas fonctionné. Réessayez avec une photo plus nette, ou saisissez les informations à la main.",
       "busy": "Le service de lecture est très sollicité en ce moment. Réessayez dans quelques instants, ou saisissez les informations à la main."
     },
-    "fromCache": "Cette photo a déjà été lue : résultat repris sans nouvel envoi."
+    "fromCache": "Cette photo a déjà été lue : résultat repris sans nouvel envoi.",
+    "insights": {
+      "title": "Recommandations IA (accueil)",
+      "unavailable": "Les recommandations IA ne sont pas disponibles pour votre entreprise : aucune clé d'API n'est configurée. Contactez M3AK pour la mettre en place.",
+      "off": "Une clé d'API est configurée, mais les recommandations IA sont désactivées.",
+      "on": "Recommandations IA activées pour le propriétaire et les responsables. Seules des statistiques sans aucun nom de client ni photo sont envoyées à Google Gemini avec la clé de votre entreprise. Avec une clé gratuite, Google peut utiliser ces données ; préférez une clé avec facturation activée.",
+      "enable": "Activer les recommandations IA",
+      "disable": "Désactiver les recommandations IA",
+      "confirmTitle": "Activer les recommandations IA ?",
+      "confirmBody": "Des statistiques de votre agence (nombres de locations, totaux, noms de modèles de véhicules) seront envoyées à Google Gemini avec la clé de votre entreprise pour générer des conseils. Aucun nom de client, téléphone ni photo n'est envoyé."
+    }
   },
   "errors": {
     "network": "Impossible de se connecter à internet. Vérifiez votre connexion, puis réessayez.",

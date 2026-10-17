@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
 import { BottomTabBar } from '@/components/bottom-tab-bar';
-import { Card, PressableCard } from '@/components/card';
+import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -13,18 +13,20 @@ import { M3akPalette } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
-import { useCustomers } from '@/features/customers/hooks';
-import { computeUtilizationRate, revenueByDay, sumPaymentsInMonth } from '@/features/dashboard/metrics';
-import { RevenueChart } from '@/features/dashboard/revenue-chart';
-import { useMaintenanceItems } from '@/features/maintenance/hooks';
+import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
+import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
+import { dashboardSections, canSeeMoney } from '@/features/dashboard/role-layout';
+import {
+  CounterSection,
+  FinancialSection,
+  FleetSection,
+  MaintenanceSummaryRow,
+  OperationsSection,
+  PerformanceSection,
+} from '@/features/dashboard/sections';
+import { useOcrSettings } from '@/features/ocr/hooks';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
-import { useAllPayments } from '@/features/payments/hooks';
 import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
-import { countByStatus } from '@/features/vehicles/filters';
-import { useVehicles } from '@/features/vehicles/hooks';
-import type { StatusFilter } from '@/features/vehicles/filters';
-import type { Vehicle } from '@/features/vehicles/types';
-import type { Payment } from '@/features/payments/types';
 import type { ExpiryUrgency } from '@/lib/expiry';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -45,39 +47,27 @@ function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
-const EMPTY_VEHICLES: Vehicle[] = [];
-const EMPTY_PAYMENTS: Payment[] = [];
-const CHART_DAYS = 7;
-
-const KPI_TILES: { statut: StatusFilter; labelKey: string }[] = [
-  { statut: 'disponible', labelKey: 'flotte.status.disponible' },
-  { statut: 'en_location', labelKey: 'flotte.status.en_location' },
-  { statut: 'maintenance', labelKey: 'flotte.status.maintenance' },
-  { statut: 'a_inspecter', labelKey: 'flotte.status.a_inspecter' },
-];
-
 export default function AccueilScreen() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const agencyQuery = useMyAgency();
   const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
-  const vehiclesQuery = useVehicles();
-  const paymentsQuery = useAllPayments();
-  const maintenanceQuery = useMaintenanceItems();
-  const customersQuery = useCustomers();
+  const role = agencyQuery.data?.role;
+  const sections = dashboardSections(role);
 
-  const vehicles = vehiclesQuery.data ?? EMPTY_VEHICLES;
-  const payments = paymentsQuery.data ?? EMPTY_PAYMENTS;
-  const counts = useMemo(() => countByStatus(vehicles), [vehicles]);
-  const utilizationRate = useMemo(() => computeUtilizationRate(vehicles), [vehicles]);
-  const revenue = useMemo(() => sumPaymentsInMonth(payments), [payments]);
-  const chartPoints = useMemo(() => revenueByDay(payments, CHART_DAYS), [payments]);
+  const { metrics, vehicles, maintenanceItems, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics();
+  const { agencyId, insightsAvailability } = useOcrSettings();
+  const insights = useAiInsights({
+    enabled: insightsAvailability === 'active' && isComplete,
+    agencyId,
+    role,
+    language: language === 'ar' ? 'ar' : 'fr',
+    metrics,
+  });
 
-  const urgentMaintenance = (maintenanceQuery.data ?? [])
-    .filter((item) => item.statut !== 'effectuee')
-    .slice(0, 4);
+  const urgentMaintenance = maintenanceItems.filter((item) => item.statut !== 'effectuee').slice(0, 4);
 
   const documentAlerts: DocumentAlertItem[] = useMemo(() => {
-    const fromCustomers: DocumentAlertItem[] = customerDocumentAlerts(customersQuery.data ?? []).map((a) => ({
+    const fromCustomers: DocumentAlertItem[] = customerDocumentAlerts(customers).map((a) => ({
       key: `c-${a.customerId}-${a.type}`,
       name: a.customerName,
       expiresAt: a.expiresAt,
@@ -92,17 +82,7 @@ export default function AccueilScreen() {
       href: `/flotte/${a.vehicleId}`,
     }));
     return [...fromCustomers, ...fromVehicles].sort((a, b) => a.expiresAt.localeCompare(b.expiresAt)).slice(0, 4);
-  }, [customersQuery.data, vehicles]);
-
-  const isRefreshing =
-    vehiclesQuery.isFetching || paymentsQuery.isFetching || maintenanceQuery.isFetching;
-
-  function handleRefresh() {
-    vehiclesQuery.refetch();
-    paymentsQuery.refetch();
-    maintenanceQuery.refetch();
-    customersQuery.refetch();
-  }
+  }, [customers, vehicles]);
 
   const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -138,7 +118,7 @@ export default function AccueilScreen() {
           }
         />
 
-        {vehiclesQuery.isLoading ? (
+        {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color={M3akPalette.mauve} />
           </View>
@@ -146,105 +126,89 @@ export default function AccueilScreen() {
           <ScrollView
             contentContainerClassName="gap-6 px-6 pb-28"
             refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor={M3akPalette.mauve} />
+              <RefreshControl refreshing={isRefreshing} onRefresh={refetchAll} tintColor={M3akPalette.mauve} />
             }
           >
-            <View>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('accueil.fleetTotal')}
-              </ThemedText>
-              <ThemedText type="title" className="font-cairo-bold">
-                {t('accueil.fleetTotalCount', { count: vehicles.length })}
-              </ThemedText>
-            </View>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t(`accueil.roleView.${role ?? 'employee'}`)}
+            </ThemedText>
 
-            <View className="flex-row flex-wrap gap-3">
-              {KPI_TILES.map((tile) => (
-                <PressableCard
-                  key={tile.statut}
-                  onPress={() => router.push({ pathname: '/flotte', params: { statut: tile.statut } })}
-                  className="w-[47%] gap-1"
-                >
-                  <ThemedText type="title" themeColor="primary">
-                    {counts[tile.statut]}
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t(tile.labelKey)}
-                  </ThemedText>
-                </PressableCard>
-              ))}
-            </View>
-
-            <View className="flex-row gap-3">
-              <Card className="flex-1 gap-1">
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('accueil.utilizationRate')}
-                </ThemedText>
-                <ThemedText type="subtitle" className="font-cairo-semibold">
-                  {`${utilizationRate}%`}
-                </ThemedText>
-              </Card>
-              <Card className="flex-1 gap-1">
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('accueil.revenueThisMonth')}
-                </ThemedText>
-                <ThemedText type="subtitle" className="font-cairo-semibold">
-                  {`${revenue.toLocaleString('fr-FR')} MAD`}
-                </ThemedText>
-              </Card>
-            </View>
-
-            <Card className="gap-3">
-              <ThemedText type="smallBold">{t('accueil.revenueChartTitle', { days: CHART_DAYS })}</ThemedText>
-              <RevenueChart points={chartPoints} />
-            </Card>
-
-            {documentAlerts.length > 0 ? (
-              <View className="gap-3">
-                <ThemedText type="smallBold">{t('accueil.documentAlertsSection')}</ThemedText>
-                <View className="gap-2">
-                  {documentAlerts.map((alert) => (
-                    <PressableCard key={alert.key} onPress={() => router.push(alert.href)} className="flex-row items-center justify-between">
-                      <ThemedText type="small">{alert.name}</ThemedText>
-                      <ThemedText type="small" style={{ color: URGENCY_COLOR[alert.urgency] }}>
-                        {formatShortDate(alert.expiresAt)}
-                      </ThemedText>
-                    </PressableCard>
-                  ))}
-                </View>
-              </View>
-            ) : null}
-
-            <View className="gap-3">
-              <View className="flex-row items-center justify-between">
-                <ThemedText type="smallBold">{t('accueil.maintenanceSection')}</ThemedText>
-                <Pressable onPress={() => router.push('/maintenance')}>
-                  <ThemedText type="small" themeColor="primary">
-                    {t('accueil.seeAll')}
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-              {urgentMaintenance.length === 0 ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('accueil.maintenanceEmpty')}
-                </ThemedText>
-              ) : (
-                <View className="gap-2">
-                  {urgentMaintenance.map((item) => {
-                    const vehicle = vehicles.find((v) => v.id === item.vehicleId);
-                    return (
-                      <MaintenanceRow
-                        key={item.id}
-                        item={item}
-                        vehicleLabel={vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined}
-                        currentKm={vehicle?.kilometrage ?? null}
-                      />
-                    );
-                  })}
-                </View>
-              )}
-            </View>
+            {sections.map((section) => {
+              switch (section) {
+                case 'financial':
+                  return <FinancialSection key={section} metrics={metrics} />;
+                case 'fleet':
+                  return <FleetSection key={section} metrics={metrics} vehicles={vehicles} />;
+                case 'operations':
+                  return <OperationsSection key={section} metrics={metrics} />;
+                case 'counter':
+                  return <CounterSection key={section} metrics={metrics} />;
+                case 'performance':
+                  return <PerformanceSection key={section} metrics={metrics} showMoney={canSeeMoney(role)} />;
+                case 'ai':
+                  return (
+                    <AiInsightsSection
+                      key={section}
+                      availability={insightsAvailability}
+                      isLoading={insights.isFetching}
+                      error={insights.error}
+                      data={insights.data}
+                      onRefresh={insights.refresh}
+                    />
+                  );
+                case 'alerts':
+                  return documentAlerts.length > 0 ? (
+                    <View key={section} className="gap-3">
+                      <ThemedText type="smallBold">{t('accueil.documentAlertsSection')}</ThemedText>
+                      <View className="gap-2">
+                        {documentAlerts.map((alert) => (
+                          <PressableCard key={alert.key} onPress={() => router.push(alert.href)} className="flex-row items-center justify-between">
+                            <ThemedText type="small">{alert.name}</ThemedText>
+                            <ThemedText type="small" style={{ color: URGENCY_COLOR[alert.urgency] }}>
+                              {formatShortDate(alert.expiresAt)}
+                            </ThemedText>
+                          </PressableCard>
+                        ))}
+                      </View>
+                    </View>
+                  ) : null;
+                case 'maintenance':
+                  return (
+                    <View key={section} className="gap-3">
+                      <View className="flex-row items-center justify-between">
+                        <ThemedText type="smallBold">{t('accueil.maintenanceSection')}</ThemedText>
+                        <Pressable onPress={() => router.push('/maintenance')}>
+                          <ThemedText type="small" themeColor="primary">
+                            {t('accueil.seeAll')}
+                          </ThemedText>
+                        </Pressable>
+                      </View>
+                      <MaintenanceSummaryRow metrics={metrics} />
+                      {urgentMaintenance.length === 0 ? (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {t('accueil.maintenanceEmpty')}
+                        </ThemedText>
+                      ) : (
+                        <View className="gap-2">
+                          {urgentMaintenance.map((item) => {
+                            const vehicle = vehicles.find((v) => v.id === item.vehicleId);
+                            return (
+                              <MaintenanceRow
+                                key={item.id}
+                                item={item}
+                                vehicleLabel={vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined}
+                                currentKm={vehicle?.kilometrage ?? null}
+                              />
+                            );
+                          })}
+                        </View>
+                      )}
+                    </View>
+                  );
+                default:
+                  return null;
+              }
+            })}
           </ScrollView>
         )}
 

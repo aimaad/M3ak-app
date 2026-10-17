@@ -16,6 +16,11 @@ const CLOUD_AWARE_FILES = [
   'features/customers/licence-ocr.ts',
   'features/vehicles/ocr.ts',
   'app/entreprise/index.tsx',
+  'features/dashboard/insights-api.ts',
+  'features/dashboard/insights.ts',
+  'features/dashboard/insights-cache.ts',
+  'features/dashboard/hooks.ts',
+  'features/dashboard/ai-insights-section.tsx',
 ];
 const FORBIDDEN_NETWORK = /fetch\s*\(|XMLHttpRequest|WebSocket|functions\.invoke|@\/lib\/supabase|axios/;
 const FORBIDDEN_PROVIDERS = /gemini|generativelanguage|anthropic|openai|googleapis|vision\.google|(?<![a-z])textract|azure|cognitive|mistral/i;
@@ -61,19 +66,34 @@ describe("confidentialité de l'OCR", () => {
     expect(offenders).toEqual([]);
   });
 
-  it("la fonction serveur n'utilise que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
+  it("les fonctions serveur n'utilisent que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    expect(fs.readdirSync(functionsDir).sort()).toEqual(['scan-document', 'send-invite']);
-    const code = fs.readFileSync(path.join(functionsDir, 'scan-document/index.ts'), 'utf8');
-    expect(code).toContain("from('agency_ocr_settings')");
-    expect(code).toContain('settings.cloud_enabled');
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'generate-insights', 'scan-document', 'send-invite']);
+    const read = (file: string) => fs.readFileSync(path.join(functionsDir, file), 'utf8');
+
+    const scan = read('scan-document/index.ts');
+    expect(scan).toContain("from('agency_ocr_settings')");
+    expect(scan).toContain('settings.cloud_enabled');
+
+    const insights = read('generate-insights/index.ts');
+    expect(insights).toContain("from('agency_ocr_settings')");
+    expect(insights).toContain('settings.insights_enabled');
+    expect(insights).toContain("membership.role !== 'owner' && membership.role !== 'manager'");
+    expect(insights).toContain('DAILY_LIMIT');
+    // aucune donnée personnelle ne peut partir : liste blanche reconstruite côté serveur
+    expect(insights).not.toMatch(/telephone|cin_ou|nom_complet|immatriculation|email/i);
+
     // surcharge passagère : plusieurs modèles Gemini et un nouvel essai, jamais un autre fournisseur
-    expect(code).toMatch(/RETRYABLE_STATUSES = new Set\(\[[^\]]*503/);
-    expect(code).toContain("LATEST_ALIAS = 'gemini-flash-latest'");
-    expect(code).toContain('discoverModels'); // les noms de modèles ne sont pas figés : liste demandée à Google
-    expect(code).not.toContain('gemini-2.0-flash'); // modèle retiré par Google
-    expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
-    expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
-    expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64)/);
+    const gemini = read('_shared/gemini.ts');
+    expect(gemini).toMatch(/RETRYABLE_STATUSES = new Set\(\[[^\]]*503/);
+    expect(gemini).toContain("LATEST_ALIAS = 'gemini-flash-latest'");
+    expect(gemini).toContain('discoverModels'); // les noms de modèles ne sont pas figés : liste demandée à Google
+    expect(gemini).not.toContain('gemini-2.0-flash'); // modèle retiré par Google
+
+    for (const code of [scan, insights, gemini]) {
+      expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
+      expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
+      expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64|payload)/);
+    }
   });
 });

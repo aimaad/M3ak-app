@@ -218,8 +218,10 @@ function renderDashboard(flash) {
         a.key_set ? h('span', { class: `pill ${a.key_tier === 'paid' ? 'warn' : 'off'}` }, a.key_tier === 'paid' ? 'Payante' : 'Gratuite') : null
       ),
       h('td', {}, a.key_set ? (a.cloud_enabled ? h('span', { class: 'pill ok' }, 'Activée') : h('span', { class: 'pill off' }, 'En attente du propriétaire')) : '—'),
+      h('td', {}, a.key_set ? (a.insights_enabled ? h('span', { class: 'pill ok' }, 'Activées') : h('span', { class: 'pill off' }, 'En attente du propriétaire')) : '—'),
       h('td', { class: 'num' }, formatInt(a.scans)),
       h('td', { class: 'num' }, formatInt(a.scans_failed)),
+      h('td', { class: 'num' }, formatInt(a.insights_calls)),
       h('td', { class: 'num' }, `${formatInt(a.input_tokens)} / ${formatInt(a.output_tokens)}`),
       h('td', {}, costLabel(a, rate)),
       h('td', {}, formatDate(a.last_scan_at)),
@@ -233,20 +235,20 @@ function renderDashboard(flash) {
   );
 
   render(
-    h('div', { class: 'toolbar' }, h('div', {}, h('h1', {}, 'Entreprises et utilisation de l’OCR'), h('p', { class: 'muted' }, 'Analyses envoyées à Gemini avec la clé de chaque entreprise. Sans clé (ou sans accord du propriétaire), la lecture automatique n’est pas active pour l’entreprise : ses employés saisissent à la main.')), h('label', {}, 'Période', periodSelect)),
+    h('div', { class: 'toolbar' }, h('div', {}, h('h1', {}, 'Entreprises et utilisation de l’OCR'), h('p', { class: 'muted' }, 'Documents lus et rapports IA envoyés à Gemini avec la clé de chaque entreprise. Sans clé (ou sans accord du propriétaire), ces fonctions ne sont pas actives pour l’entreprise.')), h('label', {}, 'Période', periodSelect)),
     flash ? h('p', { class: 'ok-msg', role: 'status' }, flash) : null,
     h('div', { class: 'kpis' },
       kpi('Entreprises', formatInt(total.agencies)),
       kpi('Avec clé / activées', `${formatInt(total.withKey)} / ${formatInt(total.enabled)}`),
-      kpi('Analyses (dont échecs)', `${formatInt(total.scans)} (${formatInt(total.failed)})`),
+      kpi('Documents lus (dont échecs)', `${formatInt(total.scans)} (${formatInt(total.failed)})`),
       kpi('Tokens entrée / sortie', `${formatInt(total.inputTokens)} / ${formatInt(total.outputTokens)}`),
       kpi('Coût estimé (USD)', costValue),
       kpi('Coût estimé (MAD)', total.costComplete || total.costUsd > 0 ? formatMad(total.costUsd, rate) : '—')
     ),
     h('div', { class: 'card table-wrap' },
       h('table', {},
-        h('thead', {}, h('tr', {}, ...['Entreprise', 'Créée le', 'Membres', 'Clé', 'Analyse cloud', 'Analyses', 'Échecs', 'Tokens (entrée / sortie)', 'Coût estimé', 'Dernière analyse', ''].map((label, i) => h('th', { class: i === 2 || i === 5 || i === 6 ? 'num' : '' }, label)))),
-        h('tbody', {}, rows.length ? rows : h('tr', {}, h('td', { colspan: 11 }, 'Aucune entreprise.')))
+        h('thead', {}, h('tr', {}, ...['Entreprise', 'Créée le', 'Membres', 'Clé', 'Lecture des documents', 'Recommandations IA', 'Documents lus', 'Échecs', 'Rapports IA', 'Tokens (entrée / sortie)', 'Coût estimé', 'Dernière analyse', ''].map((label, i) => h('th', { class: i === 2 || i === 6 || i === 7 || i === 8 ? 'num' : '' }, label)))),
+        h('tbody', {}, rows.length ? rows : h('tr', {}, h('td', { colspan: 13 }, 'Aucune entreprise.')))
       )
     ),
     pricingCard(pricing),
