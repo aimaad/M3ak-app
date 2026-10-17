@@ -1456,6 +1456,7 @@
       "tooLarge": "Le fichier est trop volumineux. Envoyez moins de pages ou des photos plus légères.",
       "invalidFile": "Ce fichier n'est pas pris en charge. Utilisez un PDF ou des photos.",
       "failed": "La lecture du contrat a échoué. Réessayez."
-    }
+    },
+    "supportDetail": "Détail pour l'assistance : {{detail}}"
   }
 }

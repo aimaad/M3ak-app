@@ -62,6 +62,7 @@ export default function ModeleContratScreen() {
   const [analyzing, setAnalyzing] = useState(false);
   const [draft, setDraft] = useState<ContractTemplate | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
 
   if (agencyQuery.data && !isOwner) return <Redirect href="/entreprise" />;
@@ -94,11 +95,15 @@ export default function ModeleContratScreen() {
   async function handleAnalyze() {
     if (files.length === 0) return;
     setError(null);
+    setErrorDetail(null);
     setAnalyzing(true);
     const result = await analyzeContractFiles(files);
     setAnalyzing(false);
     if (result.ok) setDraft(result.template);
-    else setError(t(templateErrorMessageKey(result.error)));
+    else {
+      setError(t(templateErrorMessageKey(result.error)));
+      setErrorDetail(result.detail ?? null);
+    }
   }
 
   async function handlePreview() {
@@ -228,9 +233,16 @@ export default function ModeleContratScreen() {
             )}
 
             {error ? (
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
-                {error}
-              </ThemedText>
+              <View className="gap-1">
+                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                  {error}
+                </ThemedText>
+                {errorDetail ? (
+                  <ThemedText type="small" themeColor="textSecondary" selectable style={{ fontSize: 11 }}>
+                    {t('contractTemplate.supportDetail', { detail: errorDetail.slice(0, 200) })}
+                  </ThemedText>
+                ) : null}
+              </View>
             ) : null}
           </ScrollView>
         )}

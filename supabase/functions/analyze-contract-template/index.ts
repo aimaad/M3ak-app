@@ -182,6 +182,8 @@ Deno.serve(async (request: Request) => {
   if (totalBytes > MAX_TOTAL_BYTES) return json({ ok: false, error: 'file_too_large' }, 400);
   parts.push({ text: 'Reconstruis le modèle vierge de ce contrat, au format JSON demandé.' });
 
+  const startedAt = Date.now();
+  console.log(`analyse du modèle : ${files.length} fichier(s), ${Math.round(totalBytes / 1024)} Ko`);
   try {
     const result = await callGeminiJson(apiKey, PROMPT, parts, { maxOutputTokens: 30_000, deadlineMs: 120_000, preferModels: ['gemini-2.5-flash', 'gemini-2.5-flash-lite'] });
     const template = (result.json ?? null) as { blocks?: unknown } | null;
@@ -189,15 +191,17 @@ Deno.serve(async (request: Request) => {
       await recordUsage(admin, { agencyId, ok: false, errorCode: 'template_unreadable', model: result.model, inputTokens: result.usage.inputTokens, outputTokens: result.usage.outputTokens });
       return json({ ok: false, error: 'template_unreadable' });
     }
+    console.log(`analyse du modèle terminée en ${Math.round((Date.now() - startedAt) / 1000)} s (${result.model}, ${result.usage.outputTokens} tokens)`);
     await recordUsage(admin, { agencyId, ok: true, model: result.model, inputTokens: result.usage.inputTokens, outputTokens: result.usage.outputTokens });
     return json({ ok: true, template });
   } catch (error) {
     if (error instanceof StageTimeoutError) {
+      console.error(`analyse du modèle : délai dépassé (étape ${error.stage}) après ${Math.round((Date.now() - startedAt) / 1000)} s`);
       await recordUsage(admin, { agencyId, ok: false, errorCode: 'ocr_timeout' });
-      return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
+      return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage} après ${Math.round((Date.now() - startedAt) / 1000)} s` });
     }
-    const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
-    console.error("Échec de l'analyse du modèle de contrat :", detail.slice(0, 160));
+    const detail = `${error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown'} (${Math.round((Date.now() - startedAt) / 1000)} s)`;
+    console.error("Échec de l'analyse du modèle de contrat :", detail.slice(0, 200));
     await recordUsage(admin, { agencyId, ok: false, errorCode: error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed' });
     const busy = error instanceof ProviderHttpError && (error.status === 503 || error.status === 429);
     return json({ ok: false, error: busy ? 'ocr_busy' : 'ocr_failed', detail: detail.slice(0, 200) });
