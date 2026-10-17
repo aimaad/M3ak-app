@@ -131,10 +131,10 @@ export async function callGeminiJson(
   apiKey: string,
   systemPrompt: string,
   parts: GeminiPart[],
-  options: { maxOutputTokens?: number; deadlineMs?: number } = {}
+  options: { maxOutputTokens?: number; deadlineMs?: number; preferModels?: string[] } = {}
 ): Promise<ProviderResult> {
   const started = Date.now();
-  const models = await candidateModels(apiKey);
+  const models = [...new Set([...(options.preferModels ?? []), ...(await candidateModels(apiKey))])];
   let lastError: unknown = null;
   let busyError: ProviderHttpError | null = null; // 503/429 vu au moins une fois : plus parlant qu'un 404 final
   for (let round = 0; round < 2; round++) {
@@ -142,7 +142,7 @@ export async function callGeminiJson(
       const remaining = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
       if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
       try {
-        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(options.maxOutputTokens ? 90_000 : PER_CALL_TIMEOUT_MS, remaining), options.maxOutputTokens);
+        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(options.maxOutputTokens ? 100_000 : PER_CALL_TIMEOUT_MS, remaining), options.maxOutputTokens);
       } catch (error) {
         lastError = error;
         if (error instanceof ProviderHttpError && (error.status === 503 || error.status === 429)) busyError = error;

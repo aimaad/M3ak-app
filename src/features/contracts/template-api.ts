@@ -1,5 +1,6 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { File } from 'expo-file-system';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import { getSupabase } from '@/lib/supabase';
 
@@ -54,9 +55,27 @@ const ANALYSIS_TIMEOUT_MS = 130_000;
  * Envoie l'exemple de contrat à la fonction serveur UNE fois ; le modèle vierge obtenu est ensuite enregistré par
  * l'appelant. Rien n'est conservé du fichier envoyé.
  */
+/** Une photo de téléphone (plusieurs Mo) est réduite à 1800 px de large : lisible pour l'IA, 10 fois plus légère à envoyer. */
+const MAX_IMAGE_WIDTH = 1800;
+
+async function prepareFile(file: TemplateSourceFile): Promise<{ mimeType: string; data: string }> {
+  if (file.mimeType === 'application/pdf') return { mimeType: file.mimeType, data: await new File(file.uri).base64() };
+  try {
+    const resized = await ImageManipulator.manipulateAsync(file.uri, [{ resize: { width: MAX_IMAGE_WIDTH } }], {
+      compress: 0.7,
+      format: ImageManipulator.SaveFormat.JPEG,
+      base64: true,
+    });
+    if (resized.base64) return { mimeType: 'image/jpeg', data: resized.base64 };
+  } catch {
+    // réduction impossible : on envoie l'original
+  }
+  return { mimeType: file.mimeType, data: await new File(file.uri).base64() };
+}
+
 export async function analyzeContractFiles(files: TemplateSourceFile[]): Promise<TemplateAnalysisResult> {
   try {
-    const payload = await Promise.all(files.map(async (file) => ({ mimeType: file.mimeType, data: await new File(file.uri).base64() })));
+    const payload = await Promise.all(files.map(prepareFile));
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), ANALYSIS_TIMEOUT_MS));
     const outcome = await Promise.race([getSupabase().functions.invoke('analyze-contract-template', { body: { files: payload } }), timeout]);
     if (outcome === 'timeout') return { ok: false, error: 'ocr_timeout', detail: 'stage:app' };

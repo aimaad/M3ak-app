@@ -64,7 +64,8 @@ RÈGLES STRICTES
 4. Reproduis la structure : ordre des rubriques, titres, alignements, tableaux, colonnes, encadrés, taille relative du texte, zones de signature et de cachet. Si le contrat est bilingue en colonnes, utilise "columns" avec "lang".
 5. Si une zone « signature / cachet » est présente, utilise un bloc "signatures" avec les libellés du contrat.
 6. N'invente aucune clause. Si un passage est illisible, laisse « …… ».
-7. Maximum 150 blocs.`;
+7. Maximum 150 blocs.
+8. Sois ÉCONOME : JSON compact sur une seule ligne, sans espaces ni retours à la ligne inutiles, sans propriété à sa valeur par défaut (n'écris pas "bold":false, "rtl":false, "border":"none"…).`;
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } });
@@ -160,7 +161,7 @@ Deno.serve(async (request: Request) => {
 
   let body: Record<string, unknown>;
   try {
-    body = (await withTimeout('body', request.json(), 30_000)) as Record<string, unknown>;
+    body = (await withTimeout('body', request.json(), 90_000)) as Record<string, unknown>;
   } catch (error) {
     if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: 'stage:body' });
     return json({ ok: false, error: 'invalid_request' }, 400);
@@ -182,7 +183,7 @@ Deno.serve(async (request: Request) => {
   parts.push({ text: 'Reconstruis le modèle vierge de ce contrat, au format JSON demandé.' });
 
   try {
-    const result = await callGeminiJson(apiKey, PROMPT, parts, { maxOutputTokens: 30_000, deadlineMs: 110_000 });
+    const result = await callGeminiJson(apiKey, PROMPT, parts, { maxOutputTokens: 30_000, deadlineMs: 120_000, preferModels: ['gemini-2.5-flash', 'gemini-2.5-flash-lite'] });
     const template = (result.json ?? null) as { blocks?: unknown } | null;
     if (!template || typeof template !== 'object' || !Array.isArray(template.blocks) || template.blocks.length === 0) {
       await recordUsage(admin, { agencyId, ok: false, errorCode: 'template_unreadable', model: result.model, inputTokens: result.usage.inputTokens, outputTokens: result.usage.outputTokens });
