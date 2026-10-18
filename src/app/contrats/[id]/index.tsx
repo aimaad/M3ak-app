@@ -17,7 +17,7 @@ import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPd
 import { usePaymentsForRental } from '@/features/payments/hooks';
 import { useRental } from '@/features/rentals/hooks';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
-import { downloadImageAsDataUri } from '@/features/storage/api';
+import { loadImageForPdf } from '@/features/storage/api';
 import { loadSignature } from '@/features/signatures/api';
 import { useSignature } from '@/features/signatures/hooks';
 import { SignatureView } from '@/features/signatures/signature-pad';
@@ -67,9 +67,18 @@ export default function ContratDetailScreen() {
       const [client, agency, stampDataUri, logoDataUri] = await Promise.all([
         loadSignature(contract.clientSignaturePath),
         loadSignature(contract.agencySignaturePath),
-        downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.stampPath).catch(() => null),
-        downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null),
+        loadImageForPdf(AGENCY_ASSETS_BUCKET, details?.stampPath).catch(() => null),
+        loadImageForPdf(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null),
       ]);
+      // Le logo est obligatoire sur le contrat : on ne génère jamais un PDF sans lui en silence.
+      if (!details?.logoUrl) {
+        setPdfError(t('contract.logoMissingPdf'));
+        return;
+      }
+      if (!logoDataUri) {
+        setPdfError(t('contract.logoLoadError'));
+        return;
+      }
       const localUri = await generateContractPdf(
         contract,
         {

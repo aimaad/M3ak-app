@@ -121,4 +121,16 @@ describe('réglages simples du contrat', () => {
     expect(box).toContain('Karim');
     expect(html).not.toContain('(Retour)');
   });
+
+  it('le logo de l\'agence apparaît en haut du contrat (carnet standard et réglages de l\'agence)', () => {
+    const png = 'data:image/png;base64,iVBORw0KGgo=';
+    const standard = buildContractHtml(sampleContract(), { nom: 'Atlas Cars' }, { logoDataUri: png });
+    expect(standard).toContain('class="logo"');
+    expect(standard).toContain(png);
+    expect(standard.indexOf('class="logo"')).toBeLessThan(standard.indexOf('CONTRAT DE LOCATION'));
+
+    const custom = buildContractHtml(sampleContract(), { nom: 'Atlas Cars' }, { logoDataUri: png }, templateFromOptions(defaultOptions(), LINES));
+    expect(custom).toContain('class="logo"');
+    expect(buildContractHtml(sampleContract(), { nom: 'Atlas Cars' })).not.toContain('class="logo"');
+  });
 });

@@ -26,7 +26,7 @@ import {
 } from '@/features/contracts/contract-options';
 import { generateBlankContractPdf, generateContractPdf } from '@/features/contracts/contract-pdf';
 import { sampleContract } from '@/features/contracts/sample-contract';
-import { downloadImageAsDataUri } from '@/features/storage/api';
+import { loadImageForPdf } from '@/features/storage/api';
 import { useContractTemplate, useRemoveContractTemplate, useSaveContractOptions } from '@/features/contracts/template-hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -168,7 +168,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
       const details = detailsQuery.data;
       const agency = { nom: details?.nom ?? agencyName, raisonSociale: details?.raisonSociale, adresse: details?.adresse, ville: details?.ville, telephone: details?.telephone, email: details?.email };
       const template = templateFromOptions(options, PREVIEW_LINES);
-      const logoDataUri = await downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null);
+      const logoDataUri = await loadImageForPdf(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null);
       const uri =
         kind === 'blank'
           ? await generateBlankContractPdf(agency, template, logoDataUri)

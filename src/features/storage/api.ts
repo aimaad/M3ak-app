@@ -1,4 +1,5 @@
 import * as LegacyFileSystem from 'expo-file-system/legacy';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import { getSupabase } from '@/lib/supabase';
 
@@ -58,28 +59,6 @@ export async function getSignedUrl(bucket: string, path: string, expiresInSecond
   const { data, error } = await getSupabase().storage.from(bucket).createSignedUrl(path, expiresInSeconds);
   if (error) throw error;
   return data.signedUrl;
-}
-
-/** Octets → base64 (par blocs, pour ne pas saturer la pile sur une image de quelques centaines de Ko). */
-export function bytesToBase64(bytes: Uint8Array): string {
-  let binary = '';
-  const chunk = 0x8000;
-  for (let i = 0; i < bytes.length; i += chunk) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-  }
-  return btoa(binary);
-}
-
-/** Image d'un bucket privé → data URI (pour l'intégrer dans un PDF). Null si absente, trop lourde ou d'un autre type. */
-export async function downloadImageAsDataUri(bucket: string, path: string | null | undefined): Promise<string | null> {
-  if (!path) return null;
-  const response = await fetch(await getSignedUrl(bucket, path));
-  if (!response.ok) return null;
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  if (bytes.length === 0 || bytes.length > 3 * 1024 * 1024) return null;
-  if (contentMatchesType(bytes, 'image/png')) return `data:image/png;base64,${bytesToBase64(bytes)}`;
-  if (contentMatchesType(bytes, 'image/jpeg')) return `data:image/jpeg;base64,${bytesToBase64(bytes)}`;
-  return null;
 }
 
 export type UploadProgress = { stage: 'checking' | 'uploading' | 'done'; /** 0 à 1 */ fraction: number };
@@ -168,4 +147,57 @@ export async function uploadFileWithProgress(
     throw new Error(message);
   }
   onProgress({ stage: 'done', fraction: 1 });
+}
+
+const PDF_IMAGE_MAX_SIDE = 700;
+
+/**
+ * Image d'un bucket privé prête à entrer dans un PDF : téléchargée puis réduite (côté le plus long 700 px). Une photo de
+ * téléphone de plusieurs Mo devient une image de quelques dizaines de Ko, et tient dans le PDF. Null si l'image est
+ * absente ou illisible (l'appelant doit alors le signaler, pas l'ignorer).
+ */
+export async function loadImageForPdf(bucket: string, path: string | null | undefined): Promise<string | null> {
+  if (!path) return null;
+  const signedUrl = await getSignedUrl(bucket, path);
+  const target = `${LegacyFileSystem.cacheDirectory}pdf-image-${Date.now()}.${/\.png$/i.test(path) ? 'png' : 'jpg'}`;
+  try {
+    const download = await LegacyFileSystem.downloadAsync(signedUrl, target);
+    if (download.status < 200 || download.status >= 300) return null;
+    const isPng = /\.png$/i.test(path);
+    const info = await ImageManipulator.manipulateAsync(download.uri, [], {});
+    const longest = Math.max(info.width, info.height);
+    const actions = longest > PDF_IMAGE_MAX_SIDE ? [{ resize: info.width >= info.height ? { width: PDF_IMAGE_MAX_SIDE } : { height: PDF_IMAGE_MAX_SIDE } }] : [];
+    const out = await ImageManipulator.manipulateAsync(download.uri, actions, {
+      compress: 0.85,
+      format: isPng ? ImageManipulator.SaveFormat.PNG : ImageManipulator.SaveFormat.JPEG,
+      base64: true,
+    });
+    return out.base64 ? `data:image/${isPng ? 'png' : 'jpeg'};base64,${out.base64}` : null;
+  } catch {
+    return null;
+  } finally {
+    LegacyFileSystem.deleteAsync(target, { idempotent: true }).catch(() => undefined);
+  }
+}
+
+/** Réduit une image choisie par l'utilisateur avant l'envoi (logo) : plus rapide à envoyer, même rendu dans le contrat. */
+export async function shrinkImageForUpload(
+  uri: string,
+  contentType: 'image/png' | 'image/jpeg',
+  width: number | undefined,
+  height: number | undefined,
+  maxSide = 1000
+): Promise<{ uri: string; contentType: 'image/png' | 'image/jpeg' }> {
+  try {
+    const longest = Math.max(width ?? 0, height ?? 0);
+    if (longest > 0 && longest <= maxSide) return { uri, contentType };
+    const resize = (width ?? 0) >= (height ?? 0) ? { width: maxSide } : { height: maxSide };
+    const out = await ImageManipulator.manipulateAsync(uri, [{ resize }], {
+      compress: 0.9,
+      format: contentType === 'image/png' ? ImageManipulator.SaveFormat.PNG : ImageManipulator.SaveFormat.JPEG,
+    });
+    return { uri: out.uri, contentType };
+  } catch {
+    return { uri, contentType };
+  }
 }

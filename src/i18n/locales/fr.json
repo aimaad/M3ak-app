@@ -991,7 +991,9 @@
       "stampMissingOwner": "Le cachet de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
       "logoMissing": "Le logo de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
       "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise."
-    }
+    },
+    "logoMissingPdf": "Le logo de l'agence est obligatoire sur le contrat. Ajoutez-le dans Mon entreprise (le propriétaire).",
+    "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez."
   },
   "inspection": {
     "section": "Inspection",

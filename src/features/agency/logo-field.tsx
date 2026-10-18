@@ -6,12 +6,13 @@ import { Button } from '@/components/button';
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
+import { shrinkImageForUpload } from '@/features/storage/api';
 import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
 import { AGENCY_ASSETS_BUCKET } from './api';
 import { useUploadAgencyLogo } from './hooks';
-import { logoUploadErrorCode, validateLogoAsset } from './logo-validation';
+import { logoContentType, logoUploadErrorCode, validateLogoAsset } from './logo-validation';
 
 type Phase = 'idle' | 'checking' | 'uploading' | 'saving' | 'done' | 'error';
 
@@ -99,7 +100,10 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       setPhase('error');
       return;
     }
-    await send(asset.uri);
+    const type = logoContentType({ uri: asset.uri, mimeType: asset.mimeType }) ?? 'image/jpeg';
+    const small = await shrinkImageForUpload(asset.uri, type, asset.width, asset.height);
+    setPicked({ uri: small.uri });
+    await send(small.uri);
   }
 
   const shownUri = picked?.uri ?? currentUrl ?? null;
