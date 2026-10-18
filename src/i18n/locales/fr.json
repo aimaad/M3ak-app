@@ -1530,5 +1530,12 @@
       "agencyMissing": "non renseigné",
       "agencyEdit": "Compléter dans Mon entreprise"
     }
+  },
+  "unsaved": {
+    "title": "Modifications non enregistrées",
+    "body": "Attention : vous avez fait des modifications qui ne sont pas enregistrées. Si vous quittez maintenant, elles seront perdues.",
+    "stay": "Rester",
+    "save": "Enregistrer et quitter",
+    "discard": "Quitter sans enregistrer"
   }
 }

@@ -29,6 +29,7 @@ import { generateBlankContractPdf, generateContractPdf } from '@/features/contra
 import { sampleContract } from '@/features/contracts/sample-contract';
 import { loadImageForPdf } from '@/features/storage/api';
 import { useContractTemplate, useRemoveContractTemplate, useSaveContractOptions } from '@/features/contracts/template-hooks';
+import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { useLanguage } from '@/i18n/use-language';
 
 
@@ -208,6 +209,20 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
       },
     ]);
   }
+
+  async function persist(): Promise<boolean> {
+    setError(null);
+    try {
+      await save.mutateAsync(options);
+      setDirty(false);
+      return true;
+    } catch {
+      setError(t('contractTemplate.saveError'));
+      return false;
+    }
+  }
+
+  useUnsavedChangesGuard(dirty, persist);
 
   async function handleSave() {
     setError(null);

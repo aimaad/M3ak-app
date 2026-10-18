@@ -60,3 +60,8 @@ export function toAgencyDetailsInput(values: AgencyDetailsFormValues): {
     devise: values.devise.trim() || 'MAD',
   };
 }
+
+/** Vrai si le formulaire a été modifié par rapport aux informations enregistrées (les espaces autour d'un texte ne comptent pas). */
+export function isAgencyFormDirty(values: AgencyDetailsFormValues, saved: AgencyDetailsFormValues): boolean {
+  return (Object.keys(values) as (keyof AgencyDetailsFormValues)[]).some((key) => values[key].trim() !== saved[key].trim());
+}

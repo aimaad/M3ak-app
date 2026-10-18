@@ -19,6 +19,7 @@ import {
 } from '@/features/agency/hooks';
 import {
   isAgencyDetailsFormValid,
+  isAgencyFormDirty,
   toAgencyDetailsInput,
   validateAgencyDetailsForm,
   type AgencyDetailsFormValues,
@@ -28,6 +29,7 @@ import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import { LogoField } from '@/features/agency/logo-field';
 import type { AgencyDetails } from '@/features/agency/types';
 import { useSignedUrl } from '@/features/storage/hooks';
+import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { useLanguage } from '@/i18n/use-language';
 
 function valuesFromDetails(details: AgencyDetails): AgencyDetailsFormValues {
@@ -286,18 +288,24 @@ function EntrepriseForm({
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSave() {
+  async function handleSave(): Promise<boolean> {
     setTouched(true);
     setFeedback(null);
-    if (!isAgencyDetailsFormValid(errors)) return;
+    if (!isAgencyDetailsFormValid(errors)) return false;
 
     try {
       await updateDetails.mutateAsync({ agencyId, input: toAgencyDetailsInput(values) });
       setFeedback({ type: 'success', message: t('entreprise.saveSuccess') });
+      return true;
     } catch {
       setFeedback({ type: 'error', message: t('entreprise.saveError') });
+      return false;
     }
   }
+
+  // Avertit avant de quitter avec des modifications non enregistrées (propriétaire seulement : seul lui peut modifier).
+  const dirty = isOwner && isAgencyFormDirty(values, valuesFromDetails(details));
+  useUnsavedChangesGuard(dirty, handleSave);
 
   return (
     <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
