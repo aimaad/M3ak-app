@@ -8,7 +8,7 @@ import {
 import type { CustomerInput, PendingDocument } from './types';
 
 /** Un document en cours de saisie dans le formulaire de création (le client n'existe pas encore). */
-export type PendingEntry = { key: string; values: DocumentFormValues; localUri: string | null };
+export type PendingEntry = { key: string; values: DocumentFormValues; localUri: string | null; localUriVerso?: string | null };
 
 let entryCounter = 0;
 export function newEntryKey(): string {
@@ -21,6 +21,7 @@ export function entriesFromPending(pending: PendingDocument[]): PendingEntry[] {
   return pending.map((doc) => ({
     key: newEntryKey(),
     localUri: doc.localUri,
+    localUriVerso: doc.localUriVerso ?? null,
     values: documentToFormValues({
       id: '',
       type: doc.type,
@@ -45,7 +46,7 @@ export function entriesAreValid(entries: PendingEntry[]): boolean {
 }
 
 export function entriesToPending(entries: PendingEntry[]): PendingDocument[] {
-  return entries.map((entry) => ({ ...toDocumentInput(entry.values), localUri: entry.localUri }));
+  return entries.map((entry) => ({ ...toDocumentInput(entry.values), localUri: entry.localUri, localUriVerso: entry.localUriVerso ?? null }));
 }
 
 /**

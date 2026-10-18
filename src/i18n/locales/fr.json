@@ -615,7 +615,13 @@
       "manualButton": "Saisir à la main"
     },
     "ocr": {
-      "scanHint": "Placez le permis à plat, bien éclairé, en entier dans le cadre. Étape 1 : scanner. Étape 2 : vérifier les informations. Étape 3 : enregistrer.",
+      "scanHint": "Prenez en photo les deux faces du permis : d'abord le recto (nom, numéro, naissance), puis le verso (catégories, fin de validité). Posez-le à plat, bien éclairé. L'analyse se fait ensuite une seule fois pour les deux faces.",
+      "analyzeBoth": "Analyser le permis",
+      "checks": {
+        "licence_expired": "Attention : le permis est expiré (fin de validité dépassée). Vérifiez avant de louer.",
+        "licence_expiring": "Le permis arrive bientôt à sa fin de validité (moins de 60 jours).",
+        "no_category_b": "Attention : la catégorie B (voiture) n'apparaît pas sur ce permis. Vérifiez avant de louer."
+      },
       "analyzing": "Lecture du permis en cours…",
       "retake": "Reprendre la photo",
       "manual": "Saisie manuelle",

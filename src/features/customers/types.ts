@@ -36,6 +36,8 @@ export type CustomerDocument = {
   expiresAt: string | null;
   /** null : aucun fichier (numéro saisi à la main) ou fichier supprimé. */
   path: string | null;
+  /** Fichier du verso (permis marocain recto-verso), null si absent. */
+  pathVerso?: string | null;
   notes: string | null;
   uploadedAt: string;
   uploadedBy: string | null;
@@ -56,6 +58,8 @@ export type DocumentInput = {
 
 export type PendingDocument = DocumentInput & {
   localUri: string | null;
+  /** Photo du verso (permis, carte d'identité) : enregistrée avec le même document. */
+  localUriVerso?: string | null;
 };
 
 export type Customer = {

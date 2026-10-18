@@ -14,9 +14,13 @@ import { M3akPalette } from '@/constants/theme';
 import { setCustomerCreationDraft } from '@/features/customers/customer-creation-draft';
 import {
   EMPTY_CREATION_DRAFT,
+  emptyLicenceFields,
   hasAnyOcrValue,
   licenceFieldsToDraft,
+  licenceFilledCount,
+  mergeLicenceFields,
   scanLicence,
+  type LicenceOcrFields,
   type LicenceScanErrorCode,
 } from '@/features/customers/licence-ocr';
 import { scanErrorMessageKey } from '@/features/ocr/availability';
@@ -25,6 +29,7 @@ import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { useLanguage } from '@/i18n/use-language';
 
 type Status = 'idle' | 'processing' | 'error';
+type Face = 'recto' | 'verso';
 
 async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
   const permission =
@@ -40,57 +45,77 @@ async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
-/** Photo du permis → lecture par OCR → formulaire prérempli et modifiable. Jamais de valeur inventée. */
+/** Photos du permis (recto puis verso) → une seule lecture des deux faces → formulaire prérempli et modifiable. Jamais de valeur inventée. */
 export default function ScannerPermisScreen() {
   const { t } = useLanguage();
-  const [localUri, setLocalUri] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<Record<Face, string | null>>({ recto: null, verso: null });
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
   const [keepPhoto, setKeepPhoto] = useState(true);
   const { availability, agencyId } = useOcrSettings();
 
-  async function handlePick(source: 'library' | 'camera') {
+  async function choosePhoto(face: Face, source: 'library' | 'camera') {
     const uri = await pickImage(source);
-    if (!uri) return;
-    setLocalUri(uri);
+    if (uri) setPhotos((prev) => ({ ...prev, [face]: uri }));
+  }
+
+  /** Analyse le recto et le verso en même temps, puis fusionne les deux lectures. */
+  async function analyze() {
+    const entries = (['recto', 'verso'] as const).flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
+    if (entries.length === 0) return;
     setStatus('processing');
     setErrorCode(null);
 
-    const result = await scanLicence(uri, { agencyId });
-    if (!result.ok) {
-      setErrorCode(result.error);
+    const results = await Promise.all(entries.map((entry) => scanLicence(entry.uri, { agencyId })));
+    const reads: LicenceOcrFields[] = [];
+    let firstError: LicenceScanErrorCode | null = null;
+    let allFromCache = true;
+    results.forEach((result) => {
+      if (result.ok) {
+        reads.push(result.fields);
+        if (!result.fromCache) allFromCache = false;
+      } else firstError ??= result.error;
+    });
+    if (reads.length === 0) {
+      setErrorCode(firstError);
       setStatus('error');
       return;
     }
-    if (!hasAnyOcrValue(result.fields)) {
+
+    const merged = reads.reduce(mergeLicenceFields, emptyLicenceFields());
+    if (!hasAnyOcrValue(merged) || licenceFilledCount(merged) === 0) {
       setErrorCode('nothing_read');
       setStatus('error');
       return;
     }
 
-    setCustomerCreationDraft(licenceFieldsToDraft(result.fields, keepPhoto ? uri : null, { fromCache: result.fromCache }));
+    setCustomerCreationDraft(
+      licenceFieldsToDraft(merged, keepPhoto ? photos.recto : null, { fromCache: allFromCache, versoUri: keepPhoto ? photos.verso : null })
+    );
     router.replace('/clients/nouveau/formulaire');
   }
 
-  /** Repli manuel : on garde la photo comme document du permis, sans aucune valeur lue. */
+  /** Repli manuel : on garde les photos comme document du permis, sans aucune valeur lue. */
   function continueManually() {
     setCustomerCreationDraft({
       ...EMPTY_CREATION_DRAFT,
-      pendingDocuments: localUri && keepPhoto
-        ? [
-            {
-              type: 'permis',
-              customLabel: null,
-              reference: null,
-              issuingAuthority: null,
-              categories: [],
-              dateDelivrance: null,
-              expiresAt: null,
-              notes: null,
-              localUri,
-            },
-          ]
-        : [],
+      pendingDocuments:
+        keepPhoto && (photos.recto || photos.verso)
+          ? [
+              {
+                type: 'permis',
+                customLabel: null,
+                reference: null,
+                issuingAuthority: null,
+                categories: [],
+                dateDelivrance: null,
+                expiresAt: null,
+                notes: null,
+                localUri: photos.recto,
+                localUriVerso: photos.verso,
+              },
+            ]
+          : [],
     });
     router.replace('/clients/nouveau/formulaire');
   }
@@ -116,10 +141,27 @@ export default function ScannerPermisScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {t('customer.ocr.scanHint')}
               </ThemedText>
-              <View className="flex-row gap-2">
-                <Button label={t('common.camera')} icon="camera-outline" style={{ flex: 1 }} onPress={() => handlePick('camera')} />
-                <Button label={t('common.gallery')} variant="secondary" icon="images-outline" style={{ flex: 1 }} onPress={() => handlePick('library')} />
-              </View>
+              {(['recto', 'verso'] as const).map((face) => (
+                <View key={face} className="gap-2">
+                  <ThemedText type="smallBold">{t(`vehicle.quickCreate.face.${face}`)}</ThemedText>
+                  {photos[face] ? <Image source={{ uri: photos[face] as string }} style={{ width: '100%', height: 150, borderRadius: 16 }} resizeMode="cover" /> : null}
+                  <View className="flex-row gap-2">
+                    <Button
+                      label={photos[face] ? t('vehicle.quickCreate.photoChange') : t('common.camera')}
+                      variant={photos[face] ? 'secondary' : 'primary'}
+                      size="sm"
+                      icon="camera-outline"
+                      style={{ flex: 1 }}
+                      onPress={() => choosePhoto(face, 'camera')}
+                    />
+                    <Button label={t('common.gallery')} variant="secondary" size="sm" icon="images-outline" style={{ flex: 1 }} onPress={() => choosePhoto(face, 'library')} />
+                  </View>
+                </View>
+              ))}
+              <ThemedText type="small" themeColor="textSecondary">
+                {!photos.recto && !photos.verso ? t('vehicle.quickCreate.photoMissing') : photos.recto && photos.verso ? '' : t('vehicle.quickCreate.photoOneOnly')}
+              </ThemedText>
+              <Button label={t('customer.ocr.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
               <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
               <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
@@ -127,10 +169,6 @@ export default function ScannerPermisScreen() {
                 </ThemedText>
               </View>
             </Card>
-          ) : null}
-
-          {localUri && status !== 'idle' ? (
-            <Image source={{ uri: localUri }} className="h-48 w-full rounded-2xl" resizeMode="cover" />
           ) : null}
 
           {status === 'processing' ? (
@@ -151,10 +189,7 @@ export default function ScannerPermisScreen() {
                   variant="secondary"
                   size="sm"
                   style={{ flex: 1 }}
-                  onPress={() => {
-                    setStatus('idle');
-                    setLocalUri(null);
-                  }}
+                  onPress={() => setStatus('idle')}
                 />
                 <Button label={t('customer.ocr.manual')} size="sm" style={{ flex: 1 }} onPress={continueManually} />
               </View>

@@ -12,7 +12,11 @@ export type OcrField<T> = { value: T | null; confidence: OcrConfidence };
 export type LicenceOcrFields = {
   nom: OcrField<string>;
   prenom: OcrField<string>;
+  /** Numéro de la carte d'identité nationale (sur le recto du permis marocain). */
+  cin: OcrField<string>;
   numeroPermis: OcrField<string>;
+  /** Codes de la colonne « Restrictions » (verso), ex. « 01.01 ». */
+  restrictions: OcrField<string>;
   dateDelivrance: OcrField<string>;
   dateExpiration: OcrField<string>;
   categories: OcrField<string[]>;
@@ -61,13 +65,22 @@ function readCategories(raw: unknown): OcrField<string[]> {
   return list.length > 0 ? { value: list, confidence: readConfidence(confidence) } : { value: null, confidence: 'low' };
 }
 
+/** CIN marocaine : majuscules, sans espaces ; une valeur qui n'a pas la forme « Z188822 » n'est pas gardée. */
+function normalizeCin(field: OcrField<string>): OcrField<string> {
+  if (field.value === null) return field;
+  const cin = field.value.replace(/\s+/g, '').toUpperCase();
+  return /^[A-Z]{1,2}\d{3,8}$/.test(cin) ? { value: cin, confidence: field.confidence } : { value: null, confidence: 'low' };
+}
+
 /** Normalise la réponse du serveur (déjà nettoyée une fois) : défense en profondeur côté app. */
 export function normalizeLicenceFields(raw: unknown): LicenceOcrFields {
   const source = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
   return {
     nom: readText(source.nom),
     prenom: readText(source.prenom),
+    cin: normalizeCin(readText(source.cin)),
     numeroPermis: readText(source.numeroPermis),
+    restrictions: readText(source.restrictions),
     dateDelivrance: readDate(source.dateDelivrance),
     dateExpiration: readDate(source.dateExpiration),
     categories: readCategories(source.categories),
@@ -88,9 +101,65 @@ export type CustomerCreationDraft = {
   uncertainDocumentFields: ('reference' | 'dateDelivrance' | 'expiresAt' | 'categories' | 'issuingAuthority')[];
   /** Vrai si les champs ont été préremplis par une lecture automatique. */
   fromOcr: boolean;
+  /** Contrôles de bon sens sur le permis lu (expiré, catégorie B absente…), affichés en haut du formulaire. */
+  warnings?: LicenceCheck['code'][];
   /** Vrai si le résultat vient du cache de l'appareil (même photo déjà lue : aucun nouvel envoi). */
   fromCache?: boolean;
 };
+
+const RANK: Record<OcrConfidence, number> = { low: 0, medium: 1, high: 2 };
+
+/**
+ * Fusionne la lecture du recto et celle du verso : on garde la valeur lue, et en cas de désaccord celle dont la
+ * confiance est la plus haute. Les catégories des deux faces s'additionnent. Une face ne vide jamais l'autre.
+ */
+export function mergeLicenceFields(a: LicenceOcrFields, b: LicenceOcrFields): LicenceOcrFields {
+  const out = { ...a } as Record<string, OcrField<unknown>>;
+  for (const key of Object.keys(b) as (keyof LicenceOcrFields)[]) {
+    const left = a[key] as OcrField<unknown>;
+    const right = b[key] as OcrField<unknown>;
+    if (right.value === null) continue;
+    if (key === 'categories' && left.value !== null) {
+      const union = parseCategories([...(left.value as string[]), ...(right.value as string[])].join(' '));
+      out[key] = { value: union, confidence: RANK[left.confidence] >= RANK[right.confidence] ? left.confidence : right.confidence };
+    } else if (left.value === null || RANK[right.confidence] > RANK[left.confidence]) out[key] = right;
+  }
+  return out as unknown as LicenceOcrFields;
+}
+
+export function emptyLicenceFields(): LicenceOcrFields {
+  return normalizeLicenceFields({});
+}
+
+export type LicenceFaceStatus = { recto: boolean; verso: boolean };
+
+/** Quelles faces du permis ont été lues (d'après les informations trouvées) ? */
+export function licenceFaceStatus(fields: LicenceOcrFields): LicenceFaceStatus {
+  return {
+    recto: fields.nom.value !== null || fields.prenom.value !== null || fields.numeroPermis.value !== null || fields.dateNaissance.value !== null,
+    verso: fields.dateExpiration.value !== null || fields.restrictions.value !== null,
+  };
+}
+
+export function licenceFilledCount(fields: LicenceOcrFields): number {
+  return (Object.values(fields) as OcrField<unknown>[]).filter((field) => field.value !== null).length;
+}
+
+export type LicenceCheck = { code: 'licence_expired' | 'licence_expiring' | 'no_category_b'; severity: 'warning' | 'info' };
+
+/** Contrôles de bon sens : jamais bloquants, ils préviennent l'employé (un permis expiré ne doit pas être loué sans le savoir). */
+export function checkLicence(fields: LicenceOcrFields, today: Date = new Date()): LicenceCheck[] {
+  const checks: LicenceCheck[] = [];
+  const end = fields.dateExpiration.value;
+  if (end) {
+    const days = Math.floor((new Date(`${end}T00:00:00`).getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86_400_000);
+    if (days < 0) checks.push({ code: 'licence_expired', severity: 'warning' });
+    else if (days <= 60) checks.push({ code: 'licence_expiring', severity: 'info' });
+  }
+  const categories = fields.categories.value;
+  if (categories && !categories.includes('B')) checks.push({ code: 'no_category_b', severity: 'warning' });
+  return checks;
+}
 
 export const EMPTY_CREATION_DRAFT: CustomerCreationDraft = {
   values: {},
@@ -108,7 +177,7 @@ export const EMPTY_CREATION_DRAFT: CustomerCreationDraft = {
 export function licenceFieldsToDraft(
   fields: LicenceOcrFields,
   localUri: string | null,
-  options: { fromCache?: boolean } = {}
+  options: { fromCache?: boolean; versoUri?: string | null } = {}
 ): CustomerCreationDraft {
   const values: Partial<CustomerFormValues> = {};
   const uncertainFields: CustomerFormFieldKey[] = [];
@@ -129,6 +198,12 @@ export function licenceFieldsToDraft(
     }
     if (prenom && fields.prenom.confidence === 'medium') uncertainFields.push('prenom');
     if (nom && fields.nom.confidence === 'medium') uncertainFields.push('nom');
+  }
+
+  const cin = keep(fields.cin);
+  if (cin) {
+    values.cinOuPasseport = cin;
+    if (fields.cin.confidence === 'medium') uncertainFields.push('cinOuPasseport');
   }
 
   const numero = keep(fields.numeroPermis);
@@ -155,7 +230,9 @@ export function licenceFieldsToDraft(
   if (categories && fields.categories.confidence === 'medium') uncertainDocumentFields.push('categories');
   if (autorite && fields.autorite.confidence === 'medium') uncertainDocumentFields.push('issuingAuthority');
 
-  const hasDocumentData = !!(numero || delivrance || expiration || categories || autorite || localUri);
+  const restrictions = keep(fields.restrictions);
+  const versoUri = options.versoUri ?? null;
+  const hasDocumentData = !!(numero || delivrance || expiration || categories || autorite || localUri || versoUri);
   const pendingDocuments: PendingDocument[] = hasDocumentData
     ? [
         {
@@ -166,13 +243,15 @@ export function licenceFieldsToDraft(
           categories: categories ?? [],
           dateDelivrance: delivrance,
           expiresAt: expiration,
-          notes: null,
+          notes: restrictions ? `Restrictions : ${restrictions}` : null,
           localUri,
+          localUriVerso: versoUri,
         },
       ]
     : [];
 
-  return { values, pendingDocuments, uncertainFields, uncertainDocumentFields, fromOcr: true, ...(options.fromCache ? { fromCache: true } : {}) };
+  const warnings = checkLicence(fields).map((check) => check.code);
+  return { values, pendingDocuments, uncertainFields, uncertainDocumentFields, fromOcr: true, ...(warnings.length > 0 ? { warnings } : {}), ...(options.fromCache ? { fromCache: true } : {}) };
 }
 
 /** Vrai si au moins un champ a pu être lu : sinon on propose directement la saisie manuelle. */

@@ -35,7 +35,7 @@ export default function FormulaireNouveauClientScreen() {
         const { failed } = await addPendingDocuments(
           agencyQuery.data.agencyId,
           { kind: 'customer', id: customer.id },
-          pendingDocuments.map(({ localUri, ...documentInput }) => ({ input: documentInput, localUri }))
+          pendingDocuments.map(({ localUri, localUriVerso, ...documentInput }) => ({ input: documentInput, localUri, localUriVerso }))
         );
         if (failed > 0) {
           Alert.alert(t('common.appName'), t('customer.form.uploadError'));

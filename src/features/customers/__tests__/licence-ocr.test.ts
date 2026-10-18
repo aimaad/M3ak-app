@@ -2,9 +2,13 @@
 // côté app, PAS la qualité d'une vraie lecture (voir orchestration.test.ts pour l'appel au serveur).
 import { isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from '../validation';
 import {
+  checkLicence,
   EMPTY_CREATION_DRAFT,
+  emptyLicenceFields,
   hasAnyOcrValue,
+  licenceFaceStatus,
   licenceFieldsToDraft,
+  mergeLicenceFields,
   normalizeLicenceFields,
   type LicenceOcrFields,
 } from '../licence-ocr';
@@ -141,5 +145,69 @@ describe("création manuelle quand l'OCR échoue", () => {
 
   it('une lecture sans aucune valeur exploitable est détectée (on propose la saisie manuelle)', () => {
     expect(hasAnyOcrValue(normalizeLicenceFields({ nom: { value: 'X', confidence: 'low' } }))).toBe(false);
+  });
+});
+
+// Valeurs d'un vrai permis marocain (recto + verso). Réponses d'analyse simulées : on vérifie la fusion et les garde-fous.
+describe('permis marocain recto + verso (OCR simulé)', () => {
+  const f = (value: unknown, confidence = 'high') => ({ value, confidence });
+  const recto = normalizeLicenceFields({
+    prenom: f('FOUAD'),
+    nom: f('BOUCHNEF'),
+    cin: f('z 188822'.toUpperCase()),
+    numeroPermis: f('20/086579'),
+    dateNaissance: f('1975-01-09'),
+    dateDelivrance: f('2011-04-06'),
+    autorite: f('Taza'),
+    categories: f(['B'], 'medium'),
+  });
+  const verso = normalizeLicenceFields({
+    categories: f(['B']),
+    dateDelivrance: f('2011-04-06', 'medium'),
+    dateExpiration: f('2025-02-07'),
+    restrictions: f('01.01'),
+  });
+  const merged = mergeLicenceFields(recto, verso);
+
+  it('reconnaît chaque face', () => {
+    expect(licenceFaceStatus(recto)).toEqual({ recto: true, verso: false });
+    expect(licenceFaceStatus(verso)).toEqual({ recto: false, verso: true });
+    expect(licenceFaceStatus(emptyLicenceFields())).toEqual({ recto: false, verso: false });
+  });
+
+  it('fusionne sans qu’une face vide l’autre et prend la lecture la plus sûre', () => {
+    expect(merged.nom.value).toBe('BOUCHNEF');
+    expect(merged.dateExpiration.value).toBe('2025-02-07');
+    expect(merged.categories).toEqual({ value: ['B'], confidence: 'high' });
+    expect(mergeLicenceFields(merged, emptyLicenceFields())).toEqual(merged);
+  });
+
+  it('additionne les catégories des deux faces', () => {
+    const other = normalizeLicenceFields({ categories: f(['C']) });
+    expect(mergeLicenceFields(recto, other).categories.value).toEqual(['B', 'C']);
+  });
+
+  it('prépare le client et un seul document permis avec recto, verso et restrictions', () => {
+    const draft = licenceFieldsToDraft(merged, 'file:///recto.jpg', { versoUri: 'file:///verso.jpg' });
+    expect(draft.values).toMatchObject({ nomComplet: 'FOUAD BOUCHNEF', cinOuPasseport: 'Z188822', numeroPermis: '20/086579', dateNaissance: '1975-01-09' });
+    expect(draft.pendingDocuments).toHaveLength(1);
+    expect(draft.pendingDocuments[0]).toMatchObject({
+      type: 'permis',
+      reference: '20/086579',
+      issuingAuthority: 'Taza',
+      categories: ['B'],
+      dateDelivrance: '2011-04-06',
+      expiresAt: '2025-02-07',
+      notes: 'Restrictions : 01.01',
+      localUri: 'file:///recto.jpg',
+      localUriVerso: 'file:///verso.jpg',
+    });
+  });
+
+  it('avertit : permis expiré, bientôt expiré, sans catégorie B', () => {
+    expect(checkLicence(merged, new Date('2026-10-18')).map((c) => c.code)).toEqual(['licence_expired']);
+    expect(checkLicence(merged, new Date('2025-01-15')).map((c) => c.code)).toEqual(['licence_expiring']);
+    expect(checkLicence(merged, new Date('2024-01-01'))).toEqual([]);
+    expect(checkLicence(normalizeLicenceFields({ categories: f(['A']) })).map((c) => c.code)).toContain('no_category_b');
   });
 });

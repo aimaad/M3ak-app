@@ -7,6 +7,7 @@ import { ChipGroup } from '@/components/chip-group';
 import { CollapsibleSection } from '@/components/collapsible-section';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
+import { ZoomableImage } from '@/components/zoomable-image';
 import { M3akPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -81,6 +82,11 @@ export function CustomerForm({
   const [entries, setEntries] = useState<PendingEntry[]>(() => entriesFromPending(draft.pendingDocuments));
   const [touched, setTouched] = useState(false);
 
+  const scannedPhotos = entries.flatMap((entry) => [
+    ...(entry.localUri ? [{ face: 'recto' as const, uri: entry.localUri }] : []),
+    ...(entry.localUriVerso ? [{ face: 'verso' as const, uri: entry.localUriVerso }] : []),
+  ]).slice(0, 2);
+
   const errors = validateCustomerForm(values);
   const showErrors = touched;
   const isEntreprise = values.typeClient === 'entreprise';
@@ -147,6 +153,27 @@ export function CustomerForm({
           ) : null}
         </View>
       ) : null}
+
+      {draft.fromOcr && scannedPhotos.length > 0 ? (
+        <View className="gap-1">
+          <View className="flex-row gap-2" style={{ height: 150 }}>
+            {scannedPhotos.map((photo) => (
+              <ZoomableImage key={photo.face} uri={photo.uri} label={t(`vehicle.quickCreate.face.${photo.face}`)} style={{ borderRadius: 16 }} />
+            ))}
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('common.zoomHint')}
+          </ThemedText>
+        </View>
+      ) : null}
+
+      {(draft.warnings ?? []).map((code) => (
+        <View key={code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: code === 'licence_expiring' ? '#EDE9FE' : M3akPalette.warningLight }}>
+          <ThemedText type="small" style={{ color: code === 'licence_expiring' ? '#5B21B6' : M3akPalette.warning }}>
+            {t(`customer.ocr.checks.${code}`)}
+          </ThemedText>
+        </View>
+      ))}
 
       <DuplicateCustomerCard matches={duplicates} />
 

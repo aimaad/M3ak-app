@@ -45,26 +45,33 @@ async function withTimeout<T>(stage: string, promise: PromiseLike<T>, ms = 15_00
   }
 }
 
-const LICENCE_PROMPT = `Tu lis une photo d'un permis de conduire (Maroc ou étranger) pour pré-remplir une fiche client dans une agence de location de voitures.
-Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma :
+const LICENCE_PROMPT = `Tu lis la photo d'UNE FACE d'un permis de conduire (Maroc ou étranger) pour pré-remplir une fiche client dans une agence de location de voitures. La photo montre le RECTO, le VERSO, ou parfois les deux.
+Permis marocain (format carte « Royaume du Maroc ») :
+- RECTO : Prénom, Nom (en lettres latines et arabes), C.N.I., Né(e) le + lieu de naissance, Permis N° (ex. 20/086579), « <Ville> le <date> » = lieu et date de délivrance, et la ou les lettres de catégorie encadrées (ex. B).
+- VERSO : tableau Catégories (A1, A, B, C, D, EB, EC, ED) avec une « Date de délivrance » par catégorie (une catégorie dont la case de date est vide n'est PAS détenue), colonne Restrictions (ex. 01.01), et en bas « Date de fin de validité » suivie d'un long numéro de série (à ignorer).
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information qui n'est pas sur la face photographiée, mets "value": null :
 
 {
   "nom": { "value": string ou null, "confidence": "high" | "medium" | "low" },
   "prenom": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "cin": { "value": numéro de la carte d'identité nationale (C.N.I.) ou null, "confidence": "high" | "medium" | "low" },
   "numeroPermis": { "value": string ou null, "confidence": "high" | "medium" | "low" },
   "dateDelivrance": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
   "dateExpiration": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
-  "categories": { "value": tableau de catégories (ex. ["B","C1"]) ou null, "confidence": "high" | "medium" | "low" },
+  "categories": { "value": tableau de catégories détenues (ex. ["B"]) ou null, "confidence": "high" | "medium" | "low" },
+  "restrictions": { "value": codes de la colonne Restrictions (ex. "01.01") ou null, "confidence": "high" | "medium" | "low" },
   "dateNaissance": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
-  "autorite": { "value": pays ou autorité de délivrance si identifiable, sinon null, "confidence": "high" | "medium" | "low" }
+  "autorite": { "value": ville ou autorité de délivrance (ex. "Taza") ou pays si aucune ville, sinon null, "confidence": "high" | "medium" | "low" }
 }
 
 Règles strictes :
-- Extrais UNIQUEMENT ces champs. Ignore toute autre information visible sur le document.
+- Extrais UNIQUEMENT ces champs. Ignore toute autre information visible sur le document (numéro de série, adresse, signature, tampon).
 - Si un champ est absent, illisible ou ambigu, mets "value": null et "confidence": "low". Ne devine JAMAIS une valeur plausible.
-- Écris les dates au format AAAA-MM-JJ. Si le jour ou le mois n'est pas certain, mets null.
+- Écris les dates au format AAAA-MM-JJ (le document les écrit JJ/MM/AAAA). Si le jour ou le mois n'est pas certain, mets null.
+- "dateDelivrance" : la date de délivrance du permis (recto, après la ville). Sur le verso seul, la date de la catégorie principale détenue.
+- "dateExpiration" : uniquement la « Date de fin de validité » (verso). Ne la confonds pas avec une date de délivrance.
 - "confidence": "high" seulement si le texte est net et sans ambiguïté ; "medium" si lisible mais avec un doute raisonnable ; "low" sinon.
-- "nom" et "prenom" : tels qu'imprimés (le document peut être en français ou en arabe : privilégie la graphie latine si les deux existent).
+- "nom" et "prenom" : tels qu'imprimés, en graphie latine (ignore la ligne arabe si une ligne latine existe).
 - Le permis peut être étranger : lis ce qui est présent sans traduire les numéros.`;
 
 const REGISTRATION_PROMPT = `Tu lis la photo d'UNE FACE d'un certificat d'immatriculation marocain (carte grise, format carte bancaire « Royaume du Maroc ») pour une agence de location de voitures. La photo montre le RECTO, le VERSO, ou parfois les deux.
@@ -155,12 +162,21 @@ function enumField(raw: unknown, allowed: string[]): Field<string> {
   return field.value !== null && allowed.includes(field.value) ? field : { value: null, confidence: 'low' };
 }
 
+function cinField(raw: unknown): Field<string> {
+  const field = textField(raw, 20);
+  if (field.value === null) return field;
+  const cin = field.value.replace(/\s+/g, '').toUpperCase();
+  return /^[A-Z]{1,2}\d{3,8}$/.test(cin) ? { value: cin, confidence: field.confidence } : { value: null, confidence: 'low' };
+}
+
 function sanitizeLicence(raw: unknown) {
   const s = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
   return {
     nom: textField(s.nom),
     prenom: textField(s.prenom),
+    cin: cinField(s.cin),
     numeroPermis: textField(s.numeroPermis),
+    restrictions: textField(s.restrictions, 40),
     dateDelivrance: dateField(s.dateDelivrance),
     dateExpiration: dateField(s.dateExpiration),
     categories: categoriesField(s.categories),

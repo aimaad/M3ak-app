@@ -1,9 +1,10 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Image, Pressable, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { ZoomableImage } from '@/components/zoomable-image';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
 import { useSignedUrl } from '@/features/storage/hooks';
@@ -63,16 +64,16 @@ async function pickReplacementPhoto(source: 'camera' | 'library'): Promise<strin
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
-function DocumentThumbnail({ path }: { path: string }) {
+function DocumentThumbnail({ path, label }: { path: string; label?: string }) {
   const { data: url, isLoading } = useSignedUrl(CUSTOMER_DOCUMENTS_BUCKET, path);
   if (isLoading || !url) {
     return (
-      <View className="h-28 items-center justify-center rounded-2xl bg-[#FAF9FF]">
+      <View className="h-28 flex-1 items-center justify-center rounded-2xl bg-[#FAF9FF]">
         <ActivityIndicator color={M3akPalette.mauve} />
       </View>
     );
   }
-  return <Image source={{ uri: url }} className="h-28 w-full rounded-2xl" resizeMode="cover" />;
+  return <ZoomableImage uri={url} label={label} style={{ borderRadius: 16 }} />;
 }
 
 function DocumentCard({
@@ -175,7 +176,12 @@ function DocumentCard({
         </View>
       </View>
 
-      {doc.path ? <DocumentThumbnail path={doc.path} /> : (
+      {doc.path ? (
+        <View className="flex-row gap-2" style={{ height: 112 }}>
+          <DocumentThumbnail path={doc.path} label={doc.pathVerso ? t('vehicle.quickCreate.face.recto') : undefined} />
+          {doc.pathVerso ? <DocumentThumbnail path={doc.pathVerso} label={t('vehicle.quickCreate.face.verso')} /> : null}
+        </View>
+      ) : (
         <ThemedText type="small" themeColor="textSecondary">
           {t('customer.documentsManager.noFile')}
         </ThemedText>

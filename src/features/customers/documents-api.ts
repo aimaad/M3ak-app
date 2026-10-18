@@ -19,6 +19,7 @@ export type CustomerDocumentRow = {
   date_delivrance: string | null;
   expires_at: string | null;
   file_path: string | null;
+  file_path_verso?: string | null;
   notes: string | null;
   added_by: string | null;
   added_by_name: string | null;
@@ -37,6 +38,7 @@ export function documentFromRow(row: CustomerDocumentRow): CustomerDocument {
     dateDelivrance: row.date_delivrance,
     expiresAt: row.expires_at,
     path: row.file_path,
+    pathVerso: row.file_path_verso ?? null,
     notes: row.notes,
     uploadedAt: row.created_at,
     uploadedBy: row.added_by,
@@ -94,13 +96,25 @@ export async function addDocument(
   agencyId: string,
   owner: DocumentOwner,
   input: DocumentInput,
-  localUri: string | null
+  localUri: string | null,
+  localUriVerso: string | null = null
 ): Promise<CustomerDocument> {
   let path: string | null = null;
+  let pathVerso: string | null = null;
   if (localUri) {
     const { extension, contentType } = contentTypeFor(localUri);
     path = `${agencyId}/${owner.id}/${input.type}-${Date.now()}.${extension}`;
     await uploadFile(CUSTOMER_DOCUMENTS_BUCKET, path, localUri, contentType);
+  }
+  if (localUriVerso) {
+    const { extension, contentType } = contentTypeFor(localUriVerso);
+    pathVerso = `${agencyId}/${owner.id}/${input.type}-verso-${Date.now()}.${extension}`;
+    try {
+      await uploadFile(CUSTOMER_DOCUMENTS_BUCKET, pathVerso, localUriVerso, contentType);
+    } catch (error) {
+      await removeFileQuietly(path);
+      throw error;
+    }
   }
 
   const { data, error } = await getSupabase()
@@ -110,6 +124,7 @@ export async function addDocument(
       customer_id: owner.kind === 'customer' ? owner.id : null,
       driver_id: owner.kind === 'driver' ? owner.id : null,
       file_path: path,
+      file_path_verso: pathVerso,
       ...toRow(input),
     })
     .select('*')
@@ -117,6 +132,7 @@ export async function addDocument(
 
   if (error) {
     await removeFileQuietly(path);
+    await removeFileQuietly(pathVerso);
     throw error;
   }
   return documentFromRow(data as CustomerDocumentRow);
@@ -165,7 +181,7 @@ export async function replaceDocumentFile(
  * Suppression douce (responsables uniquement, vérifié côté serveur) : la ligne et son historique
  * restent, le fichier est détaché puis effacé du stockage.
  */
-export async function deleteDocument(doc: Pick<CustomerDocument, 'id' | 'path'>): Promise<void> {
+export async function deleteDocument(doc: Pick<CustomerDocument, 'id' | 'path' | 'pathVerso'>): Promise<void> {
   const { error } = await getSupabase()
     .from('customer_documents')
     .update({ deleted_at: new Date().toISOString() })
@@ -173,19 +189,20 @@ export async function deleteDocument(doc: Pick<CustomerDocument, 'id' | 'path'>)
 
   if (error) throw error;
   await removeFileQuietly(doc.path);
+  await removeFileQuietly(doc.pathVerso);
 }
 
 /** Envoie le fichier de chaque document en attente d'un nouveau client, en continuant malgré un échec isolé. */
 export async function addPendingDocuments(
   agencyId: string,
   owner: DocumentOwner,
-  pending: { input: DocumentInput; localUri: string | null }[]
+  pending: { input: DocumentInput; localUri: string | null; localUriVerso?: string | null }[]
 ): Promise<{ saved: number; failed: number }> {
   let saved = 0;
   let failed = 0;
   for (const item of pending) {
     try {
-      await addDocument(agencyId, owner, item.input, item.localUri);
+      await addDocument(agencyId, owner, item.input, item.localUri, item.localUriVerso ?? null);
       saved += 1;
     } catch {
       failed += 1;
