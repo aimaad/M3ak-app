@@ -42,9 +42,9 @@ describe('réglages simples du contrat', () => {
   });
 
   it('les mentions légales renseignées s\'affichent, les autres non', () => {
-    expect(legalLine({ patente: '123', rc: '', if: '789', cnss: '' })).toBe('Patente : 123  -  I.F : 789');
-    expect(legalLine({ patente: '', rc: '', if: '', cnss: '' })).toBe('');
-    const html = render({ ...defaultOptions(), legal: { patente: '36191611', rc: '336151', if: '15285760', cnss: '4617257' } });
+    expect(legalLine({ patente: '123', rc: '', if: '789', cnss: '', extra: [] })).toBe('Patente : 123  -  I.F : 789');
+    expect(legalLine({ patente: '', rc: '', if: '', cnss: '', extra: [] })).toBe('');
+    const html = render({ ...defaultOptions(), legal: { patente: '36191611', rc: '336151', if: '15285760', cnss: '4617257', extra: [] } });
     for (const v of ['Patente : 36191611', 'R.C : 336151', 'I.F : 15285760', 'C.N.S.S : 4617257']) expect(html).toContain(v);
     expect(render()).not.toContain('Patente');
   });
@@ -65,7 +65,7 @@ describe('réglages simples du contrat', () => {
   });
 
   it('échappe tout ce que le propriétaire écrit', () => {
-    const html = render({ ...defaultOptions(), extraFields: ['<img src=x onerror=alert(1)>'], legal: { patente: '<b>1</b>', rc: '', if: '', cnss: '' } });
+    const html = render({ ...defaultOptions(), extraFields: ['<img src=x onerror=alert(1)>'], legal: { patente: '<b>1</b>', rc: '', if: '', cnss: '', extra: [] } });
     expect(html).not.toContain('<img src=x');
     expect(html).not.toContain('<b>1</b>');
   });
@@ -87,5 +87,28 @@ describe('réglages simples du contrat', () => {
   it('borne le nombre d\'informations en plus', () => {
     const parsed = parseOptions({ v: 1, extraFields: Array.from({ length: 50 }, (_, i) => `Champ ${i}`) })!;
     expect(parsed.extraFields.length).toBeLessThanOrEqual(12);
+  });
+
+  it('le propriétaire ajoute ses propres numéros (ex. ICE) comme la patente', () => {
+    const o = defaultOptions();
+    const html = render({ ...o, legal: { ...o.legal, patente: '123', extra: [{ label: 'ICE', value: '000123456789012' }, { label: 'Autorisation N°', value: '77/2020' }] } });
+    expect(html).toContain('Patente : 123');
+    expect(html).toContain('ICE : 000123456789012');
+    expect(html).toContain('Autorisation N° : 77/2020');
+  });
+
+  it('relit les numéros ajoutés, ignore les incomplets et les borne', () => {
+    const parsed = parseOptions({ v: 1, legal: { extra: [{ label: 'ICE', value: '1' }, { label: 'Sans valeur', value: '' }, { value: 'x' }, ...Array.from({ length: 20 }, (_, i) => ({ label: `N${i}`, value: `${i}` }))] } })!;
+    expect(parsed.legal.extra[0]).toEqual({ label: 'ICE', value: '1' });
+    expect(parsed.legal.extra.length).toBeLessThanOrEqual(8);
+    expect(parsed.legal.extra.every((item) => item.label && item.value)).toBe(true);
+  });
+
+  it('n\'affiche plus l\'e-mail de l\'agence sur le contrat', () => {
+    const html = buildContractHtml(sampleContract(), { nom: 'Atlas Cars', email: 'contact@atlas.ma', telephone: '+212600000000' }, {}, templateFromOptions(defaultOptions(), LINES));
+    expect(html).toContain('+212600000000');
+    expect(html).not.toContain('contact@atlas.ma');
+    const standard = buildContractHtml(sampleContract(), { nom: 'Atlas Cars', email: 'contact@atlas.ma' });
+    expect(standard).not.toContain('contact@atlas.ma');
   });
 });

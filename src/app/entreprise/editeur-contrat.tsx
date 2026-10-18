@@ -100,6 +100,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
   const [options, setOptions] = useState<ContractOptions>(initial);
   const [dirty, setDirty] = useState(false);
   const [newField, setNewField] = useState('');
+  const [newNumber, setNewNumber] = useState({ label: '', value: '' });
   const [openCondition, setOpenCondition] = useState<number | null>(null);
   const [showFranchise, setShowFranchise] = useState(false);
   const [previewing, setPreviewing] = useState(false);
@@ -121,6 +122,18 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
     }
     change((o) => ({ ...o, extraFields: [...o.extraFields, name.slice(0, LIMITS_OPTIONS.label)] }));
     setNewField('');
+  }
+
+  function addLegalNumber() {
+    const label = newNumber.label.trim();
+    const value = newNumber.value.trim();
+    if (!label || !value) return;
+    if (options.legal.extra.length >= LIMITS_OPTIONS.extraNumbers) {
+      Alert.alert(t('common.appName'), t('contractTemplate.simple.numberLimit'));
+      return;
+    }
+    change((o) => ({ ...o, legal: { ...o.legal, extra: [...o.legal.extra, { label, value }] } }));
+    setNewNumber({ label: '', value: '' });
   }
 
   function updateCondition(index: number, patch: Partial<ContractOptions['conditions'][number]>) {
@@ -220,6 +233,20 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
             <TextField label={t('contractTemplate.simple.rc')} value={options.legal.rc} onChangeText={(rc) => change((o) => ({ ...o, legal: { ...o.legal, rc } }))} />
             <TextField label={t('contractTemplate.simple.if')} value={options.legal.if} onChangeText={(value) => change((o) => ({ ...o, legal: { ...o.legal, if: value } }))} />
             <TextField label={t('contractTemplate.simple.cnss')} value={options.legal.cnss} onChangeText={(cnss) => change((o) => ({ ...o, legal: { ...o.legal, cnss } }))} />
+            {options.legal.extra.map((item, index) => (
+              <View key={`${item.label}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-[#EAE5F2] bg-[#FAF9FF] px-4 py-2">
+                <ThemedText type="default" style={{ flex: 1 }}>
+                  {item.label} : {item.value}
+                </ThemedText>
+                <Pressable accessibilityLabel={t('contractTemplate.simple.remove')} hitSlop={8} onPress={() => change((o) => ({ ...o, legal: { ...o.legal, extra: o.legal.extra.filter((_, i) => i !== index) } }))}>
+                  <Ionicons name="trash-outline" size={20} color={M3akPalette.danger} />
+                </Pressable>
+              </View>
+            ))}
+            <ThemedText type="smallBold">{t('contractTemplate.simple.numberTitle')}</ThemedText>
+            <TextField label={t('contractTemplate.simple.numberName')} placeholder={t('contractTemplate.simple.numberNamePlaceholder')} value={newNumber.label} onChangeText={(label) => setNewNumber((current) => ({ ...current, label }))} />
+            <TextField label={t('contractTemplate.simple.numberValue')} value={newNumber.value} onChangeText={(value) => setNewNumber((current) => ({ ...current, value }))} />
+            <Button label={t('contractTemplate.simple.numberAdd')} variant="secondary" size="sm" icon="add" onPress={addLegalNumber} disabled={!newNumber.label.trim() || !newNumber.value.trim()} />
           </Section>
 
           <Section number={2} title={t('contractTemplate.simple.clientTitle')} help={t('contractTemplate.simple.clientHelp')}>

@@ -12,7 +12,7 @@ export type SectionKey = 'conducteur2' | 'paiement' | 'kilometrage' | 'carburant
 export const CLIENT_FIELD_KEYS: ClientFieldKey[] = ['naissance', 'nationalite', 'adresseEtranger', 'hotel', 'passeport', 'cin'];
 export const SECTION_KEYS: SectionKey[] = ['conducteur2', 'paiement', 'kilometrage', 'carburant', 'etatVehicule', 'franchise', 'conditions'];
 
-export type LegalInfo = { patente: string; rc: string; if: string; cnss: string };
+export type LegalInfo = { patente: string; rc: string; if: string; cnss: string; /** Autres numéros (ex. ICE) : nom + valeur, au choix du propriétaire. */ extra: { label: string; value: string }[] };
 export type Condition = { titleFr: string; textFr: string; titleAr: string; textAr: string };
 
 export type ContractOptions = {
@@ -26,7 +26,7 @@ export type ContractOptions = {
   conditions: Condition[];
 };
 
-export const LIMITS_OPTIONS = { extraFields: 12, conditions: 40, label: 80, text: 4000, legal: 40 } as const;
+export const LIMITS_OPTIONS = { extraFields: 12, conditions: 40, label: 80, text: 4000, legal: 40, extraNumbers: 8 } as const;
 
 export const DEFAULT_FRANCHISE_TEXT =
   "Le locataire signataire du présent contrat supportera les frais de réparation et de remise en état du véhicule si le montant des réparations n'excède pas dix pour cent (10 %) de la valeur du véhicule neuf. " +
@@ -39,7 +39,7 @@ export const DEFAULT_FRANCHISE_TEXT =
 export function defaultOptions(ctx: TermsContext = { caution: '{{caution}}', city: '{{agence_ville}}' }): ContractOptions {
   return {
     v: 1,
-    legal: { patente: '', rc: '', if: '', cnss: '' },
+    legal: { patente: '', rc: '', if: '', cnss: '', extra: [] },
     clientFields: { naissance: true, nationalite: true, adresseEtranger: true, hotel: true, passeport: true, cin: true },
     sections: { conducteur2: true, paiement: true, kilometrage: true, carburant: true, etatVehicule: true, franchise: true, conditions: true },
     extraFields: [],
@@ -57,8 +57,14 @@ export function parseOptions(raw: unknown): ContractOptions | null {
   const base = defaultOptions();
 
   const legalRaw = isObject(raw.legal) ? raw.legal : {};
-  const legal = { ...base.legal };
+  const legal: LegalInfo = { ...base.legal, extra: [] };
   for (const key of ['patente', 'rc', 'if', 'cnss'] as const) legal[key] = str(legalRaw[key], LIMITS_OPTIONS.legal) ?? '';
+  for (const item of (Array.isArray(legalRaw.extra) ? legalRaw.extra : []).slice(0, LIMITS_OPTIONS.extraNumbers)) {
+    if (!isObject(item)) continue;
+    const label = str(item.label, LIMITS_OPTIONS.legal)?.trim() ?? '';
+    const value = str(item.value, LIMITS_OPTIONS.legal)?.trim() ?? '';
+    if (label && value) legal.extra.push({ label, value });
+  }
 
   const clientFields = { ...base.clientFields };
   const clientRaw = isObject(raw.clientFields) ? raw.clientFields : {};
@@ -105,6 +111,7 @@ export function legalLine(legal: LegalInfo): string {
     legal.rc.trim() && `R.C : ${legal.rc.trim()}`,
     legal.if.trim() && `I.F : ${legal.if.trim()}`,
     legal.cnss.trim() && `C.N.S.S : ${legal.cnss.trim()}`,
+    ...legal.extra.filter((item) => item.label.trim() && item.value.trim()).map((item) => `${item.label.trim()} : ${item.value.trim()}`),
   ]
     .filter(Boolean)
     .join('  -  ');
@@ -115,7 +122,7 @@ export function templateFromOptions(options: ContractOptions, agencyLines: strin
   const { clientFields: f, sections: s } = options;
   const blocks: Block[] = [];
 
-  blocks.push({ type: 'header', logo: 'left', center: agencyLines.join('\n'), right: 'Tél : {{agence_telephone}}\n{{agence_email}}' });
+  blocks.push({ type: 'header', logo: 'left', center: agencyLines.join('\n'), right: 'Tél : {{agence_telephone}}' });
   blocks.push({ type: 'heading', text: 'CONTRAT DE LOCATION  N° {{numero}}', size: 'xl', bold: true, align: 'center', border: 'none' });
 
   const driverRows: FieldRow[] = [

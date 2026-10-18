@@ -142,7 +142,6 @@ export function resolveTemplate(contract: Contract, info: ContractAgencyInfo, ag
   const agencyLines = [
     info.nom + (info.raisonSociale && info.raisonSociale !== info.nom ? ` — ${info.raisonSociale}` : ''),
     [info.adresse, info.ville].filter(Boolean).join(', '),
-    [info.telephone ? `Tél : ${info.telephone}` : '', info.email ?? ''].filter(Boolean).join(' · '),
   ].filter(Boolean);
   return defaultContractTemplate({ caution: money(contract.cautionMontant), city: info.ville ?? '', agencyLines });
 }

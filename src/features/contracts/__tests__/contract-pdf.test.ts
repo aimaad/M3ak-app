@@ -136,11 +136,11 @@ describe('contrat complet (conditions, parties, signatures)', () => {
     expect(buildContractHtml(makeContract({ cautionMontant: 2500 }), agency).replace(/\s/g, ' ')).toMatch(/caution de 2.500 MAD/);
   });
 
-  it('affiche les coordonnées de l\'agence', () => {
+  it('affiche les coordonnées de l\'agence (sans e-mail)', () => {
     const html = buildContractHtml(makeContract(), agency);
     expect(html).toContain('12 rue Hassan II');
     expect(html).toContain('+212600000000');
-    expect(html).toContain('contact@atlas.ma');
+    expect(html).not.toContain('contact@atlas.ma'); // l'e-mail n'est plus affiché sur le contrat
   });
 
   it('insère les deux signatures manuscrites, le nom du signataire et la date', () => {

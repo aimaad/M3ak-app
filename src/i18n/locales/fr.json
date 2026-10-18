@@ -1431,7 +1431,7 @@
       "introTitle": "Votre contrat est déjà prêt",
       "intro": "Il suffit de régler ce que vous voulez voir dessus, puis de toucher « Enregistrer ». Vous pouvez regarder le résultat avec « Voir un aperçu » avant.",
       "legalTitle": "Vos informations légales",
-      "legalHelp": "Elles s'écrivent en bas de vos contrats. Laissez vide ce que vous ne voulez pas afficher. Le nom, l'adresse, le téléphone, le logo et le cachet viennent de « Mon entreprise ».",
+      "legalHelp": "Elles s'écrivent en bas de vos contrats. Laissez vide ce que vous ne voulez pas afficher, et ajoutez vos autres numéros (ICE, etc.). Le nom, l'adresse, le téléphone, le logo et le cachet viennent de « Mon entreprise ».",
       "patente": "Patente",
       "rc": "R.C (registre de commerce)",
       "if": "I.F (identifiant fiscal)",
@@ -1480,7 +1480,13 @@
       "reset": "Revenir aux réglages M3ak",
       "resetTitle": "Revenir aux réglages M3ak ?",
       "resetBody": "Tous vos réglages seront effacés et le contrat M3ak standard sera utilisé.",
-      "unsaved": "Modifications non enregistrées"
+      "unsaved": "Modifications non enregistrées",
+      "numberTitle": "Ajouter un autre numéro (ex. ICE)",
+      "numberName": "Nom du numéro",
+      "numberNamePlaceholder": "Ex. : ICE",
+      "numberValue": "Numéro",
+      "numberAdd": "Ajouter ce numéro",
+      "numberLimit": "Vous avez atteint le nombre maximum de numéros."
     }
   }
 }
