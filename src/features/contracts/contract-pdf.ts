@@ -3,6 +3,7 @@ import * as Print from 'expo-print';
 import type { HandwrittenSignature } from '@/features/signatures/signature';
 
 import { defaultContractTemplate } from './default-template';
+import { sampleContract } from './sample-contract';
 import { ensureSignatures, parseTemplate, PLACEHOLDERS, type ContractTemplate, type TemplateContext, type TemplateValues } from './template';
 import { renderTemplateHtml } from './template-render';
 import type { Contract } from './types';
@@ -182,6 +183,31 @@ export async function generateContractPdf(
   }
 
   const html = buildContractHtml(contract, agency, signatures, agencyTemplate, extras);
+  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  return uri;
+}
+
+/**
+ * Contrat VIERGE : seules les informations de l'agence sont remplies ; tout le reste est une ligne à remplir au stylo.
+ * Sert à l'aperçu « vierge » de l'éditeur et à imprimer des exemplaires papier.
+ */
+export async function generateBlankContractPdf(agency: ContractAgencyInfo, agencyTemplate?: unknown): Promise<string> {
+  const blank = { ...sampleContract(), snapshotValues: null, numero: '', customerNom: '' };
+  const template = resolveTemplate(blank, agency, agencyTemplate);
+  const values: TemplateValues = {
+    agence_nom: agency.nom,
+    agence_raison_sociale: agency.raisonSociale ?? '',
+    agence_adresse: agency.adresse ?? '',
+    agence_ville: agency.ville ?? '',
+    agence_telephone: agency.telephone ?? '',
+    agence_email: agency.email ?? '',
+  };
+  const html = renderTemplateHtml(template, {
+    values,
+    context: { hasDrivers: true, hasConditions: true, hasDeparture: true },
+    clientName: '',
+    agencyName: agency.nom,
+  });
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   return uri;
 }

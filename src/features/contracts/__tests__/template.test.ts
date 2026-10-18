@@ -227,3 +227,18 @@ describe('cadres personnalisés (ajout, suppression, champs)', () => {
     expect(html).toContain('A: x');
   });
 });
+
+describe('contrat vierge', () => {
+  it('ne contient aucune donnée d\'exemple : informations de l\'agence seulement, le reste en lignes à remplir', () => {
+    const t = defaultContractTemplate({ caution: '{{caution}}', city: '{{agence_ville}}', agencyLines: ['{{agence_nom}}'] });
+    const html = renderTemplateHtml(t, {
+      values: { agence_nom: 'Atlas Cars' },
+      context: { hasDrivers: true, hasConditions: true, hasDeparture: true },
+      clientName: '',
+      agencyName: 'Atlas Cars',
+    });
+    expect(html).toContain('Atlas Cars');
+    expect(html).toContain('…………………');
+    for (const fake of ['Nom Client Exemple', 'CTR-EXEMPLE', 'Dacia', 'Logan', '1500', '1 500']) expect(html).not.toContain(fake);
+  });
+});

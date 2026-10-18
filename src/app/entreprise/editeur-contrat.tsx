@@ -12,7 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
-import { generateContractPdf } from '@/features/contracts/contract-pdf';
+import { generateBlankContractPdf, generateContractPdf } from '@/features/contracts/contract-pdf';
 import { defaultEditableTemplate } from '@/features/contracts/default-template';
 import { sampleContract } from '@/features/contracts/sample-contract';
 import { ensureSignatures, PLACEHOLDERS, type Block, type ContractTemplate, type FieldRow } from '@/features/contracts/template';
@@ -201,23 +201,30 @@ function EditorBody({ agencyId, agencyName, initial }: { agencyId: string; agenc
     ]);
   }
 
-  async function handlePreview() {
+  async function runPreview(kind: 'example' | 'blank') {
     setPreviewing(true);
     try {
       const details = detailsQuery.data;
-      const uri = await generateContractPdf(
-        sampleContract(),
-        { nom: details?.nom ?? agencyName, raisonSociale: details?.raisonSociale, adresse: details?.adresse, ville: details?.ville, telephone: details?.telephone, email: details?.email },
-        {},
-        pruneEmptyBoxes(template),
-        { kmDepart: 12000, carburantDepart: 100 }
-      );
+      const agency = { nom: details?.nom ?? agencyName, raisonSociale: details?.raisonSociale, adresse: details?.adresse, ville: details?.ville, telephone: details?.telephone, email: details?.email };
+      const pruned = pruneEmptyBoxes(template);
+      const uri =
+        kind === 'blank'
+          ? await generateBlankContractPdf(agency, pruned)
+          : await generateContractPdf(sampleContract(), agency, {}, pruned, { kmDepart: 12000, carburantDepart: 100 });
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
     } catch {
       Alert.alert(t('common.appName'), t('contract.pdfError'));
     } finally {
       setPreviewing(false);
     }
+  }
+
+  function handlePreview() {
+    Alert.alert(t('contractTemplate.previewTitle'), t('contractTemplate.previewBody'), [
+      { text: t('contractTemplate.previewBlank'), onPress: () => runPreview('blank') },
+      { text: t('contractTemplate.previewExample'), onPress: () => runPreview('example') },
+      { text: t('common.cancel'), style: 'cancel' },
+    ]);
   }
 
   async function handleSave() {

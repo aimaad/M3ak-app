@@ -1543,6 +1543,10 @@
         "client": "Texte sous la signature du client",
         "agency": "Texte sous la signature et le cachet de l'agence"
       }
-    }
+    },
+    "previewTitle": "Quel aperçu ?",
+    "previewBody": "« Contrat vierge » : seules les informations de votre agence sont remplies, le reste est à écrire au stylo (utile pour imprimer). « Avec un exemple » : un faux client est utilisé pour montrer un contrat rempli.",
+    "previewBlank": "Contrat vierge",
+    "previewExample": "Avec un exemple"
   }
 }
