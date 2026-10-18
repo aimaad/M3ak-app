@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, useWindowDimensions, View, type StyleProp, type ImageStyle } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, Modal, Platform, Pressable, ScrollView, StatusBar, useWindowDimensions, View, type StyleProp, type ImageStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
@@ -12,6 +12,10 @@ export function ZoomableImage({ uri, style, label }: Props) {
   const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  // Dans un Modal les marges de sécurité peuvent être à 0 : on garde un minimum pour passer sous l'heure et la batterie.
+  const topInset = Math.max(insets.top, Platform.OS === 'ios' ? 54 : (StatusBar.currentHeight ?? 24) + 8);
+  const bottomInset = Math.max(insets.bottom, 16);
 
   return (
     <>
@@ -25,8 +29,8 @@ export function ZoomableImage({ uri, style, label }: Props) {
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)} statusBarTranslucent>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)' }}>
-          <SafeAreaView style={{ flex: 1 }}>
-            <View className="flex-row items-center justify-between px-5 py-3">
+          <View style={{ flex: 1, paddingTop: topInset, paddingBottom: bottomInset }}>
+            <View className="flex-row items-center justify-between px-5 pb-3">
               <ThemedText type="smallBold" style={{ color: '#fff' }}>
                 {label ?? ''}
               </ThemedText>
@@ -49,7 +53,7 @@ export function ZoomableImage({ uri, style, label }: Props) {
                 <Image source={{ uri }} style={{ width, height: height * 0.75 }} resizeMode="contain" />
               </Pressable>
             </ScrollView>
-          </SafeAreaView>
+          </View>
         </View>
       </Modal>
     </>
