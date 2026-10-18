@@ -358,3 +358,10 @@ dans Supabase**, sinon l'e-mail ne contiendra qu'un lien qui ne mène nulle part
 Sécurité : l'écran répond toujours pareil, que l'adresse existe ou non ; le code est à usage unique et expire ;
 si le nouveau mot de passe est refusé, la session de récupération est refermée.
 
+
+
+## Analyse des inspections (`analyze-inspection`)
+
+Fonction serveur qui analyse les photos d'une inspection avec la clé Gemini de l'entreprise (mêmes accords que `scan-document`) et enregistre les dommages proposés. Voir `docs/INSPECTION.md`.
+
+Déploiement : `npx supabase functions deploy analyze-inspection --project-ref <ref>` (après la migration `0046_inspection_analysis.sql`).

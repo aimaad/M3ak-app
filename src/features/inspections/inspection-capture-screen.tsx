@@ -1,7 +1,8 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImageManipulator from 'expo-image-manipulator';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
@@ -12,7 +13,7 @@ import { useLanguage } from '@/i18n/use-language';
 import { computeAngleProgress } from './angle-progress';
 import { useCompleteInspection, useCreateInspection, useInspectionForRental, useInspectionPhotos } from './hooks';
 import { persistCapturedPhoto } from './local-photo-storage';
-import { CAPTURE_ANGLES, type InspectionType, type PhotoAngle } from './types';
+import { CAPTURE_ANGLES, CAPTURE_PLAN, isSkippableAngle, type InspectionType, type PhotoAngle } from './types';
 import { usePhotoSync } from './use-photo-sync';
 
 type InspectionCaptureScreenProps = {
@@ -42,6 +43,7 @@ export function InspectionCaptureScreen({
   );
 
   const [manualAngle, setManualAngle] = useState<PhotoAngle | null>(null);
+  const [skipped, setSkipped] = useState<PhotoAngle[]>([]);
   const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function InspectionCaptureScreen({
   const uploadedAngles = (photosQuery.data ?? []).map((photo) => photo.angle);
   const pendingAngles = pendingPhotos.map((photo) => photo.angle);
   const coveredAngles = Array.from(new Set([...uploadedAngles, ...pendingAngles]));
-  const progress = computeAngleProgress(coveredAngles);
+  const progress = computeAngleProgress([...coveredAngles, ...skipped]);
   const activeAngle = manualAngle ?? progress.nextAngle;
 
   const inspection = inspectionQuery.data;
@@ -63,9 +65,14 @@ export function InspectionCaptureScreen({
     if (!inspection || !activeAngle || isCapturing) return;
     setIsCapturing(true);
     try {
-      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.6 });
+      const photo = await cameraRef.current?.takePictureAsync({ quality: 0.8 });
       if (!photo) return;
-      const localUri = persistCapturedPhoto(photo.uri, `${activeAngle}-${Date.now()}.jpg`);
+      // Photo réduite (1600 px) : assez nette pour voir une rayure, assez légère pour l'envoi et pour l'analyse IA.
+      const resized = await ImageManipulator.manipulateAsync(photo.uri, [{ resize: photo.width >= photo.height ? { width: 1600 } : { height: 1600 } }], {
+        compress: 0.75,
+        format: ImageManipulator.SaveFormat.JPEG,
+      }).catch(() => null);
+      const localUri = persistCapturedPhoto(resized?.uri ?? photo.uri, `${activeAngle}-${Date.now()}.jpg`);
       await addPending({
         id: `${inspection.id}-${activeAngle}-${Date.now()}`,
         inspectionId: inspection.id,
@@ -74,16 +81,35 @@ export function InspectionCaptureScreen({
         localUri,
         createdAt: new Date().toISOString(),
       });
+      setSkipped((prev) => prev.filter((angle) => angle !== activeAngle));
       setManualAngle(null);
     } finally {
       setIsCapturing(false);
     }
   }
 
+  function handleSkip() {
+    if (!activeAngle) return;
+    Alert.alert(t('inspection.skipTitle'), t('inspection.skipBody', { angle: t(`inspection.angles.${activeAngle}`) }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('inspection.skipConfirm'),
+        onPress: () => {
+          setSkipped((prev) => [...prev, activeAngle]);
+          setManualAngle(null);
+        },
+      },
+    ]);
+  }
+
   async function handleFinish() {
     if (!inspection) return;
+    // Les photos en attente d'envoi partent d'abord : l'analyse IA se fait sur les photos déjà dans le nuage.
+    if (pendingPhotos.length > 0) {
+      await syncNow();
+    }
     await completeInspection.mutateAsync(inspection.id);
-    router.back();
+    router.replace({ pathname: '/locations/[id]/inspection-analyse', params: { id: rentalId, type } });
   }
 
   if (!permission) {
@@ -117,7 +143,7 @@ export function InspectionCaptureScreen({
         <View className="bg-white">
           <ScreenHeader
             title={t(`inspection.title.${type}`)}
-            subtitle={t('inspection.progress', { done: progress.capturedAngles.length, total: CAPTURE_ANGLES.length })}
+            subtitle={t('inspection.progress', { done: coveredAngles.filter((angle) => CAPTURE_ANGLES.includes(angle)).length, total: CAPTURE_ANGLES.length })}
             showBack
           />
         </View>
@@ -135,10 +161,15 @@ export function InspectionCaptureScreen({
           )}
 
           {activeAngle ? (
-            <View className="absolute inset-x-0 top-4 items-center">
+            <View className="absolute inset-x-3 top-3 items-center gap-2">
               <View className="rounded-full bg-black/60 px-4 py-2">
                 <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
                   {t('inspection.angleRequired', { angle: t(`inspection.angles.${activeAngle}`) })}
+                </ThemedText>
+              </View>
+              <View className="rounded-2xl bg-black/60 px-4 py-2">
+                <ThemedText type="small" style={{ color: '#ffffff', textAlign: 'center' }}>
+                  {t(`inspection.angleHints.${activeAngle}`)}
                 </ThemedText>
               </View>
             </View>
@@ -158,9 +189,24 @@ export function InspectionCaptureScreen({
         </View>
 
         <View className="gap-3 bg-white px-4 pb-4 pt-3">
+          <View className="flex-row gap-2">
+            {CAPTURE_PLAN.map((entry) => {
+              const done = entry.angles.filter((angle) => coveredAngles.includes(angle)).length;
+              return (
+                <View key={entry.group} className="flex-1 rounded-xl bg-[#FAF9FF] px-2 py-1.5">
+                  <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
+                    {t(`inspection.groups.${entry.group}`)}
+                  </ThemedText>
+                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#15803D' : '#211A2E' }}>
+                    {done}/{entry.angles.length}
+                  </ThemedText>
+                </View>
+              );
+            })}
+          </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
             {CAPTURE_ANGLES.map((angle) => {
-              const done = progress.capturedAngles.includes(angle);
+              const done = coveredAngles.includes(angle);
               const selected = angle === activeAngle;
               return (
                 <Pressable
@@ -178,7 +224,7 @@ export function InspectionCaptureScreen({
                     type="small"
                     style={{ color: selected ? '#ffffff' : done ? '#15803D' : '#211A2E' }}
                   >
-                    {`${done ? '✓ ' : ''}${t(`inspection.angles.${angle}`)}`}
+                    {`${done ? '✓ ' : skipped.includes(angle) ? '– ' : ''}${t(`inspection.angles.${angle}`)}`}
                   </ThemedText>
                 </Pressable>
               );
@@ -196,13 +242,25 @@ export function InspectionCaptureScreen({
               </ThemedText>
             </Pressable>
           ) : (
-            <Pressable
-              onPress={handleCapture}
-              disabled={!inspection || isCapturing}
-              className="h-16 w-16 self-center items-center justify-center rounded-full border-4 border-[#7C3AED] bg-white"
-            >
-              {isCapturing ? <ActivityIndicator color="#7C3AED" /> : <View className="h-11 w-11 rounded-full bg-[#7C3AED]" />}
-            </Pressable>
+            <View className="flex-row items-center justify-between">
+              {activeAngle && isSkippableAngle(activeAngle) ? (
+                <Pressable onPress={handleSkip} hitSlop={8} className="w-24">
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('inspection.skip')}
+                  </ThemedText>
+                </Pressable>
+              ) : (
+                <View className="w-24" />
+              )}
+              <Pressable
+                onPress={handleCapture}
+                disabled={!inspection || isCapturing}
+                className="h-16 w-16 items-center justify-center rounded-full border-4 border-[#7C3AED] bg-white"
+              >
+                {isCapturing ? <ActivityIndicator color="#7C3AED" /> : <View className="h-11 w-11 rounded-full bg-[#7C3AED]" />}
+              </Pressable>
+              <View className="w-24" />
+            </View>
           )}
         </View>
       </SafeAreaView>

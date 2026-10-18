@@ -22,8 +22,10 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 ## Étape 3 — Inspection par caméra IA ⭐
 - [x] Guide de capture par angle (`design/03_inspection_camera.png`), fonctionnement hors ligne
 - [x] Inspection de départ et de retour liées à la location
-- [ ] Edge Function d'analyse IA → dommages structurés, validation par l'employé (nécessite un compte API Anthropic)
-- [ ] Rapport comparatif avant/après (`design/04_rapport_inspection.png`), retenue sur caution, PDF, partage WhatsApp
+- [x] Guide de capture complet (24 angles : tour de la voiture, capot, toit, pare-brise, 4 roues, tableau de bord, volant, frein à main, sièges, banquette, plafond, tapis, coffre) avec consigne par angle — migration 0046
+- [x] Edge Function `analyze-inspection` (Gemini avec la clé de l'agence) → dommages structurés (zone, type, gravité, confiance, coût estimé, cadre sur la photo), comparaison départ / retour, validation par l'employé — voir `docs/INSPECTION.md`
+- [x] Rapport comparatif avant/après, retenue sur caution (proposée par l'IA, validée par l'employé), rapport PDF, partage WhatsApp
+- [ ] Vérifier la qualité de détection sur de vraies photos (non vérifiée : aucun test avec une vraie clé Gemini)
 
 ## Étape 4 — Tableau de bord et maintenance
 - [x] Accueil (`design/01_dashboard.png`) : disponibles, en location, en atelier, à inspecter, revenus, taux d'utilisation

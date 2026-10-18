@@ -68,12 +68,18 @@ describe("confidentialité de l'OCR", () => {
 
   it("les fonctions serveur n'utilisent que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'generate-insights', 'scan-document', 'send-invite']);
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'generate-insights', 'scan-document', 'send-invite']);
     const read = (file: string) => fs.readFileSync(path.join(functionsDir, file), 'utf8');
 
     const scan = read('scan-document/index.ts');
     expect(scan).toContain("from('agency_ocr_settings')");
     expect(scan).toContain('settings.cloud_enabled');
+
+    const inspection = read('analyze-inspection/index.ts');
+    expect(inspection).toContain("from('agency_ocr_settings')");
+    expect(inspection).toContain('settings.cloud_enabled');
+    expect(inspection).toContain('RLS'); // l'inspection est d'abord lue avec le droit de l'appelant
+    expect(inspection).toContain("supabase.from('inspections')");
 
     const insights = read('generate-insights/index.ts');
     expect(insights).toContain("from('agency_ocr_settings')");
@@ -90,7 +96,7 @@ describe("confidentialité de l'OCR", () => {
     expect(gemini).toContain('discoverModels'); // les noms de modèles ne sont pas figés : liste demandée à Google
     expect(gemini).not.toContain('gemini-2.0-flash'); // modèle retiré par Google
 
-    for (const code of [scan, insights, gemini]) {
+    for (const code of [scan, inspection, insights, gemini]) {
       expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
       expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
       expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64|payload)/);

@@ -225,6 +225,24 @@ export default function LocationDetailScreen() {
                 </ThemedText>
               </PressableCard>
             ) : null}
+            {inspectionDepart?.statut === 'terminee' ? (
+              <PressableCard
+                onPress={() => router.push({ pathname: '/locations/[id]/inspection-analyse', params: { id: rental.id, type: 'depart' } })}
+                padded={false}
+                className="flex-row items-center justify-between px-4 py-3"
+              >
+                <ThemedText type="small">{t('inspection.openReport')} — {t('inspection.analysis.compare.depart')}</ThemedText>
+              </PressableCard>
+            ) : null}
+            {inspectionRetour?.statut === 'terminee' ? (
+              <PressableCard
+                onPress={() => router.push({ pathname: '/locations/[id]/inspection-analyse', params: { id: rental.id, type: 'retour' } })}
+                padded={false}
+                className="flex-row items-center justify-between px-4 py-3"
+              >
+                <ThemedText type="small">{t('inspection.openReport')} — {t('inspection.analysis.compare.retour')}</ThemedText>
+              </PressableCard>
+            ) : null}
           </View>
 
           {rentalConfirmed && contract?.statut === 'signe' && departureBlocked ? (
