@@ -180,7 +180,7 @@ describe('modèle M3ak standard : carnet de location', () => {
       expect(html).toContain(title);
     }
     expect(html).toContain('R: rayures');
-    expect(html).toContain('Patente');
+    expect(html).not.toContain('Patente'); // affichée seulement si l'agence l'a renseignée
   });
 
   it('remplit le conducteur 1 avec la fiche client figée', () => {

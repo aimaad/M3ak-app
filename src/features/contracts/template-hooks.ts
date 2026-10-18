@@ -1,11 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { getContractTemplate, removeContractTemplate, saveContractTemplate } from './template-api';
-import type { ContractTemplate } from './template';
+import type { ContractOptions } from './contract-options';
+import { getContractTemplate, removeContractTemplate, saveContractOptions } from './template-api';
 
 const key = (agencyId: string | undefined) => ['contract-template', agencyId] as const;
 
-/** Lu une fois puis gardé en mémoire : générer un contrat ne refait aucune analyse. */
+/** Lu une fois puis gardé en mémoire : générer un contrat ne refait aucune lecture lourde. */
 export function useContractTemplate(agencyId: string | undefined) {
   return useQuery({
     queryKey: key(agencyId),
@@ -15,10 +15,10 @@ export function useContractTemplate(agencyId: string | undefined) {
   });
 }
 
-export function useSaveContractTemplate(agencyId: string | undefined) {
+export function useSaveContractOptions(agencyId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (template: ContractTemplate) => saveContractTemplate(agencyId as string, template),
+    mutationFn: (options: ContractOptions) => saveContractOptions(agencyId as string, options),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(agencyId) }),
   });
 }
