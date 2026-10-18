@@ -18,8 +18,7 @@ export function useContractTemplate(agencyId: string | undefined) {
 export function useSaveContractTemplate(agencyId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ template, sourceName }: { template: ContractTemplate; sourceName: string | null }) =>
-      saveContractTemplate(agencyId as string, template, sourceName),
+    mutationFn: (template: ContractTemplate) => saveContractTemplate(agencyId as string, template),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: key(agencyId) }),
   });
 }

@@ -428,7 +428,7 @@ function EntrepriseForm({
           label={t('contractTemplate.open')}
           variant="secondary"
           icon="document-text-outline"
-          onPress={() => router.push('/entreprise/modele-contrat')}
+          onPress={() => router.push('/entreprise/editeur-contrat')}
         />
       ) : null}
 

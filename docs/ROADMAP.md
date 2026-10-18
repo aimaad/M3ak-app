@@ -52,7 +52,7 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Vérification avant départ configurable par l'agence, contrôlée côté serveur, avec confirmation humaine
 - [x] Traçabilité réservée au propriétaire : qui a fait quoi (locations, paiements, clients, véhicules, contrats, cautions, entretien, inspections, équipe, réglages), filtres période / employé / type, synthèse par personne, export PDF — voir `docs/TRACABILITE.md` (migration 0036)
 - [x] Contrat complet bilingue (14 articles, état des lieux, parties) + signature manuscrite du personnel (profil) et du client (après lecture du contrat) collées dans le PDF — voir `docs/CONTRATS-SIGNATURES.md` (migration 0037)
-- [x] Modèle de contrat propre à chaque agence : le propriétaire envoie un exemple (PDF/photos) analysé une seule fois par Gemini, puis chaque contrat remplit ce modèle localement (migration 0040, fonction `analyze-contract-template`)
+- [x] Modèle de contrat propre à chaque agence, modifiable par le propriétaire (migration 0040)
 - [x] Contrat par défaut au format carnet de location (cadres, paiement, km, carburant, état du véhicule, verso) + éditeur de modèle (modifier, supprimer, ajouter des champs et cadres) — migration 0041
 - [ ] Faire relire les conditions générales du contrat par un juriste
 - [ ] Politique de conservation du journal de traçabilité (durée, purge) — à définir

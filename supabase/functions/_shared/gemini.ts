@@ -33,14 +33,7 @@ export function parseJson(text: string): unknown {
   return JSON.parse(text.trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim());
 }
 
-/** Réflexion coupée (ou minimale) : une lecture de document n'en a pas besoin et elle multiplie la durée. */
-function thinkingConfigFor(model: string): Record<string, unknown> {
-  if (/^gemini-2\.5-flash/.test(model)) return { thinkingConfig: { thinkingBudget: 0 } };
-  if (versionOf(model) >= 3) return { thinkingConfig: { thinkingLevel: 'minimal' } };
-  return {};
-}
-
-async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number, maxOutput?: number, forceNoThinkingConfig = false, plainText = false): Promise<ProviderResult> {
+async function callGeminiModel(apiKey: string, model: string, systemPrompt: string, parts: GeminiPart[], timeoutMs: number): Promise<ProviderResult> {
   let response: Response;
   try {
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
@@ -51,12 +44,12 @@ async function callGeminiModel(apiKey: string, model: string, systemPrompt: stri
         systemInstruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts }],
         generationConfig: {
-          ...(plainText ? {} : { responseMimeType: 'application/json' }),
+          responseMimeType: 'application/json',
           temperature: 0,
           // Les modèles 2.5 acceptent « pas de réflexion » (plus rapide, moins cher). Pour les autres on ne force
           // rien (paramètre non garanti) et on laisse plus de marge de sortie.
-          maxOutputTokens: maxOutput ?? (/^gemini-2\.5-flash/.test(model) ? 8192 : 16384),
-          ...(forceNoThinkingConfig ? {} : thinkingConfigFor(model)),
+          maxOutputTokens: /^gemini-2\.5-flash/.test(model) ? 8192 : 16384,
+          ...(/^gemini-2\.5-flash/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
         },
       }),
     });
@@ -88,7 +81,7 @@ async function callGeminiModel(apiKey: string, model: string, systemPrompt: stri
   const text = candidate?.content?.parts?.map((part) => part.text ?? '').join('');
   if (!text) throw new Error('provider_empty_response');
   if (candidate?.finishReason === 'MAX_TOKENS') throw new Error('provider_response_truncated');
-  return { json: plainText ? text : parseJson(text), usage, model };
+  return { json: parseJson(text), usage, model };
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -134,42 +127,19 @@ async function candidateModels(apiKey: string): Promise<string[]> {
  * pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux, dans une durée totale
  * bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
  */
-export async function callGeminiJson(
-  apiKey: string,
-  systemPrompt: string,
-  parts: GeminiPart[],
-  options: { maxOutputTokens?: number; deadlineMs?: number; preferModels?: string[]; perCallMs?: number; trace?: string[]; plainText?: boolean } = {}
-): Promise<ProviderResult> {
+export async function callGeminiJson(apiKey: string, systemPrompt: string, parts: GeminiPart[]): Promise<ProviderResult> {
   const started = Date.now();
-  const models = [...new Set([...(options.preferModels ?? []), ...(await candidateModels(apiKey))])];
+  const models = await candidateModels(apiKey);
   let lastError: unknown = null;
   let busyError: ProviderHttpError | null = null; // 503/429 vu au moins une fois : plus parlant qu'un 404 final
   for (let round = 0; round < 2; round++) {
     for (const model of models) {
-      const remaining = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
+      const remaining = PROVIDER_DEADLINE_MS - (Date.now() - started);
       if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
-      const perCall = Math.min(options.perCallMs ?? (options.maxOutputTokens ? 70_000 : PER_CALL_TIMEOUT_MS), remaining);
-      const callStart = Date.now();
-      const note = (outcome: string) => options.trace?.push(`${model}: ${outcome} (${Math.round((Date.now() - callStart) / 1000)} s)`);
       try {
-        try {
-          const result = await callGeminiModel(apiKey, model, systemPrompt, parts, perCall, options.maxOutputTokens, false, options.plainText);
-          note('ok');
-          return result;
-        } catch (error) {
-          // Paramètre de réflexion refusé par ce modèle : on réessaie le même modèle sans ce paramètre.
-          if (error instanceof ProviderHttpError && error.status === 400 && /thinking/i.test(error.message)) {
-            const left = (options.deadlineMs ?? PROVIDER_DEADLINE_MS) - (Date.now() - started);
-            if (left < 4_000) throw error;
-            const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(perCall, left), options.maxOutputTokens, true, options.plainText);
-            note('ok sans réflexion');
-            return result;
-          }
-          throw error;
-        }
+        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(PER_CALL_TIMEOUT_MS, remaining));
       } catch (error) {
         lastError = error;
-        note(error instanceof StageTimeoutError ? 'trop lent' : error instanceof ProviderHttpError ? `erreur ${error.status}` : 'échec');
         if (error instanceof ProviderHttpError && (error.status === 503 || error.status === 429)) busyError = error;
         const retryable = error instanceof ProviderHttpError && RETRYABLE_STATUSES.has(error.status);
         const timedOut = error instanceof StageTimeoutError;

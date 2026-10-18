@@ -68,7 +68,7 @@ describe("confidentialité de l'OCR", () => {
 
   it("les fonctions serveur n'utilisent que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-contract-template', 'generate-insights', 'scan-document', 'send-invite']);
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'generate-insights', 'scan-document', 'send-invite']);
     const read = (file: string) => fs.readFileSync(path.join(functionsDir, file), 'utf8');
 
     const scan = read('scan-document/index.ts');
@@ -83,13 +83,6 @@ describe("confidentialité de l'OCR", () => {
     // aucune donnée personnelle ne peut partir : liste blanche reconstruite côté serveur
     expect(insights).not.toMatch(/telephone|cin_ou|nom_complet|immatriculation|email/i);
 
-    const template = read('analyze-contract-template/index.ts');
-    expect(template).toContain("from('agency_ocr_settings')");
-    expect(template).toContain('settings.cloud_enabled');
-    expect(template).toContain("membership.role !== 'owner'"); // seul le propriétaire envoie un exemple de contrat
-    expect(template).toContain('DAILY_LIMIT');
-    expect(template).not.toMatch(/\.storage\b|\.upload\(/); // le fichier envoyé n'est jamais conservé
-
     // surcharge passagère : plusieurs modèles Gemini et un nouvel essai, jamais un autre fournisseur
     const gemini = read('_shared/gemini.ts');
     expect(gemini).toMatch(/RETRYABLE_STATUSES = new Set\(\[[^\]]*503/);
@@ -97,7 +90,7 @@ describe("confidentialité de l'OCR", () => {
     expect(gemini).toContain('discoverModels'); // les noms de modèles ne sont pas figés : liste demandée à Google
     expect(gemini).not.toContain('gemini-2.0-flash'); // modèle retiré par Google
 
-    for (const code of [scan, insights, template, gemini]) {
+    for (const code of [scan, insights, gemini]) {
       expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
       expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
       expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64|payload)/);
