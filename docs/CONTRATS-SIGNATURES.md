@@ -1,5 +1,8 @@
 # Contrat complet et signatures manuscrites
 
+## Deux pages seulement : recto et verso
+Le PDF fait **exactement deux feuilles A4**. **Page principale (recto)** : tout le formulaire (en-tête avec logo, conducteurs, véhicule, paiement, kilométrage, carburant, état du véhicule, franchise, signatures et cachet, mentions légales). **Verso** : les conditions générales, en deux colonnes serrées (français | arabe). Chaque feuille est automatiquement réduite juste ce qu'il faut pour tenir sur UNE page (jamais en dessous de 45 %) : plus le propriétaire ajoute de champs ou de conditions, plus le texte est serré. Le calcul est testé et vérifié sur un rendu réel (Chromium) ; le rendu exact peut varier légèrement selon le téléphone.
+
 ## Le contrat par défaut : carnet de location
 Toutes les agences démarrent avec un contrat au format **carnet de location** (une page de cadres, puis les conditions générales au verso) : en-tête avec logo et coordonnées, numéro du contrat, **Conducteur 1** (nom, prénom, naissance, nationalité, adresse, téléphone, permis, CIN, passeport), **Véhicule et période**, **Conducteur 2** (nom, **prénom**, permis, CIN), **Paiement** (prix par jour, nombre de jours, total, caution, avance, reste, mode), **Kilométrage**, **jauge de carburant**, **schémas de l'état du véhicule** (départ et retour, à marquer à la main : R rayures, B bosses, E éclats, C cassures), franchise sinistre, signatures et cachet, ligne Patente / R.C / I.F / C.N.S.S à compléter, puis **14 articles bilingues** au verso. Les informations du client (adresse, naissance, permis…) sont figées à la création du contrat (migration 0041) ; paiements et kilométrages sont lus à la génération du PDF.
 

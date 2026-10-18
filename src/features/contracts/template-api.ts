@@ -13,8 +13,11 @@ export async function getContractTemplate(agencyId: string): Promise<StoredTempl
   const { data, error } = await getSupabase().from('agency_contract_templates').select('template, options, updated_at').eq('agency_id', agencyId).maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const template = parseTemplate(data.template);
-  return template ? { template: ensureSignatures(template), options: parseOptions(data.options), updatedAt: data.updated_at } : null;
+  const options = parseOptions(data.options);
+  // Avec des réglages enregistrés, le modèle est refabriqué à chaque lecture : une amélioration de la mise en page
+  // s'applique donc tout de suite, sans que le propriétaire ait à réenregistrer.
+  const template = options ? parseTemplate(templateFromOptions(options, AGENCY_LINES)) : parseTemplate(data.template);
+  return template ? { template: ensureSignatures(template), options, updatedAt: data.updated_at } : null;
 }
 
 /** Enregistre les réglages ET le modèle qui en découle. */

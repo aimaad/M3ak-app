@@ -195,8 +195,9 @@ export function templateFromOptions(options: ContractOptions, agencyLines: strin
   if (s.carburant) blocks.push({ type: 'fuelGauge', width: 'half', title: 'Niveau de carburant' });
 
   if (s.etatVehicule) {
-    blocks.push({ type: 'vehicleDiagram', title: 'État du véhicule (Départ)' });
+    blocks.push({ type: 'vehicleDiagram', title: 'État du véhicule (Départ)', width: 'half' });
   }
+  if (s.franchise && options.franchiseText.trim()) blocks.push({ type: 'box', width: 'half', title: 'Franchise sinistre', rows: [], text: options.franchiseText });
   blocks.push({
     type: 'box',
     showIf: 'hasDeparture',
@@ -204,7 +205,6 @@ export function templateFromOptions(options: ContractOptions, agencyLines: strin
     rows: [row('État général', '{{etat_depart}}'), row('Accessoires remis', '{{accessoires_depart}}'), row('Observations', '{{observations_depart}}', true)],
   });
   blocks.push({ type: 'box', showIf: 'hasConditions', title: 'Conditions particulières', rows: [], text: '{{conditions_particulieres}}' });
-  if (s.franchise && options.franchiseText.trim()) blocks.push({ type: 'box', title: 'Franchise sinistre', rows: [], text: options.franchiseText });
 
   blocks.push({ type: 'paragraph', text: CONTRACT_ACCEPTANCE.fr, size: 'sm' });
   blocks.push({ type: 'paragraph', text: CONTRACT_ACCEPTANCE.ar, size: 'sm', rtl: true, align: 'right' });

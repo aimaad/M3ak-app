@@ -22,7 +22,7 @@ describe('réglages simples du contrat', () => {
       expect(html).not.toContain(word);
     }
     expect(html).toContain('Conducteur 1');
-    expect(html).not.toContain('page-break-after');
+    expect(html.match(/<section class="sheet/g)).toHaveLength(1); // sans conditions : une seule feuille
   });
 
   it('chaque information du client peut être retirée', () => {

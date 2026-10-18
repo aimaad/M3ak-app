@@ -5,7 +5,7 @@ import type { HandwrittenSignature } from '@/features/signatures/signature';
 import { defaultContractTemplate } from './default-template';
 import { sampleContract } from './sample-contract';
 import { ensureSignatures, parseTemplate, PLACEHOLDERS, type ContractTemplate, type TemplateContext, type TemplateValues } from './template';
-import { renderTemplateHtml } from './template-render';
+import { PAGE, renderTemplateHtml } from './template-render';
 import type { Contract } from './types';
 
 function formatDateTime(iso: string): string {
@@ -182,7 +182,7 @@ export async function generateContractPdf(
   }
 
   const html = buildContractHtml(contract, agency, signatures, agencyTemplate, extras);
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const { uri } = await Print.printToFileAsync({ html, base64: false, width: PAGE.width, height: PAGE.height });
   return uri;
 }
 
@@ -208,6 +208,6 @@ export async function generateBlankContractPdf(agency: ContractAgencyInfo, agenc
     agencyName: agency.nom,
     logoDataUri,
   });
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const { uri } = await Print.printToFileAsync({ html, base64: false, width: PAGE.width, height: PAGE.height });
   return uri;
 }

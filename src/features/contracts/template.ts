@@ -36,7 +36,7 @@ export type Block = Common &
     /** Cadre de formulaire : bandeau de titre, lignes « libellé : valeur » à remplir, et/ou texte libre. Deux cadres `half` consécutifs sont côte à côte. */
     | { type: 'box'; title?: string; width?: 'half' | 'full'; rows: FieldRow[]; text?: string }
     /** Schéma du véhicule vu de dessus pour marquer les dommages à la main, avec sa légende. */
-    | { type: 'vehicleDiagram'; title: string; legend?: string }
+    | { type: 'vehicleDiagram'; title: string; legend?: string; width?: 'half' | 'full' }
     /** Jauge de carburant (0, 1/4, 2/4, 3/4, 4/4) à cocher à la main. */
     | { type: 'fuelGauge'; title?: string; width?: 'half' | 'full' }
     | { type: 'signatures'; boxes: SignatureBox[] }
@@ -166,7 +166,7 @@ function parseBlock(raw: unknown): Block | null {
       const title = text(raw.title, LIMITS.label);
       if (title === null) return null;
       const legend = text(raw.legend, 500);
-      return { ...common, type: 'vehicleDiagram', title, ...(legend ? { legend } : {}) };
+      return { ...common, type: 'vehicleDiagram', title, width: raw.width === 'half' ? 'half' : 'full', ...(legend ? { legend } : {}) };
     }
     case 'fuelGauge': {
       const title = text(raw.title, LIMITS.label);

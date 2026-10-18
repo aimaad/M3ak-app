@@ -1,4 +1,5 @@
-import { contractTemplateContext, contractTemplateValues, buildContractHtml } from '../contract-pdf';
+import { buildContractHtml, contractTemplateContext, contractTemplateValues, resolveTemplate } from '../contract-pdf';
+import { defaultOptions, templateFromOptions } from '../contract-options';
 import { defaultContractTemplate } from '../default-template';
 import { sampleContract } from '../sample-contract';
 import {
@@ -9,7 +10,7 @@ import {
   PLACEHOLDERS,
   readingSections,
 } from '../template';
-import { renderTemplateHtml, safeImage } from '../template-render';
+import { estimateSheetHeights, renderTemplateHtml, safeImage } from '../template-render';
 
 const agency = { nom: 'Agence Atlas', ville: 'Rabat', adresse: '1 av. Mohammed V' };
 
@@ -202,8 +203,10 @@ describe('modèle M3ak standard : carnet de location', () => {
 
   it('met les cadres « half » côte à côte et le verso sur une nouvelle page', () => {
     expect(html).toContain('class="pair"');
-    expect(html).toContain('page-break-after:always');
-    expect(html.indexOf('page-break-after:always')).toBeLessThan(html.indexOf('Article 1'));
+    const sheets = html.match(/<section class="sheet/g) ?? [];
+    expect(sheets).toHaveLength(2); // recto + verso : exactement deux feuilles
+    expect(html.indexOf('class="sheet last"')).toBeLessThan(html.indexOf('Article 1'));
+    expect(html.indexOf('Franchise sinistre')).toBeLessThan(html.indexOf('class="sheet last"')); // tout le formulaire est au recto
   });
 });
 
@@ -242,5 +245,48 @@ describe('contrat vierge', () => {
     expect(html).toContain('Atlas Cars');
     expect(html).toContain('…………………');
     for (const fake of ['Nom Client Exemple', 'CTR-EXEMPLE', 'Dacia', 'Logan', '1500', '1 500']) expect(html).not.toContain(fake);
+  });
+});
+
+describe('mise en page : recto et verso sur deux feuilles A4', () => {
+  const agency = { nom: 'Location Imad', adresse: '12 rue Hassan II, Casablanca', ville: 'Casablanca', telephone: '+212 6 60 44 10 70' };
+
+  it('le formulaire entier est sur la première feuille et les conditions sur la seconde', () => {
+    const html = buildContractHtml(sampleContract(), agency);
+    const [front, back] = html.split('class="sheet last"');
+    for (const word of ['Conducteur 1', 'Paiement', 'Kilométrage', 'Franchise sinistre', 'Signature du locataire']) expect(front).toContain(word);
+    expect(front).not.toContain('Article 1');
+    expect(back).toContain('Article 1');
+    expect(back).toContain('Article 14');
+    expect(back).not.toContain('Conducteur 1');
+  });
+
+  it('chaque feuille est réduite pour tenir sur une page, sans devenir illisible', () => {
+    const html = buildContractHtml(sampleContract(), agency);
+    const zooms = [...html.matchAll(/zoom:([0-9.]+)/g)].map((m) => Number(m[1]));
+    expect(zooms.length).toBeGreaterThan(0);
+    for (const zoom of zooms) {
+      expect(zoom).toBeGreaterThanOrEqual(0.7);
+      expect(zoom).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('les hauteurs estimées restent proches de celles mesurées sur un rendu réel (recto ≈ 936 px, verso ≈ 691 px)', () => {
+    const c = sampleContract();
+    const template = resolveTemplate(c, agency);
+    const [front, back] = estimateSheetHeights(template, { values: contractTemplateValues(c, agency), context: contractTemplateContext(c), clientName: 'x', agencyName: 'y' });
+    expect(front).toBeGreaterThan(850);
+    expect(front).toBeLessThan(1040);
+    expect(back).toBeGreaterThan(650);
+    expect(back).toBeLessThan(820);
+  });
+
+  it('un verso très chargé est réduit davantage plutôt que coupé ou reporté', () => {
+    const o = defaultOptions();
+    const many = { ...o, conditions: [...o.conditions, ...o.conditions] };
+    const html = buildContractHtml(sampleContract(), agency, {}, templateFromOptions(many, ['{{agence_nom}}']));
+    expect(html.match(/<section class="sheet/g)).toHaveLength(2);
+    const zooms = [...html.matchAll(/zoom:([0-9.]+)/g)].map((m) => Number(m[1]));
+    expect(Math.min(...zooms)).toBeLessThan(0.7);
   });
 });
