@@ -1,6 +1,6 @@
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
-import { Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
@@ -169,6 +169,7 @@ export default function ModeleContratScreen() {
                   : t('contractTemplate.statusDefaultHelp')}
               </ThemedText>
               <View className="flex-row flex-wrap gap-2">
+                <Button label={t('contractTemplate.edit')} size="sm" onPress={() => router.push('/entreprise/editeur-contrat')} />
                 {stored.data ? <Button label={t('contractTemplate.preview')} variant="secondary" size="sm" onPress={handlePreview} loading={previewing} disabled={previewing} /> : null}
                 {stored.data ? <Button label={t('contractTemplate.remove')} variant="ghost" size="sm" onPress={handleRemove} disabled={remove.isPending} /> : null}
               </View>

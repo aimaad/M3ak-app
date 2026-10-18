@@ -322,6 +322,7 @@ peut pas la réutiliser, d'où ces deux secrets.
 - `0038_agency_stamp.sql` — cachet de l'agence (`agencies.stamp_path`, image dans le bucket privé `agency-assets`), apposé sur les contrats PDF.
 - `0039_require_agency_stamp_to_sign.sql` — un contrat ne peut passer à « signé » que si l'agence a enregistré son cachet.
 - `0040_contract_templates.sql` — modèle de contrat propre à chaque agence (`agency_contract_templates`, écriture réservée au propriétaire), modèle figé sur le contrat à la signature (`contracts.terms_snapshot`), type d'usage `contrat_modele`. Fonction à déployer : `supabase functions deploy analyze-contract-template --project-ref <réf>`.
+- `0041_contract_snapshot_values.sql` — informations complémentaires du client et du conducteur 2 figées sur le contrat à sa création (`contracts.snapshot_values`), verrouillées à la signature.
   (`insights_enabled`), suivi « insights » dans l'utilisation, console web. Voir `docs/ACCUEIL-RAPPORTS.md`.
 - `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
   taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.

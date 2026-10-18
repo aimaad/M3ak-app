@@ -126,3 +126,8 @@ export function defaultContractTemplate(ctx: TermsContext & { agencyLines: strin
 
   return { v: 1, direction: 'ltr', blocks };
 }
+
+/** Modèle standard prêt à être modifié par l'agence : tout ce qui varie d'un contrat à l'autre est un champ automatique. */
+export function defaultEditableTemplate(): ContractTemplate {
+  return defaultContractTemplate({ caution: '{{caution}}', city: '{{agence_ville}}', agencyLines: ['{{agence_nom}}', '{{agence_adresse}}'] });
+}
