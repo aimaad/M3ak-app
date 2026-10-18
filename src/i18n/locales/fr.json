@@ -410,7 +410,7 @@
       "subtitle": "Identifiez le véhicule, le reste se remplit tout seul",
       "scanTitle": "Scanner la carte grise",
       "scanSubtitle": "Le plus rapide — photographiez le document",
-      "scanHint": "Photographiez le recto de la carte grise (l'immatriculation, la date de mise en circulation, l'usage). Vous pourrez ensuite photographier le verso (marque, modèle, carburant, châssis).",
+      "scanHint": "Prenez en photo les deux faces de la carte grise : d'abord le recto, puis le verso. L'analyse se fait ensuite une seule fois pour les deux.",
       "analyzing": "Analyse du document en cours…",
       "plateTitle": "Immatriculation ou VIN",
       "plateSubtitle": "Vérifie d'abord si ce véhicule existe déjà",
@@ -460,9 +460,14 @@
       },
       "faceMissingVerso": "Le verso n'a pas encore été lu : il contient la marque, le modèle, le carburant, le châssis, les places et la puissance. Photographiez-le.",
       "faceMissingRecto": "Le recto n'a pas encore été lu : il contient l'immatriculation, la date de première mise en circulation, l'usage et la fin de validité. Photographiez-le.",
-      "scanOtherFace": "Photographier l'autre face",
+      "scanOtherFace": "Ajouter une photo",
       "bothFaces": "Recto et verso lus. Vérifiez les informations ci-dessous.",
-      "nothingNewFace": "Cette photo n'a rien apporté de nouveau : c'est peut-être la même face. Prenez l'autre face de la carte."
+      "nothingNewFace": "La photo du {{face}} n'a rien donné de lisible : reprenez-la en vérifiant que la bonne face est bien dans le cadre.",
+      "analyzeBoth": "Analyser la carte grise",
+      "photoChange": "Changer",
+      "photoMissing": "Ajoutez au moins une photo pour lancer l'analyse.",
+      "photoOneOnly": "Une seule face ajoutée : l'analyse sera incomplète.",
+      "analyzingBoth": "Analyse du recto et du verso en cours…"
     },
     "duplicate": {
       "title": "Ce véhicule est déjà dans votre flotte",

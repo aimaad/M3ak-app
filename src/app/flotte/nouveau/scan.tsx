@@ -99,7 +99,8 @@ async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
-type ScanItem = { uri: string; fields: VehicleOcrFields };
+type Face = 'recto' | 'verso';
+type ScanItem = { face: Face; uri: string; fields: VehicleOcrFields };
 
 const CONFIDENCE_KEYS = [
   'immatriculation', 'vin', 'marque', 'modele', 'finition', 'annee', 'dateMiseEnCirculation', 'puissanceFiscale', 'couleur', 'nombrePlaces', 'carburant', 'categorie',
@@ -111,13 +112,11 @@ function confidencesOf(fields: VehicleOcrFields): Partial<Record<keyof EditableF
 
 /** Photos de la carte grise rangées par face : le recto porte la date de fin de validité (alerte d'expiration), le verso a son propre document. */
 function pendingCardDocuments(scans: ScanItem[], expiresAt: string | null): PendingVehicleDocument[] {
-  const byType = new Map<'carte_grise' | 'carte_grise_verso', PendingVehicleDocument>();
-  for (const item of scans) {
-    const faces = faceStatus(item.fields);
-    const type = faces.recto || !faces.verso ? 'carte_grise' : 'carte_grise_verso';
-    byType.set(type, { type, localUri: item.uri, expiresAt: type === 'carte_grise' ? expiresAt : null });
-  }
-  return [...byType.values()];
+  return scans.map((item) =>
+    item.face === 'recto'
+      ? { type: 'carte_grise', localUri: item.uri, expiresAt }
+      : { type: 'carte_grise_verso', localUri: item.uri, expiresAt: null }
+  );
 }
 
 export default function ScannerCarteGriseScreen() {
@@ -125,7 +124,8 @@ export default function ScannerCarteGriseScreen() {
   const [scans, setScans] = useState<ScanItem[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
-  const [nothingNew, setNothingNew] = useState(false);
+  const [photos, setPhotos] = useState<Record<Face, string | null>>({ recto: null, verso: null });
+  const [emptyFaces, setEmptyFaces] = useState<Face[]>([]);
   const [keepPhoto, setKeepPhoto] = useState(true);
   const { availability, agencyId } = useOcrSettings();
   const vehiclesQuery = useVehicles();
@@ -133,7 +133,6 @@ export default function ScannerCarteGriseScreen() {
   const [duplicateDismissed, setDuplicateDismissed] = useState(false);
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
-  const [autoValues, setAutoValues] = useState<EditableFields>(EMPTY_EDITABLE);
 
   const merged = scans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
   const faces = faceStatus(merged);
@@ -143,39 +142,42 @@ export default function ScannerCarteGriseScreen() {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  /** Lit une photo. `addToExisting` : la photo est l'autre face de la même carte et s'ajoute à ce qui est déjà lu. */
-  async function handlePick(source: 'library' | 'camera', addToExisting = false) {
+  /** Choisit la photo d'une face : rien n'est analysé tant que l'employé n'a pas lancé l'analyse. */
+  async function choosePhoto(face: Face, source: 'library' | 'camera') {
     const uri = await pickImage(source);
-    if (!uri) return;
+    if (uri) setPhotos((prev) => ({ ...prev, [face]: uri }));
+  }
+
+  /** Analyse le recto et le verso en même temps, puis fusionne les deux lectures. */
+  async function analyze() {
+    const entries = (['recto', 'verso'] as const).flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
+    if (entries.length === 0) return;
     setStatus('processing');
     setErrorCode(null);
-    setNothingNew(false);
+    setEmptyFaces([]);
     setFromCache(false);
     setDuplicateDismissed(false);
 
-    const result = await scanVehicleDocument(uri, { agencyId });
-    if (!result.ok) {
-      setErrorCode(result.error);
-      setStatus(addToExisting && scans.length > 0 ? 'result' : 'error');
-      if (addToExisting && scans.length > 0) setNothingNew(false);
+    const results = await Promise.all(entries.map((entry) => scanVehicleDocument(entry.uri, { agencyId })));
+    const nextScans: ScanItem[] = [];
+    let firstError: ScanErrorCode | null = null;
+    results.forEach((result, index) => {
+      if (result.ok) nextScans.push({ ...entries[index], fields: result.fields });
+      else firstError ??= result.error;
+    });
+    if (nextScans.length === 0) {
+      setErrorCode(firstError);
+      setStatus('error');
       return;
     }
 
-    const before = scans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
-    const nextScans = addToExisting ? [...scans, { uri, fields: result.fields }] : [{ uri, fields: result.fields }];
     const after = nextScans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
-    if (addToExisting && filledCount(after) <= filledCount(before)) setNothingNew(true);
-
-    // Les valeurs que l'employé a corrigées à la main ne sont jamais écrasées par la lecture de la 2e face.
-    const nextAuto = fieldsToEditable(after);
-    setValues((current) =>
-      addToExisting
-        ? (Object.fromEntries((Object.keys(nextAuto) as (keyof EditableFields)[]).map((key) => [key, current[key] === autoValues[key] ? nextAuto[key] : current[key]])) as EditableFields)
-        : nextAuto
-    );
-    setAutoValues(nextAuto);
+    setEmptyFaces(nextScans.filter((item) => filledCount(item.fields) === 0).map((item) => item.face));
+    const nextValues = fieldsToEditable(after);
+    setValues(nextValues);
     setScans(nextScans);
-    setFromCache(result.fromCache === true);
+    setErrorCode(firstError);
+    setFromCache(results.every((result) => result.ok && result.fromCache === true));
     setConfidences(confidencesOf(after));
     setStatus('result');
   }
@@ -183,9 +185,9 @@ export default function ScannerCarteGriseScreen() {
   function restart() {
     setScans([]);
     setStatus('idle');
-    setNothingNew(false);
+    setEmptyFaces([]);
+    setErrorCode(null);
     setValues(EMPTY_EDITABLE);
-    setAutoValues(EMPTY_EDITABLE);
   }
 
   function continueWithDraft(useValues: boolean) {
@@ -227,19 +229,36 @@ export default function ScannerCarteGriseScreen() {
           ) : null}
 
           {status === 'idle' && availability === 'active' ? (
-            <Card className="items-center gap-4 py-10">
+            <Card className="gap-4 py-6">
               <ThemedText type="small" themeColor="textSecondary" className="text-center">
                 {t('vehicle.quickCreate.scanHint')}
               </ThemedText>
-              <View className="w-full flex-row gap-2">
-                <Button label={t('common.camera')} onPress={() => handlePick('camera')} style={{ flex: 1 }} />
-                <Button
-                  label={t('common.gallery')}
-                  variant="secondary"
-                  onPress={() => handlePick('library')}
-                  style={{ flex: 1 }}
-                />
-              </View>
+              {(['recto', 'verso'] as const).map((face) => (
+                <View key={face} className="gap-2">
+                  <ThemedText type="smallBold">{t(`vehicle.quickCreate.face.${face}`)}</ThemedText>
+                  {photos[face] ? (
+                    <Image source={{ uri: photos[face] as string }} style={{ width: '100%', height: 150, borderRadius: 16 }} resizeMode="cover" />
+                  ) : null}
+                  <View className="flex-row gap-2">
+                    <Button
+                      label={photos[face] ? t('vehicle.quickCreate.photoChange') : t('common.camera')}
+                      variant={photos[face] ? 'secondary' : 'primary'}
+                      size="sm"
+                      onPress={() => choosePhoto(face, 'camera')}
+                      style={{ flex: 1 }}
+                    />
+                    <Button label={t('common.gallery')} variant="secondary" size="sm" onPress={() => choosePhoto(face, 'library')} style={{ flex: 1 }} />
+                  </View>
+                </View>
+              ))}
+              <ThemedText type="small" themeColor="textSecondary">
+                {!photos.recto && !photos.verso
+                  ? t('vehicle.quickCreate.photoMissing')
+                  : photos.recto && photos.verso
+                    ? ''
+                    : t('vehicle.quickCreate.photoOneOnly')}
+              </ThemedText>
+              <Button label={t('vehicle.quickCreate.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
               <View className="w-full gap-3">
                 <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
                 <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
@@ -251,10 +270,10 @@ export default function ScannerCarteGriseScreen() {
             </Card>
           ) : null}
 
-          {scans.length > 0 ? (
+          {status === 'result' && scans.length > 0 ? (
             <View className="flex-row gap-2">
-              {scans.map((item, index) => (
-                <Image key={`${item.uri}-${index}`} source={{ uri: item.uri }} style={{ flex: 1, height: 130, borderRadius: 16 }} resizeMode="cover" />
+              {scans.map((item) => (
+                <Image key={item.face} source={{ uri: item.uri }} style={{ flex: 1, height: 130, borderRadius: 16 }} resizeMode="cover" />
               ))}
             </View>
           ) : null}
@@ -263,7 +282,7 @@ export default function ScannerCarteGriseScreen() {
             <Card className="items-center gap-3 py-8">
               <ActivityIndicator color={M3akPalette.mauve} />
               <ThemedText type="small" themeColor="textSecondary">
-                {t('vehicle.quickCreate.analyzing')}
+                {t('vehicle.quickCreate.analyzingBoth')}
               </ThemedText>
             </Card>
           ) : null}
@@ -318,26 +337,18 @@ export default function ScannerCarteGriseScreen() {
                     </View>
                   ))}
                 </View>
-                {!faces.recto || !faces.verso ? (
-                  <>
-                    <ThemedText type="small">{t(faces.recto ? 'vehicle.quickCreate.faceMissingVerso' : 'vehicle.quickCreate.faceMissingRecto')}</ThemedText>
-                    {scans.length < 2 ? (
-                      <View className="flex-row gap-2">
-                        <Button label={t('vehicle.quickCreate.scanOtherFace')} size="sm" onPress={() => handlePick('camera', true)} style={{ flex: 1 }} />
-                        <Button label={t('common.gallery')} variant="secondary" size="sm" onPress={() => handlePick('library', true)} style={{ flex: 1 }} />
-                      </View>
-                    ) : null}
-                  </>
-                ) : (
+                {scans.length < 2 ? (
+                  <ThemedText type="small">{t(scans[0]?.face === 'recto' ? 'vehicle.quickCreate.faceMissingVerso' : 'vehicle.quickCreate.faceMissingRecto')}</ThemedText>
+                ) : faces.recto && faces.verso ? (
                   <ThemedText type="small" style={{ color: M3akPalette.success }}>
                     {t('vehicle.quickCreate.bothFaces')}
                   </ThemedText>
-                )}
-                {nothingNew ? (
-                  <ThemedText type="small" style={{ color: M3akPalette.warning }}>
-                    {t('vehicle.quickCreate.nothingNewFace')}
-                  </ThemedText>
                 ) : null}
+                {emptyFaces.map((face) => (
+                  <ThemedText key={face} type="small" style={{ color: M3akPalette.warning }}>
+                    {t('vehicle.quickCreate.nothingNewFace', { face: t(`vehicle.quickCreate.face.${face}`) })}
+                  </ThemedText>
+                ))}
                 {errorCode ? (
                   <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                     {t(scanErrorMessageKey(errorCode))}
