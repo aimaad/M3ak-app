@@ -17,6 +17,9 @@ type DocumentFormProps = {
   /** Photo choisie localement, pas encore envoyée. */
   localUri: string | null;
   onPickFile: (uri: string) => void;
+  /** Verso du document (permis) : affiché avec un 2e champ photo quand ces deux props sont fournies. */
+  localUriVerso?: string | null;
+  onPickFileVerso?: (uri: string) => void;
   /** Fichier déjà enregistré (correction d'un document existant). */
   existingPath?: string | null;
   /** Empêche de changer le type (correction d'un document existant). */
@@ -34,6 +37,8 @@ export function DocumentForm({
   errors = {},
   localUri,
   onPickFile,
+  localUriVerso,
+  onPickFileVerso,
   existingPath,
   lockType,
   uncertain = [],
@@ -77,13 +82,21 @@ export function DocumentForm({
 
       {hideFile ? null : (
         <DocumentPhotoField
-          label={t('customer.documentForm.file')}
+          label={onPickFileVerso && values.type === 'permis' ? t('customer.documentForm.fileRecto') : t('customer.documentForm.file')}
           bucket={CUSTOMER_DOCUMENTS_BUCKET}
           localUri={localUri}
           existingPath={existingPath ?? undefined}
           onPick={onPickFile}
         />
       )}
+      {!hideFile && onPickFileVerso && values.type === 'permis' ? (
+        <DocumentPhotoField
+          label={t('customer.documentForm.fileVerso')}
+          bucket={CUSTOMER_DOCUMENTS_BUCKET}
+          localUri={localUriVerso ?? null}
+          onPick={onPickFileVerso}
+        />
+      ) : null}
 
       <TextField
         label={t('customer.documentForm.reference')}

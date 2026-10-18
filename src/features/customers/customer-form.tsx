@@ -265,6 +265,8 @@ export function CustomerForm({
                   errors={showErrors ? entryErrors : {}}
                   localUri={entry.localUri}
                   onPickFile={(uri) => updateEntry(entry.key, { localUri: uri })}
+                  localUriVerso={entry.localUriVerso ?? null}
+                  onPickFileVerso={(uri) => updateEntry(entry.key, { localUriVerso: uri })}
                   uncertain={entry.values.type === 'permis' ? draft.uncertainDocumentFields : []}
                 />
               </Card>

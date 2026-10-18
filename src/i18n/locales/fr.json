@@ -617,6 +617,7 @@
     "ocr": {
       "scanHint": "Prenez en photo les deux faces du permis : d'abord le recto (nom, numéro, naissance), puis le verso (catégories, fin de validité). Posez-le à plat, bien éclairé. L'analyse se fait ensuite une seule fois pour les deux faces.",
       "analyzeBoth": "Analyser le permis",
+      "bothRequired": "Ajoutez les deux faces du permis (recto et verso) pour lancer l'analyse.",
       "checks": {
         "licence_expired": "Attention : le permis est expiré (fin de validité dépassée). Vérifiez avant de louer.",
         "licence_expiring": "Le permis arrive bientôt à sa fin de validité (moins de 60 jours).",
@@ -634,6 +635,8 @@
       "customLabel": "Nom du document",
       "customLabelPlaceholder": "Ex. carte professionnelle",
       "file": "Photo ou fichier du document",
+      "fileRecto": "Permis : photo du recto",
+      "fileVerso": "Permis : photo du verso",
       "reference": "Numéro de référence",
       "issuingAuthority": "Pays ou autorité de délivrance",
       "categories": "Catégories de permis",
@@ -668,10 +671,11 @@
       "noFile": "Aucun fichier joint (numéro saisi à la main).",
       "addedBy": "Ajouté par {{name}} le {{date}}",
       "unknownMember": "un membre",
-      "licenceHint": "Pour un client particulier, le permis de conduire est obligatoire : photo du recto, numéro et date d'expiration. Le verso est conseillé. Les autres documents sont facultatifs.",
+      "licenceHint": "Pour un client particulier, le permis de conduire est obligatoire : photos du recto ET du verso, numéro et date d'expiration. Les autres documents sont facultatifs.",
       "licenceRequired": {
         "no_licence": "Ajoutez le permis de conduire de ce client.",
         "no_photo": "Ajoutez la photo du permis (recto).",
+        "no_verso": "Ajoutez la photo du verso du permis.",
         "no_number": "Indiquez le numéro du permis.",
         "no_expiry": "Indiquez la date d'expiration du permis."
       },

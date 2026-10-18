@@ -63,7 +63,7 @@ export default function ScannerPermisScreen() {
   /** Analyse le recto et le verso en même temps, puis fusionne les deux lectures. */
   async function analyze() {
     const entries = (['recto', 'verso'] as const).flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
-    if (entries.length === 0) return;
+    if (entries.length < 2) return;
     setStatus('processing');
     setErrorCode(null);
 
@@ -164,9 +164,9 @@ export default function ScannerPermisScreen() {
                 </View>
               ))}
               <ThemedText type="small" themeColor="textSecondary">
-                {!photos.recto && !photos.verso ? t('vehicle.quickCreate.photoMissing') : photos.recto && photos.verso ? '' : t('vehicle.quickCreate.photoOneOnly')}
+                {photos.recto && photos.verso ? '' : t('customer.ocr.bothRequired')}
               </ThemedText>
-              <Button label={t('customer.ocr.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
+              <Button label={t('customer.ocr.analyzeBoth')} disabled={!photos.recto || !photos.verso} onPress={analyze} />
               <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('ocr.privacyCloud')}

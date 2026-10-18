@@ -93,13 +93,14 @@ describe('permis obligatoire à la création', () => {
     expect(licenceGaps([entry({ values: { type: 'cin' } })], '')).toEqual(['no_licence']);
   });
 
-  it('exige la photo, le numéro et la date d’expiration', () => {
-    expect(licenceGaps([entry()], '')).toEqual(['no_photo', 'no_number', 'no_expiry']);
-    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', values: { reference: '20/086579', expiresAt: '07/02/2025' } })], '')).toEqual([]);
+  it('exige les photos recto ET verso, le numéro et la date d’expiration', () => {
+    expect(licenceGaps([entry()], '')).toEqual(['no_photo', 'no_verso', 'no_number', 'no_expiry']);
+    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', values: { reference: '20/086579', expiresAt: '07/02/2025' } })], '')).toEqual(['no_verso']);
+    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', localUriVerso: 'file:///v.jpg', values: { reference: '20/086579', expiresAt: '07/02/2025' } })], '')).toEqual([]);
   });
 
   it('accepte le numéro saisi sur la fiche au lieu du document', () => {
-    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', values: { expiresAt: '2030-01-01' } })], '20/086579')).toEqual([]);
+    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', localUriVerso: 'file:///v.jpg', values: { expiresAt: '2030-01-01' } })], '20/086579')).toEqual([]);
   });
 
   it('repère une entrée vide', () => {
