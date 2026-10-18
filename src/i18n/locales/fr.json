@@ -233,7 +233,7 @@
       "photoActive": "Vous utilisez la photo de votre cachet physique. Vous pouvez la remplacer par un cachet dessiné par M3ak ci-dessous.",
       "saved": "Cachet enregistré — c'est celui qui apparaît sur vos contrats.",
       "notSaved": "Aperçu : pas encore enregistré. Touchez « Enregistrer le cachet ».",
-      "generatedHelp": "M3ak dessine un vrai tampon (anneaux, nom en arc, lignes au centre) avec ces informations. Il s'imprime net sur le contrat, à côté de la signature.",
+      "generatedHelp": "M3ak dessine un vrai tampon dans cet ordre : nom de l'agence, adresse (2 lignes si elle est longue), téléphone, puis GSM. Il s'imprime net sur le contrat, à côté de la signature.",
       "shape": "Forme",
       "shapes": {
         "round": "Rond",
@@ -247,17 +247,15 @@
         "black": "Noir"
       },
       "titleLabel": "Nom de l'agence (en haut)",
-      "linesLabel": "Lignes au centre (raison sociale, ICE, RC, téléphone…)",
-      "linePlaceholder": {
-        "0": "Ex. Atlas Cars SARL",
-        "1": "Ex. ICE : 001234567000089",
-        "2": "Ex. Tél : +212 5 22 00 00 00"
-      },
       "bottomLabel": "Ville (en bas)",
       "save": "Enregistrer le cachet",
       "upToDate": "Cachet à jour",
       "useGenerated": "Utiliser ce cachet à la place de la photo",
-      "photoHelp": "Vous préférez la photo de votre vrai cachet ? Prenez-la sur une feuille blanche, bien à plat."
+      "photoHelp": "Vous préférez la photo de votre vrai cachet ? Prenez-la sur une feuille blanche, bien à plat.",
+      "addressLabel": "Adresse (sur 2 lignes si elle est longue)",
+      "addressPlaceholder": "Ex. 12 avenue Hassan II, quartier Maarif",
+      "telLabel": "Téléphone fixe",
+      "gsmLabel": "GSM (mobile)"
     },
     "logo": {
       "title": "Logo de l'agence",

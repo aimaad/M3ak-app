@@ -34,10 +34,12 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
   const [shape, setShape] = useState<StampShape>(initial.shape);
   const [color, setColor] = useState<StampColor>(initial.color);
   const [title, setTitle] = useState(initial.title);
-  const [lines, setLines] = useState<string[]>([initial.lines[0] ?? '', initial.lines[1] ?? '', initial.lines[2] ?? '']);
+  const [address, setAddress] = useState(initial.address);
+  const [tel, setTel] = useState(initial.tel);
+  const [gsm, setGsm] = useState(initial.gsm);
   const [bottom, setBottom] = useState(initial.bottom);
 
-  const draft = parseStampConfig({ v: 1, shape, color, title, lines, bottom });
+  const draft = parseStampConfig({ v: 1, shape, color, title, address, tel, gsm, bottom });
   const hasPhoto = !!details.stampPath;
   const saved = !!details.stampConfig;
   const dirty = !!draft && !sameConfig(draft, details.stampConfig);
@@ -101,16 +103,9 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
               <ChipGroup<StampColor> options={STAMP_COLORS} selected={color} getLabel={(value) => t(`entreprise.stamp.colors.${value}`)} onSelect={setColor} />
             </View>
             <TextField label={t('entreprise.stamp.titleLabel')} value={title} onChangeText={setTitle} maxLength={STAMP_LIMITS.title} autoCapitalize="characters" error={!title.trim() ? t('vehicle.form.errors.required') : undefined} />
-            {[0, 1, 2].map((index) => (
-              <TextField
-                key={index}
-                label={index === 0 ? t('entreprise.stamp.linesLabel') : undefined}
-                value={lines[index]}
-                onChangeText={(value) => setLines((prev) => prev.map((line, i) => (i === index ? value : line)))}
-                maxLength={STAMP_LIMITS.line}
-                placeholder={t(`entreprise.stamp.linePlaceholder.${index}`)}
-              />
-            ))}
+            <TextField label={t('entreprise.stamp.addressLabel')} value={address} onChangeText={setAddress} maxLength={STAMP_LIMITS.address} placeholder={t('entreprise.stamp.addressPlaceholder')} />
+            <TextField label={t('entreprise.stamp.telLabel')} value={tel} onChangeText={setTel} maxLength={STAMP_LIMITS.phone} keyboardType="phone-pad" />
+            <TextField label={t('entreprise.stamp.gsmLabel')} value={gsm} onChangeText={setGsm} maxLength={STAMP_LIMITS.phone} keyboardType="phone-pad" />
             <TextField label={t('entreprise.stamp.bottomLabel')} value={bottom} onChangeText={setBottom} maxLength={STAMP_LIMITS.bottom} autoCapitalize="characters" />
             <Button
               label={saved && !dirty && !hasPhoto ? t('entreprise.stamp.upToDate') : hasPhoto ? t('entreprise.stamp.useGenerated') : t('entreprise.stamp.save')}

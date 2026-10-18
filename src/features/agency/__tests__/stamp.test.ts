@@ -1,15 +1,24 @@
-import { defaultStampConfig, escapeXml, parseStampConfig, stampSvg, STAMP_INK } from '../stamp';
+import { defaultStampConfig, escapeXml, parseStampConfig, stampLines, stampSvg, STAMP_INK, wrapText } from '../stamp';
 
 describe('cachet de l\'agence', () => {
-  const config = defaultStampConfig({ nom: 'Atlas Cars', raisonSociale: 'Atlas Cars SARL', ville: 'Casablanca', telephone: '+212 5 22 00 00 00' });
+  const config = defaultStampConfig({ nom: 'Atlas Cars', adresse: '12 avenue Hassan II', ville: 'Casablanca', telephone: '+212 5 22 00 00 00' });
 
-  it('propose un cachet à partir des informations de l\'entreprise', () => {
-    expect(config).toMatchObject({ shape: 'round', color: 'blue', title: 'ATLAS CARS', bottom: 'CASABLANCA' });
-    expect(config.lines).toEqual(['Atlas Cars SARL', 'Tél : +212 5 22 00 00 00']);
+  it("propose un cachet à partir des informations de l'entreprise", () => {
+    expect(config).toMatchObject({ shape: 'round', color: 'blue', title: 'ATLAS CARS', address: '12 avenue Hassan II', tel: '+212 5 22 00 00 00', gsm: '', bottom: 'CASABLANCA' });
   });
 
-  it('n\'répète pas la raison sociale quand elle est identique au nom', () => {
-    expect(defaultStampConfig({ nom: 'Atlas', raisonSociale: 'Atlas' }).lines).toEqual([]);
+  it("range les lignes dans l'ordre : adresse, téléphone, GSM", () => {
+    const full = { ...config, address: '12 avenue Hassan II', tel: '0522000000', gsm: '0661000000' };
+    expect(stampLines(full, 30)).toEqual(['12 avenue Hassan II', 'Tél : 0522000000', 'GSM : 0661000000']);
+    expect(stampLines({ ...full, tel: '' }, 30)).toEqual(['12 avenue Hassan II', 'GSM : 0661000000']);
+  });
+
+  it('passe une adresse longue sur 2 lignes, abrégée si elle déborde encore', () => {
+    expect(wrapText('12 avenue Hassan II, quartier Maarif, Casablanca', 28)).toEqual(['12 avenue Hassan II,', 'quartier Maarif, Casablanca']);
+    expect(wrapText('Rue courte', 26)).toEqual(['Rue courte']);
+    const long = wrapText('Immeuble Al Amal numéro 45 boulevard Mohammed V quartier des Habous centre ville Casablanca', 26);
+    expect(long).toHaveLength(2);
+    expect(long[1].endsWith('…')).toBe(true);
   });
 
   it('dessine un vrai cachet : anneaux, texte en arc, lignes et couleur d\'encre', () => {
@@ -24,7 +33,7 @@ describe('cachet de l\'agence', () => {
   });
 
   it('échappe tout texte : aucune balise ne peut entrer dans le SVG', () => {
-    const evil = parseStampConfig({ ...config, title: 'A</text><script>alert(1)</script>', lines: ['<img src=x onerror=1>'] });
+    const evil = parseStampConfig({ ...config, title: 'A</text><script>alert(1)</script>', address: '<img src=x onerror=1>' });
     const svg = stampSvg(evil as NonNullable<typeof evil>);
     expect(svg).not.toContain('<script');
     expect(svg).not.toContain('<img');
@@ -39,9 +48,14 @@ describe('cachet de l\'agence', () => {
     expect(parseStampConfig({ ...config, v: 2 })).toBeNull();
   });
 
-  it('limite la longueur et le nombre de lignes', () => {
-    const parsed = parseStampConfig({ ...config, title: 'x'.repeat(100), lines: ['a', 'b', 'c', 'd', 'e'] });
+  it('limite la longueur des textes', () => {
+    const parsed = parseStampConfig({ ...config, title: 'x'.repeat(100), address: 'y'.repeat(200), tel: '1'.repeat(50) });
     expect(parsed?.title).toHaveLength(36);
-    expect(parsed?.lines).toHaveLength(3);
+    expect(parsed?.address).toHaveLength(80);
+    expect(parsed?.tel).toHaveLength(24);
+  });
+
+  it("reprend une ancienne configuration à lignes libres comme adresse", () => {
+    expect(parseStampConfig({ v: 1, shape: 'round', color: 'blue', title: 'A', lines: ['Rue 1', 'Casa'] })?.address).toBe('Rue 1 Casa');
   });
 });
