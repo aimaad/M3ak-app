@@ -14,6 +14,7 @@ import { useContractTemplate } from '@/features/contracts/template-hooks';
 import { generateContractPdf } from '@/features/contracts/contract-pdf';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPdf } from '@/features/contracts/hooks';
+import { usePaymentsForRental } from '@/features/payments/hooks';
 import { useRental } from '@/features/rentals/hooks';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import { downloadImageAsDataUri } from '@/features/storage/api';
@@ -46,6 +47,7 @@ export default function ContratDetailScreen() {
   const { data: rental } = useRental(contract?.rentalId);
   const detailsQuery = useAgencyDetails(agencyQuery.data?.agencyId);
   const templateQuery = useContractTemplate(agencyQuery.data?.agencyId);
+  const paymentsQuery = usePaymentsForRental(contract?.rentalId);
   const membersQuery = useAgencyMembers(agencyQuery.data?.agencyId);
   const clientSignature = useSignature(contract?.clientSignaturePath);
   const agencySignature = useSignature(contract?.agencySignaturePath);
@@ -79,7 +81,13 @@ export default function ContratDetailScreen() {
           email: details?.email,
         },
         { client, agency, stampDataUri, logoDataUri, agencySignerName: signer?.nomComplet ?? null },
-        templateQuery.data?.template
+        templateQuery.data?.template,
+        {
+          payments: paymentsQuery.data,
+          kmDepart: rental?.kmDepart,
+          kmRetour: rental?.kmRetour,
+          carburantDepart: rental?.carburantDepart,
+        }
       );
       await uploadPdf.mutateAsync({ agencyId: contract.agencyId, contractId: contract.id, localUri });
       if (await Sharing.isAvailableAsync()) {

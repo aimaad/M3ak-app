@@ -12,6 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useCreateContract } from '@/features/contracts/hooks';
+import { buildSnapshotValues } from '@/features/contracts/snapshot';
 import { useCustomer, useDrivers } from '@/features/customers/hooks';
 import { getDriverById } from '@/features/rentals/drivers-api';
 import { useRental, useRentalAdditionalDrivers } from '@/features/rentals/hooks';
@@ -74,6 +75,7 @@ export default function NouveauContratScreen() {
           dateFinPrevue: rental.dateFinPrevue,
           prixTotal: rental.prixTotal,
           cautionMontant: rental.cautionMontant,
+          snapshotValues: buildSnapshotValues(customer, additionalDrivers ?? []),
         },
       });
       router.replace(`/contrats/${contract.id}`);

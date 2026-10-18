@@ -38,6 +38,7 @@ type ContractRow = {
   agency_signature_path: string | null;
   client_signed_at: string | null;
   terms_snapshot: unknown | null;
+  snapshot_values: Record<string, string> | null;
   etat_depart: VehicleCondition | null;
   accessoires_depart: AccessoryKey[];
   observations_depart: string | null;
@@ -82,6 +83,7 @@ function fromRow(row: ContractRow): Contract {
     agencySignaturePath: row.agency_signature_path,
     clientSignedAt: row.client_signed_at,
     termsSnapshot: row.terms_snapshot ?? null,
+    snapshotValues: row.snapshot_values ?? null,
     etatDepart: row.etat_depart,
     accessoiresDepart: row.accessoires_depart ?? [],
     observationsDepart: row.observations_depart,
@@ -144,6 +146,8 @@ export async function createContract(
     dateFinPrevue: string;
     prixTotal: number | null;
     cautionMontant: number;
+    /** Informations complémentaires du client et du deuxième conducteur (voir snapshot.ts). */
+    snapshotValues?: Record<string, string>;
   }
 ): Promise<Contract> {
   const userId = await getCurrentUserId();
@@ -165,6 +169,7 @@ export async function createContract(
       date_fin_prevue: snapshot.dateFinPrevue,
       prix_total: snapshot.prixTotal,
       caution_montant: snapshot.cautionMontant,
+      snapshot_values: snapshot.snapshotValues ?? null,
       conditions_particulieres: input.conditionsParticulieres,
       notes: input.notes,
       created_by: userId,

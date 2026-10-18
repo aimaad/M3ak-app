@@ -117,7 +117,7 @@ describe('génération depuis le modèle de l\'agence (sans IA, instantanée)', 
     const sig = { v: 1 as const, width: 300, height: 150, paths: ['M 1 1 L 2 2 L 3 3 L 4 4 L 5 5 L 6 6 L 7 7 L 8 8 L 9 9 L 10 10 L 11 11 L 12 12'] };
     const png = 'data:image/png;base64,iVBORw0KGgo=';
     const html = buildContractHtml(sampleContract(), agency, { client: sig, agency: sig, stampDataUri: png }, custom);
-    expect(html.match(/<svg/g)).toHaveLength(2);
+    expect(html.match(/class="sig"/g)).toHaveLength(2);
     expect(html).toContain('class="stamp"');
     expect(html).toContain('Lu et approuvé');
   });
@@ -151,5 +151,79 @@ describe('lecture avant signature', () => {
     const sections = readingSections(t, values, ctx);
     expect(hasLanguageToggle(sections)).toBe(true);
     expect(sections.filter((s) => s.lang === 'ar').every((s) => s.rtl)).toBe(true);
+  });
+});
+
+describe('modèle M3ak standard : carnet de location', () => {
+  const contract = {
+    ...sampleContract(),
+    snapshotValues: {
+      client_prenom: 'Sara',
+      client_nom_famille: 'Alaoui',
+      client_naissance: '26/09/2001',
+      client_nationalite: 'Maroc',
+      client_adresse: '5 rue Atlas, Settat',
+      client_permis: '19/226595',
+      client_permis_delivre_le: '10/03/2020',
+      client_permis_delivre_a: 'Settat',
+      conducteur2_nom: 'Karim Benali',
+    },
+  };
+  const html = buildContractHtml(contract, { nom: 'Atlas Cars', ville: 'Casablanca', telephone: '+212600000000' }, {}, undefined, {
+    payments: [{ montant: 500, methode: 'especes', statut: 'paye' }, { montant: 300, methode: 'carte', statut: 'en_attente' }],
+    kmDepart: 42000,
+    carburantDepart: 75,
+  });
+
+  it('reprend les cadres d\'un carnet de location', () => {
+    for (const title of ['Conducteur 1', 'Conducteur 2', 'Véhicule et période', 'Paiement', 'Kilométrage', 'Franchise sinistre', 'État du véhicule (Départ)', 'État du véhicule (Retour)', 'Niveau de carburant']) {
+      expect(html).toContain(title);
+    }
+    expect(html).toContain('R: rayures');
+    expect(html).toContain('Patente');
+  });
+
+  it('remplit le conducteur 1 avec la fiche client figée', () => {
+    for (const value of ['Alaoui', 'Sara', '26/09/2001', '5 rue Atlas, Settat', '19/226595', '10/03/2020', 'Karim Benali']) {
+      expect(html).toContain(value);
+    }
+  });
+
+  it('calcule jours, prix par jour, avance et reste depuis les paiements encaissés uniquement', () => {
+    expect(html).toMatch(/Nombre de jours[\s\S]*?>3</);
+    expect(html.replace(/\s/g, ' ')).toMatch(/500 MAD/); // avance : seul le paiement « paye » compte
+    expect(html.replace(/\s/g, ' ')).toMatch(/1.000 MAD/); // reste = 1500 - 500
+    expect(html).toContain('Espèces');
+    expect(html).toContain('42000');
+    expect(html).toContain('75 %');
+  });
+
+  it('met les cadres « half » côte à côte et le verso sur une nouvelle page', () => {
+    expect(html).toContain('class="pair"');
+    expect(html).toContain('page-break-after:always');
+    expect(html.indexOf('page-break-after:always')).toBeLessThan(html.indexOf('Article 1'));
+  });
+});
+
+describe('cadres personnalisés (ajout, suppression, champs)', () => {
+  const t = parseTemplate({
+    blocks: [
+      { type: 'box', title: 'Mon cadre', width: 'half', rows: [{ label: 'Champ ajouté', value: '' }, { label: 'Client', value: '{{client_nom}}' }] },
+      { type: 'box', width: 'half', title: 'Texte', rows: [], text: 'Clause libre <b>x</b>' },
+      { type: 'fuelGauge', width: 'half' },
+      { type: 'vehicleDiagram', title: 'État', legend: 'A: x' },
+      { type: 'box', rows: [] },
+    ],
+  })!;
+
+  it('valide les nouveaux blocs et ignore un cadre vide', () => {
+    expect(t.blocks).toHaveLength(4);
+  });
+
+  it('affiche un champ ajouté par le propriétaire et échappe le texte libre', () => {
+    const html = buildContractHtml(sampleContract(), 'Agence', {}, t);
+    expect(html).toContain('Champ ajouté');
+    expect(html).toContain('Clause libre &lt;b&gt;x&lt;/b&gt;');
+    expect(html).toContain('A: x');
   });
 });

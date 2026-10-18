@@ -32,6 +32,7 @@ function makeContract(overrides: Partial<Contract> = {}): Contract {
     agencySignaturePath: null,
     clientSignedAt: null,
     termsSnapshot: null,
+    snapshotValues: null,
     etatDepart: null,
     accessoiresDepart: [],
     observationsDepart: null,
@@ -148,20 +149,20 @@ describe('contrat complet (conditions, parties, signatures)', () => {
       agency,
       { client: sig, agency: sig, agencySignerName: 'Sara Alaoui' }
     );
-    expect(html.match(/<svg/g)?.length).toBe(2);
+    expect(html.match(/class="sig"/g)?.length).toBe(2);
     expect(html).toContain('Sara Alaoui');
     expect(html).toContain('M 10 10 L 50 60');
   });
 
   it('laisse les cadres vides tant que rien n\'est signé', () => {
-    expect(buildContractHtml(makeContract(), agency)).not.toContain('<svg');
+    expect(buildContractHtml(makeContract(), agency)).not.toContain('class="sig"');
   });
 
   it('refuse d\'insérer une signature falsifiée (aucun code ne peut passer)', () => {
     const evil = { ...sig, paths: ['M 1 1"/><script>alert(1)</script>'] };
     const html = buildContractHtml(makeContract(), agency, { client: evil, agency: evil });
     expect(html).not.toContain('<script>');
-    expect(html).not.toContain('<svg');
+    expect(html).not.toContain('class="sig"');
   });
 
   it('reprend l\'état des lieux de départ quand il existe', () => {

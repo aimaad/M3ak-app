@@ -33,6 +33,12 @@ export type Block = Common &
     | { type: 'fields'; columns?: 1 | 2; bordered?: boolean; rows: FieldRow[] }
     | { type: 'columns'; bordered?: boolean; cells: ColumnCell[] }
     | { type: 'header'; logo?: Align | 'none'; left?: string; center?: string; right?: string }
+    /** Cadre de formulaire : bandeau de titre, lignes « libellé : valeur » à remplir, et/ou texte libre. Deux cadres `half` consécutifs sont côte à côte. */
+    | { type: 'box'; title?: string; width?: 'half' | 'full'; rows: FieldRow[]; text?: string }
+    /** Schéma du véhicule vu de dessus pour marquer les dommages à la main, avec sa légende. */
+    | { type: 'vehicleDiagram'; title: string; legend?: string }
+    /** Jauge de carburant (0, 1/4, 2/4, 3/4, 4/4) à cocher à la main. */
+    | { type: 'fuelGauge'; title?: string; width?: 'half' | 'full' }
     | { type: 'signatures'; boxes: SignatureBox[] }
     | { type: 'rule' }
     | { type: 'spacer'; size?: 'sm' | 'md' | 'lg' }
@@ -50,6 +56,11 @@ export const PLACEHOLDERS = [
   'vehicule', 'marque', 'modele', 'immatriculation',
   'date_debut', 'date_fin', 'prix_total', 'caution',
   'etat_depart', 'accessoires_depart', 'observations_depart', 'conditions_particulieres',
+  'client_prenom', 'client_nom_famille', 'client_naissance', 'client_nationalite', 'client_adresse',
+  'client_permis', 'client_permis_delivre_le', 'client_permis_delivre_a', 'client_passeport',
+  'conducteur2_nom', 'conducteur2_permis', 'conducteur2_cin',
+  'prix_jour', 'nombre_jours', 'avance', 'reste', 'mode_paiement',
+  'km_depart', 'km_retour', 'carburant_depart',
 ] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];
 const PLACEHOLDER_SET = new Set<string>(PLACEHOLDERS);
@@ -135,6 +146,32 @@ function parseBlock(raw: unknown): Block | null {
         ...(parts.right ? { right: parts.right } : {}),
       };
     }
+    case 'box': {
+      const rowsRaw = Array.isArray(raw.rows) ? raw.rows : [];
+      if (rowsRaw.length > LIMITS.rows) return null;
+      const rows: FieldRow[] = [];
+      for (const row of rowsRaw) {
+        if (!isObject(row)) return null;
+        const label = text(row.label, LIMITS.label);
+        const value = text(row.value, 2000);
+        if (label === null || value === null) return null;
+        rows.push({ label, value, ...(row.optional === true ? { optional: true } : {}) });
+      }
+      const title = text(raw.title, LIMITS.label);
+      const body = text(raw.text);
+      if (rows.length === 0 && !body) return null;
+      return { ...common, type: 'box', rows, width: raw.width === 'half' ? 'half' : 'full', ...(title ? { title } : {}), ...(body ? { text: body } : {}) };
+    }
+    case 'vehicleDiagram': {
+      const title = text(raw.title, LIMITS.label);
+      if (title === null) return null;
+      const legend = text(raw.legend, 500);
+      return { ...common, type: 'vehicleDiagram', title, ...(legend ? { legend } : {}) };
+    }
+    case 'fuelGauge': {
+      const title = text(raw.title, LIMITS.label);
+      return { ...common, type: 'fuelGauge', width: raw.width === 'half' ? 'half' : 'full', ...(title ? { title } : {}) };
+    }
     case 'signatures': {
       if (!Array.isArray(raw.boxes) || raw.boxes.length === 0 || raw.boxes.length > 4) return null;
       const boxes: SignatureBox[] = [];
@@ -185,7 +222,7 @@ export type TemplateValues = Partial<Record<Placeholder, string>>;
 
 /** Remplace {{champ}}. Champ vide ou inconnu → ligne à remplir à la main (jamais un texte technique). */
 export function fillPlaceholders(input: string, values: TemplateValues): string {
-  return input.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (_, key: string) => {
+  return input.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/g, (_, key: string) => {
     if (!PLACEHOLDER_SET.has(key)) return BLANK;
     return values[key as Placeholder]?.trim() || BLANK;
   });
@@ -193,7 +230,7 @@ export function fillPlaceholders(input: string, values: TemplateValues): string 
 
 /** Vrai si la ligne reste vide une fois les champs remplis (pour masquer une rubrique facultative). */
 export function isEmptyFilled(input: string, values: TemplateValues): boolean {
-  const filled = input.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (_, key: string) => (PLACEHOLDER_SET.has(key) ? values[key as Placeholder]?.trim() || '' : ''));
+  const filled = input.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/g, (_, key: string) => (PLACEHOLDER_SET.has(key) ? values[key as Placeholder]?.trim() || '' : ''));
   return filled.trim() === '';
 }
 
@@ -234,6 +271,14 @@ export function readingSections(template: ContractTemplate, values: TemplateValu
           out.push({ ...(cell.title ? { title: fillPlaceholders(cell.title, values) } : {}), text: fillPlaceholders(cell.text, values), rtl: cell.rtl ?? rtlDefault, ...(cell.lang ? { lang: cell.lang } : {}) });
         }
         break;
+      case 'box': {
+        const lines = block.rows
+          .filter((row) => !(row.optional && isEmptyFilled(row.value, values)))
+          .map((row) => `${row.label} : ${fillPlaceholders(row.value, values)}`);
+        const body = block.text ? fillPlaceholders(block.text, values) : '';
+        out.push({ ...(block.title ? { title: fillPlaceholders(block.title, values) } : {}), text: [...lines, body].filter(Boolean).join('\n'), rtl: rtlDefault });
+        break;
+      }
       case 'header':
         {
           const lines = [block.left, block.center, block.right].filter((part): part is string => !!part).map((part) => fillPlaceholders(part, values));

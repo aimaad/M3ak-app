@@ -71,5 +71,5 @@ export function signatureToSvg(signature: HandwrittenSignature, heightPx = 60): 
   if (!valid) return '';
   const widthPx = Math.round((valid.width / valid.height) * heightPx);
   const d = valid.paths.join(' ');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${valid.width} ${valid.height}" width="${widthPx}" height="${heightPx}"><path d="${d}" fill="none" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  return `<svg class="sig" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${valid.width} ${valid.height}" width="${widthPx}" height="${heightPx}"><path d="${d}" fill="none" stroke="#111111" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 }

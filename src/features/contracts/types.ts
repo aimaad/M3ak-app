@@ -65,6 +65,8 @@ export type Contract = {
   clientSignedAt: string | null;
   /** Modèle de contrat figé à la signature (null = modèle M3ak standard ou contrat non encore signé). */
   termsSnapshot: unknown | null;
+  /** Informations complémentaires figées à la création (adresse, naissance, permis, conducteur 2…) pour remplir le modèle. */
+  snapshotValues: Record<string, string> | null;
 
   etatDepart: VehicleCondition | null;
   accessoiresDepart: AccessoryKey[];

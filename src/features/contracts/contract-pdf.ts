@@ -3,7 +3,7 @@ import * as Print from 'expo-print';
 import type { HandwrittenSignature } from '@/features/signatures/signature';
 
 import { defaultContractTemplate } from './default-template';
-import { ensureSignatures, parseTemplate, type ContractTemplate, type TemplateContext, type TemplateValues } from './template';
+import { ensureSignatures, parseTemplate, PLACEHOLDERS, type ContractTemplate, type TemplateContext, type TemplateValues } from './template';
 import { renderTemplateHtml } from './template-render';
 import type { Contract } from './types';
 
@@ -61,9 +61,37 @@ const ACCESSORY_LABEL: Record<string, string> = {
 
 const money = (value: number) => `${value.toLocaleString('fr-FR')} MAD`;
 
-/** Valeurs des champs automatiques ({{client_nom}}…) à partir du contrat figé et de la fiche agence. */
-export function contractTemplateValues(contract: Contract, info: ContractAgencyInfo): TemplateValues {
-  return {
+/** Informations qui évoluent (paiements, relevés de départ et de retour) : lues au moment de générer le PDF. */
+export type LiveExtras = {
+  payments?: { montant: number; methode: string; statut: string }[];
+  kmDepart?: number | null;
+  kmRetour?: number | null;
+  carburantDepart?: number | null;
+};
+
+const PAYMENT_LABEL: Record<string, string> = { especes: 'Espèces', carte: 'Carte bancaire', virement: 'Virement', cheque: 'Chèque' };
+
+function rentalDays(contract: Contract): number {
+  const ms = new Date(contract.dateFinPrevue).getTime() - new Date(contract.dateDebutPrevue).getTime();
+  return Number.isFinite(ms) && ms > 0 ? Math.max(1, Math.ceil(ms / 86_400_000)) : 0;
+}
+
+/** Valeurs des champs automatiques ({{client_nom}}…) à partir du contrat figé, de la fiche agence et des informations en direct. */
+export function contractTemplateValues(contract: Contract, info: ContractAgencyInfo, extras: LiveExtras = {}): TemplateValues {
+  const days = rentalDays(contract);
+  const paid = (extras.payments ?? []).filter((payment) => payment.statut === 'paye');
+  const advance = paid.reduce((sum, payment) => sum + payment.montant, 0);
+  const methods = [...new Set(paid.map((payment) => PAYMENT_LABEL[payment.methode] ?? payment.methode))].join(', ');
+  const values: TemplateValues = {
+    ...(contract.snapshotValues as TemplateValues | null),
+    prix_jour: contract.prixTotal != null && days > 0 ? money(Math.round(contract.prixTotal / days)) : '',
+    nombre_jours: days > 0 ? String(days) : '',
+    avance: paid.length > 0 ? money(advance) : '',
+    reste: contract.prixTotal != null && paid.length > 0 ? money(Math.max(0, contract.prixTotal - advance)) : '',
+    mode_paiement: methods,
+    km_depart: extras.kmDepart != null ? String(extras.kmDepart) : '',
+    km_retour: extras.kmRetour != null ? String(extras.kmRetour) : '',
+    carburant_depart: extras.carburantDepart != null ? `${extras.carburantDepart} %` : '',
     numero: contract.numero,
     date_contrat: formatDateTime(contract.createdAt),
     ville_contrat: info.ville ?? '',
@@ -91,6 +119,8 @@ export function contractTemplateValues(contract: Contract, info: ContractAgencyI
     observations_depart: contract.observationsDepart ?? '',
     conditions_particulieres: contract.conditionsParticulieres ?? '',
   };
+  for (const key of PLACEHOLDERS) values[key] = values[key] ?? '';
+  return values;
 }
 
 export function contractTemplateContext(contract: Contract): TemplateContext {
@@ -121,11 +151,12 @@ export function buildContractHtml(
   contract: Contract,
   agency: string | ContractAgencyInfo,
   signatures: ContractSignatures = {},
-  agencyTemplate?: unknown
+  agencyTemplate?: unknown,
+  extras: LiveExtras = {}
 ): string {
   const info: ContractAgencyInfo = typeof agency === 'string' ? { nom: agency } : agency;
   return renderTemplateHtml(resolveTemplate(contract, info, agencyTemplate), {
-    values: contractTemplateValues(contract, info),
+    values: contractTemplateValues(contract, info, extras),
     context: contractTemplateContext(contract),
     clientName: contract.customerNom,
     agencyName: info.nom,
@@ -142,14 +173,15 @@ export async function generateContractPdf(
   contract: Contract,
   agency: string | ContractAgencyInfo,
   signatures: ContractSignatures = {},
-  agencyTemplate?: unknown
+  agencyTemplate?: unknown,
+  extras: LiveExtras = {}
 ): Promise<string> {
   const missing = assertContractIsComplete(contract, typeof agency === 'string' ? agency : agency.nom);
   if (missing.length > 0) {
     throw new Error(`Informations manquantes pour générer le contrat : ${missing.join(', ')}`);
   }
 
-  const html = buildContractHtml(contract, agency, signatures, agencyTemplate);
+  const html = buildContractHtml(contract, agency, signatures, agencyTemplate, extras);
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   return uri;
 }
