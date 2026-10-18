@@ -34,6 +34,11 @@ export type RenderInput = {
   logoDataUri?: string | null;
 };
 
+/** Vrai si tous les champs {{…}} de la ligne sont vides ou inconnus. */
+function hasOnlyEmptyFields(line: string, values: TemplateValues): boolean {
+  return [...line.matchAll(/\{\{\s*([a-z0-9_]+)\s*\}\}/g)].every((match) => !(values as Record<string, string | undefined>)[match[1]]?.trim());
+}
+
 const SIZE_PX = { xs: 9, sm: 11, md: 12, lg: 15, xl: 20 } as const;
 const COLOR = { default: '#211A2E', muted: '#81778F', accent: '#5B21B6' } as const;
 
@@ -110,12 +115,18 @@ function renderBlock(block: Block, input: RenderInput, rtlDefault: boolean): str
         })
         .join('')}</tr></table>`;
     case 'header': {
+      // Une ligne dont les champs sont tous vides (ex. adresse ou téléphone non renseignés) disparaît : pas de pointillés en en-tête.
+      const keep = (text: string | undefined) => {
+        if (!text) return undefined;
+        const lines = text.split('\n').filter((line) => !/\{\{\s*[a-z0-9_]+\s*\}\}/.test(line) || !hasOnlyEmptyFields(line, values));
+        return lines.length > 0 ? lines.join('\n') : undefined;
+      };
       const logo = safeImage(input.logoDataUri);
       const place = block.logo && block.logo !== 'none' && logo ? block.logo : null;
       const img = logo ? `<img class="logo" src="${logo}" />` : '';
       const slot = (position: Align, text: string | undefined) =>
         `<td style="text-align:${position}">${place === position ? img : ''}${text ? `<div>${html(text, values)}</div>` : ''}</td>`;
-      return `<table class="header"><tr>${slot('left', block.left)}${slot('center', block.center)}${slot('right', block.right)}</tr></table>`;
+      return `<table class="header"><tr>${slot('left', keep(block.left))}${slot('center', keep(block.center))}${slot('right', keep(block.right))}</tr></table>`;
     }
     case 'box': {
       const rows = block.rows.filter((row) => !(row.optional && isEmptyFilled(row.value, values)));
@@ -147,15 +158,23 @@ const CAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 150" wi
 
 const GAUGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke="#211A2E" stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke="#211A2E" stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke="#211A2E" stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke="#211A2E" stroke-width="1.5"/><text x="8" y="82" font-size="10" fill="#211A2E">0</text><text x="12" y="34" font-size="10" fill="#211A2E">1/4</text><text x="68" y="10" font-size="10" fill="#211A2E">2/4</text><text x="122" y="34" font-size="10" fill="#211A2E">3/4</text><text x="142" y="82" font-size="10" fill="#211A2E">4/4</text></svg>`;
 
-export const PAGE = { width: 595, height: 842, padX: 24, padY: 20 } as const;
-const CONTENT_W = PAGE.width - 2 * PAGE.padX; // 547
-const CONTENT_H = PAGE.height - 2 * PAGE.padY; // 802
+/** Feuille A4 en pixels CSS (96 dpi) : 794 × 1123. L'impression, elle, est demandée en points : 595 × 842 (`PRINT_SIZE`). */
+export const PAGE = { width: 794, height: 1123, padX: 36, padY: 30 } as const;
+export const PRINT_SIZE = { width: 595, height: 842 } as const;
+const CONTENT_W = PAGE.width - 2 * PAGE.padX; // 722
+const CONTENT_H = PAGE.height - 2 * PAGE.padY; // 1063
+/** Le contenu peut être agrandi (jusqu'à ×1,3) pour bien remplir la feuille, ou réduit (jusqu'à ×0,45) pour y tenir. */
+const MAX_ZOOM = 1.3;
+/** Une feuille faite uniquement de conditions (le verso) peut être plus agrandie pour mieux remplir la page. */
+const MAX_ZOOM_TERMS = 1.8;
+const MIN_ZOOM = 0.45;
 
 const CSS = `
   @page { size: ${PAGE.width}px ${PAGE.height}px; margin: 0; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #211A2E; font-size: 10px; line-height: 1.35; }
   .sheet { width: ${PAGE.width}px; padding: ${PAGE.padY}px ${PAGE.padX}px; page-break-after: always; break-after: page; overflow: hidden; }
+  .fit { display: flex; flex-direction: column; justify-content: space-between; }
   .sheet.last { page-break-after: auto; break-after: auto; }
   .box { border: 1.2px solid #211A2E; border-radius: 5px; margin: 4px 0; overflow: hidden; }
   .banner { background: #211A2E; color: #fff; font-weight: bold; text-align: center; padding: 2px 6px; font-size: 10px; letter-spacing: .4px; text-transform: uppercase; }
@@ -216,7 +235,7 @@ function textLines(text: string, fontPx: number, widthPx: number): number {
 }
 const textHeight = (text: string, fontPx: number, widthPx: number, lineHeight = 1.35) => textLines(text, fontPx, widthPx) * fontPx * lineHeight;
 
-type Unit = { html: string; height: (width: number) => number };
+type Unit = { html: string; height: (width: number) => number; terms?: boolean };
 
 function blockUnit(block: Block, input: RenderInput, rtlDefault: boolean): Unit {
   const { values } = input;
@@ -226,7 +245,7 @@ function blockUnit(block: Block, input: RenderInput, rtlDefault: boolean): Unit 
 
   switch (block.type) {
     case 'header':
-      height = (w) => Math.max(safeImage(input.logoDataUri) ? 56 : 0, ...[block.left, block.center, block.right].map((part) => (part ? textHeight(fill(part), 10, w / 3) : 0))) + 10;
+      height = (w) => Math.max(safeImage(input.logoDataUri) ? 56 : 0, ...[block.left, block.center, block.right].map((part) => (part ? textHeight(part.split('\n').filter((line) => !/\{\{/.test(line) || !hasOnlyEmptyFields(line, values)).map(fill).join('\n'), 10, w / 3) : 0))) + 10;
       break;
     case 'heading':
       height = (w) => textHeight(fill(block.text), SIZE_FONT[block.size ?? 'lg'], w, 1.3) + 14 + (block.border === 'box' ? 8 : 0);
@@ -288,8 +307,8 @@ function termsUnit(blocks: Extract<Block, { type: 'columns' }>[], input: RenderI
   const height = (w: number) =>
     Math.max(
       ...columns.map((cells) => cells.reduce((sum, cell) => sum + textHeight(`${cell.title ?? ''} ${fillPlaceholders(cell.text, values)}`, 7, w / count - 16, 1.3) + 4, 0))
-    ) + 12;
-  return { html, height };
+    ) * 0.93 + 12; // le texte réel est ~7 % moins haut que l'estimation (mesuré)
+  return { html, height, terms: true };
 }
 
 function pageUnits(blocks: Block[], input: RenderInput, rtlDefault: boolean): Unit[] {
@@ -312,14 +331,14 @@ function pageUnits(blocks: Block[], input: RenderInput, rtlDefault: boolean): Un
   return units;
 }
 
-/** Plus grand zoom (≤ 1) pour lequel la page entière tient sur une feuille. Contenu serré au-delà de 0,45 : il déborde alors sur une page de plus. */
-export function fitScale(units: Pick<Unit, 'height'>[]): number {
-  for (let scale = 1; scale >= 0.45; scale = Math.round((scale - 0.02) * 100) / 100) {
+/** Plus grand zoom pour lequel la page entière tient sur une feuille. Contenu serré au-delà de 0,45 : il déborde alors sur une page de plus. */
+export function fitScale(units: Pick<Unit, 'height'>[], maxZoom: number = MAX_ZOOM): number {
+  for (let scale = maxZoom; scale >= MIN_ZOOM; scale = Math.round((scale - 0.02) * 100) / 100) {
     const width = CONTENT_W / scale;
-    const visible = units.reduce((sum, unit) => sum + unit.height(width), 0) * scale * 1.04;
+    const visible = units.reduce((sum, unit) => sum + unit.height(width), 0) * scale * 1.025;
     if (visible <= CONTENT_H) return scale;
   }
-  return 0.45;
+  return MIN_ZOOM;
 }
 
 /** Hauteur estimée (px) de chaque feuille avant réduction, pour la largeur de contenu donnée (utilisé par les tests de calibrage). */
@@ -346,8 +365,10 @@ export function renderTemplateHtml(template: ContractTemplate, input: RenderInpu
     .filter((blocks) => blocks.length > 0)
     .map((blocks, index, all) => {
       const units = pageUnits(blocks, input, rtlDefault);
-      const scale = fitScale(units);
-      return `<section class="sheet${index === all.length - 1 ? ' last' : ''}"><div class="fit"${scale < 1 ? ` style="zoom:${scale}"` : ''}>${units.map((unit) => unit.html).join('\n')}</div></section>`;
+      const scale = fitScale(units, units.some((unit) => unit.terms) ? MAX_ZOOM_TERMS : MAX_ZOOM);
+      // Hauteur minimale = toute la feuille : les rubriques se répartissent sur la page au lieu d'être serrées en haut.
+      const minHeight = Math.floor(CONTENT_H / scale) - 4;
+      return `<section class="sheet${index === all.length - 1 ? ' last' : ''}"><div class="fit" style="${scale !== 1 ? `zoom:${scale};` : ''}min-height:${minHeight}px">${units.map((unit) => unit.html).join('\n')}</div></section>`;
     });
   return `<html><head><meta charset="utf-8" /><style>${CSS}</style></head><body dir="${rtlDefault ? 'rtl' : 'ltr'}">${sheets.join('\n')}</body></html>`;
 }

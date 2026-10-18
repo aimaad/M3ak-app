@@ -10,7 +10,7 @@ import {
   PLACEHOLDERS,
   readingSections,
 } from '../template';
-import { estimateSheetHeights, renderTemplateHtml, safeImage } from '../template-render';
+import { estimateSheetHeights, PAGE, PRINT_SIZE, renderTemplateHtml, safeImage } from '../template-render';
 
 const agency = { nom: 'Agence Atlas', ville: 'Rabat', adresse: '1 av. Mohammed V' };
 
@@ -261,32 +261,58 @@ describe('mise en page : recto et verso sur deux feuilles A4', () => {
     expect(back).not.toContain('Conducteur 1');
   });
 
-  it('chaque feuille est réduite pour tenir sur une page, sans devenir illisible', () => {
+  it('chaque feuille est ajustée pour remplir une page, sans devenir illisible', () => {
     const html = buildContractHtml(sampleContract(), agency);
     const zooms = [...html.matchAll(/zoom:([0-9.]+)/g)].map((m) => Number(m[1]));
     expect(zooms.length).toBeGreaterThan(0);
     for (const zoom of zooms) {
       expect(zoom).toBeGreaterThanOrEqual(0.7);
-      expect(zoom).toBeLessThanOrEqual(1);
+      expect(zoom).toBeLessThanOrEqual(1.8);
     }
   });
 
-  it('les hauteurs estimées restent proches de celles mesurées sur un rendu réel (recto ≈ 936 px, verso ≈ 691 px)', () => {
+  it('les hauteurs estimées restent proches de celles mesurées sur un rendu réel (recto ≈ 896 px, verso ≈ 546 px)', () => {
     const c = sampleContract();
     const template = resolveTemplate(c, agency);
     const [front, back] = estimateSheetHeights(template, { values: contractTemplateValues(c, agency), context: contractTemplateContext(c), clientName: 'x', agencyName: 'y' });
-    expect(front).toBeGreaterThan(850);
-    expect(front).toBeLessThan(1040);
-    expect(back).toBeGreaterThan(650);
-    expect(back).toBeLessThan(820);
+    expect(front).toBeGreaterThan(830);
+    expect(front).toBeLessThan(990);
+    expect(back).toBeGreaterThan(500);
+    expect(back).toBeLessThan(620);
   });
 
-  it('un verso très chargé est réduit davantage plutôt que coupé ou reporté', () => {
+  it('un verso très chargé est moins agrandi plutôt que coupé ou reporté', () => {
     const o = defaultOptions();
     const many = { ...o, conditions: [...o.conditions, ...o.conditions] };
     const html = buildContractHtml(sampleContract(), agency, {}, templateFromOptions(many, ['{{agence_nom}}']));
     expect(html.match(/<section class="sheet/g)).toHaveLength(2);
     const zooms = [...html.matchAll(/zoom:([0-9.]+)/g)].map((m) => Number(m[1]));
-    expect(Math.min(...zooms)).toBeLessThan(0.7);
+    expect(Math.min(...zooms)).toBeLessThan(1.2);
+  });
+});
+
+describe('en-tête sans informations manquantes', () => {
+  it('une adresse ou un téléphone non renseignés ne laissent pas de ligne en pointillés', () => {
+    const t = templateFromOptions(defaultOptions(), ['{{agence_nom}}', '{{agence_adresse}}']);
+    const html = buildContractHtml(sampleContract(), { nom: 'Location imad' }, {}, t);
+    const header = html.slice(html.indexOf('class="header"'), html.indexOf('CONTRAT DE LOCATION'));
+    expect(header).toContain('Location imad');
+    expect(header).not.toContain('…');
+    expect(header).not.toContain('Tél');
+  });
+
+  it('les informations renseignées s\'affichent dans l\'en-tête', () => {
+    const t = templateFromOptions(defaultOptions(), ['{{agence_nom}}', '{{agence_adresse}}']);
+    const html = buildContractHtml(sampleContract(), { nom: 'Location imad', adresse: '12 rue Hassan II', telephone: '+212600000000' }, {}, t);
+    const header = html.slice(html.indexOf('class="header"'), html.indexOf('CONTRAT DE LOCATION'));
+    expect(header).toContain('12 rue Hassan II');
+    expect(header).toContain('Tél : +212600000000');
+  });
+
+  it('la feuille est dimensionnée comme un A4 en pixels CSS (794 × 1123) et imprimée en 595 × 842 points', () => {
+    expect(PAGE.width).toBe(794);
+    expect(PAGE.height).toBe(1123);
+    expect(PRINT_SIZE).toEqual({ width: 595, height: 842 });
+    expect(buildContractHtml(sampleContract(), 'Agence')).toContain('size: 794px 1123px');
   });
 });
