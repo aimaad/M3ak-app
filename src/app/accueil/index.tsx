@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
-import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
@@ -52,6 +52,8 @@ export default function AccueilScreen() {
   const agencyQuery = useMyAgency();
   const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
   const role = agencyQuery.data?.role;
+  const agencyDetails = useAgencyDetails(role === 'owner' ? agencyQuery.data?.agencyId : undefined);
+  const logoMissing = role === 'owner' && !!agencyDetails.data && !agencyDetails.data.logoUrl;
   const sections = dashboardSections(role);
 
   const { metrics, vehicles, maintenanceItems, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics();
@@ -132,6 +134,17 @@ export default function AccueilScreen() {
             <ThemedText type="small" themeColor="textSecondary">
               {t(`accueil.roleView.${role ?? 'employee'}`)}
             </ThemedText>
+
+            {logoMissing ? (
+              <Pressable onPress={() => router.push('/entreprise')} className="gap-1 rounded-2xl bg-[#FEE2E2] px-4 py-3">
+                <ThemedText type="smallBold" style={{ color: M3akPalette.danger }}>
+                  {t('entreprise.logo.homeNoticeTitle')}
+                </ThemedText>
+                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                  {t('entreprise.logo.homeNotice')}
+                </ThemedText>
+              </Pressable>
+            ) : null}
 
             {sections.map((section) => {
               switch (section) {

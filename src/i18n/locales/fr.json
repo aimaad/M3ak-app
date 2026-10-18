@@ -165,7 +165,6 @@
     "subtitle": "Informations de votre agence",
     "loadError": "Impossible de charger les informations de l'entreprise. Vérifiez votre connexion.",
     "journal": "Traçabilité",
-    "logoChange": "Changer le logo",
     "fields": {
       "nom": "Nom commercial",
       "raisonSociale": "Raison sociale",
@@ -180,7 +179,6 @@
     "saving": "Enregistrement…",
     "saveSuccess": "Informations enregistrées.",
     "saveError": "Impossible d'enregistrer. Réessayez.",
-    "logoError": "Impossible d'envoyer le logo. Réessayez.",
     "readOnlyHint": "Seul le propriétaire peut modifier ces informations.",
     "errors": {
       "required": "Ce champ est obligatoire.",
@@ -230,6 +228,34 @@
       "remove": "Retirer le cachet",
       "error": "Impossible d'enregistrer le cachet. Réessayez.",
       "add": "Ajouter le cachet"
+    },
+    "logo": {
+      "title": "Logo de l'agence",
+      "required": "Obligatoire",
+      "ok": "Enregistré",
+      "help": "Le logo s'affiche en haut de chaque contrat PDF. Formats acceptés : PNG ou JPEG, 5 Mo maximum, au moins 150 pixels.",
+      "missingOwner": "Ajoutez le logo de votre agence : il est obligatoire pour pouvoir faire signer des contrats.",
+      "missingOther": "Le logo de l'agence n'est pas encore ajouté. Demandez au propriétaire de l'ajouter.",
+      "add": "Ajouter le logo",
+      "change": "Changer le logo",
+      "retry": "Réessayer",
+      "stageChecking": "Vérification de l'image…",
+      "stageUploading": "Envoi du logo… {{percent}} %",
+      "stageSaving": "Enregistrement…",
+      "saved": "Logo enregistré. Il apparaîtra sur vos prochains contrats.",
+      "errors": {
+        "unsupported_type": "Ce format n'est pas accepté. Choisissez une image PNG ou JPEG.",
+        "too_large": "L'image est trop lourde (5 Mo maximum). Choisissez une image plus légère.",
+        "too_small": "L'image est trop petite. Choisissez un logo d'au moins 150 pixels de côté.",
+        "unreadable": "Impossible de lire cette image. Choisissez-en une autre.",
+        "empty": "Cette image est vide. Choisissez-en une autre.",
+        "network": "Pas de connexion. Vérifiez internet puis touchez « Réessayer ».",
+        "permission": "Vous n'avez pas le droit de modifier le logo. Seul le propriétaire le peut.",
+        "permissionPhotos": "L'accès aux photos est refusé. Autorisez-le dans les réglages du téléphone.",
+        "failed": "L'envoi du logo a échoué. Touchez « Réessayer »."
+      },
+      "homeNoticeTitle": "Le logo de votre agence est obligatoire",
+      "homeNotice": "Touchez ici pour l'ajouter dans Mon entreprise : sans logo, vous ne pourrez pas faire signer de contrats."
     }
   },
   "flotte": {
@@ -960,8 +986,8 @@
       "agencyLabel": "Agence",
       "stampMissing": "Le cachet de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
       "stampMissingOwner": "Le cachet de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
-      "logoMissing": "Le logo de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise > Mon contrat.",
-      "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise > Mon contrat."
+      "logoMissing": "Le logo de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
+      "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise."
     }
   },
   "inspection": {
@@ -1488,13 +1514,7 @@
       "numberNamePlaceholder": "Ex. : ICE",
       "numberValue": "Numéro",
       "numberAdd": "Ajouter ce numéro",
-      "numberLimit": "Vous avez atteint le nombre maximum de numéros.",
-      "logoTitle": "Logo de l'agence (obligatoire)",
-      "logoHelp": "Il s'affiche en haut de chaque contrat PDF.",
-      "logoRequired": "Ajoutez le logo de votre agence : il est obligatoire, il s'affichera en haut de tous vos contrats.",
-      "logoAdd": "Ajouter le logo",
-      "logoChange": "Changer le logo",
-      "logoNeededToSave": "Ajoutez d'abord le logo de l'agence pour pouvoir enregistrer."
+      "numberLimit": "Vous avez atteint le nombre maximum de numéros."
     }
   }
 }

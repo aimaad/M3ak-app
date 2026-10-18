@@ -277,7 +277,7 @@ export default function SignerContratScreen() {
               </ThemedText>
             ) : null}
             {logoMissing && agencyQuery.data?.role === 'owner' ? (
-              <Button label={t('contractTemplate.simple.logoAdd')} variant="secondary" size="sm" onPress={() => router.push('/entreprise/editeur-contrat')} />
+              <Button label={t('entreprise.logo.add')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />
             ) : null}
             {stampMissing && agencyQuery.data?.role === 'owner' ? (
               <Button label={t('entreprise.stamp.add')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />

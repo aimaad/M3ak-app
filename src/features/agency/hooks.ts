@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { PersonName } from '@/features/auth/names';
 import { useSession } from '@/features/auth/session-context';
+import type { UploadProgress } from '@/features/storage/api';
 
 import {
   createAgency,
@@ -132,8 +133,8 @@ export function useUploadAgencyLogo() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ agencyId, localUri }: { agencyId: string; localUri: string }) =>
-      uploadAgencyLogo(agencyId, localUri),
+    mutationFn: ({ agencyId, localUri, onProgress }: { agencyId: string; localUri: string; onProgress?: (progress: UploadProgress) => void }) =>
+      uploadAgencyLogo(agencyId, localUri, onProgress),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
     },

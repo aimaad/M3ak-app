@@ -1,3 +1,5 @@
+import * as LegacyFileSystem from 'expo-file-system/legacy';
+
 import { getSupabase } from '@/lib/supabase';
 
 /** 15 Mo : largement suffisant pour une photo compressée ou un PDF de contrat,
@@ -78,4 +80,58 @@ export async function downloadImageAsDataUri(bucket: string, path: string | null
   if (contentMatchesType(bytes, 'image/png')) return `data:image/png;base64,${bytesToBase64(bytes)}`;
   if (contentMatchesType(bytes, 'image/jpeg')) return `data:image/jpeg;base64,${bytesToBase64(bytes)}`;
   return null;
+}
+
+export type UploadProgress = { stage: 'checking' | 'uploading' | 'done'; /** 0 à 1 */ fraction: number };
+
+/**
+ * Même contrôles que `uploadFile` (type, taille, contenu réel), mais l'envoi suit sa progression octet par octet pour
+ * afficher une barre de chargement. Le fichier est envoyé en binaire à l'API de stockage, avec la session de l'utilisateur.
+ */
+export async function uploadFileWithProgress(
+  bucket: string,
+  path: string,
+  localUri: string,
+  contentType: string,
+  onProgress: (progress: UploadProgress) => void
+): Promise<void> {
+  onProgress({ stage: 'checking', fraction: 0 });
+  if (!ALLOWED_CONTENT_TYPES.includes(contentType)) throw new UploadValidationError(`unsupported_content_type: ${contentType}`);
+
+  const buffer = await (await fetch(localUri)).arrayBuffer();
+  if (buffer.byteLength === 0) throw new UploadValidationError('file_empty');
+  if (buffer.byteLength > MAX_UPLOAD_SIZE_BYTES) throw new UploadValidationError('file_too_large');
+  if (!contentMatchesType(new Uint8Array(buffer, 0, Math.min(8, buffer.byteLength)), contentType)) throw new UploadValidationError('content_type_mismatch');
+
+  const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const { data: session } = await getSupabase().auth.getSession();
+  const token = session.session?.access_token;
+  if (!supabaseUrl || !anonKey || !token) throw new Error('not_authenticated');
+
+  onProgress({ stage: 'uploading', fraction: 0 });
+  const encodedPath = path.split('/').map(encodeURIComponent).join('/');
+  const task = LegacyFileSystem.createUploadTask(
+    `${supabaseUrl}/storage/v1/object/${bucket}/${encodedPath}`,
+    localUri,
+    {
+      httpMethod: 'POST',
+      uploadType: LegacyFileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: { Authorization: `Bearer ${token}`, apikey: anonKey, 'Content-Type': contentType, 'x-upsert': 'true', 'cache-control': '3600' },
+    },
+    (event) => {
+      if (event.totalBytesExpectedToSend > 0) onProgress({ stage: 'uploading', fraction: Math.min(1, event.totalBytesSent / event.totalBytesExpectedToSend) });
+    }
+  );
+  const result = await task.uploadAsync();
+  if (!result || result.status < 200 || result.status >= 300) {
+    let message = `upload_failed_${result?.status ?? 0}`;
+    try {
+      message = (JSON.parse(result?.body ?? '{}') as { message?: string }).message ?? message;
+    } catch {
+      // corps non JSON
+    }
+    throw new Error(message);
+  }
+  onProgress({ stage: 'done', fraction: 1 });
 }

@@ -1,9 +1,10 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { buildFullName, type PersonName } from '@/features/auth/names';
-import { uploadFile } from '@/features/storage/api';
+import { uploadFile, uploadFileWithProgress, type UploadProgress } from '@/features/storage/api';
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
+import { logoContentType } from './logo-validation';
 import type {
   AgencyDetails,
   AgencyDetailsInput,
@@ -316,19 +317,15 @@ export async function updateAgencyDetails(
   return agencyFromRow(data as AgencyRow);
 }
 
-export async function uploadAgencyLogo(agencyId: string, localUri: string): Promise<AgencyDetails> {
-  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
-  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
+export async function uploadAgencyLogo(agencyId: string, localUri: string, onProgress?: (progress: UploadProgress) => void): Promise<AgencyDetails> {
+  const contentType = logoContentType({ uri: localUri, mimeType: null }) ?? 'image/jpeg';
+  const extension = contentType === 'image/png' ? 'png' : 'jpg';
   const path = `${agencyId}/logo.${extension}`;
 
-  await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, contentType);
+  if (onProgress) await uploadFileWithProgress(AGENCY_ASSETS_BUCKET, path, localUri, contentType, onProgress);
+  else await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, contentType);
 
-  const { data, error } = await getSupabase()
-    .from('agencies')
-    .update({ logo_url: path })
-    .eq('id', agencyId)
-    .select()
-    .single();
+  const { data, error } = await getSupabase().from('agencies').update({ logo_url: path }).eq('id', agencyId).select().single();
 
   if (error) throw error;
   return agencyFromRow(data as AgencyRow);

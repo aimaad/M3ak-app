@@ -15,7 +15,6 @@ import {
   useMyAgency,
   useUpdateAgencyDetails,
   useRemoveAgencyStamp,
-  useUploadAgencyLogo,
   useUploadAgencyStamp,
 } from '@/features/agency/hooks';
 import {
@@ -26,6 +25,7 @@ import {
 } from '@/features/agency/validation';
 import { useOcrSettings, useSetAiInsightsEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
+import { LogoField } from '@/features/agency/logo-field';
 import type { AgencyDetails } from '@/features/agency/types';
 import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -275,8 +275,6 @@ function EntrepriseForm({
 }) {
   const { t } = useLanguage();
   const updateDetails = useUpdateAgencyDetails();
-  const uploadLogo = useUploadAgencyLogo();
-  const { data: logoUrl } = useSignedUrl(AGENCY_ASSETS_BUCKET, details.logoUrl ?? undefined);
 
   const [values, setValues] = useState<AgencyDetailsFormValues>(() => valuesFromDetails(details));
   const [touched, setTouched] = useState(false);
@@ -301,43 +299,9 @@ function EntrepriseForm({
     }
   }
 
-  async function handlePickLogo() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (result.canceled) return;
-
-    const uri = result.assets[0]?.uri;
-    if (!uri) return;
-
-    try {
-      await uploadLogo.mutateAsync({ agencyId, localUri: uri });
-    } catch {
-      setFeedback({ type: 'error', message: t('entreprise.logoError') });
-    }
-  }
-
   return (
     <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-      {isOwner ? (
-        <Pressable onPress={handlePickLogo} className="items-center gap-2">
-          {logoUrl ? (
-            <Image source={{ uri: logoUrl }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />
-          ) : (
-            <View className="h-24 w-24 items-center justify-center rounded-2xl bg-[#FAF9FF]">
-              <ThemedText type="title" themeColor="primary">
-                {values.nom.charAt(0).toUpperCase() || '?'}
-              </ThemedText>
-            </View>
-          )}
-          <ThemedText type="small" themeColor="primary">
-            {t('entreprise.logoChange')}
-          </ThemedText>
-        </Pressable>
-      ) : logoUrl ? (
-        <Image source={{ uri: logoUrl }} className="h-24 w-24 self-center rounded-2xl" resizeMode="cover" />
-      ) : null}
+      <LogoField agencyId={agencyId} logoPath={details.logoUrl} canEdit={isOwner} initial={values.nom.charAt(0).toUpperCase() || '?'} />
 
       {isOwner ? (
         <>
