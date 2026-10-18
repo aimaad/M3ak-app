@@ -1,5 +1,5 @@
-import { EMPTY_DOCUMENT_FORM } from '../documents';
-import { entriesAreValid, entriesFromPending, entriesToPending, reconcilePermisNumber } from '../creation';
+import { entriesAreValid, entriesFromPending, entriesToPending, isEmptyEntry, licenceGaps, reconcilePermisNumber, type PendingEntry } from '../creation';
+import { EMPTY_DOCUMENT_FORM, type DocumentFormValues } from '../documents';
 import type { CustomerInput, PendingDocument } from '../types';
 
 const BASE_INPUT: CustomerInput = {
@@ -77,5 +77,33 @@ describe('entrées de documents du formulaire de création', () => {
     expect(
       entriesAreValid([{ key: 'k', values: { ...EMPTY_DOCUMENT_FORM, dateDelivrance: '2025-01-01', expiresAt: '2024-01-01' }, localUri: null }])
     ).toBe(false);
+  });
+});
+
+describe('permis obligatoire à la création', () => {
+  const entry = (over: Partial<Omit<PendingEntry, 'values'>> & { values?: Partial<DocumentFormValues> } = {}): PendingEntry => ({
+    key: 'k',
+    localUri: null,
+    ...over,
+    values: { ...EMPTY_DOCUMENT_FORM, type: 'permis', ...over.values },
+  });
+
+  it('exige le document permis', () => {
+    expect(licenceGaps([], '')).toEqual(['no_licence']);
+    expect(licenceGaps([entry({ values: { type: 'cin' } })], '')).toEqual(['no_licence']);
+  });
+
+  it('exige la photo, le numéro et la date d’expiration', () => {
+    expect(licenceGaps([entry()], '')).toEqual(['no_photo', 'no_number', 'no_expiry']);
+    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', values: { reference: '20/086579', expiresAt: '07/02/2025' } })], '')).toEqual([]);
+  });
+
+  it('accepte le numéro saisi sur la fiche au lieu du document', () => {
+    expect(licenceGaps([entry({ localUri: 'file:///p.jpg', values: { expiresAt: '2030-01-01' } })], '20/086579')).toEqual([]);
+  });
+
+  it('repère une entrée vide', () => {
+    expect(isEmptyEntry(entry())).toBe(true);
+    expect(isEmptyEntry(entry({ localUri: 'file:///p.jpg' }))).toBe(false);
   });
 });

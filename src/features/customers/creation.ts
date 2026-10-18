@@ -67,3 +67,25 @@ export function reconcilePermisNumber(
   );
   return { input: nextInput, documents: nextDocuments };
 }
+
+export type LicenceGap = 'no_licence' | 'no_photo' | 'no_number' | 'no_expiry';
+
+/**
+ * À la création d'un client particulier, le permis est obligatoire : un document « permis » avec sa photo (recto),
+ * son numéro (sur le document ou sur la fiche) et sa date d'expiration. Le verso reste facultatif.
+ */
+export function licenceGaps(entries: PendingEntry[], numeroPermis: string): LicenceGap[] {
+  const permis = entries.find((entry) => entry.values.type === 'permis');
+  if (!permis) return ['no_licence'];
+  const gaps: LicenceGap[] = [];
+  if (!permis.localUri) gaps.push('no_photo');
+  if (!permis.values.reference.trim() && !numeroPermis.trim()) gaps.push('no_number');
+  if (!permis.values.expiresAt.trim()) gaps.push('no_expiry');
+  return gaps;
+}
+
+/** Une entrée vide (rien de saisi ni de photo) n'est pas enregistrée quand le permis n'est pas exigé. */
+export function isEmptyEntry(entry: PendingEntry): boolean {
+  const v = entry.values;
+  return !entry.localUri && !entry.localUriVerso && !v.reference.trim() && !v.issuingAuthority.trim() && !v.categories.trim() && !v.dateDelivrance.trim() && !v.expiresAt.trim() && !v.notes.trim() && !v.customLabel.trim();
+}

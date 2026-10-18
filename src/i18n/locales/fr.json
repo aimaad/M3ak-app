@@ -668,6 +668,13 @@
       "noFile": "Aucun fichier joint (numéro saisi à la main).",
       "addedBy": "Ajouté par {{name}} le {{date}}",
       "unknownMember": "un membre",
+      "licenceHint": "Pour un client particulier, le permis de conduire est obligatoire : photo du recto, numéro et date d'expiration. Le verso est conseillé. Les autres documents sont facultatifs.",
+      "licenceRequired": {
+        "no_licence": "Ajoutez le permis de conduire de ce client.",
+        "no_photo": "Ajoutez la photo du permis (recto).",
+        "no_number": "Indiquez le numéro du permis.",
+        "no_expiry": "Indiquez la date d'expiration du permis."
+      },
       "optionalHint": "Aucun document n'est obligatoire pour créer la fiche. Les documents exigés avant un départ sont définis par l'agence.",
       "status": {
         "no_date": "Date à vérifier",

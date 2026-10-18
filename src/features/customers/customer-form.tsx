@@ -15,6 +15,8 @@ import {
   entriesAreValid,
   entriesFromPending,
   entriesToPending,
+  isEmptyEntry,
+  licenceGaps,
   newEntryKey,
   reconcilePermisNumber,
   type PendingEntry,
@@ -79,7 +81,13 @@ export function CustomerForm({
     ...(initialValues ?? EMPTY_CUSTOMER_VALUES),
     ...draft.values,
   }));
-  const [entries, setEntries] = useState<PendingEntry[]>(() => entriesFromPending(draft.pendingDocuments));
+  const [entries, setEntries] = useState<PendingEntry[]>(() => {
+    const initial = entriesFromPending(draft.pendingDocuments);
+    // Création : la ligne « permis » est toujours là, à remplir (obligatoire pour un particulier).
+    return mode === 'create' && !initial.some((entry) => entry.values.type === 'permis')
+      ? [{ key: newEntryKey(), localUri: null, values: { ...EMPTY_DOCUMENT_FORM, type: 'permis' as const } }, ...initial]
+      : initial;
+  });
   const [touched, setTouched] = useState(false);
 
   const scannedPhotos = entries.flatMap((entry) => [
@@ -127,10 +135,14 @@ export function CustomerForm({
     ]);
   }
 
+  const licenceRequired = mode === 'create' && !isEntreprise;
+  const gaps = licenceRequired ? licenceGaps(entries, values.numeroPermis) : [];
+
   function handleSubmit() {
     setTouched(true);
-    if (!isFormValid(errors) || !entriesAreValid(entries)) return;
-    const reconciled = reconcilePermisNumber(toCustomerInput(values), entriesToPending(entries));
+    if (!isFormValid(errors) || !entriesAreValid(entries) || gaps.length > 0) return;
+    const kept = licenceRequired ? entries : entries.filter((entry) => !isEmptyEntry(entry));
+    const reconciled = reconcilePermisNumber(toCustomerInput(values), entriesToPending(kept));
     onSubmit(reconciled.input, reconciled.documents);
   }
 
@@ -213,7 +225,7 @@ export function CustomerForm({
         <CollapsibleSection
           title={t('customer.sections.documents')}
           badge={entryBadge}
-          defaultOpen={draft.fromOcr || entries.length > 0}
+          defaultOpen
         >
           <TextField
             label={t('customer.fields.permis')}
@@ -259,6 +271,16 @@ export function CustomerForm({
             );
           })}
 
+          {showErrors && gaps.length > 0 ? (
+            <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
+              {gaps.map((gap) => (
+                <ThemedText key={gap} type="small" style={{ color: M3akPalette.danger }}>
+                  {t(`customer.documentsManager.licenceRequired.${gap}`)}
+                </ThemedText>
+              ))}
+            </View>
+          ) : null}
+
           <Button
             label={t('customer.documentsManager.addButton')}
             variant="secondary"
@@ -266,7 +288,7 @@ export function CustomerForm({
             onPress={addEntry}
           />
           <ThemedText type="small" themeColor="textSecondary">
-            {t('customer.documentsManager.optionalHint')}
+            {t(licenceRequired ? 'customer.documentsManager.licenceHint' : 'customer.documentsManager.optionalHint')}
           </ThemedText>
         </CollapsibleSection>
       ) : (

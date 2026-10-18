@@ -7,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ZoomableImage } from '@/components/zoomable-image';
-import { KeepPhotoChoice } from '@/components/keep-photo-choice';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -52,7 +51,8 @@ export default function ScannerPermisScreen() {
   const [photos, setPhotos] = useState<Record<Face, string | null>>({ recto: null, verso: null });
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<LicenceScanErrorCode | 'nothing_read' | null>(null);
-  const [keepPhoto, setKeepPhoto] = useState(true);
+  // Le permis est obligatoire à la création d'un client : ses photos sont toujours conservées.
+  const keepPhoto = true;
   const { availability, agencyId } = useOcrSettings();
 
   async function choosePhoto(face: Face, source: 'library' | 'camera') {
@@ -167,7 +167,6 @@ export default function ScannerPermisScreen() {
                 {!photos.recto && !photos.verso ? t('vehicle.quickCreate.photoMissing') : photos.recto && photos.verso ? '' : t('vehicle.quickCreate.photoOneOnly')}
               </ThemedText>
               <Button label={t('customer.ocr.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
-              <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
               <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('ocr.privacyCloud')}
