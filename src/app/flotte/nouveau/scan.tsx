@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -238,7 +238,9 @@ export default function ScannerCarteGriseScreen() {
                 <View key={face} className="gap-2">
                   <ThemedText type="smallBold">{t(`vehicle.quickCreate.face.${face}`)}</ThemedText>
                   {photos[face] ? (
-                    <Image source={{ uri: photos[face] as string }} style={{ width: '100%', height: 150, borderRadius: 16 }} resizeMode="cover" />
+                    <View style={{ height: 150 }}>
+                      <ZoomableImage uri={photos[face] as string} label={t(`vehicle.quickCreate.face.${face}`)} style={{ borderRadius: 16 }} />
+                    </View>
                   ) : null}
                   <View className="flex-row gap-2">
                     <Button

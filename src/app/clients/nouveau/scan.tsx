@@ -1,11 +1,12 @@
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Image, ScrollView, View } from 'react-native';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { ZoomableImage } from '@/components/zoomable-image';
 import { KeepPhotoChoice } from '@/components/keep-photo-choice';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -144,7 +145,11 @@ export default function ScannerPermisScreen() {
               {(['recto', 'verso'] as const).map((face) => (
                 <View key={face} className="gap-2">
                   <ThemedText type="smallBold">{t(`vehicle.quickCreate.face.${face}`)}</ThemedText>
-                  {photos[face] ? <Image source={{ uri: photos[face] as string }} style={{ width: '100%', height: 150, borderRadius: 16 }} resizeMode="cover" /> : null}
+                  {photos[face] ? (
+                    <View style={{ height: 150 }}>
+                      <ZoomableImage uri={photos[face] as string} label={t(`vehicle.quickCreate.face.${face}`)} style={{ borderRadius: 16 }} />
+                    </View>
+                  ) : null}
                   <View className="flex-row gap-2">
                     <Button
                       label={photos[face] ? t('vehicle.quickCreate.photoChange') : t('common.camera')}
