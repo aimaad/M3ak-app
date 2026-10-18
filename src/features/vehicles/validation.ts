@@ -1,3 +1,4 @@
+import { parseFrDate } from '@/features/audit/types';
 import type { FuelType, VehicleCategory, VehicleStatus, VehicleTransmission } from './types';
 
 export type VehicleFormValues = {
@@ -7,6 +8,10 @@ export type VehicleFormValues = {
   vin: string;
   finition: string;
   annee: string;
+  /** « JJ/MM/AAAA ». */
+  dateMiseEnCirculation?: string;
+  /** CV. */
+  puissanceFiscale?: string;
   categorie: VehicleCategory | null;
   couleur: string;
   nombrePlaces: string;
@@ -27,7 +32,9 @@ export type VehicleFormErrorCode =
   | 'invalid_year'
   | 'invalid_price'
   | 'invalid_seats'
-  | 'invalid_fuel_level';
+  | 'invalid_fuel_level'
+  | 'invalid_cv'
+  | 'invalid_date';
 
 export type VehicleFormErrors = Partial<
   Record<
@@ -40,7 +47,9 @@ export type VehicleFormErrors = Partial<
     | 'prixSemaine'
     | 'prixMois'
     | 'nombrePlaces'
-    | 'niveauCarburant',
+    | 'niveauCarburant'
+    | 'puissanceFiscale'
+    | 'dateMiseEnCirculation',
     VehicleFormErrorCode
   >
 >;
@@ -90,6 +99,16 @@ export function validateVehicleForm(values: VehicleFormValues): VehicleFormError
     }
   }
 
+  if (values.puissanceFiscale?.trim()) {
+    const cv = Number(values.puissanceFiscale);
+    if (!Number.isInteger(cv) || cv < 1 || cv > 60) errors.puissanceFiscale = 'invalid_cv';
+  }
+
+  if (values.dateMiseEnCirculation?.trim()) {
+    const date = parseFrDate(values.dateMiseEnCirculation);
+    if (!date || date.getTime() > Date.now() || date.getFullYear() < 1950) errors.dateMiseEnCirculation = 'invalid_date';
+  }
+
   if (values.niveauCarburant.trim()) {
     const niveau = Number(values.niveauCarburant);
     if (!Number.isInteger(niveau) || niveau < 0 || niveau > 100) {
@@ -114,6 +133,20 @@ function optionalNumber(value: string): number | null {
   return result === 'invalid' ? null : result;
 }
 
+/** « 27/08/2025 » → « 2025-08-27 » (date locale, sans décalage de fuseau) ; null si vide ou invalide. */
+export function toIsoDate(value: string | undefined): string | null {
+  const date = value ? parseFrDate(value) : null;
+  if (!date) return null;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}
+
+/** « 2025-08-27 » → « 27/08/2025 » pour l'affichage et la saisie. */
+export function fromIsoDate(iso: string | null | undefined): string {
+  const match = iso ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
+  return match ? `${match[3]}/${match[2]}/${match[1]}` : '';
+}
+
 export function toVehicleInput(values: VehicleFormValues) {
   return {
     marque: values.marque.trim(),
@@ -122,6 +155,8 @@ export function toVehicleInput(values: VehicleFormValues) {
     vin: emptyToNull(values.vin),
     finition: emptyToNull(values.finition),
     annee: values.annee.trim() ? Number(values.annee) : null,
+    dateMiseEnCirculation: toIsoDate(values.dateMiseEnCirculation),
+    puissanceFiscale: values.puissanceFiscale?.trim() ? Number(values.puissanceFiscale) : null,
     categorie: values.categorie,
     couleur: emptyToNull(values.couleur),
     nombrePlaces: values.nombrePlaces.trim() ? Number(values.nombrePlaces) : null,

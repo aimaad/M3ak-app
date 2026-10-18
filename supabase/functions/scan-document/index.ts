@@ -67,30 +67,50 @@ Règles strictes :
 - "nom" et "prenom" : tels qu'imprimés (le document peut être en français ou en arabe : privilégie la graphie latine si les deux existent).
 - Le permis peut être étranger : lis ce qui est présent sans traduire les numéros.`;
 
-const REGISTRATION_PROMPT = `Tu lis une photo de carte grise (certificat d'immatriculation) marocaine pour une agence de location de voitures.
-Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma :
+const REGISTRATION_PROMPT = `Tu lis la photo d'UNE FACE d'un certificat d'immatriculation marocain (carte grise, format carte bancaire « Royaume du Maroc ») pour une agence de location de voitures. La photo montre le RECTO, le VERSO, ou parfois les deux.
+Le RECTO contient : Numéro d'immatriculation, Immatriculation antérieure, Première mise en circulation, M.C. au Maroc, Mutation le, Usage, Propriétaire, Adresse, Fin de validité.
+Le VERSO contient : Marque, Type (code du modèle), Genre, Modèle, Type carburant, N° du chassis, Nombre de cylindres, Puissance fiscale, Nombre de places, P.T.A.C., Poids à vide, P.T.R.A., Restrictions, et en bas une ligne de caractères (zone lisible par machine).
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information qui n'est pas sur la face photographiée, mets "value": null :
 
 {
   "immatriculation": { "value": string ou null, "confidence": "high" | "medium" | "low" },
-  "vin": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "immatriculationAnterieure": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "dateMiseEnCirculation": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
+  "dateFinValidite": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
+  "usage": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "proprietaire": { "value": string ou null, "confidence": "high" | "medium" | "low" },
   "marque": { "value": string ou null, "confidence": "high" | "medium" | "low" },
   "modele": { "value": string ou null, "confidence": "high" | "medium" | "low" },
-  "finition": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "finition": { "value": null, "confidence": "low" },
+  "type": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "genre": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "vin": { "value": string ou null, "confidence": "high" | "medium" | "low" },
   "annee": { "value": nombre ou null, "confidence": "high" | "medium" | "low" },
-  "couleur": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "couleur": { "value": null, "confidence": "low" },
   "nombrePlaces": { "value": nombre ou null, "confidence": "high" | "medium" | "low" },
+  "nombreCylindres": { "value": nombre ou null, "confidence": "high" | "medium" | "low" },
+  "puissanceFiscale": { "value": nombre ou null, "confidence": "high" | "medium" | "low" },
+  "ptac": { "value": nombre de kg ou null, "confidence": "high" | "medium" | "low" },
+  "poidsVide": { "value": nombre de kg ou null, "confidence": "high" | "medium" | "low" },
   "carburant": { "value": une valeur EXACTE parmi ["essence","diesel","hybride","electrique"] ou null, "confidence": "high" | "medium" | "low" },
   "categorie": { "value": une valeur EXACTE parmi ["economique","compacte","berline","suv","utilitaire","minibus","luxe"] ou null, "confidence": "high" | "medium" | "low" }
 }
 
 Règles strictes :
-- "immatriculation" au format marocain « chiffres | lettre arabe | chiffres » (ex. « 8921 | ب | 14 »).
-- "annee" = l'année de la date de première mise en circulation (4 chiffres).
-- "vin" = le numéro de série / châssis (N° de série), tel qu'imprimé.
-- Si un champ n'est pas lisible ou absent du document, mets "value": null et "confidence": "low". Ne devine JAMAIS une valeur plausible.
+- "immatriculation" = « Numéro d'immatriculation » au format « chiffres | lettre arabe | chiffres » : l'écrit « 68013-ب-72 » devient « 68013 | ب | 72 ».
+- "immatriculationAnterieure" = « Immatriculation antérieure » tel qu'imprimé (ex. WW675804). Un simple tiret « - » signifie null.
+- "dateMiseEnCirculation" = « Première mise en circulation » ; "dateFinValidite" = « Fin de validité ». Dates JJ/MM/AAAA converties en AAAA-MM-JJ.
+- "annee" = l'année de la première mise en circulation (4 chiffres).
+- "usage" tel qu'imprimé (ex. « Véhicule loué sans chauffeur »). "proprietaire" tel qu'imprimé (nom de la personne ou de la société, sans l'adresse).
+- "marque" = « Marque » (ex. DACIA). "modele" = « Modèle » (ex. SANDERO). "type" = « Type » : le code alphanumérique du modèle, NE PAS le mettre dans "modele" ni "finition". "genre" = « Genre » (ex. CONDUITE INTERIEURE).
+- "vin" = « N° du chassis » : 17 caractères, tel qu'imprimé, sans espace. Ne le confonds pas avec le « Type » ni avec le numéro de la ligne du bas.
+- "carburant" : Diesel ou Gasoil → "diesel" ; Essence → "essence" ; Hybride → "hybride" ; Electrique → "electrique". Sinon null.
+- "categorie" : null SAUF si le « Genre » l'indique clairement : camionnette ou véhicule utilitaire → "utilitaire" ; autocar ou minibus → "minibus". « Conduite intérieure » ne suffit pas : mets null.
+- "finition" et "couleur" ne figurent jamais sur la carte : toujours null.
+- "puissanceFiscale" en CV (ex. 6), "nombreCylindres" (ex. 4), "ptac" et "poidsVide" en kilogrammes (nombre seul).
+- Si un champ n'est pas lisible ou absent de la face photographiée, mets "value": null et "confidence": "low". Ne devine JAMAIS une valeur plausible.
 - "confidence": "high" seulement si le texte est net et sans ambiguïté. "medium" si lisible mais avec un doute raisonnable. "low" sinon.
-- Pour "carburant" et "categorie", si le document ne permet pas de déduire une valeur EXACTEMENT parmi la liste autorisée, mets null.
-- Le document peut être en français ou en arabe : lis les deux.`;
+- Le document est bilingue français / arabe : lis la version française (ou latine) quand elle existe.`;
 
 function confidenceOf(raw: unknown): Confidence {
   return raw === 'high' || raw === 'medium' || raw === 'low' ? raw : 'low';
@@ -151,15 +171,29 @@ function sanitizeLicence(raw: unknown) {
 
 function sanitizeRegistration(raw: unknown) {
   const s = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
+  const plate = textField(s.immatriculation, 40);
+  const previous = textField(s.immatriculationAnterieure, 40);
+  const vin = textField(s.vin, 40);
   return {
-    immatriculation: textField(s.immatriculation, 40),
-    vin: textField(s.vin, 40),
+    immatriculation: plate,
+    immatriculationAnterieure: previous.value && /^[-–—\s]+$/.test(previous.value) ? { value: null, confidence: 'low' as Confidence } : previous,
+    dateMiseEnCirculation: dateField(s.dateMiseEnCirculation),
+    dateFinValidite: dateField(s.dateFinValidite),
+    usage: textField(s.usage, 80),
+    proprietaire: textField(s.proprietaire, 120),
+    vin: vin.value ? { ...vin, value: vin.value.replace(/\s+/g, '').toUpperCase() } : vin,
     marque: textField(s.marque, 60),
     modele: textField(s.modele, 60),
-    finition: textField(s.finition, 60),
+    finition: { value: null, confidence: 'low' as Confidence },
+    type: textField(s.type, 60),
+    genre: textField(s.genre, 60),
     annee: numberField(s.annee, 1950, new Date().getFullYear() + 1),
-    couleur: textField(s.couleur, 40),
+    couleur: { value: null, confidence: 'low' as Confidence },
     nombrePlaces: numberField(s.nombrePlaces, 1, 9),
+    nombreCylindres: numberField(s.nombreCylindres, 1, 16),
+    puissanceFiscale: numberField(s.puissanceFiscale, 1, 60),
+    ptac: numberField(s.ptac, 100, 60000),
+    poidsVide: numberField(s.poidsVide, 100, 60000),
     carburant: enumField(s.carburant, FUEL_VALUES),
     categorie: enumField(s.categorie, CATEGORY_VALUES),
   };

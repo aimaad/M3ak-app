@@ -20,8 +20,20 @@ import { useVehicles } from '@/features/vehicles/hooks';
 import { scanErrorMessageKey } from '@/features/ocr/availability';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
-import { scanVehicleDocument, type OcrConfidence, type ScanErrorCode, type VehicleOcrFields } from '@/features/vehicles/ocr';
-import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type VehicleCategory } from '@/features/vehicles/types';
+import {
+  checkRegistrationCard,
+  emptyVehicleFields,
+  faceStatus,
+  filledCount,
+  mergeVehicleFields,
+  scanVehicleDocument,
+  yearFromFields,
+  type OcrConfidence,
+  type ScanErrorCode,
+  type VehicleOcrFields,
+} from '@/features/vehicles/ocr';
+import { fromIsoDate } from '@/features/vehicles/validation';
+import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type PendingVehicleDocument, type VehicleCategory } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
 
 type Status = 'idle' | 'processing' | 'result' | 'error';
@@ -33,6 +45,8 @@ type EditableFields = {
   modele: string;
   finition: string;
   annee: string;
+  dateMiseEnCirculation: string;
+  puissanceFiscale: string;
   couleur: string;
   nombrePlaces: string;
   carburant: FuelType | null;
@@ -46,6 +60,8 @@ const EMPTY_EDITABLE: EditableFields = {
   modele: '',
   finition: '',
   annee: '',
+  dateMiseEnCirculation: '',
+  puissanceFiscale: '',
   couleur: '',
   nombrePlaces: '',
   carburant: null,
@@ -59,7 +75,9 @@ function fieldsToEditable(fields: VehicleOcrFields): EditableFields {
     marque: fields.marque.value ?? '',
     modele: fields.modele.value ?? '',
     finition: fields.finition.value ?? '',
-    annee: fields.annee.value != null ? String(fields.annee.value) : '',
+    annee: yearFromFields(fields) != null ? String(yearFromFields(fields)) : '',
+    dateMiseEnCirculation: fromIsoDate(fields.dateMiseEnCirculation.value),
+    puissanceFiscale: fields.puissanceFiscale.value != null ? String(fields.puissanceFiscale.value) : '',
     couleur: fields.couleur.value ?? '',
     nombrePlaces: fields.nombrePlaces.value != null ? String(fields.nombrePlaces.value) : '',
     carburant: fields.carburant.value,
@@ -81,11 +99,33 @@ async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
   return result.canceled ? null : (result.assets[0]?.uri ?? null);
 }
 
+type ScanItem = { uri: string; fields: VehicleOcrFields };
+
+const CONFIDENCE_KEYS = [
+  'immatriculation', 'vin', 'marque', 'modele', 'finition', 'annee', 'dateMiseEnCirculation', 'puissanceFiscale', 'couleur', 'nombrePlaces', 'carburant', 'categorie',
+] as const;
+
+function confidencesOf(fields: VehicleOcrFields): Partial<Record<keyof EditableFields, OcrConfidence>> {
+  return Object.fromEntries(CONFIDENCE_KEYS.map((key) => [key, fields[key].confidence])) as Partial<Record<keyof EditableFields, OcrConfidence>>;
+}
+
+/** Photos de la carte grise rangées par face : le recto porte la date de fin de validité (alerte d'expiration), le verso a son propre document. */
+function pendingCardDocuments(scans: ScanItem[], expiresAt: string | null): PendingVehicleDocument[] {
+  const byType = new Map<'carte_grise' | 'carte_grise_verso', PendingVehicleDocument>();
+  for (const item of scans) {
+    const faces = faceStatus(item.fields);
+    const type = faces.recto || !faces.verso ? 'carte_grise' : 'carte_grise_verso';
+    byType.set(type, { type, localUri: item.uri, expiresAt: type === 'carte_grise' ? expiresAt : null });
+  }
+  return [...byType.values()];
+}
+
 export default function ScannerCarteGriseScreen() {
   const { t } = useLanguage();
-  const [localUri, setLocalUri] = useState<string | null>(null);
+  const [scans, setScans] = useState<ScanItem[]>([]);
   const [status, setStatus] = useState<Status>('idle');
   const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
+  const [nothingNew, setNothingNew] = useState(false);
   const [keepPhoto, setKeepPhoto] = useState(true);
   const { availability, agencyId } = useOcrSettings();
   const vehiclesQuery = useVehicles();
@@ -93,45 +133,63 @@ export default function ScannerCarteGriseScreen() {
   const [duplicateDismissed, setDuplicateDismissed] = useState(false);
   const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
   const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
+  const [autoValues, setAutoValues] = useState<EditableFields>(EMPTY_EDITABLE);
+
+  const merged = scans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
+  const faces = faceStatus(merged);
+  const checks = checkRegistrationCard(merged);
 
   function update<K extends keyof EditableFields>(key: K, value: EditableFields[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handlePick(source: 'library' | 'camera') {
+  /** Lit une photo. `addToExisting` : la photo est l'autre face de la même carte et s'ajoute à ce qui est déjà lu. */
+  async function handlePick(source: 'library' | 'camera', addToExisting = false) {
     const uri = await pickImage(source);
     if (!uri) return;
-    setLocalUri(uri);
     setStatus('processing');
     setErrorCode(null);
-
+    setNothingNew(false);
     setFromCache(false);
     setDuplicateDismissed(false);
+
     const result = await scanVehicleDocument(uri, { agencyId });
     if (!result.ok) {
       setErrorCode(result.error);
-      setStatus('error');
+      setStatus(addToExisting && scans.length > 0 ? 'result' : 'error');
+      if (addToExisting && scans.length > 0) setNothingNew(false);
       return;
     }
 
+    const before = scans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
+    const nextScans = addToExisting ? [...scans, { uri, fields: result.fields }] : [{ uri, fields: result.fields }];
+    const after = nextScans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
+    if (addToExisting && filledCount(after) <= filledCount(before)) setNothingNew(true);
+
+    // Les valeurs que l'employé a corrigées à la main ne sont jamais écrasées par la lecture de la 2e face.
+    const nextAuto = fieldsToEditable(after);
+    setValues((current) =>
+      addToExisting
+        ? (Object.fromEntries((Object.keys(nextAuto) as (keyof EditableFields)[]).map((key) => [key, current[key] === autoValues[key] ? nextAuto[key] : current[key]])) as EditableFields)
+        : nextAuto
+    );
+    setAutoValues(nextAuto);
+    setScans(nextScans);
     setFromCache(result.fromCache === true);
-    setValues(fieldsToEditable(result.fields));
-    setConfidences({
-      immatriculation: result.fields.immatriculation.confidence,
-      vin: result.fields.vin.confidence,
-      marque: result.fields.marque.confidence,
-      modele: result.fields.modele.confidence,
-      finition: result.fields.finition.confidence,
-      annee: result.fields.annee.confidence,
-      couleur: result.fields.couleur.confidence,
-      nombrePlaces: result.fields.nombrePlaces.confidence,
-      carburant: result.fields.carburant.confidence,
-      categorie: result.fields.categorie.confidence,
-    });
+    setConfidences(confidencesOf(after));
     setStatus('result');
   }
 
+  function restart() {
+    setScans([]);
+    setStatus('idle');
+    setNothingNew(false);
+    setValues(EMPTY_EDITABLE);
+    setAutoValues(EMPTY_EDITABLE);
+  }
+
   function continueWithDraft(useValues: boolean) {
+    const expiresAt = merged.dateFinValidite.value;
     setVehicleCreationDraft({
       immatriculation: useValues && values.immatriculation.trim() ? values.immatriculation.trim() : undefined,
       vin: useValues && values.vin.trim() ? values.vin.trim() : undefined,
@@ -139,11 +197,13 @@ export default function ScannerCarteGriseScreen() {
       modele: useValues && values.modele.trim() ? values.modele.trim() : undefined,
       finition: useValues && values.finition.trim() ? values.finition.trim() : undefined,
       annee: useValues && values.annee.trim() ? Number(values.annee) : undefined,
+      dateMiseEnCirculation: useValues && values.dateMiseEnCirculation.trim() ? values.dateMiseEnCirculation.trim() : undefined,
+      puissanceFiscale: useValues && values.puissanceFiscale.trim() ? Number(values.puissanceFiscale) : undefined,
       couleur: useValues && values.couleur.trim() ? values.couleur.trim() : undefined,
       nombrePlaces: useValues && values.nombrePlaces.trim() ? Number(values.nombrePlaces) : undefined,
       carburant: useValues ? (values.carburant ?? undefined) : undefined,
       categorie: useValues ? (values.categorie ?? undefined) : undefined,
-      carteGrisePendingDocument: localUri && keepPhoto ? { type: 'carte_grise', localUri, expiresAt: null } : undefined,
+      carteGrisePendingDocuments: keepPhoto && scans.length > 0 ? pendingCardDocuments(scans, expiresAt) : undefined,
     });
     router.replace('/flotte/nouveau/finaliser');
   }
@@ -191,7 +251,13 @@ export default function ScannerCarteGriseScreen() {
             </Card>
           ) : null}
 
-          {localUri ? <Image source={{ uri: localUri }} className="h-44 w-full rounded-2xl" resizeMode="cover" /> : null}
+          {scans.length > 0 ? (
+            <View className="flex-row gap-2">
+              {scans.map((item, index) => (
+                <Image key={`${item.uri}-${index}`} source={{ uri: item.uri }} style={{ flex: 1, height: 130, borderRadius: 16 }} resizeMode="cover" />
+              ))}
+            </View>
+          ) : null}
 
           {status === 'processing' ? (
             <Card className="items-center gap-3 py-8">
@@ -210,10 +276,7 @@ export default function ScannerCarteGriseScreen() {
                   label={t('vehicle.quickCreate.retake')}
                   variant="secondary"
                   size="sm"
-                  onPress={() => {
-                    setStatus('idle');
-                    setLocalUri(null);
-                  }}
+                  onPress={restart}
                   style={{ flex: 1 }}
                 />
                 <Button
@@ -243,6 +306,52 @@ export default function ScannerCarteGriseScreen() {
                   {t('ocr.fromCache')}
                 </ThemedText>
               ) : null}
+
+              <View className="gap-2 rounded-2xl bg-[#FAF9FF] px-4 py-3">
+                <View className="flex-row flex-wrap gap-2">
+                  {(['recto', 'verso'] as const).map((face) => (
+                    <View key={face} className="flex-row items-center gap-1 rounded-full px-3 py-1" style={{ backgroundColor: faces[face] ? M3akPalette.successLight : M3akPalette.warningLight }}>
+                      <ThemedText type="small" style={{ color: faces[face] ? M3akPalette.success : M3akPalette.warning }}>
+                        {faces[face] ? '✓ ' : '• '}
+                        {t(`vehicle.quickCreate.face.${face}`)}
+                      </ThemedText>
+                    </View>
+                  ))}
+                </View>
+                {!faces.recto || !faces.verso ? (
+                  <>
+                    <ThemedText type="small">{t(faces.recto ? 'vehicle.quickCreate.faceMissingVerso' : 'vehicle.quickCreate.faceMissingRecto')}</ThemedText>
+                    {scans.length < 2 ? (
+                      <View className="flex-row gap-2">
+                        <Button label={t('vehicle.quickCreate.scanOtherFace')} size="sm" onPress={() => handlePick('camera', true)} style={{ flex: 1 }} />
+                        <Button label={t('common.gallery')} variant="secondary" size="sm" onPress={() => handlePick('library', true)} style={{ flex: 1 }} />
+                      </View>
+                    ) : null}
+                  </>
+                ) : (
+                  <ThemedText type="small" style={{ color: M3akPalette.success }}>
+                    {t('vehicle.quickCreate.bothFaces')}
+                  </ThemedText>
+                )}
+                {nothingNew ? (
+                  <ThemedText type="small" style={{ color: M3akPalette.warning }}>
+                    {t('vehicle.quickCreate.nothingNewFace')}
+                  </ThemedText>
+                ) : null}
+                {errorCode ? (
+                  <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                    {t(scanErrorMessageKey(errorCode))}
+                  </ThemedText>
+                ) : null}
+              </View>
+
+              {checks.map((check) => (
+                <View key={check.code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: check.severity === 'warning' ? M3akPalette.warningLight : '#EDE9FE' }}>
+                  <ThemedText type="small" style={{ color: check.severity === 'warning' ? M3akPalette.warning : '#5B21B6' }}>
+                    {t(`vehicle.quickCreate.checks.${check.code}`)}
+                  </ThemedText>
+                </View>
+              ))}
 
               {scanDuplicate && !duplicateDismissed ? (
                 <DuplicateVehicleCard duplicate={scanDuplicate} onContinue={() => setDuplicateDismissed(true)} />
@@ -292,6 +401,21 @@ export default function ScannerCarteGriseScreen() {
                 t={t}
               />
               <ReviewField
+                label={t('vehicle.fields.dateMiseEnCirculation')}
+                value={values.dateMiseEnCirculation}
+                onChangeText={(v) => update('dateMiseEnCirculation', v)}
+                confidence={confidences.dateMiseEnCirculation}
+                t={t}
+              />
+              <ReviewField
+                label={t('vehicle.fields.puissanceFiscale')}
+                value={values.puissanceFiscale}
+                onChangeText={(v) => update('puissanceFiscale', v)}
+                confidence={confidences.puissanceFiscale}
+                keyboardType="number-pad"
+                t={t}
+              />
+              <ReviewField
                 label={t('vehicle.fields.couleur')}
                 value={values.couleur}
                 onChangeText={(v) => update('couleur', v)}
@@ -325,14 +449,10 @@ export default function ScannerCarteGriseScreen() {
                 />
               </View>
 
+              <RegistrationInfo fields={merged} t={t} />
+
               <View className="flex-row gap-2">
-                <Pressable
-                  onPress={() => {
-                    setStatus('idle');
-                    setLocalUri(null);
-                  }}
-                  className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
-                >
+                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
                   <ThemedText type="small">{t('vehicle.quickCreate.retake')}</ThemedText>
                 </Pressable>
               </View>
@@ -342,6 +462,36 @@ export default function ScannerCarteGriseScreen() {
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
+  );
+}
+
+/** Informations lues sur la carte mais qui n'ont pas de champ propre : affichées pour contrôle (non modifiables ici). */
+function RegistrationInfo({ fields, t }: { fields: VehicleOcrFields; t: (key: string) => string }) {
+  const rows: [string, string | null][] = [
+    [t('vehicle.quickCreate.info.proprietaire'), fields.proprietaire.value],
+    [t('vehicle.quickCreate.info.usage'), fields.usage.value],
+    [t('vehicle.quickCreate.info.finValidite'), fromIsoDate(fields.dateFinValidite.value) || null],
+    [t('vehicle.quickCreate.info.immatriculationAnterieure'), fields.immatriculationAnterieure.value],
+    [t('vehicle.quickCreate.info.genre'), fields.genre.value],
+    [t('vehicle.quickCreate.info.type'), fields.type.value],
+    [t('vehicle.quickCreate.info.cylindres'), fields.nombreCylindres.value != null ? String(fields.nombreCylindres.value) : null],
+    [t('vehicle.quickCreate.info.ptac'), fields.ptac.value != null ? `${fields.ptac.value} kg` : null],
+    [t('vehicle.quickCreate.info.poidsVide'), fields.poidsVide.value != null ? `${fields.poidsVide.value} kg` : null],
+  ];
+  const shown = rows.filter((row): row is [string, string] => !!row[1]);
+  if (shown.length === 0) return null;
+  return (
+    <Card className="gap-1">
+      <ThemedText type="smallBold">{t('vehicle.quickCreate.info.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {t('vehicle.quickCreate.info.help')}
+      </ThemedText>
+      {shown.map(([label, value]) => (
+        <ThemedText key={label} type="small">
+          {label} : <ThemedText type="smallBold">{value}</ThemedText>
+        </ThemedText>
+      ))}
+    </Card>
   );
 }
 

@@ -36,7 +36,7 @@ import {
 } from '@/features/vehicles/types';
 import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
 import { findDuplicateInList } from '@/features/vehicles/duplicates';
-import { duplicateVehicleField, toVehicleInput } from '@/features/vehicles/validation';
+import { duplicateVehicleField, toVehicleInput, validateVehicleForm, type VehicleFormValues } from '@/features/vehicles/validation';
 import { VehiclePhotoPicker } from '@/features/vehicles/vehicle-photo-picker';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -47,6 +47,8 @@ type FormState = {
   modele: string;
   finition: string;
   annee: string;
+  dateMiseEnCirculation: string;
+  puissanceFiscale: string;
   categorie: (typeof VEHICLE_CATEGORIES)[number] | null;
   couleur: string;
   nombrePlaces: string;
@@ -67,6 +69,8 @@ function draftToFormState(draft: VehicleCreationDraft | null): FormState {
     modele: draft?.modele ?? '',
     finition: draft?.finition ?? '',
     annee: draft?.annee != null ? String(draft.annee) : '',
+    dateMiseEnCirculation: draft?.dateMiseEnCirculation ?? '',
+    puissanceFiscale: draft?.puissanceFiscale != null ? String(draft.puissanceFiscale) : '',
     categorie: draft?.categorie ?? null,
     couleur: draft?.couleur ?? '',
     nombrePlaces: draft?.nombrePlaces != null ? String(draft.nombrePlaces) : '',
@@ -89,7 +93,7 @@ export default function FinaliserVehiculeScreen() {
   const [showMore, setShowMore] = useState(false);
   const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
   const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>(
-    draft?.carteGrisePendingDocument ? [draft.carteGrisePendingDocument] : []
+    draft?.carteGrisePendingDocuments ?? []
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,7 +126,14 @@ export default function FinaliserVehiculeScreen() {
     categorie: !values.categorie,
     prixJour: !values.prixJour.trim() || Number(values.prixJour) <= 0,
   };
-  const isValid = !Object.values(missing).some(Boolean);
+  const cardErrors = validateVehicleForm({
+    marque: 'x', modele: 'x', immatriculation: 'x', vin: '', finition: '', annee: '',
+    dateMiseEnCirculation: values.dateMiseEnCirculation, puissanceFiscale: values.puissanceFiscale,
+    categorie: values.categorie, couleur: '', nombrePlaces: '', transmission: values.transmission,
+    carburant: values.carburant, kilometrage: '0', niveauCarburant: '', prixJour: '1', prixSemaine: '', prixMois: '',
+    description: '', statut: values.statut,
+  } as VehicleFormValues);
+  const isValid = !Object.values(missing).some(Boolean) && !cardErrors.dateMiseEnCirculation && !cardErrors.puissanceFiscale;
   const statusLocked = !canManuallyChangeStatus(values.statut);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -174,6 +185,8 @@ export default function FinaliserVehiculeScreen() {
           vin: values.vin,
           finition: values.finition,
           annee: values.annee,
+          dateMiseEnCirculation: values.dateMiseEnCirculation,
+          puissanceFiscale: values.puissanceFiscale,
           categorie: values.categorie,
           couleur: values.couleur,
           nombrePlaces: values.nombrePlaces,
@@ -411,6 +424,20 @@ export default function FinaliserVehiculeScreen() {
                 keyboardType="number-pad"
               />
               <TextField
+                label={t('vehicle.fields.dateMiseEnCirculation')}
+                value={values.dateMiseEnCirculation}
+                onChangeText={(v) => update('dateMiseEnCirculation', v)}
+                error={touched && cardErrors.dateMiseEnCirculation ? t('vehicle.form.errors.invalid_date') : undefined}
+                placeholder={t('vehicle.fields.datePlaceholder')}
+              />
+              <TextField
+                label={t('vehicle.fields.puissanceFiscale')}
+                value={values.puissanceFiscale}
+                onChangeText={(v) => update('puissanceFiscale', v)}
+                error={touched && cardErrors.puissanceFiscale ? t('vehicle.form.errors.invalid_cv') : undefined}
+                keyboardType="number-pad"
+              />
+              <TextField
                 label={t('vehicle.fields.finition')}
                 value={values.finition}
                 onChangeText={(v) => update('finition', v)}
@@ -480,6 +507,14 @@ export default function FinaliserVehiculeScreen() {
                 localUri={pendingDocuments.find((d) => d.type === 'carte_grise')?.localUri ?? null}
                 onPick={(uri) =>
                   setPendingDocuments((prev) => [...prev.filter((d) => d.type !== 'carte_grise'), { type: 'carte_grise', localUri: uri, expiresAt: null }])
+                }
+              />
+              <DocumentPhotoField
+                label={t('vehicle.documents.carte_grise_verso')}
+                bucket={VEHICLE_DOCUMENTS_BUCKET}
+                localUri={pendingDocuments.find((d) => d.type === 'carte_grise_verso')?.localUri ?? null}
+                onPick={(uri) =>
+                  setPendingDocuments((prev) => [...prev.filter((d) => d.type !== 'carte_grise_verso'), { type: 'carte_grise_verso', localUri: uri, expiresAt: null }])
                 }
               />
               <DocumentPhotoField

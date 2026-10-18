@@ -23,6 +23,8 @@ type VehicleRow = {
   modele: string;
   finition: string | null;
   annee: number | null;
+  date_mise_en_circulation: string | null;
+  puissance_fiscale: number | null;
   categorie: Vehicle['categorie'];
   couleur: string | null;
   nombre_places: number | null;
@@ -54,6 +56,8 @@ function fromRow(row: VehicleRow): Vehicle {
     modele: row.modele,
     finition: row.finition,
     annee: row.annee,
+    dateMiseEnCirculation: row.date_mise_en_circulation ?? null,
+    puissanceFiscale: row.puissance_fiscale ?? null,
     categorie: row.categorie,
     couleur: row.couleur,
     nombrePlaces: row.nombre_places,
@@ -83,6 +87,8 @@ function toRow(input: VehicleInput) {
     vin: input.vin,
     finition: input.finition,
     annee: input.annee,
+    date_mise_en_circulation: input.dateMiseEnCirculation ?? null,
+    puissance_fiscale: input.puissanceFiscale ?? null,
     categorie: input.categorie,
     couleur: input.couleur,
     nombre_places: input.nombrePlaces,

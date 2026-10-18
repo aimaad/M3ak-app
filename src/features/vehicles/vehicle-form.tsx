@@ -54,6 +54,8 @@ const EMPTY_VALUES: VehicleFormValues = {
   vin: '',
   finition: '',
   annee: '',
+  dateMiseEnCirculation: '',
+  puissanceFiscale: '',
   categorie: null,
   couleur: '',
   nombrePlaces: '',
@@ -162,6 +164,20 @@ export function VehicleForm({
         onChangeText={(v) => update('annee', v)}
         keyboardType="number-pad"
         error={showErrors && errors.annee ? t(`vehicle.form.errors.${errors.annee}`) : undefined}
+      />
+      <TextField
+        label={t('vehicle.fields.dateMiseEnCirculation')}
+        value={values.dateMiseEnCirculation ?? ''}
+        onChangeText={(v) => update('dateMiseEnCirculation', v)}
+        placeholder={t('vehicle.fields.datePlaceholder')}
+        error={showErrors && errors.dateMiseEnCirculation ? t(`vehicle.form.errors.${errors.dateMiseEnCirculation}`) : undefined}
+      />
+      <TextField
+        label={t('vehicle.fields.puissanceFiscale')}
+        value={values.puissanceFiscale ?? ''}
+        onChangeText={(v) => update('puissanceFiscale', v)}
+        keyboardType="number-pad"
+        error={showErrors && errors.puissanceFiscale ? t(`vehicle.form.errors.${errors.puissanceFiscale}`) : undefined}
       />
       <TextField
         label={t('vehicle.fields.finition')}

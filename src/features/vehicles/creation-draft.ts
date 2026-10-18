@@ -14,14 +14,17 @@ export type VehicleCreationDraft = {
   modele?: string;
   finition?: string;
   annee?: number;
+  /** Première mise en circulation, « JJ/MM/AAAA ». */
+  dateMiseEnCirculation?: string;
+  puissanceFiscale?: number;
   couleur?: string;
   nombrePlaces?: number;
   carburant?: FuelType;
   categorie?: VehicleCategory;
   /** Champs dont la confiance OCR était "medium" — à mettre en évidence pour vérification. */
   uncertainFields?: (keyof VehicleCreationDraft)[];
-  /** Photo de la carte grise capturée pendant le scan, à proposer comme document du véhicule. */
-  carteGrisePendingDocument?: PendingVehicleDocument;
+  /** Photos de la carte grise (recto et/ou verso) prises pendant le scan, à proposer comme documents du véhicule. */
+  carteGrisePendingDocuments?: PendingVehicleDocument[];
 };
 
 let draft: VehicleCreationDraft | null = null;

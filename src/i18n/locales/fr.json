@@ -326,9 +326,10 @@
     "existingPhotosHint": "{{count}} photo(s) déjà enregistrée(s).",
     "statusLockedHint": "Statut « {{status}} » géré automatiquement par le module locations.",
     "documents": {
-      "carte_grise": "Carte grise",
+      "carte_grise": "Carte grise (recto)",
       "assurance": "Assurance",
-      "visite_technique": "Visite technique"
+      "visite_technique": "Visite technique",
+      "carte_grise_verso": "Carte grise (verso)"
     },
     "fields": {
       "marque": "Marque",
@@ -352,7 +353,10 @@
       "prixMois": "Prix / mois (MAD)",
       "optionalPlaceholder": "Facultatif",
       "description": "Description / notes internes",
-      "statut": "Statut"
+      "statut": "Statut",
+      "dateMiseEnCirculation": "Première mise en circulation",
+      "datePlaceholder": "JJ/MM/AAAA",
+      "puissanceFiscale": "Puissance fiscale (CV)"
     },
     "fuel": {
       "essence": "Essence",
@@ -397,14 +401,16 @@
         "invalid_year": "Entrez une année valide.",
         "invalid_price": "Entrez un prix supérieur à 0.",
         "invalid_seats": "Entrez un nombre de places entre 1 et 9.",
-        "invalid_fuel_level": "Entrez un pourcentage entre 0 et 100."
+        "invalid_fuel_level": "Entrez un pourcentage entre 0 et 100.",
+        "invalid_cv": "La puissance fiscale doit être un nombre entre 1 et 60.",
+        "invalid_date": "Date invalide : écrivez-la au format JJ/MM/AAAA, sans date future."
       }
     },
     "quickCreate": {
       "subtitle": "Identifiez le véhicule, le reste se remplit tout seul",
       "scanTitle": "Scanner la carte grise",
       "scanSubtitle": "Le plus rapide — photographiez le document",
-      "scanHint": "Cadrez la carte grise bien à plat, dans un endroit lumineux.",
+      "scanHint": "Photographiez le recto de la carte grise (l'immatriculation, la date de mise en circulation, l'usage). Vous pourrez ensuite photographier le verso (marque, modèle, carburant, châssis).",
       "analyzing": "Analyse du document en cours…",
       "plateTitle": "Immatriculation ou VIN",
       "plateSubtitle": "Vérifie d'abord si ce véhicule existe déjà",
@@ -428,7 +434,35 @@
       "successTitle": "Véhicule ajouté !",
       "successBody": "{{plate}} a bien été enregistré dans votre flotte.",
       "viewVehicle": "Voir la voiture",
-      "addAnother": "Ajouter une autre voiture"
+      "addAnother": "Ajouter une autre voiture",
+      "face": {
+        "recto": "Recto",
+        "verso": "Verso"
+      },
+      "checks": {
+        "usage_not_rental": "Attention : l'usage inscrit sur cette carte grise n'est pas « véhicule loué sans chauffeur ». Vérifiez qu'elle correspond bien à un véhicule de location.",
+        "card_expired": "Attention : la carte grise est expirée (fin de validité dépassée).",
+        "card_expiring": "La carte grise arrive bientôt à sa fin de validité (moins de 60 jours). Une alerte sera créée.",
+        "vin_length": "Le numéro de châssis lu n'a pas 17 caractères : vérifiez-le sur la carte."
+      },
+      "info": {
+        "title": "Autres informations lues sur la carte",
+        "help": "Pour contrôle : elles ne sont pas modifiables ici. La fin de validité devient l'échéance d'une alerte.",
+        "proprietaire": "Propriétaire",
+        "usage": "Usage",
+        "finValidite": "Fin de validité",
+        "immatriculationAnterieure": "Immatriculation antérieure",
+        "genre": "Genre",
+        "type": "Type (code)",
+        "cylindres": "Cylindres",
+        "ptac": "P.T.A.C.",
+        "poidsVide": "Poids à vide"
+      },
+      "faceMissingVerso": "Le verso n'a pas encore été lu : il contient la marque, le modèle, le carburant, le châssis, les places et la puissance. Photographiez-le.",
+      "faceMissingRecto": "Le recto n'a pas encore été lu : il contient l'immatriculation, la date de première mise en circulation, l'usage et la fin de validité. Photographiez-le.",
+      "scanOtherFace": "Photographier l'autre face",
+      "bothFaces": "Recto et verso lus. Vérifiez les informations ci-dessous.",
+      "nothingNewFace": "Cette photo n'a rien apporté de nouveau : c'est peut-être la même face. Prenez l'autre face de la carte."
     },
     "duplicate": {
       "title": "Ce véhicule est déjà dans votre flotte",

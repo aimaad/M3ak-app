@@ -1,4 +1,5 @@
 import {
+  fromIsoDate,
   isDuplicatePlateError,
   isFormValid,
   toVehicleInput,
@@ -118,5 +119,32 @@ describe('isDuplicatePlateError', () => {
     expect(isDuplicatePlateError({ code: '42501', message: 'rls' })).toBe(false);
     expect(isDuplicatePlateError(new Error('boom'))).toBe(false);
     expect(isDuplicatePlateError(null)).toBe(false);
+  });
+});
+
+describe('informations de la carte grise : date de mise en circulation et puissance fiscale', () => {
+  const base = makeValues({});
+
+  it('accepte une date JJ/MM/AAAA et une puissance valides, et les convertit', () => {
+    const values = { ...base, dateMiseEnCirculation: '27/08/2025', puissanceFiscale: '6' };
+    expect(validateVehicleForm(values).dateMiseEnCirculation).toBeUndefined();
+    expect(validateVehicleForm(values).puissanceFiscale).toBeUndefined();
+    const input = toVehicleInput(values);
+    expect(input.dateMiseEnCirculation).toBe('2025-08-27');
+    expect(input.puissanceFiscale).toBe(6);
+    expect(fromIsoDate('2025-08-27')).toBe('27/08/2025');
+  });
+
+  it('refuse une date inexistante ou future et une puissance hors limites', () => {
+    expect(validateVehicleForm({ ...base, dateMiseEnCirculation: '31/02/2025' }).dateMiseEnCirculation).toBe('invalid_date');
+    expect(validateVehicleForm({ ...base, dateMiseEnCirculation: '01/01/2999' }).dateMiseEnCirculation).toBe('invalid_date');
+    expect(validateVehicleForm({ ...base, puissanceFiscale: '0' }).puissanceFiscale).toBe('invalid_cv');
+    expect(validateVehicleForm({ ...base, puissanceFiscale: '99' }).puissanceFiscale).toBe('invalid_cv');
+  });
+
+  it('les deux champs restent facultatifs', () => {
+    const errors = validateVehicleForm({ ...base, dateMiseEnCirculation: '', puissanceFiscale: '' });
+    expect(errors.dateMiseEnCirculation).toBeUndefined();
+    expect(toVehicleInput({ ...base, dateMiseEnCirculation: '', puissanceFiscale: '' }).dateMiseEnCirculation).toBeNull();
   });
 });

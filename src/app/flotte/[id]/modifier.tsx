@@ -10,7 +10,7 @@ import { mergeDocuments } from '@/features/storage/documents';
 import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
 import { useUpdateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicle } from '@/features/vehicles/hooks';
 import type { PendingVehicleDocument, VehicleInput } from '@/features/vehicles/types';
-import { duplicateVehicleField } from '@/features/vehicles/validation';
+import { duplicateVehicleField, fromIsoDate } from '@/features/vehicles/validation';
 import { VehicleForm } from '@/features/vehicles/vehicle-form';
 import type { VehicleFormValues } from '@/features/vehicles/validation';
 import { useLanguage } from '@/i18n/use-language';
@@ -87,6 +87,8 @@ export default function ModifierVehiculeScreen() {
         vin: vehicle.vin ?? '',
         finition: vehicle.finition ?? '',
         annee: vehicle.annee ? String(vehicle.annee) : '',
+        dateMiseEnCirculation: fromIsoDate(vehicle.dateMiseEnCirculation),
+        puissanceFiscale: vehicle.puissanceFiscale ? String(vehicle.puissanceFiscale) : '',
         categorie: vehicle.categorie,
         couleur: vehicle.couleur ?? '',
         nombrePlaces: vehicle.nombrePlaces ? String(vehicle.nombrePlaces) : '',
