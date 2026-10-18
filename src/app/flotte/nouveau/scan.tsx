@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { ZoomableImage } from '@/components/zoomable-image';
 import { KeepPhotoChoice } from '@/components/keep-photo-choice';
 import { ChipGroup } from '@/components/chip-group';
 import { ScreenHeader } from '@/components/screen-header';
@@ -271,10 +272,15 @@ export default function ScannerCarteGriseScreen() {
           ) : null}
 
           {status === 'result' && scans.length > 0 ? (
-            <View className="flex-row gap-2">
-              {scans.map((item) => (
-                <Image key={item.face} source={{ uri: item.uri }} style={{ flex: 1, height: 130, borderRadius: 16 }} resizeMode="cover" />
-              ))}
+            <View className="gap-1">
+              <View className="flex-row gap-2" style={{ height: 150 }}>
+                {scans.map((item) => (
+                  <ZoomableImage key={item.face} uri={item.uri} label={t(`vehicle.quickCreate.face.${item.face}`)} style={{ borderRadius: 16 }} />
+                ))}
+              </View>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('common.zoomHint')}
+              </ThemedText>
             </View>
           ) : null}
 

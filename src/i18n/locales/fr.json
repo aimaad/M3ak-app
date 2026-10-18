@@ -1,5 +1,7 @@
 {
   "common": {
+    "close": "Fermer",
+    "zoomHint": "Touchez pour agrandir",
     "appName": "M3ak",
     "tagline": "L'application intelligente pour votre agence de location",
     "language": "Langue",
