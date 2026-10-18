@@ -252,10 +252,13 @@
         "network": "Pas de connexion. Vérifiez internet puis touchez « Réessayer ».",
         "permission": "Vous n'avez pas le droit de modifier le logo. Seul le propriétaire le peut.",
         "permissionPhotos": "L'accès aux photos est refusé. Autorisez-le dans les réglages du téléphone.",
-        "failed": "L'envoi du logo a échoué. Touchez « Réessayer »."
+        "failed": "L'envoi du logo a échoué. Touchez « Réessayer ».",
+        "timeout": "La connexion est trop lente ou instable : l'envoi a été arrêté. Rapprochez-vous du Wi-Fi puis touchez « Réessayer »."
       },
       "homeNoticeTitle": "Le logo de votre agence est obligatoire",
-      "homeNotice": "Touchez ici pour l'ajouter dans Mon entreprise : sans logo, vous ne pourrez pas faire signer de contrats."
+      "homeNotice": "Touchez ici pour l'ajouter dans Mon entreprise : sans logo, vous ne pourrez pas faire signer de contrats.",
+      "stageWaiting": "Envoi terminé, en attente de la réponse du serveur… la connexion est lente, patientez.",
+      "cancel": "Annuler l'envoi"
     }
   },
   "flotte": {

@@ -133,10 +133,12 @@ export function useUploadAgencyLogo() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ agencyId, localUri, onProgress }: { agencyId: string; localUri: string; onProgress?: (progress: UploadProgress) => void }) =>
-      uploadAgencyLogo(agencyId, localUri, onProgress),
+    mutationFn: ({ agencyId, localUri, onProgress, signal }: { agencyId: string; localUri: string; onProgress?: (progress: UploadProgress) => void; signal?: AbortSignal }) =>
+      uploadAgencyLogo(agencyId, localUri, onProgress, signal),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['signed-url'] });
+      queryClient.invalidateQueries({ queryKey: ['my-agency'] });
     },
   });
 }

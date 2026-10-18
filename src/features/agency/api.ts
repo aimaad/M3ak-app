@@ -317,17 +317,30 @@ export async function updateAgencyDetails(
   return agencyFromRow(data as AgencyRow);
 }
 
-export async function uploadAgencyLogo(agencyId: string, localUri: string, onProgress?: (progress: UploadProgress) => void): Promise<AgencyDetails> {
+export async function uploadAgencyLogo(
+  agencyId: string,
+  localUri: string,
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
+): Promise<AgencyDetails> {
   const contentType = logoContentType({ uri: localUri, mimeType: null }) ?? 'image/jpeg';
   const extension = contentType === 'image/png' ? 'png' : 'jpg';
-  const path = `${agencyId}/logo.${extension}`;
+  // Nom unique à chaque envoi : l'ancien logo ne reste pas affiché (image mise en cache sous l'ancien nom).
+  const path = `${agencyId}/logo-${Date.now()}.${extension}`;
 
-  if (onProgress) await uploadFileWithProgress(AGENCY_ASSETS_BUCKET, path, localUri, contentType, onProgress);
+  const { data: before } = await getSupabase().from('agencies').select('logo_url').eq('id', agencyId).maybeSingle();
+  const previousPath = (before as { logo_url: string | null } | null)?.logo_url ?? null;
+
+  if (onProgress) await uploadFileWithProgress(AGENCY_ASSETS_BUCKET, path, localUri, contentType, onProgress, signal);
   else await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, contentType);
 
   const { data, error } = await getSupabase().from('agencies').update({ logo_url: path }).eq('id', agencyId).select().single();
-
   if (error) throw error;
+
+  // Nettoyage de l'ancien fichier (sans importance s'il échoue).
+  if (previousPath && previousPath !== path) {
+    getSupabase().storage.from(AGENCY_ASSETS_BUCKET).remove([previousPath]).catch(() => undefined);
+  }
   return agencyFromRow(data as AgencyRow);
 }
 

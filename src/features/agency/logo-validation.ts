@@ -30,8 +30,10 @@ export function validateLogoAsset(asset: LogoAsset): LogoErrorCode | null {
 }
 
 /** Erreur technique d'envoi → code simple (les autres erreurs deviennent un message générique « réessayez »). */
-export function logoUploadErrorCode(error: unknown): LogoErrorCode | 'network' | 'permission' | 'failed' {
+export function logoUploadErrorCode(error: unknown): LogoErrorCode | 'network' | 'timeout' | 'cancelled' | 'permission' | 'failed' {
   const text = (error instanceof Error ? error.message : String(error)).toLowerCase();
+  if (/upload_cancelled/.test(text)) return 'cancelled';
+  if (/upload_timeout/.test(text)) return 'timeout';
   if (/file_too_large|payload too large|exceeded the maximum|\b413\b/.test(text)) return 'too_large';
   if (/file_empty/.test(text)) return 'empty';
   if (/content_type_mismatch|unsupported_content_type|mime type/.test(text)) return 'unsupported_type';

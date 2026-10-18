@@ -31,6 +31,8 @@ describe('contrôles du logo', () => {
     expect(logoUploadErrorCode(new Error('The object exceeded the maximum allowed size'))).toBe('too_large');
     expect(logoUploadErrorCode(new Error('new row violates row-level security policy'))).toBe('permission');
     expect(logoUploadErrorCode(new Error('content_type_mismatch'))).toBe('unsupported_type');
+    expect(logoUploadErrorCode(new Error('upload_timeout'))).toBe('timeout');
+    expect(logoUploadErrorCode(new Error('upload_cancelled'))).toBe('cancelled');
     expect(logoUploadErrorCode(new Error('quelque chose'))).toBe('failed');
   });
 });

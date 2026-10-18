@@ -88,12 +88,18 @@ export type UploadProgress = { stage: 'checking' | 'uploading' | 'done'; /** 0 �
  * Même contrôles que `uploadFile` (type, taille, contenu réel), mais l'envoi suit sa progression octet par octet pour
  * afficher une barre de chargement. Le fichier est envoyé en binaire à l'API de stockage, avec la session de l'utilisateur.
  */
+/** Sans aucune avancée pendant ce délai, l'envoi est abandonné (connexion coupée ou trop faible). */
+export const UPLOAD_STALL_MS = 45_000;
+/** Durée maximale totale d'un envoi. */
+export const UPLOAD_MAX_MS = 120_000;
+
 export async function uploadFileWithProgress(
   bucket: string,
   path: string,
   localUri: string,
   contentType: string,
-  onProgress: (progress: UploadProgress) => void
+  onProgress: (progress: UploadProgress) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   onProgress({ stage: 'checking', fraction: 0 });
   if (!ALLOWED_CONTENT_TYPES.includes(contentType)) throw new UploadValidationError(`unsupported_content_type: ${contentType}`);
@@ -120,10 +126,38 @@ export async function uploadFileWithProgress(
       headers: { Authorization: `Bearer ${token}`, apikey: anonKey, 'Content-Type': contentType, 'x-upsert': 'true', 'cache-control': '3600' },
     },
     (event) => {
+      lastProgressAt = Date.now();
       if (event.totalBytesExpectedToSend > 0) onProgress({ stage: 'uploading', fraction: Math.min(1, event.totalBytesSent / event.totalBytesExpectedToSend) });
     }
   );
-  const result = await task.uploadAsync();
+
+  // Garde-fous : l'envoi s'arrête (au lieu de rester bloqué) si la connexion n'avance plus, si c'est trop long ou si l'utilisateur annule.
+  const startedAt = Date.now();
+  let lastProgressAt = Date.now();
+  let abortReason: 'upload_timeout' | 'upload_cancelled' | null = null;
+  const abort = (reason: 'upload_timeout' | 'upload_cancelled') => {
+    if (abortReason) return;
+    abortReason = reason;
+    task.cancelAsync().catch(() => undefined);
+  };
+  const watchdog = setInterval(() => {
+    if (Date.now() - lastProgressAt > UPLOAD_STALL_MS || Date.now() - startedAt > UPLOAD_MAX_MS) abort('upload_timeout');
+  }, 2_000);
+  const onAbort = () => abort('upload_cancelled');
+  if (signal?.aborted) onAbort();
+  signal?.addEventListener('abort', onAbort);
+
+  let result: Awaited<ReturnType<typeof task.uploadAsync>>;
+  try {
+    result = await task.uploadAsync();
+  } catch (error) {
+    if (abortReason) throw new Error(abortReason);
+    throw error;
+  } finally {
+    clearInterval(watchdog);
+    signal?.removeEventListener('abort', onAbort);
+  }
+  if (abortReason) throw new Error(abortReason);
   if (!result || result.status < 200 || result.status >= 300) {
     let message = `upload_failed_${result?.status ?? 0}`;
     try {

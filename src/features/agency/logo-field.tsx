@@ -1,5 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Image, View } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -18,7 +18,7 @@ type Phase = 'idle' | 'checking' | 'uploading' | 'saving' | 'done' | 'error';
 /** Part de la barre : vérification 0-10 %, envoi 10-90 %, enregistrement 90-100 %. */
 function barFraction(phase: Phase, uploadFraction: number): number {
   if (phase === 'checking') return 0.05;
-  if (phase === 'uploading') return 0.1 + 0.8 * uploadFraction;
+  if (phase === 'uploading') return 0.1 + 0.78 * uploadFraction; // jamais 100 % avant la réponse du serveur
   if (phase === 'saving') return 0.95;
   if (phase === 'done') return 1;
   return 0;
@@ -37,6 +37,7 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
   const [uploadFraction, setUploadFraction] = useState(0);
   const [picked, setPicked] = useState<{ uri: string } | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const busy = phase === 'checking' || phase === 'uploading' || phase === 'saving';
   const missing = !logoPath && phase !== 'done';
@@ -45,10 +46,13 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
     setErrorKey(null);
     setPhase('checking');
     setUploadFraction(0);
+    const controller = new AbortController();
+    abortRef.current = controller;
     try {
       await upload.mutateAsync({
         agencyId,
         localUri: uri,
+        signal: controller.signal,
         onProgress: (progress) => {
           if (progress.stage === 'uploading') {
             setPhase('uploading');
@@ -62,8 +66,15 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       setPicked(null);
     } catch (error) {
       const code = logoUploadErrorCode(error);
+      if (code === 'cancelled') {
+        setPhase('idle');
+        setPicked(null);
+        return;
+      }
       setErrorKey(`entreprise.logo.errors.${code}`);
       setPhase('error');
+    } finally {
+      abortRef.current = null;
     }
   }
 
@@ -130,10 +141,13 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
           <ThemedText type="small" themeColor="textSecondary" className="text-center">
             {phase === 'checking'
               ? t('entreprise.logo.stageChecking')
-              : phase === 'uploading'
-                ? t('entreprise.logo.stageUploading', { percent: Math.round(uploadFraction * 100) })
-                : t('entreprise.logo.stageSaving')}
+              : phase === 'uploading' && uploadFraction >= 1
+                ? t('entreprise.logo.stageWaiting')
+                : phase === 'uploading'
+                  ? t('entreprise.logo.stageUploading', { percent: Math.round(uploadFraction * 100) })
+                  : t('entreprise.logo.stageSaving')}
           </ThemedText>
+          <Button label={t('entreprise.logo.cancel')} variant="ghost" size="sm" onPress={() => abortRef.current?.abort()} />
         </View>
       ) : null}
 
@@ -148,7 +162,7 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
           <ThemedText type="small" style={{ color: M3akPalette.danger }}>
             {t(errorKey)}
           </ThemedText>
-          {picked && ['entreprise.logo.errors.network', 'entreprise.logo.errors.failed'].includes(errorKey) ? (
+          {picked && ['entreprise.logo.errors.network', 'entreprise.logo.errors.timeout', 'entreprise.logo.errors.failed'].includes(errorKey) ? (
             <Button label={t('entreprise.logo.retry')} variant="secondary" size="sm" onPress={() => send(picked.uri)} />
           ) : null}
         </View>
