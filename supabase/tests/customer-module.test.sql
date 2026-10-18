@@ -277,6 +277,13 @@ select pg_temp.ck('liste de contrôle : signale quand même le manque (permis du
   and (public.rental_departure_check('b1000000-0000-0000-0000-000000000001') -> 'parties' -> 1 -> 'issues')::text like '%licence_missing%',
   (public.rental_departure_check('b1000000-0000-0000-0000-000000000001') ->> 'blocking_count'));
 
+-- Depuis la migration 0047, le départ exige l'inspection de départ terminée (8 photos minimum) : on la prépare.
+insert into inspections (id, agency_id, rental_id, vehicle_id, type, statut)
+values ('e1000000-0000-0000-0000-0000000000b1', 'aaaaaaaa-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'depart', 'terminee');
+insert into inspection_photos (inspection_id, agency_id, angle, url)
+select 'e1000000-0000-0000-0000-0000000000b1', 'aaaaaaaa-0000-0000-0000-000000000001', a::photo_angle, 'x/' || a || '.jpg'
+from unnest(array['avant','arriere','lateral_gauche','lateral_droit','jante_avant_gauche','jante_avant_droit','jante_arriere_gauche','jante_arriere_droit']) a;
+
 -- non-régression : politique inactive => le départ fonctionne comme avant, sans aucun document
 select pg_temp.try('NON-RÉGRESSION : départ possible sans documents tant que la politique est inactive', $$
   select public.start_rental_with_contract('b1000000-0000-0000-0000-000000000001', 'c0000000-0000-0000-0000-0000000000c1', 1000, 100, 'bon', '[]'::jsonb, null)$$);

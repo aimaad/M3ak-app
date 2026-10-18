@@ -17,6 +17,7 @@ import { DepartureChecklist } from '@/features/rentals/departure-checklist';
 import { useDepartureCheck, useRental } from '@/features/rentals/hooks';
 import { validateOdometerForm } from '@/features/rentals/validation';
 import { useMyAgency } from '@/features/agency/hooks';
+import { useInspectionForRental } from '@/features/inspections/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -29,6 +30,8 @@ export default function DepartScreen() {
   const agencyQuery = useMyAgency();
   const { data: rental } = useRental(id);
   const departureCheck = useDepartureCheck(id);
+  const { data: departInspection, isLoading: isLoadingInspection } = useInspectionForRental(id, 'depart');
+  const departInspectionDone = departInspection?.statut === 'terminee' || departInspection?.statut === 'validee';
   // La politique de l'agence bloque le départ tant que la liste de contrôle n'est pas satisfaite (le serveur le refuse aussi).
   const departureBlocked = !!departureCheck.data && departureCheck.data.enforced && !departureCheck.data.ok;
 
@@ -71,16 +74,18 @@ export default function DepartScreen() {
       });
       router.back();
     } catch (err) {
-      const message = err instanceof Error ? err.message : '';
+      const message = (err as { message?: string } | null)?.message ?? '';
       setError(
-        message.includes('departure_requirements_not_met')
-          ? t(departureErrorKey(err))
-          : t('locations.depart.error')
+        message.includes('departure_inspection_required')
+          ? t('locations.departInspectionRequired.body')
+          : message.includes('departure_requirements_not_met')
+            ? t(departureErrorKey(err))
+            : t('locations.depart.error')
       );
     }
   }
 
-  if (isLoadingContract) {
+  if (isLoadingContract || isLoadingInspection) {
     return (
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
@@ -102,6 +107,28 @@ export default function DepartScreen() {
             <ThemedText type="default" themeColor="textSecondary" className="text-center">
               {t('contract.unavailableHint')}
             </ThemedText>
+          </View>
+        </SafeAreaView>
+      </ThemedView>
+    );
+  }
+
+  if (!departInspectionDone) {
+    return (
+      <ThemedView className="flex-1">
+        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+          <ScreenHeader title={t('locations.depart.title')} showBack />
+          <View className="flex-1 items-center justify-center gap-4 px-8">
+            <ThemedText type="smallBold" className="text-center">
+              {t('locations.departInspectionRequired.title')}
+            </ThemedText>
+            <ThemedText type="default" themeColor="textSecondary" className="text-center">
+              {t('locations.departInspectionRequired.body')}
+            </ThemedText>
+            <Button
+              label={t('locations.departInspectionRequired.action')}
+              onPress={() => router.replace({ pathname: '/locations/[id]/inspection-depart', params: { id: id as string } })}
+            />
           </View>
         </SafeAreaView>
       </ThemedView>

@@ -98,5 +98,36 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
 select pg_temp.try('dommage : un responsable peut supprimer', $$delete from damages where id = 'd1000000-0000-0000-0000-000000000001'$$);
 select pg_temp.ck('dommage : supprimé par le responsable', (select count(*) = 0 from damages), '');
 
+-- Le départ exige l'inspection de départ terminée (migration 0047).
+reset role;
+set session_replication_role = replica;
+insert into rentals (id, agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue)
+values ('a2000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001', 'confirmee', now(), now() + interval '2 day');
+insert into contracts (id, agency_id, rental_id, statut, customer_nom, vehicle_immatriculation, vehicle_marque, vehicle_modele, date_debut_prevue, date_fin_prevue, prix_total, caution_montant)
+values ('c0000000-0000-0000-0000-0000000000c2', 'aaaaaaaa-0000-0000-0000-000000000001', 'a2000000-0000-0000-0000-000000000002', 'signe', 'Client Un', '1-A-1', 'Dacia', 'Logan', now(), now() + interval '2 day', 600, 2000);
+set session_replication_role = origin;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('départ : refusé sans inspection de départ',
+  $$select public.start_rental_with_contract('a2000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-0000000000c2', 1000, 100, 'bon', '[]'::jsonb, null)$$, 'departure_inspection_required');
+reset role;
+set session_replication_role = replica;
+insert into inspections (id, agency_id, rental_id, vehicle_id, type, statut)
+values ('e2000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'a2000000-0000-0000-0000-000000000002', 'f1000000-0000-0000-0000-000000000001', 'depart', 'en_cours');
+set session_replication_role = origin;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('départ : refusé si l''inspection de départ n''est pas terminée',
+  $$select public.start_rental_with_contract('a2000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-0000000000c2', 1000, 100, 'bon', '[]'::jsonb, null)$$, 'departure_inspection_required');
+update inspections set statut = 'terminee' where id = 'e2000000-0000-0000-0000-000000000002';
+select pg_temp.try('départ : refusé si l''inspection est terminée mais sans assez de photos',
+  $$select public.start_rental_with_contract('a2000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-0000000000c2', 1000, 100, 'bon', '[]'::jsonb, null)$$, 'departure_inspection_required');
+insert into inspection_photos (inspection_id, agency_id, angle, url)
+select 'e2000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', a::photo_angle, 'x/' || a || '.jpg'
+from unnest(array['avant','arriere','lateral_gauche','lateral_droit','jante_avant_gauche','jante_avant_droit','jante_arriere_gauche','jante_arriere_droit']) a;
+select pg_temp.try('départ : accepté avec l''inspection terminée et ses photos',
+  $$select public.start_rental_with_contract('a2000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-0000000000c2', 1000, 100, 'bon', '[]'::jsonb, null)$$);
+select pg_temp.ck('départ : la location est bien passée en cours', (select statut = 'en_cours' from rentals where id = 'a2000000-0000-0000-0000-000000000002'), '');
+
 reset role;
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

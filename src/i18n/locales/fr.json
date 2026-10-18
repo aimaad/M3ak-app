@@ -954,6 +954,11 @@
         "rental_not_ready_for_departure": "La location n'est pas prête pour le départ.",
         "rental_not_found": "Réservation introuvable."
       }
+    },
+    "departInspectionRequired": {
+      "title": "Inspection de départ obligatoire",
+      "body": "Prenez d'abord les photos du véhicule (inspection de départ). La location ne peut pas démarrer tant que l'inspection de départ n'est pas terminée : ces photos prouvent l'état de la voiture avant la location.",
+      "action": "Faire l'inspection de départ"
     }
   },
   "contract": {

@@ -64,7 +64,10 @@ export default function LocationDetailScreen() {
   const rentalConfirmed = rental?.statut === 'confirmee' || rental?.statut === 'reservee';
   const canCreateContract = rentalConfirmed && !contract;
   const departureBlocked = !!departureCheck.data && departureCheck.data.enforced && !departureCheck.data.ok;
-  const canStart = rentalConfirmed && contract?.statut === 'signe' && !departureBlocked;
+  // Le départ exige l'inspection de départ terminée (photos du véhicule) : le serveur le refuse aussi.
+  const departInspectionDone = inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee';
+  const needsDepartInspection = rentalConfirmed && contract?.statut === 'signe' && !departInspectionDone;
+  const canStart = rentalConfirmed && contract?.statut === 'signe' && !departureBlocked && departInspectionDone;
   const driversEditable =
     rental?.statut === 'en_attente_confirmation' || rental?.statut === 'confirmee' || rental?.statut === 'reservee';
   const canConfirm = rental?.statut === 'en_attente_confirmation';
@@ -249,6 +252,22 @@ export default function LocationDetailScreen() {
             <ThemedText type="small" style={{ color: '#DC2626' }}>
               {t('locations.departureCheck.startBlocked')}
             </ThemedText>
+          ) : null}
+
+          {needsDepartInspection ? (
+            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FEF3C7' }}>
+              <ThemedText type="smallBold" style={{ color: '#92400E' }}>
+                {t('locations.departInspectionRequired.title')}
+              </ThemedText>
+              <ThemedText type="small" style={{ color: '#92400E' }}>
+                {t('locations.departInspectionRequired.body')}
+              </ThemedText>
+              <Button
+                label={t('locations.departInspectionRequired.action')}
+                size="sm"
+                onPress={() => router.push({ pathname: '/locations/[id]/inspection-depart', params: { id: rental.id } })}
+              />
+            </View>
           ) : null}
 
           {canStart ? (

@@ -6,13 +6,16 @@
 3. **Validation** : l'employé confirme, rejette ou corrige chaque dommage (emplacement, type, gravité, coût, nouveau / déjà présent), ou en ajoute un que l'IA a manqué. Le coût est proposé par l'IA et modifiable.
 4. **Retenue et rapport** (retour) : seuls les dommages **nouveaux ET confirmés** comptent. La retenue est proposée, modifiable, plafonnée à la caution, et ne peut pas être validée tant qu'un nouveau dommage est « à valider ». Rapport PDF (synthèse, dommages, photos départ / retour, caution) partageable, et message WhatsApp.
 
+## Départ conditionné à l'inspection
+Une location **ne peut pas démarrer** tant que l'inspection de départ n'est pas terminée (au moins 8 photos ; le guide actuel en demande 24). L'écran de la location affiche un bandeau « Inspection de départ obligatoire » avec un bouton, l'écran de départ renvoie vers l'inspection, et le serveur refuse aussi (`departure_inspection_required`, migration 0047) : contourner l'écran ne suffit pas.
+
 ## Confidentialité et sécurité
 - Même règle que la lecture de documents : clé Gemini **de l'entreprise** uniquement, accord du propriétaire obligatoire (sinon `ocr_disabled` / `ocr_not_configured`, rien n'est envoyé).
 - La fonction vérifie d'abord, avec le droit de l'appelant (RLS), qu'il peut voir l'inspection (entreprise et filiale). Les photos ne sont lues avec le rôle service qu'ensuite. Ni images ni résultats ne sont journalisés.
 - L'IA propose, l'humain décide : rien n'est retenu sans validation.
 
 ## Mise en route
-1. Exécuter `supabase/migrations/0046_inspection_analysis.sql`.
+1. Exécuter `supabase/migrations/0046_inspection_analysis.sql` puis `0047_departure_requires_inspection.sql`.
 2. `npx supabase functions deploy analyze-inspection --project-ref <ref>` (la fonction partage `_shared/gemini.ts`).
 3. Tests SQL : `supabase/tests/inspection-analysis.test.sql` (isolation entre agences, contraintes, nouveaux angles).
 
