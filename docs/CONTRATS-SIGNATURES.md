@@ -5,7 +5,7 @@ Toutes les agences démarrent avec un contrat au format **carnet de location** (
 
 ### Régler son contrat (propriétaire) — « Mon entreprise → Mon contrat »
 Un seul écran, en 5 parties numérotées, sans aucun vocabulaire technique :
-1. **Vos informations légales** : Patente, R.C, I.F, C.N.S.S (affichées en bas du contrat ; ce qui est vide n'apparaît pas). Le nom, l'adresse, le téléphone, le logo et le cachet viennent de « Mon entreprise ».
+1. **Vos informations légales** : Patente, R.C, I.F, C.N.S.S **et tous les autres numéros que le propriétaire veut ajouter** (ex. ICE : un nom + un numéro), affichés en bas du contrat ; ce qui est vide n'apparaît pas. L'e-mail de l'agence n'est pas affiché sur le contrat. Le nom, l'adresse, le téléphone, le logo et le cachet viennent de « Mon entreprise ».
 2. **Informations demandées au client** : interrupteurs (date de naissance, nationalité, adresse à l'étranger, hôtel, CIN, passeport).
 3. **Parties du contrat** : interrupteurs (deuxième conducteur, paiement, kilométrage, niveau de carburant, schémas de l'état du véhicule, franchise sinistre avec son texte modifiable, conditions générales au verso).
 4. **Ajouter une information à écrire au stylo** : on écrit un nom (ex. « Numéro de dossier »), une ligne vide apparaît dans la fiche du conducteur.
