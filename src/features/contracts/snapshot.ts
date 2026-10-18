@@ -18,7 +18,7 @@ const firstDoc = (customer: Customer, type: CustomerDocument['type']): CustomerD
  * Informations du client et du deuxième conducteur, figées sur le contrat à sa création : une modification ultérieure
  * de la fiche client ne change jamais un contrat existant. Les valeurs absentes restent vides (ligne à remplir à la main).
  */
-export function buildSnapshotValues(customer: Customer, additionalDrivers: Pick<Driver, 'nomComplet' | 'cinOuPasseport' | 'numeroPermis'>[]): SnapshotValues {
+export function buildSnapshotValues(customer: Customer, additionalDrivers: Pick<Driver, 'nomComplet' | 'prenom' | 'nom' | 'cinOuPasseport' | 'numeroPermis'>[]): SnapshotValues {
   const licence = firstDoc(customer, 'permis');
   const passport = firstDoc(customer, 'passeport');
   const second = additionalDrivers[0];
@@ -34,7 +34,9 @@ export function buildSnapshotValues(customer: Customer, additionalDrivers: Pick<
     client_permis_delivre_le: formatDate(licence?.dateDelivrance),
     client_permis_delivre_a: licence?.issuingAuthority ?? '',
     client_passeport: passport?.reference ?? '',
-    conducteur2_nom: second?.nomComplet ?? '',
+    // Conducteur créé avant l'ajout du prénom : le nom complet va dans « Nom », « Prénom » reste à écrire à la main.
+    conducteur2_prenom: second?.prenom ?? '',
+    conducteur2_nom: second ? (second.prenom || second.nom ? (second.nom ?? '') : second.nomComplet) : '',
     conducteur2_permis: second?.numeroPermis ?? '',
     conducteur2_cin: second?.cinOuPasseport ?? '',
   };

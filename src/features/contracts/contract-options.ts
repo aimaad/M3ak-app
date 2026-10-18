@@ -160,6 +160,7 @@ export function templateFromOptions(options: ContractOptions, agencyLines: strin
       title: 'Conducteur 2',
       rows: [
         row('Nom', '{{conducteur2_nom}}'),
+        row('Prénom', '{{conducteur2_prenom}}'),
         row('Permis de conduire N°', '{{conducteur2_permis}}'),
         row('C.I.N N°', '{{conducteur2_cin}}'),
         row('Conducteur principal', '{{conducteur_principal}}', true),
@@ -195,7 +196,6 @@ export function templateFromOptions(options: ContractOptions, agencyLines: strin
 
   if (s.etatVehicule) {
     blocks.push({ type: 'vehicleDiagram', title: 'État du véhicule (Départ)' });
-    blocks.push({ type: 'vehicleDiagram', title: 'État du véhicule (Retour)' });
   }
   blocks.push({
     type: 'box',

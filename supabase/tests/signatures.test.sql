@@ -79,6 +79,14 @@ select pg_temp.try('cachet : refus d''un chemin d''une autre agence',
 select pg_temp.try('cachet : refus d''un fichier qui n''est pas une image de cachet',
   $$update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/../x.svg' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'invalid_stamp_path');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('contrat : refus de signer sans logo de l''agence',
+  $$update contracts set client_signature_path = 'aaaaaaaa-0000-0000-0000-000000000001/contracts/c0000000-0000-0000-0000-0000000000c1/client-1.json',
+      client_signed_at = now(), statut = 'signe', signed_at = now(), signed_by = '00000000-0000-0000-0000-0000000000a3'
+    where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_agency_logo_required');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.try('logo : le propriétaire enregistre le logo de l''agence',
+  $$update agencies set logo_url = 'aaaaaaaa-0000-0000-0000-000000000001/logo.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
 update agencies set stamp_path = null where id = 'aaaaaaaa-0000-0000-0000-000000000001';
 select pg_temp.ck('cachet : un employé ne peut pas le modifier', (select stamp_path is not null from agencies where id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
 

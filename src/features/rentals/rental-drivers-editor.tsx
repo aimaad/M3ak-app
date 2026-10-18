@@ -38,7 +38,7 @@ type Props = {
   disabled?: boolean;
 };
 
-const EMPTY_NEW_DRIVER: DriverFormValues = { nomComplet: '', cinOuPasseport: '', numeroPermis: '', telephone: '' };
+const EMPTY_NEW_DRIVER: DriverFormValues = { prenom: '', nom: '', cinOuPasseport: '', numeroPermis: '', telephone: '' };
 const MAX_RESULTS = 6;
 
 type Answer = 'no' | 'yes';
@@ -242,10 +242,16 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
             <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-4">
               <ThemedText type="smallBold">{t('locations.drivers.newTitle')}</ThemedText>
               <TextField
-                label={t('customer.fields.nomComplet')}
-                value={newDriver.nomComplet}
-                onChangeText={(v) => setNewDriver((prev) => ({ ...prev, nomComplet: v }))}
-                error={touched && errors.nomComplet ? t('customer.form.errors.required') : undefined}
+                label={t('customer.fields.prenom')}
+                value={newDriver.prenom}
+                onChangeText={(v) => setNewDriver((prev) => ({ ...prev, prenom: v }))}
+                error={touched && errors.prenom ? t('customer.form.errors.required') : undefined}
+              />
+              <TextField
+                label={t('customer.fields.nom')}
+                value={newDriver.nom}
+                onChangeText={(v) => setNewDriver((prev) => ({ ...prev, nom: v }))}
+                error={touched && errors.nom ? t('customer.form.errors.required') : undefined}
               />
               <TextField
                 label={t('customer.fields.telephone')}

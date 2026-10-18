@@ -12,7 +12,8 @@ import { useCreateDriver, useDrivers, useRemoveDriver } from './hooks';
 import { isDriverFormValid, toDriverInput, validateDriverForm, type DriverFormValues } from './driver-validation';
 
 const EMPTY_VALUES: DriverFormValues = {
-  nomComplet: '',
+  prenom: '',
+  nom: '',
   cinOuPasseport: '',
   numeroPermis: '',
   telephone: '',
@@ -125,10 +126,16 @@ export function DriverList({
       {showForm ? (
         <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-4">
           <TextField
-            label={t('customer.fields.nomComplet')}
-            value={values.nomComplet}
-            onChangeText={(v) => update('nomComplet', v)}
-            error={touched && errors.nomComplet ? t(`customer.form.errors.${errors.nomComplet}`) : undefined}
+            label={t('customer.fields.prenom')}
+            value={values.prenom}
+            onChangeText={(v) => update('prenom', v)}
+            error={touched && errors.prenom ? t(`customer.form.errors.${errors.prenom}`) : undefined}
+          />
+          <TextField
+            label={t('customer.fields.nom')}
+            value={values.nom}
+            onChangeText={(v) => update('nom', v)}
+            error={touched && errors.nom ? t(`customer.form.errors.${errors.nom}`) : undefined}
           />
           <TextField
             label={t('customer.fields.telephone')}

@@ -190,7 +190,7 @@ export async function generateContractPdf(
  * Contrat VIERGE : seules les informations de l'agence sont remplies ; tout le reste est une ligne à remplir au stylo.
  * Sert à l'aperçu « vierge » de l'éditeur et à imprimer des exemplaires papier.
  */
-export async function generateBlankContractPdf(agency: ContractAgencyInfo, agencyTemplate?: unknown): Promise<string> {
+export async function generateBlankContractPdf(agency: ContractAgencyInfo, agencyTemplate?: unknown, logoDataUri?: string | null): Promise<string> {
   const blank = { ...sampleContract(), snapshotValues: null, numero: '', customerNom: '' };
   const template = resolveTemplate(blank, agency, agencyTemplate);
   const values: TemplateValues = {
@@ -206,6 +206,7 @@ export async function generateBlankContractPdf(agency: ContractAgencyInfo, agenc
     context: { hasDrivers: true, hasConditions: true, hasDeparture: true },
     clientName: '',
     agencyName: agency.nom,
+    logoDataUri,
   });
   const { uri } = await Print.printToFileAsync({ html, base64: false });
   return uri;

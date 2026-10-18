@@ -46,7 +46,7 @@ insert into rentals (id, agency_id, vehicle_id, customer_id, statut, date_debut_
   values ('a1000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001', 'confirmee', now() + interval '1 day', now() + interval '3 day');
 insert into contracts (id, agency_id, rental_id, statut, customer_nom, vehicle_immatriculation, vehicle_marque, vehicle_modele, date_debut_prevue, date_fin_prevue, prix_total, caution_montant)
   values ('c0000000-0000-0000-0000-0000000000c1', 'aaaaaaaa-0000-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'pret_a_signer', 'Client Un', '1-A-1', 'Dacia', 'Logan', now() + interval '1 day', now() + interval '3 day', 900, 2000);
-update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/stamp.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+update agencies set stamp_path = 'aaaaaaaa-0000-0000-0000-000000000001/stamp.png', logo_url = 'aaaaaaaa-0000-0000-0000-000000000001/logo.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
 set session_replication_role = origin;
 grant all on res to authenticated;
 set role authenticated;

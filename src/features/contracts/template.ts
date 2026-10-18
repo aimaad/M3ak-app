@@ -58,7 +58,7 @@ export const PLACEHOLDERS = [
   'etat_depart', 'accessoires_depart', 'observations_depart', 'conditions_particulieres',
   'client_prenom', 'client_nom_famille', 'client_naissance', 'client_nationalite', 'client_adresse',
   'client_permis', 'client_permis_delivre_le', 'client_permis_delivre_a', 'client_passeport',
-  'conducteur2_nom', 'conducteur2_permis', 'conducteur2_cin',
+  'conducteur2_prenom', 'conducteur2_nom', 'conducteur2_permis', 'conducteur2_cin',
   'prix_jour', 'nombre_jours', 'avance', 'reste', 'mode_paiement',
   'km_depart', 'km_retour', 'carburant_depart',
 ] as const;

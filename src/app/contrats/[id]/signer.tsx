@@ -118,7 +118,8 @@ export default function SignerContratScreen() {
   const staffMissing = !!profileQuery.data && !profileQuery.data.signaturePath;
   const clientDrawn = isSignatureDrawn(paths) && size.width > 0;
   const stampMissing = !!detailsQuery.data && !detailsQuery.data.stampPath;
-  const canSign = clientDrawn && !!staffSignature && !stampMissing && !signContract.isPending;
+  const logoMissing = !!detailsQuery.data && !detailsQuery.data.logoUrl;
+  const canSign = clientDrawn && !!staffSignature && !stampMissing && !logoMissing && !signContract.isPending;
 
   async function handleSign() {
     if (!contract || !canSign || !staffSignature) return;
@@ -132,8 +133,10 @@ export default function SignerContratScreen() {
       });
       router.replace({ pathname: '/contrats/[id]', params: { id: contract.id } });
     } catch (e) {
-      const stampRefused = e instanceof Error ? /contract_agency_stamp_required/.test(e.message) : /contract_agency_stamp_required/.test(JSON.stringify(e));
-      setError(t(stampRefused ? 'contract.sign.stampMissing' : friendlyErrorKey(e, 'contract.sign.error')));
+      const raw = e instanceof Error ? e.message : JSON.stringify(e);
+      setError(
+        t(/contract_agency_stamp_required/.test(raw) ? 'contract.sign.stampMissing' : /contract_agency_logo_required/.test(raw) ? 'contract.sign.logoMissing' : friendlyErrorKey(e, 'contract.sign.error'))
+      );
     }
   }
 
@@ -267,6 +270,14 @@ export default function SignerContratScreen() {
               <ThemedText type="small" style={{ color: M3akPalette.danger }}>
                 {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.stampMissingOwner' : 'contract.sign.stampMissing')}
               </ThemedText>
+            ) : null}
+            {logoMissing ? (
+              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.logoMissingOwner' : 'contract.sign.logoMissing')}
+              </ThemedText>
+            ) : null}
+            {logoMissing && agencyQuery.data?.role === 'owner' ? (
+              <Button label={t('contractTemplate.simple.logoAdd')} variant="secondary" size="sm" onPress={() => router.push('/entreprise/editeur-contrat')} />
             ) : null}
             {stampMissing && agencyQuery.data?.role === 'owner' ? (
               <Button label={t('entreprise.stamp.add')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />

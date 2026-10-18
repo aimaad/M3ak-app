@@ -959,7 +959,9 @@
       "clientLabel": "Client",
       "agencyLabel": "Agence",
       "stampMissing": "Le cachet de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
-      "stampMissingOwner": "Le cachet de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise."
+      "stampMissingOwner": "Le cachet de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
+      "logoMissing": "Le logo de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise > Mon contrat.",
+      "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise > Mon contrat."
     }
   },
   "inspection": {
@@ -1453,7 +1455,7 @@
         "paiement": "Paiement (prix, avance, reste)",
         "kilometrage": "Kilométrage départ et retour",
         "carburant": "Niveau de carburant",
-        "etatVehicule": "Schémas de l'état du véhicule",
+        "etatVehicule": "Schéma de l'état du véhicule au départ",
         "franchise": "Franchise sinistre",
         "conditions": "Conditions générales (au verso)"
       },
@@ -1486,7 +1488,13 @@
       "numberNamePlaceholder": "Ex. : ICE",
       "numberValue": "Numéro",
       "numberAdd": "Ajouter ce numéro",
-      "numberLimit": "Vous avez atteint le nombre maximum de numéros."
+      "numberLimit": "Vous avez atteint le nombre maximum de numéros.",
+      "logoTitle": "Logo de l'agence (obligatoire)",
+      "logoHelp": "Il s'affiche en haut de chaque contrat PDF.",
+      "logoRequired": "Ajoutez le logo de votre agence : il est obligatoire, il s'affichera en haut de tous vos contrats.",
+      "logoAdd": "Ajouter le logo",
+      "logoChange": "Changer le logo",
+      "logoNeededToSave": "Ajoutez d'abord le logo de l'agence pour pouvoir enregistrer."
     }
   }
 }

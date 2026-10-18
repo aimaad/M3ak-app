@@ -111,4 +111,14 @@ describe('réglages simples du contrat', () => {
     const standard = buildContractHtml(sampleContract(), { nom: 'Atlas Cars', email: 'contact@atlas.ma' });
     expect(standard).not.toContain('contact@atlas.ma');
   });
+
+  it('le conducteur 2 a un nom ET un prénom, et il n\'y a plus d\'état du véhicule au retour', () => {
+    const html = buildContractHtml({ ...sampleContract(), snapshotValues: { conducteur2_nom: 'Benali', conducteur2_prenom: 'Karim' } }, { nom: 'Atlas Cars' }, {}, templateFromOptions(defaultOptions(), LINES));
+    const box = html.slice(html.indexOf('Conducteur 2'), html.indexOf('Paiement'));
+    expect(box).toContain('Nom');
+    expect(box).toContain('Prénom');
+    expect(box).toContain('Benali');
+    expect(box).toContain('Karim');
+    expect(html).not.toContain('(Retour)');
+  });
 });

@@ -115,6 +115,9 @@ export type Driver = {
   /** Renseigné quand le conducteur EST une fiche client existante (identité et documents du client). */
   linkedCustomerId: string | null;
   nomComplet: string;
+  /** Prénom et nom séparés (contrat) ; null pour un conducteur créé avant leur ajout. */
+  prenom?: string | null;
+  nom?: string | null;
   cinOuPasseport: string | null;
   numeroPermis: string | null;
   telephone: string | null;
@@ -123,6 +126,8 @@ export type Driver = {
 
 export type DriverInput = {
   nomComplet: string;
+  prenom?: string | null;
+  nom?: string | null;
   cinOuPasseport: string | null;
   numeroPermis: string | null;
   telephone: string | null;

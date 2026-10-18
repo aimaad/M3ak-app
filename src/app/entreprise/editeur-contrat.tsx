@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { Redirect, router } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Switch, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, ScrollView, Switch, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -12,7 +13,8 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
-import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
+import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
+import { useAgencyDetails, useMyAgency, useUploadAgencyLogo } from '@/features/agency/hooks';
 import {
   CLIENT_FIELD_KEYS,
   defaultOptions,
@@ -25,6 +27,8 @@ import {
 } from '@/features/contracts/contract-options';
 import { generateBlankContractPdf, generateContractPdf } from '@/features/contracts/contract-pdf';
 import { sampleContract } from '@/features/contracts/sample-contract';
+import { downloadImageAsDataUri } from '@/features/storage/api';
+import { useSignedUrl } from '@/features/storage/hooks';
 import { useContractTemplate, useRemoveContractTemplate, useSaveContractOptions } from '@/features/contracts/template-hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -96,6 +100,10 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
   const detailsQuery = useAgencyDetails(agencyId);
   const save = useSaveContractOptions(agencyId);
   const remove = useRemoveContractTemplate(agencyId);
+  const uploadLogo = useUploadAgencyLogo();
+  const logoPath = detailsQuery.data?.logoUrl ?? undefined;
+  const { data: logoUrl } = useSignedUrl(AGENCY_ASSETS_BUCKET, logoPath);
+  const logoMissing = !!detailsQuery.data && !detailsQuery.data.logoUrl;
 
   const [options, setOptions] = useState<ContractOptions>(initial);
   const [dirty, setDirty] = useState(false);
@@ -112,6 +120,22 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
   }
   const setClientField = (key: ClientFieldKey, value: boolean) => change((o) => ({ ...o, clientFields: { ...o.clientFields, [key]: value } }));
   const setSection = (key: SectionKey, value: boolean) => change((o) => ({ ...o, sections: { ...o.sections, [key]: value } }));
+
+  async function pickLogo(source: 'camera' | 'library') {
+    const permission = source === 'camera' ? await ImagePicker.requestCameraPermissionsAsync() : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+    const result =
+      source === 'camera'
+        ? await ImagePicker.launchCameraAsync({ quality: 0.8 })
+        : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+    const uri = result.canceled ? null : result.assets[0]?.uri;
+    if (!uri) return;
+    try {
+      await uploadLogo.mutateAsync({ agencyId, localUri: uri });
+    } catch {
+      Alert.alert(t('common.appName'), t('entreprise.logoError'));
+    }
+  }
 
   function addExtraField() {
     const name = newField.trim();
@@ -166,10 +190,11 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
       const details = detailsQuery.data;
       const agency = { nom: details?.nom ?? agencyName, raisonSociale: details?.raisonSociale, adresse: details?.adresse, ville: details?.ville, telephone: details?.telephone, email: details?.email };
       const template = templateFromOptions(options, PREVIEW_LINES);
+      const logoDataUri = await downloadImageAsDataUri(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null);
       const uri =
         kind === 'blank'
-          ? await generateBlankContractPdf(agency, template)
-          : await generateContractPdf(sampleContract(), agency, {}, template, { kmDepart: 12000, carburantDepart: 100 });
+          ? await generateBlankContractPdf(agency, template, logoDataUri)
+          : await generateContractPdf(sampleContract(), agency, { logoDataUri }, template, { kmDepart: 12000, carburantDepart: 100 });
       if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
     } catch {
       Alert.alert(t('common.appName'), t('contract.pdfError'));
@@ -227,6 +252,18 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
             <ThemedText type="smallBold">{t('contractTemplate.simple.introTitle')}</ThemedText>
             <ThemedText type="small">{t('contractTemplate.simple.intro')}</ThemedText>
           </View>
+
+          <Card className="gap-3" style={logoMissing ? { borderColor: M3akPalette.danger, borderWidth: 1.5 } : undefined}>
+            <ThemedText type="smallBold">{t('contractTemplate.simple.logoTitle')}</ThemedText>
+            <ThemedText type="small" style={{ color: logoMissing ? M3akPalette.danger : undefined }} themeColor={logoMissing ? undefined : 'textSecondary'}>
+              {logoMissing ? t('contractTemplate.simple.logoRequired') : t('contractTemplate.simple.logoHelp')}
+            </ThemedText>
+            {logoUrl ? <Image source={{ uri: logoUrl }} style={{ width: 120, height: 120, alignSelf: 'center' }} resizeMode="contain" /> : null}
+            <View className="flex-row flex-wrap justify-center gap-2">
+              <Button label={t('common.camera')} variant="secondary" size="sm" disabled={uploadLogo.isPending} onPress={() => pickLogo('camera')} />
+              <Button label={logoMissing ? t('contractTemplate.simple.logoAdd') : t('contractTemplate.simple.logoChange')} variant={logoMissing ? 'primary' : 'secondary'} size="sm" disabled={uploadLogo.isPending} loading={uploadLogo.isPending} onPress={() => pickLogo('library')} />
+            </View>
+          </Card>
 
           <Section number={1} title={t('contractTemplate.simple.legalTitle')} help={t('contractTemplate.simple.legalHelp')}>
             <TextField label={t('contractTemplate.simple.patente')} value={options.legal.patente} onChangeText={(patente) => change((o) => ({ ...o, legal: { ...o.legal, patente } }))} />
@@ -325,6 +362,10 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
             <ThemedText type="small" style={{ color: M3akPalette.danger }}>
               {error}
             </ThemedText>
+          ) : logoMissing ? (
+            <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              {t('contractTemplate.simple.logoNeededToSave')}
+            </ThemedText>
           ) : dirty ? (
             <ThemedText type="small" style={{ color: M3akPalette.warning }}>
               {t('contractTemplate.simple.unsaved')}
@@ -335,7 +376,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
               <Button label={t('contractTemplate.preview')} variant="secondary" icon="eye-outline" onPress={handlePreview} loading={previewing} disabled={previewing} />
             </View>
             <View style={{ flex: 1 }}>
-              <Button label={t('contractTemplate.save')} onPress={handleSave} disabled={save.isPending || !dirty} loading={save.isPending} />
+              <Button label={t('contractTemplate.save')} onPress={handleSave} disabled={save.isPending || !dirty || logoMissing} loading={save.isPending} />
             </View>
           </View>
         </View>

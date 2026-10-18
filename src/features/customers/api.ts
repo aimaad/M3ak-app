@@ -183,6 +183,8 @@ type DriverRow = {
   customer_id: string;
   linked_customer_id: string | null;
   nom_complet: string;
+  prenom: string | null;
+  nom: string | null;
   cin_ou_passeport: string | null;
   numero_permis: string | null;
   telephone: string | null;
@@ -196,6 +198,8 @@ export function driverFromRow(row: DriverRow): Driver {
     customerId: row.customer_id,
     linkedCustomerId: row.linked_customer_id,
     nomComplet: row.nom_complet,
+    prenom: row.prenom,
+    nom: row.nom,
     cinOuPasseport: row.cin_ou_passeport,
     numeroPermis: row.numero_permis,
     telephone: row.telephone,
@@ -204,7 +208,7 @@ export function driverFromRow(row: DriverRow): Driver {
 }
 
 const DRIVER_COLUMNS =
-  'id, agency_id, customer_id, linked_customer_id, nom_complet, cin_ou_passeport, numero_permis, telephone, created_at';
+  'id, agency_id, customer_id, linked_customer_id, nom_complet, prenom, nom, cin_ou_passeport, numero_permis, telephone, created_at';
 
 /** Conducteurs supplémentaires d'un client (la ligne technique d'un client « conducteur lié » n'en fait pas partie). */
 export async function listDrivers(customerId: string): Promise<Driver[]> {
@@ -241,6 +245,8 @@ export async function createDriver(
       agency_id: agencyId,
       customer_id: customerId,
       nom_complet: input.nomComplet,
+      prenom: input.prenom ?? null,
+      nom: input.nom ?? null,
       cin_ou_passeport: input.cinOuPasseport,
       numero_permis: input.numeroPermis,
       telephone: input.telephone,

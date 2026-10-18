@@ -5,7 +5,7 @@ import { getSupabase } from '@/lib/supabase';
 import type { RentalDriversSelection } from './rental-drivers';
 
 const DRIVER_COLUMNS =
-  'id, agency_id, customer_id, linked_customer_id, nom_complet, cin_ou_passeport, numero_permis, telephone, created_at';
+  'id, agency_id, customer_id, linked_customer_id, nom_complet, prenom, nom, cin_ou_passeport, numero_permis, telephone, created_at';
 
 type DriverRow = Parameters<typeof driverFromRow>[0];
 

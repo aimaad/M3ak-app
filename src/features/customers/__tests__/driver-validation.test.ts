@@ -2,7 +2,8 @@ import { isDriverFormValid, toDriverInput, validateDriverForm, type DriverFormVa
 
 function makeValues(overrides: Partial<DriverFormValues> = {}): DriverFormValues {
   return {
-    nomComplet: 'Samir Tazi',
+    prenom: 'Samir',
+    nom: 'Tazi',
     cinOuPasseport: 'BK123456',
     numeroPermis: 'B987654',
     telephone: '0661112233',
@@ -15,22 +16,23 @@ describe('validateDriverForm', () => {
     expect(isDriverFormValid(validateDriverForm(makeValues()))).toBe(true);
   });
 
-  it('exige le nom complet', () => {
-    expect(validateDriverForm(makeValues({ nomComplet: '  ' })).nomComplet).toBe('required');
+  it('exige le prénom ET le nom', () => {
+    expect(validateDriverForm(makeValues({ prenom: '  ' })).prenom).toBe('required');
+    expect(validateDriverForm(makeValues({ nom: '' })).nom).toBe('required');
   });
 
   it("n'exige aucun autre champ", () => {
-    const errors = validateDriverForm(
-      makeValues({ cinOuPasseport: '', numeroPermis: '', telephone: '' })
-    );
+    const errors = validateDriverForm(makeValues({ cinOuPasseport: '', numeroPermis: '', telephone: '' }));
     expect(isDriverFormValid(errors)).toBe(true);
   });
 });
 
 describe('toDriverInput', () => {
-  it('convertit les champs vides en null et rogne les espaces', () => {
-    const input = toDriverInput(makeValues({ nomComplet: '  Samir Tazi  ', telephone: '' }));
+  it('compose le nom complet, convertit les champs vides en null et rogne les espaces', () => {
+    const input = toDriverInput(makeValues({ prenom: '  Samir ', nom: ' Tazi  ', telephone: '' }));
     expect(input.nomComplet).toBe('Samir Tazi');
+    expect(input.prenom).toBe('Samir');
+    expect(input.nom).toBe('Tazi');
     expect(input.telephone).toBeNull();
   });
 });

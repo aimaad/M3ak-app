@@ -166,7 +166,8 @@ describe('modèle M3ak standard : carnet de location', () => {
       client_permis: '19/226595',
       client_permis_delivre_le: '10/03/2020',
       client_permis_delivre_a: 'Settat',
-      conducteur2_nom: 'Karim Benali',
+      conducteur2_nom: 'Benali',
+      conducteur2_prenom: 'Karim',
     },
   };
   const html = buildContractHtml(contract, { nom: 'Atlas Cars', ville: 'Casablanca', telephone: '+212600000000' }, {}, undefined, {
@@ -176,15 +177,16 @@ describe('modèle M3ak standard : carnet de location', () => {
   });
 
   it('reprend les cadres d\'un carnet de location', () => {
-    for (const title of ['Conducteur 1', 'Conducteur 2', 'Véhicule et période', 'Paiement', 'Kilométrage', 'Franchise sinistre', 'État du véhicule (Départ)', 'État du véhicule (Retour)', 'Niveau de carburant']) {
+    for (const title of ['Conducteur 1', 'Conducteur 2', 'Véhicule et période', 'Paiement', 'Kilométrage', 'Franchise sinistre', 'État du véhicule (Départ)', 'Niveau de carburant']) {
       expect(html).toContain(title);
     }
+    expect(html).not.toContain('État du véhicule (Retour)');
     expect(html).toContain('R: rayures');
     expect(html).not.toContain('Patente'); // affichée seulement si l'agence l'a renseignée
   });
 
   it('remplit le conducteur 1 avec la fiche client figée', () => {
-    for (const value of ['Alaoui', 'Sara', '26/09/2001', '5 rue Atlas, Settat', '19/226595', '10/03/2020', 'Karim Benali']) {
+    for (const value of ['Alaoui', 'Sara', '26/09/2001', '5 rue Atlas, Settat', '19/226595', '10/03/2020', 'Benali', 'Karim']) {
       expect(html).toContain(value);
     }
   });
