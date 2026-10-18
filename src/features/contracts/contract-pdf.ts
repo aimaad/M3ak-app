@@ -1,5 +1,6 @@
 import * as Print from 'expo-print';
 
+import type { StampConfig } from '@/features/agency/stamp';
 import type { HandwrittenSignature } from '@/features/signatures/signature';
 
 import { defaultContractTemplate } from './default-template';
@@ -42,6 +43,8 @@ export type ContractSignatures = {
   agency?: HandwrittenSignature | null;
   /** Cachet de l'agence en data URI (png/jpeg uniquement ; toute autre valeur est ignorée). */
   stampDataUri?: string | null;
+  /** Cachet généré par M3ak (vrai tampon dessiné) ; prioritaire sur la photo. */
+  stampConfig?: StampConfig | null;
   /** Logo de l'agence en data URI (png/jpeg uniquement). */
   logoDataUri?: string | null;
   /** Nom de la personne de l'agence qui signe. */
@@ -166,6 +169,7 @@ export function buildContractHtml(
     agencySignedAtLabel: contract.signedAt ? formatDateTime(contract.signedAt) : null,
     signatures: { client: signatures.client, agency: signatures.agency },
     stampDataUri: signatures.stampDataUri,
+    stampConfig: signatures.stampConfig,
     logoDataUri: signatures.logoDataUri,
   });
 }

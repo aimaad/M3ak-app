@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, BackHandler, Pressable, ScrollView, View, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
+import { ActivityIndicator, BackHandler, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -10,11 +10,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
-import { contractTemplateContext, contractTemplateValues, resolveTemplate } from '@/features/contracts/contract-pdf';
+import { buildContractHtml } from '@/features/contracts/contract-pdf';
+import { ContractViewer } from '@/features/contracts/contract-viewer';
 import { useContract, useSignContract } from '@/features/contracts/hooks';
-import { hasLanguageToggle, readingSections } from '@/features/contracts/template';
 import { useContractTemplate } from '@/features/contracts/template-hooks';
+import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import { useSignature } from '@/features/signatures/hooks';
+import { loadImageForPdf } from '@/features/storage/api';
 import { buildSignature, isSignatureDrawn } from '@/features/signatures/signature';
 import { SignaturePad, SignatureView } from '@/features/signatures/signature-pad';
 import { useLanguage } from '@/i18n/use-language';
@@ -43,8 +45,11 @@ export default function SignerContratScreen() {
   const signContract = useSignContract();
 
   const [step, setStep] = useState<'read' | 'sign'>('read');
-  const [lang, setLang] = useState<Lang>(language === 'ar' ? 'ar' : 'fr');
+  const lang: Lang = language === 'ar' ? 'ar' : 'fr';
   const [reachedEnd, setReachedEnd] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [previewHtml, setPreviewHtml] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [paths, setPaths] = useState<string[]>([]);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -64,11 +69,6 @@ export default function SignerContratScreen() {
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => true);
     return () => subscription.remove();
   }, [drawing]);
-
-  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
-    const { contentOffset, layoutMeasurement, contentSize } = event.nativeEvent;
-    if (contentOffset.y + layoutMeasurement.height >= contentSize.height - 48) setReachedEnd(true);
-  }
 
   if (isLoading || !contract || storedTemplate.isLoading) {
     return (
@@ -108,18 +108,27 @@ export default function SignerContratScreen() {
     email: detailsQuery.data?.email,
   };
   const customTemplate = storedTemplate.data?.template ?? null;
-  const allSections = readingSections(resolveTemplate(contract, agencyInfo, customTemplate), contractTemplateValues(contract, agencyInfo), contractTemplateContext(contract));
-  const toggle = hasLanguageToggle(allSections);
-  const sections = toggle ? allSections.filter((section) => !section.lang || section.lang === lang) : allSections;
-  const isAr = lang === 'ar';
-  const direction = { writingDirection: isAr ? ('rtl' as const) : ('ltr' as const), textAlign: isAr ? ('right' as const) : ('left' as const) };
   const money = (value: number) => `${value.toLocaleString('fr-FR')} MAD`;
   const staffSignature = myStaffSignature.data ?? null;
   const staffMissing = !!profileQuery.data && !profileQuery.data.signaturePath;
   const clientDrawn = isSignatureDrawn(paths) && size.width > 0;
-  const stampMissing = !!detailsQuery.data && !detailsQuery.data.stampPath;
+  const stampMissing = !!detailsQuery.data && !detailsQuery.data.stampPath && !detailsQuery.data.stampConfig;
   const logoMissing = !!detailsQuery.data && !detailsQuery.data.logoUrl;
   const canSign = clientDrawn && !!staffSignature && !stampMissing && !logoMissing && !signContract.isPending;
+
+  /** Prépare le contrat tel qu'il sera imprimé (mêmes pages que le PDF) et l'ouvre en plein écran pour le client. */
+  async function openContract() {
+    if (!contract) return;
+    setViewerOpen(true);
+    if (previewHtml) return;
+    setPreparing(true);
+    try {
+      const logoDataUri = await loadImageForPdf(AGENCY_ASSETS_BUCKET, detailsQuery.data?.logoUrl).catch(() => null);
+      setPreviewHtml(buildContractHtml(contract, agencyInfo, { logoDataUri }, customTemplate));
+    } finally {
+      setPreparing(false);
+    }
+  }
 
   async function handleSign() {
     if (!contract || !canSign || !staffSignature) return;
@@ -157,64 +166,39 @@ export default function SignerContratScreen() {
 
         {step === 'read' ? (
           <View className="flex-1">
-            <View className="flex-row gap-2 px-6 pb-3" style={{ display: toggle ? 'flex' : 'none' }}>
-              {(['fr', 'ar'] as Lang[]).map((option) => (
-                <Pressable
-                  key={option}
-                  onPress={() => setLang(option)}
-                  className={`rounded-full border px-4 py-2 ${lang === option ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
-                >
-                  <ThemedText type="small" style={{ color: lang === option ? '#ffffff' : '#211A2E' }}>
-                    {option === 'fr' ? 'Français' : 'العربية'}
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </View>
-
-            <ScrollView
-              className="flex-1"
-              contentContainerClassName="gap-4 px-6 pb-6"
-              onScroll={handleScroll}
-              scrollEventThrottle={64}
-              onContentSizeChange={(_, height) => {
-                if (height < 400) setReachedEnd(true);
-              }}
-            >
+            <ScrollView className="flex-1" contentContainerClassName="gap-4 px-6 pb-6">
               <Card padded={false} className="px-4">
                 {summaryRows.map(([label, value]) => (
                   <View key={label} className="border-b border-[#EAE5F2] py-3 last:border-b-0">
-                    <ThemedText type="small" themeColor="textSecondary" style={direction}>
+                    <ThemedText type="small" themeColor="textSecondary">
                       {label}
                     </ThemedText>
-                    <ThemedText type="smallBold" style={direction}>
-                      {value}
-                    </ThemedText>
+                    <ThemedText type="smallBold">{value}</ThemedText>
                   </View>
                 ))}
               </Card>
 
-              {sections.map((section, index) => (
-                <View key={index} className="gap-1">
-                  {section.title ? (
-                    <ThemedText type="smallBold" style={{ writingDirection: section.rtl ? 'rtl' : 'ltr', textAlign: section.rtl ? 'right' : 'left' }}>
-                      {section.title}
-                    </ThemedText>
-                  ) : null}
-                  {section.text ? (
-                    <ThemedText type="default" style={{ writingDirection: section.rtl ? 'rtl' : 'ltr', textAlign: section.rtl ? 'right' : 'left' }}>
-                      {section.text}
-                    </ThemedText>
-                  ) : null}
-                </View>
-              ))}
+              <Card className="items-center gap-3 py-6">
+                <ThemedText type="subtitle" className="text-center">
+                  {t('contract.sign.readCardTitle')}
+                </ThemedText>
+                <ThemedText type="small" themeColor="textSecondary" className="text-center">
+                  {t('contract.sign.readCardBody')}
+                </ThemedText>
+                <Button
+                  label={reachedEnd ? t('contract.sign.readAgain') : t('contract.sign.openContract')}
+                  icon="document-text-outline"
+                  onPress={openContract}
+                  loading={preparing}
+                  style={{ alignSelf: 'stretch' }}
+                />
+                <ThemedText type="smallBold" style={{ color: reachedEnd ? '#15803D' : '#B45309' }}>
+                  {reachedEnd ? t('contract.sign.readDone') : t('contract.sign.readPending')}
+                </ThemedText>
+              </Card>
             </ScrollView>
 
             <View className="gap-3 border-t border-[#EAE5F2] bg-white px-6 py-4">
-              {!reachedEnd ? (
-                <ThemedText type="small" themeColor="textSecondary" className="text-center">
-                  {t('contract.sign.scrollHint')}
-                </ThemedText>
-              ) : null}
               <Pressable
                 onPress={() => reachedEnd && setAccepted((value) => !value)}
                 disabled={!reachedEnd}
@@ -232,6 +216,8 @@ export default function SignerContratScreen() {
               </Pressable>
               <Button label={t('contract.sign.continue')} onPress={() => setStep('sign')} disabled={!accepted} />
             </View>
+
+            <ContractViewer visible={viewerOpen} html={previewHtml} reachedEnd={reachedEnd} onReachEnd={() => setReachedEnd(true)} onClose={() => setViewerOpen(false)} />
           </View>
         ) : (
           <View className="flex-1 gap-4 px-6 pb-6">

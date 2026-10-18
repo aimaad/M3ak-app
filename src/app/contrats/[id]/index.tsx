@@ -89,7 +89,7 @@ export default function ContratDetailScreen() {
           telephone: details?.telephone,
           email: details?.email,
         },
-        { client, agency, stampDataUri, logoDataUri, agencySignerName: signer?.nomComplet ?? null },
+        { client, agency, stampDataUri, stampConfig: details?.stampConfig ?? null, logoDataUri, agencySignerName: signer?.nomComplet ?? null },
         templateQuery.data?.template,
         {
           payments: paymentsQuery.data,

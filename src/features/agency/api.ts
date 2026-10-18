@@ -5,6 +5,7 @@ import { uploadFile, uploadFileWithProgress, type UploadProgress } from '@/featu
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
 import { logoContentType } from './logo-validation';
+import { parseStampConfig, type StampConfig } from './stamp';
 import type {
   AgencyDetails,
   AgencyDetailsInput,
@@ -33,6 +34,7 @@ type AgencyRow = {
   devise: string;
   logo_url: string | null;
   stamp_path: string | null;
+  stamp_config?: unknown;
   created_at: string;
 };
 
@@ -49,6 +51,7 @@ function agencyFromRow(row: AgencyRow): AgencyDetails {
     devise: row.devise,
     logoUrl: row.logo_url,
     stampPath: row.stamp_path,
+    stampConfig: parseStampConfig(row.stamp_config),
     createdAt: row.created_at,
   };
 }
@@ -352,13 +355,22 @@ export async function uploadAgencyStamp(agencyId: string, localUri: string): Pro
 
   await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, isPng ? 'image/png' : 'image/jpeg');
 
-  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: path }).eq('id', agencyId).select().single();
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: path, stamp_config: null }).eq('id', agencyId).select().single();
   if (error) throw error;
   return agencyFromRow(data as AgencyRow);
 }
 
 export async function removeAgencyStamp(agencyId: string): Promise<AgencyDetails> {
-  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: null }).eq('id', agencyId).select().single();
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: null, stamp_config: null }).eq('id', agencyId).select().single();
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+/** Cachet généré par M3ak (vrai tampon dessiné). Il remplace la photo de cachet : un seul des deux est actif. */
+export async function saveAgencyStampConfig(agencyId: string, config: StampConfig): Promise<AgencyDetails> {
+  const valid = parseStampConfig(config);
+  if (!valid) throw new Error('invalid_stamp_config');
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_config: valid, stamp_path: null }).eq('id', agencyId).select().single();
   if (error) throw error;
   return agencyFromRow(data as AgencyRow);
 }

@@ -229,7 +229,35 @@
       "help": "Photographiez votre cachet sur une feuille blanche bien éclairée, ou choisissez une image dans la galerie. Il sera apposé à côté de la signature de l'agence sur chaque contrat.",
       "remove": "Retirer le cachet",
       "error": "Impossible d'enregistrer le cachet. Réessayez.",
-      "add": "Ajouter le cachet"
+      "add": "Ajouter le cachet",
+      "photoActive": "Vous utilisez la photo de votre cachet physique. Vous pouvez la remplacer par un cachet dessiné par M3ak ci-dessous.",
+      "saved": "Cachet enregistré — c'est celui qui apparaît sur vos contrats.",
+      "notSaved": "Aperçu : pas encore enregistré. Touchez « Enregistrer le cachet ».",
+      "generatedHelp": "M3ak dessine un vrai tampon (anneaux, nom en arc, lignes au centre) avec ces informations. Il s'imprime net sur le contrat, à côté de la signature.",
+      "shape": "Forme",
+      "shapes": {
+        "round": "Rond",
+        "rect": "Rectangle",
+        "oval": "Ovale"
+      },
+      "color": "Encre",
+      "colors": {
+        "blue": "Bleu",
+        "red": "Rouge",
+        "black": "Noir"
+      },
+      "titleLabel": "Nom de l'agence (en haut)",
+      "linesLabel": "Lignes au centre (raison sociale, ICE, RC, téléphone…)",
+      "linePlaceholder": {
+        "0": "Ex. Atlas Cars SARL",
+        "1": "Ex. ICE : 001234567000089",
+        "2": "Ex. Tél : +212 5 22 00 00 00"
+      },
+      "bottomLabel": "Ville (en bas)",
+      "save": "Enregistrer le cachet",
+      "upToDate": "Cachet à jour",
+      "useGenerated": "Utiliser ce cachet à la place de la photo",
+      "photoHelp": "Vous préférez la photo de votre vrai cachet ? Prenez-la sur une feuille blanche, bien à plat."
     },
     "logo": {
       "title": "Logo de l'agence",
@@ -1053,7 +1081,16 @@
       "stampMissing": "Le cachet de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
       "stampMissingOwner": "Le cachet de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
       "logoMissing": "Le logo de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
-      "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise."
+      "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
+      "readCardTitle": "Contrat de location",
+      "readCardBody": "Ouvrez le contrat tel qu'il sera imprimé et lisez-le jusqu'en bas (pincez pour agrandir). Vous pourrez ensuite cocher la case et signer.",
+      "openContract": "Lire le contrat",
+      "readAgain": "Relire le contrat",
+      "readDone": "✓ Contrat lu en entier",
+      "readPending": "À lire jusqu'en bas avant de continuer",
+      "viewerTitle": "Contrat de location",
+      "viewerHint": "Faites défiler jusqu'à la fin du contrat",
+      "viewerDone": "✓ Vous êtes arrivé à la fin : vous pouvez fermer"
     },
     "logoMissingPdf": "Le logo de l'agence est obligatoire sur le contrat. Ajoutez-le dans Mon entreprise (le propriétaire).",
     "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez."

@@ -161,7 +161,9 @@ describe('contrat complet (conditions, parties, signatures)', () => {
   it('refuse d\'insérer une signature falsifiée (aucun code ne peut passer)', () => {
     const evil = { ...sig, paths: ['M 1 1"/><script>alert(1)</script>'] };
     const html = buildContractHtml(makeContract(), agency, { client: evil, agency: evil });
-    expect(html).not.toContain('<script>');
+    expect(html).not.toContain('alert(1)');
+    // Le seul script du document est le filet de mise en page, constant : aucun contenu venant des données n'y entre.
+    expect(html.match(/<script>/g) ?? []).toHaveLength(1);
     expect(html).not.toContain('class="sig"');
   });
 

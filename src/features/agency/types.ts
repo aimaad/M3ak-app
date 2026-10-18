@@ -1,3 +1,5 @@
+import type { StampConfig } from './stamp';
+
 export type AgencyRole = 'owner' | 'manager' | 'employee';
 
 export const INVITABLE_ROLES: AgencyRole[] = ['manager', 'employee'];
@@ -92,6 +94,8 @@ export type AgencyDetails = {
   logoUrl: string | null;
   /** Cachet de l'agence apposé sur les contrats (chemin dans le bucket privé). */
   stampPath: string | null;
+  /** Cachet généré par M3ak (vrai tampon dessiné) ; exclusif avec la photo de cachet. */
+  stampConfig: StampConfig | null;
   /** Analyse automatique des permis par un fournisseur d'IA externe : désactivée par défaut, réservée au propriétaire. */
   createdAt: string;
 };

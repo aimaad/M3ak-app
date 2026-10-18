@@ -1,3 +1,4 @@
+import { stampSvg, type StampConfig } from '@/features/agency/stamp';
 import { signatureToSvg, type HandwrittenSignature } from '@/features/signatures/signature';
 
 import {
@@ -31,6 +32,8 @@ export type RenderInput = {
   agencySignedAtLabel?: string | null;
   signatures?: { client?: HandwrittenSignature | null; agency?: HandwrittenSignature | null };
   stampDataUri?: string | null;
+  /** Cachet généré par M3ak : dessiné en vectoriel sur le contrat (prioritaire sur la photo). */
+  stampConfig?: StampConfig | null;
   logoDataUri?: string | null;
 };
 
@@ -69,7 +72,8 @@ function borderClass(border: string | undefined): string {
 function signatureBox(label: string, role: 'client' | 'agency', input: RenderInput): string {
   const signature = role === 'client' ? input.signatures?.client : input.signatures?.agency;
   const svg = signature ? signatureToSvg(signature, 56) : '';
-  const stamp = role === 'agency' && safeImage(input.stampDataUri) ? `<img class="stamp" src="${safeImage(input.stampDataUri)}" />` : '';
+  const generated = role === 'agency' && input.stampConfig ? `<div class="stamp-svg">${stampSvg(input.stampConfig, input.stampConfig.shape === 'round' ? 104 : 132)}</div>` : '';
+  const stamp = generated || (role === 'agency' && safeImage(input.stampDataUri) ? `<img class="stamp" src="${safeImage(input.stampDataUri)}" />` : '');
   const name = role === 'client' ? input.clientName : (input.agencySignerName ?? input.agencyName);
   const when = role === 'client' ? input.clientSignedAtLabel : input.agencySignedAtLabel;
   return `<div class="sign-box">
@@ -178,7 +182,7 @@ const CSS = `
   @page { size: ${PAGE.width}px ${PAGE.height}px; margin: 0; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #211A2E; font-size: 10px; line-height: 1.35; }
-  .sheet { width: ${PAGE.width}px; height: ${SHEET_H}px; padding: ${PAGE.padY}px ${PAGE.padX}px; page-break-after: always; break-after: page; }
+  .sheet { width: ${PAGE.width}px; height: ${SHEET_H}px; padding: ${PAGE.padY}px ${PAGE.padX}px; page-break-after: always; break-after: page; overflow: hidden; }
   html, body { margin: 0; padding: 0; }
   .fit { display: flex; flex-direction: column; justify-content: space-between; }
   .sheet.last { page-break-after: auto; break-after: auto; }
@@ -220,9 +224,11 @@ const CSS = `
   .signatures { margin-top: 8px; display: flex; justify-content: space-between; gap: 16px; page-break-inside: avoid; }
   .sign-box { flex: 1; border: 1px solid #C9C0D8; border-radius: 5px; padding: 5px; font-size: 9px; text-align: center; }
   .sign-title { font-weight: bold; }
-  .sign-area { height: 62px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #211A2E; margin: 4px 0 3px; }
+  .sign-area { position: relative; height: 96px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #211A2E; margin: 4px 0 3px; }
+  .stamp-svg { position: absolute; inset-inline-end: 4px; top: -2px; line-height: 0; }
+  .stamp-svg svg { display: block; }
   .sign-area svg.sig { max-height: 58px; }
-  .stamp { height: 58px; max-width: 95px; object-fit: contain; margin-inline-start: 6px; }
+  .stamp { height: 80px; max-width: 95px; object-fit: contain; margin-inline-start: 6px; }
   .sign-name { font-weight: bold; }
   .sign-date { color: #81778F; font-size: 8px; }
 `;
@@ -283,7 +289,7 @@ function blockUnit(block: Block, input: RenderInput, rtlDefault: boolean): Unit 
       height = () => 64 + 14 + 8 + 8;
       break;
     case 'signatures':
-      height = () => 62 + 14 + 24 + 12 + 10;
+      height = () => 96 + 14 + 24 + 12 + 10;
       break;
     case 'rule':
       height = () => 13;
@@ -341,7 +347,7 @@ function pageUnits(blocks: Block[], input: RenderInput, rtlDefault: boolean): Un
 export function fitScale(units: Pick<Unit, 'height'>[], maxZoom: number = MAX_ZOOM): number {
   for (let scale = maxZoom; scale >= MIN_ZOOM; scale = Math.round((scale - 0.02) * 100) / 100) {
     const width = CONTENT_W / scale;
-    const visible = units.reduce((sum, unit) => sum + unit.height(width), 0) * scale * 1.025;
+    const visible = units.reduce((sum, unit) => sum + unit.height(width), 0) * scale * 1.05;
     if (visible <= CONTENT_H) return scale;
   }
   return MIN_ZOOM;
@@ -357,6 +363,14 @@ export function estimateSheetHeights(template: ContractTemplate, input: RenderIn
   }
   return pages.filter((blocks) => blocks.length > 0).map((blocks) => Math.round(pageUnits(blocks, input, rtlDefault).reduce((sum, unit) => sum + unit.height(width), 0)));
 }
+
+/**
+ * Filet de sécurité exécuté par le moteur d'impression du téléphone : les hauteurs ci-dessus sont des estimations, et les
+ * polices d'un iPhone ou d'un Android ne sont pas celles de nos mesures. Si une feuille déborde malgré tout, on réduit
+ * son zoom jusqu'à ce qu'elle tienne — jamais de 3e page. (Sans script, les marges de l'estimation et `overflow: hidden`
+ * sur la feuille empêchent déjà tout débordement vers une page de plus.)
+ */
+const FIT_SCRIPT = `(function(){try{var H=${CONTENT_H};document.querySelectorAll('.sheet').forEach(function(sheet){var fit=sheet.querySelector('.fit');if(!fit)return;var z=parseFloat(fit.style.zoom||'1');var n=0;while(sheet.scrollHeight>sheet.clientHeight+2&&z>${MIN_ZOOM}&&n++<60){z=Math.round((z-0.02)*100)/100;fit.style.zoom=String(z);fit.style.minHeight=(Math.floor(H/z)-4)+'px';}});}catch(e){}})();`;
 
 /** Cadres de blocs séparés par des « sauts de page » : le recto (page principale) puis le verso (conditions), chacun sur UNE feuille. */
 export function renderTemplateHtml(template: ContractTemplate, input: RenderInput): string {
@@ -376,5 +390,5 @@ export function renderTemplateHtml(template: ContractTemplate, input: RenderInpu
       const minHeight = Math.floor(CONTENT_H / scale) - 4;
       return `<section class="sheet${index === all.length - 1 ? ' last' : ''}"><div class="fit" style="${scale !== 1 ? `zoom:${scale};` : ''}min-height:${minHeight}px">${units.map((unit) => unit.html).join('\n')}</div></section>`;
     });
-  return `<html><head><meta charset="utf-8" /><style>${CSS}</style></head><body dir="${rtlDefault ? 'rtl' : 'ltr'}">${sheets.join('\n')}</body></html>`;
+  return `<html><head><meta charset="utf-8" /><style>${CSS}</style></head><body dir="${rtlDefault ? 'rtl' : 'ltr'}">${sheets.join('\n')}<script>${FIT_SCRIPT}</script></body></html>`;
 }

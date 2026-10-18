@@ -129,5 +129,13 @@ select pg_temp.try('départ : accepté avec l''inspection terminée et ses photo
   $$select public.start_rental_with_contract('a2000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-0000000000c2', 1000, 100, 'bon', '[]'::jsonb, null)$$);
 select pg_temp.ck('départ : la location est bien passée en cours', (select statut = 'en_cours' from rentals where id = 'a2000000-0000-0000-0000-000000000002'), '');
 
+-- Cachet généré (migration 0048) : il suffit, avec le logo, pour signer ; une configuration trop lourde est refusée.
+reset role;
+update agencies set logo_url = 'aaaaaaaa-0000-0000-0000-000000000001/logo.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+select pg_temp.try('cachet : une configuration de cachet valide est acceptée',
+  $$update agencies set stamp_config = '{"v":1,"shape":"round","color":"blue","title":"ATLAS","lines":[],"bottom":""}'::jsonb where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$);
+select pg_temp.try('cachet : une configuration qui n''est pas un objet est refusée',
+  $$update agencies set stamp_config = '[1,2]'::jsonb where id = 'aaaaaaaa-0000-0000-0000-000000000001'$$, 'agencies_stamp_config_check');
+
 reset role;
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;
