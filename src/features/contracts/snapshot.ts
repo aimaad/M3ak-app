@@ -21,6 +21,7 @@ const firstDoc = (customer: Customer, type: CustomerDocument['type']): CustomerD
 export function buildSnapshotValues(customer: Customer, additionalDrivers: Pick<Driver, 'nomComplet' | 'prenom' | 'nom' | 'cinOuPasseport' | 'numeroPermis'>[]): SnapshotValues {
   const licence = firstDoc(customer, 'permis');
   const passport = firstDoc(customer, 'passeport');
+  const identityCard = firstDoc(customer, 'cin');
   const second = additionalDrivers[0];
   const hasSplitName = !!(customer.prenom || customer.nom);
 
@@ -33,6 +34,8 @@ export function buildSnapshotValues(customer: Customer, additionalDrivers: Pick<
     client_permis: licence?.reference ?? customer.numeroPermis ?? '',
     client_permis_delivre_le: formatDate(licence?.dateDelivrance),
     client_permis_delivre_a: licence?.issuingAuthority ?? '',
+    // Le numéro de CIN vient de la fiche, sinon du document « CIN » du dossier.
+    client_cin: customer.cinOuPasseport ?? identityCard?.reference ?? '',
     client_passeport: passport?.reference ?? '',
     // Conducteur créé avant l'ajout du prénom : le nom complet va dans « Nom », « Prénom » reste à écrire à la main.
     conducteur2_prenom: second?.prenom ?? '',

@@ -1,7 +1,6 @@
 import type { CustomerInput, CustomerType, PreferredLanguage } from './types';
 
 export type CustomerFormValues = {
-  nomComplet: string;
   prenom: string;
   nom: string;
   cinOuPasseport: string;
@@ -22,7 +21,7 @@ export type CustomerFormValues = {
 export type CustomerFormErrorCode = 'required' | 'invalid_phone' | 'invalid_email' | 'invalid_date';
 
 export type CustomerFormErrors = Partial<
-  Record<'nomComplet' | 'telephone' | 'email' | 'dateNaissance' | 'raisonSociale', CustomerFormErrorCode>
+  Record<'prenom' | 'nom' | 'telephone' | 'email' | 'dateNaissance' | 'raisonSociale', CustomerFormErrorCode>
 >;
 
 // Formats marocains courants : +212 6XXXXXXXX / 0[5-7]XXXXXXXX
@@ -36,8 +35,10 @@ export function normalizePhone(raw: string): string {
 export function validateCustomerForm(values: CustomerFormValues): CustomerFormErrors {
   const errors: CustomerFormErrors = {};
 
-  if (!values.nomComplet.trim()) {
-    errors.nomComplet = 'required';
+  // Une personne a toujours un prénom ET un nom, saisis séparément. Pour une entreprise, la raison sociale suffit.
+  if (values.typeClient !== 'entreprise') {
+    if (!values.prenom.trim()) errors.prenom = 'required';
+    if (!values.nom.trim()) errors.nom = 'required';
   }
 
   const phone = normalizePhone(values.telephone);
@@ -72,9 +73,21 @@ function emptyToNull(value: string): string | null {
   return trimmed ? trimmed : null;
 }
 
+/** Nom affiché partout (listes, contrat, recherche) : « Prénom Nom », ou la raison sociale d'une entreprise sans contact saisi. */
+export function fullNameOf(values: Pick<CustomerFormValues, 'prenom' | 'nom' | 'typeClient' | 'raisonSociale'>): string {
+  const person = [values.prenom.trim(), values.nom.trim()].filter(Boolean).join(' ');
+  return values.typeClient === 'entreprise' ? person || values.raisonSociale.trim() : person;
+}
+
+/** Fiche créée avant la séparation prénom / nom : on propose « premier mot = prénom, le reste = nom » (à corriger si besoin). */
+export function splitFullName(nomComplet: string): { prenom: string; nom: string } {
+  const [first = '', ...rest] = nomComplet.trim().split(/\s+/);
+  return rest.length === 0 ? { prenom: '', nom: first } : { prenom: first, nom: rest.join(' ') };
+}
+
 export function toCustomerInput(values: CustomerFormValues): CustomerInput {
   return {
-    nomComplet: values.nomComplet.trim(),
+    nomComplet: fullNameOf(values),
     prenom: emptyToNull(values.prenom),
     nom: emptyToNull(values.nom),
     cinOuPasseport: emptyToNull(values.cinOuPasseport),

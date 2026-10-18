@@ -1,6 +1,8 @@
 import {
+  fullNameOf,
   isFormValid,
   normalizePhone,
+  splitFullName,
   toCustomerInput,
   validateCustomerForm,
   type CustomerFormValues,
@@ -8,7 +10,6 @@ import {
 
 function makeValues(overrides: Partial<CustomerFormValues> = {}): CustomerFormValues {
   return {
-    nomComplet: 'Youssef El Amrani',
     prenom: 'Youssef',
     nom: 'El Amrani',
     cinOuPasseport: 'BE482913',
@@ -33,8 +34,25 @@ describe('validateCustomerForm', () => {
     expect(isFormValid(validateCustomerForm(makeValues()))).toBe(true);
   });
 
-  it('exige le nom complet', () => {
-    expect(validateCustomerForm(makeValues({ nomComplet: '  ' })).nomComplet).toBe('required');
+  it('exige le prénom ET le nom, saisis séparément', () => {
+    expect(validateCustomerForm(makeValues({ prenom: '  ' })).prenom).toBe('required');
+    expect(validateCustomerForm(makeValues({ nom: '' })).nom).toBe('required');
+    expect(validateCustomerForm(makeValues()).prenom).toBeUndefined();
+  });
+
+  it('pour une entreprise, la raison sociale suffit (prénom et nom facultatifs)', () => {
+    const errors = validateCustomerForm(makeValues({ typeClient: 'entreprise', raisonSociale: 'ACME SARL', prenom: '', nom: '' }));
+    expect(errors.prenom).toBeUndefined();
+    expect(errors.nom).toBeUndefined();
+  });
+
+  it('compose le nom affiché « Prénom Nom » et reprend les anciennes fiches', () => {
+    expect(fullNameOf(makeValues())).toBe('Youssef El Amrani');
+    expect(toCustomerInput(makeValues({ prenom: ' Youssef ', nom: ' El Amrani ' })).nomComplet).toBe('Youssef El Amrani');
+    expect(fullNameOf(makeValues({ typeClient: 'entreprise', raisonSociale: 'ACME', prenom: '', nom: '' }))).toBe('ACME');
+    expect(splitFullName('Imad Bouchnef')).toEqual({ prenom: 'Imad', nom: 'Bouchnef' });
+    expect(splitFullName('Mohamed Ben Ali')).toEqual({ prenom: 'Mohamed', nom: 'Ben Ali' });
+    expect(splitFullName('Cher')).toEqual({ prenom: '', nom: 'Cher' });
   });
 
   it('accepte les formats marocains courants de téléphone', () => {

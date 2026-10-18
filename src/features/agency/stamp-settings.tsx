@@ -37,9 +37,8 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
   const [address, setAddress] = useState(initial.address);
   const [tel, setTel] = useState(initial.tel);
   const [gsm, setGsm] = useState(initial.gsm);
-  const [bottom, setBottom] = useState(initial.bottom);
 
-  const draft = parseStampConfig({ v: 1, shape, color, title, address, tel, gsm, bottom });
+  const draft = parseStampConfig({ v: 1, shape, color, title, address, tel, gsm });
   const hasPhoto = !!details.stampPath;
   const saved = !!details.stampConfig;
   const dirty = !!draft && !sameConfig(draft, details.stampConfig);
@@ -106,7 +105,6 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
             <TextField label={t('entreprise.stamp.addressLabel')} value={address} onChangeText={setAddress} maxLength={STAMP_LIMITS.address} placeholder={t('entreprise.stamp.addressPlaceholder')} />
             <TextField label={t('entreprise.stamp.telLabel')} value={tel} onChangeText={setTel} maxLength={STAMP_LIMITS.phone} keyboardType="phone-pad" />
             <TextField label={t('entreprise.stamp.gsmLabel')} value={gsm} onChangeText={setGsm} maxLength={STAMP_LIMITS.phone} keyboardType="phone-pad" />
-            <TextField label={t('entreprise.stamp.bottomLabel')} value={bottom} onChangeText={setBottom} maxLength={STAMP_LIMITS.bottom} autoCapitalize="characters" />
             <Button
               label={saved && !dirty && !hasPhoto ? t('entreprise.stamp.upToDate') : hasPhoto ? t('entreprise.stamp.useGenerated') : t('entreprise.stamp.save')}
               onPress={handleSave}

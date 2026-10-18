@@ -107,7 +107,7 @@ export function contractTemplateValues(contract: Contract, info: ContractAgencyI
     agence_telephone: info.telephone ?? '',
     agence_email: info.email ?? '',
     client_nom: contract.customerNom,
-    client_cin: contract.customerCin ?? '',
+    client_cin: contract.customerCin || (contract.snapshotValues as TemplateValues | null)?.client_cin || '',
     client_telephone: contract.customerTelephone ?? '',
     conducteur_principal: contract.driverNom ?? '',
     autres_conducteurs: contract.autresConducteurs.join('\n'),

@@ -4,7 +4,8 @@ describe('cachet de l\'agence', () => {
   const config = defaultStampConfig({ nom: 'Atlas Cars', adresse: '12 avenue Hassan II', ville: 'Casablanca', telephone: '+212 5 22 00 00 00' });
 
   it("propose un cachet à partir des informations de l'entreprise", () => {
-    expect(config).toMatchObject({ shape: 'round', color: 'blue', title: 'ATLAS CARS', address: '12 avenue Hassan II', tel: '+212 5 22 00 00 00', gsm: '', bottom: 'CASABLANCA' });
+    expect(config).toMatchObject({ shape: 'round', color: 'blue', title: 'ATLAS CARS', address: '12 avenue Hassan II, Casablanca', tel: '+212 5 22 00 00 00', gsm: '' });
+    expect(config).not.toHaveProperty('bottom');
   });
 
   it("range les lignes dans l'ordre : adresse, téléphone, GSM", () => {
@@ -21,12 +22,17 @@ describe('cachet de l\'agence', () => {
     expect(long[1].endsWith('…')).toBe(true);
   });
 
+  it('n\'ajoute pas la ville deux fois dans l\'adresse', () => {
+    expect(defaultStampConfig({ nom: 'A', adresse: '5 rue X, Casablanca', ville: 'Casablanca' }).address).toBe('5 rue X, Casablanca');
+    expect(defaultStampConfig({ nom: 'A', adresse: null, ville: 'Settat' }).address).toBe('Settat');
+  });
+
   it('dessine un vrai cachet : anneaux, texte en arc, lignes et couleur d\'encre', () => {
     const svg = stampSvg(config);
     expect(svg).toContain('<circle');
     expect(svg).toContain('textPath');
     expect(svg).toContain('ATLAS CARS');
-    expect(svg).toContain('CASABLANCA');
+    expect(svg).not.toContain('★'); // plus d'étoiles : le nom prend tout le rond
     expect(svg).toContain(STAMP_INK.blue);
     expect(stampSvg({ ...config, shape: 'rect', color: 'red' })).toContain('<rect');
     expect(stampSvg({ ...config, shape: 'oval', color: 'black' })).toContain('<ellipse');

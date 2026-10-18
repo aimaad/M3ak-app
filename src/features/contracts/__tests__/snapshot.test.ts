@@ -5,6 +5,13 @@ import { buildSnapshotValues } from '../snapshot';
 const customer = { id: 'c', prenom: 'Sara', nom: 'Alaoui', nomComplet: 'Sara Alaoui', pays: 'Maroc', adresse: '5 rue Atlas', ville: 'Settat', documents: [], dateNaissance: null, numeroPermis: null } as unknown as Customer;
 
 describe('informations figées sur le contrat', () => {
+  it('reprend le CIN de la fiche, sinon celui du document « CIN »', () => {
+    expect(buildSnapshotValues({ ...customer, cinOuPasseport: 'Z188822' } as Customer, []).client_cin).toBe('Z188822');
+    const withDoc = { ...customer, cinOuPasseport: null, documents: [{ type: 'cin', reference: 'F670782' }] } as unknown as Customer;
+    expect(buildSnapshotValues(withDoc, []).client_cin).toBe('F670782');
+    expect(buildSnapshotValues(customer, []).client_cin).toBeUndefined();
+  });
+
   it('sépare prénom et nom du conducteur 2', () => {
     const v = buildSnapshotValues(customer, [{ nomComplet: 'Karim Benali', prenom: 'Karim', nom: 'Benali', cinOuPasseport: 'AB1', numeroPermis: 'P1' }]);
     expect(v.conducteur2_prenom).toBe('Karim');

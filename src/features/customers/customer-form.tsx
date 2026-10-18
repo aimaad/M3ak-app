@@ -28,7 +28,7 @@ import { findDuplicateMatches } from './duplicates';
 import { EMPTY_CREATION_DRAFT, type CustomerCreationDraft } from './licence-ocr';
 import { CUSTOMER_TYPES, PREFERRED_LANGUAGES } from './types';
 import type { Customer, CustomerInput, CustomerType, PendingDocument, PreferredLanguage } from './types';
-import { isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from './validation';
+import { fullNameOf, isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from './validation';
 
 type CustomerFormProps = {
   /** « create » : documents joints à la création (après scan ou à la main) ; « edit » : les documents se gèrent depuis la fiche. */
@@ -46,7 +46,6 @@ type CustomerFormProps = {
 };
 
 export const EMPTY_CUSTOMER_VALUES: CustomerFormValues = {
-  nomComplet: '',
   prenom: '',
   nom: '',
   cinOuPasseport: '',
@@ -101,6 +100,7 @@ export function CustomerForm({
   const uncertain = new Set<string>(draft.uncertainFields);
 
   const permisReference = entries.find((entry) => entry.values.type === 'permis')?.values.reference ?? '';
+  const fullName = fullNameOf(values);
   const duplicates = useMemo(
     () =>
       findDuplicateMatches(
@@ -109,12 +109,12 @@ export function CustomerForm({
           telephone: values.telephone,
           cinOuPasseport: values.cinOuPasseport,
           numeroPermis: values.numeroPermis || permisReference,
-          nomComplet: values.nomComplet,
+          nomComplet: fullName,
           dateNaissance: values.dateNaissance,
         },
         existingCustomerId
       ),
-    [allCustomers, values.telephone, values.cinOuPasseport, values.numeroPermis, permisReference, values.nomComplet, values.dateNaissance, existingCustomerId]
+    [allCustomers, values.telephone, values.cinOuPasseport, values.numeroPermis, permisReference, fullName, values.dateNaissance, existingCustomerId]
   );
 
   function update<K extends keyof CustomerFormValues>(key: K, value: CustomerFormValues[K]) {
@@ -191,24 +191,17 @@ export function CustomerForm({
 
       <CollapsibleSection title={t('customer.sections.general')} defaultOpen>
         <TextField
-          label={t('customer.fields.nomComplet')}
-          value={values.nomComplet}
-          onChangeText={(v) => update('nomComplet', v)}
-          error={showErrors && errors.nomComplet ? t(`customer.form.errors.${errors.nomComplet}`) : undefined}
-          warning={verify('nomComplet')}
-        />
-        <TextField
           label={t('customer.fields.prenom')}
           value={values.prenom}
           onChangeText={(v) => update('prenom', v)}
-          placeholder={t('customer.fields.optionalPlaceholder')}
+          error={showErrors && errors.prenom ? t(`customer.form.errors.${errors.prenom}`) : undefined}
           warning={verify('prenom')}
         />
         <TextField
           label={t('customer.fields.nom')}
           value={values.nom}
           onChangeText={(v) => update('nom', v)}
-          placeholder={t('customer.fields.optionalPlaceholder')}
+          error={showErrors && errors.nom ? t(`customer.form.errors.${errors.nom}`) : undefined}
           warning={verify('nom')}
         />
         <TextField

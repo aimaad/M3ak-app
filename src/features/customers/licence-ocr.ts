@@ -65,6 +65,11 @@ function readCategories(raw: unknown): OcrField<string[]> {
   return list.length > 0 ? { value: list, confidence: readConfidence(confidence) } : { value: null, confidence: 'low' };
 }
 
+/** « Royaume du Maroc » est l'en-tête du document, pas le lieu de délivrance : on ne le garde jamais comme autorité. */
+function dropCountry(field: OcrField<string>): OcrField<string> {
+  return field.value !== null && /^(le\s+)?royaume(\s+du\s+maroc)?$/i.test(field.value.trim()) ? { value: null, confidence: 'low' } : field;
+}
+
 /** CIN marocaine : majuscules, sans espaces ; une valeur qui n'a pas la forme « Z188822 » n'est pas gardée. */
 function normalizeCin(field: OcrField<string>): OcrField<string> {
   if (field.value === null) return field;
@@ -85,7 +90,7 @@ export function normalizeLicenceFields(raw: unknown): LicenceOcrFields {
     dateExpiration: readDate(source.dateExpiration),
     categories: readCategories(source.categories),
     dateNaissance: readDate(source.dateNaissance),
-    autorite: readText(source.autorite),
+    autorite: dropCountry(readText(source.autorite)),
   };
 }
 
@@ -191,14 +196,8 @@ export function licenceFieldsToDraft(
   const nom = keep(fields.nom);
   if (prenom) values.prenom = prenom;
   if (nom) values.nom = nom;
-  if (prenom || nom) {
-    values.nomComplet = [prenom, nom].filter(Boolean).join(' ');
-    if (fields.prenom.confidence === 'medium' || fields.nom.confidence === 'medium') {
-      uncertainFields.push('nomComplet');
-    }
-    if (prenom && fields.prenom.confidence === 'medium') uncertainFields.push('prenom');
-    if (nom && fields.nom.confidence === 'medium') uncertainFields.push('nom');
-  }
+  if (prenom && fields.prenom.confidence === 'medium') uncertainFields.push('prenom');
+  if (nom && fields.nom.confidence === 'medium') uncertainFields.push('nom');
 
   const cin = keep(fields.cin);
   if (cin) {

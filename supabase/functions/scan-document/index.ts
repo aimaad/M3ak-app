@@ -61,7 +61,7 @@ Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises m
   "categories": { "value": tableau de catégories détenues (ex. ["B"]) ou null, "confidence": "high" | "medium" | "low" },
   "restrictions": { "value": codes de la colonne Restrictions (ex. "01.01") ou null, "confidence": "high" | "medium" | "low" },
   "dateNaissance": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
-  "autorite": { "value": ville ou autorité de délivrance (ex. "Taza") ou pays si aucune ville, sinon null, "confidence": "high" | "medium" | "low" }
+  "autorite": { "value": la VILLE de délivrance écrite avant « le <date> » sur le recto (ex. "Taza"), sinon null — JAMAIS « Royaume du Maroc » (c'est l'en-tête du document), "confidence": "high" | "medium" | "low" }
 }
 
 Règles strictes :

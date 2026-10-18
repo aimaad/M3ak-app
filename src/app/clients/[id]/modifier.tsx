@@ -9,7 +9,7 @@ import { ThemedView } from '@/components/themed-view';
 import { CustomerForm } from '@/features/customers/customer-form';
 import { useCustomer, useCustomers, useUpdateCustomer } from '@/features/customers/hooks';
 import type { CustomerInput } from '@/features/customers/types';
-import type { CustomerFormValues } from '@/features/customers/validation';
+import { splitFullName, type CustomerFormValues } from '@/features/customers/validation';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function ModifierClientScreen() {
@@ -38,9 +38,8 @@ export default function ModifierClientScreen() {
 
   const initialValues: CustomerFormValues | undefined = customer
     ? {
-        nomComplet: customer.nomComplet,
-        prenom: customer.prenom ?? '',
-        nom: customer.nom ?? '',
+        // Fiche créée avant la séparation prénom / nom : on propose un découpage, à corriger si besoin.
+        ...(customer.prenom || customer.nom ? { prenom: customer.prenom ?? '', nom: customer.nom ?? '' } : splitFullName(customer.nomComplet)),
         cinOuPasseport: customer.cinOuPasseport ?? '',
         numeroPermis: customer.numeroPermis ?? '',
         telephone: customer.telephone ?? '',

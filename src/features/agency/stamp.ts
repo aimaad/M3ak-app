@@ -12,7 +12,7 @@ export const STAMP_SHAPES: StampShape[] = ['round', 'rect', 'oval'];
 export const STAMP_COLORS: StampColor[] = ['blue', 'red', 'black'];
 export const STAMP_INK: Record<StampColor, string> = { blue: '#1D3FA8', red: '#B91C1C', black: '#1F2937' };
 
-export const STAMP_LIMITS = { title: 36, address: 80, phone: 24, bottom: 28 } as const;
+export const STAMP_LIMITS = { title: 36, address: 80, phone: 24 } as const;
 
 export type StampConfig = {
   v: 1;
@@ -26,8 +26,6 @@ export type StampConfig = {
   tel: string;
   /** GSM (mobile), sous le téléphone. */
   gsm: string;
-  /** Ville : en arc en bas (cachet rond), sinon en bas. */
-  bottom: string;
 };
 
 const clean = (value: unknown, max: number): string =>
@@ -50,21 +48,27 @@ export function parseStampConfig(raw: unknown): StampConfig | null {
     address: clean(c.address ?? legacy, STAMP_LIMITS.address),
     tel: clean(c.tel, STAMP_LIMITS.phone),
     gsm: clean(c.gsm, STAMP_LIMITS.phone),
-    bottom: clean(c.bottom, STAMP_LIMITS.bottom),
   };
 }
 
-/** Cachet proposé au départ, à partir des informations de l'entreprise. */
+/** « 12 avenue Hassan II » + « Casablanca » → « 12 avenue Hassan II, Casablanca » (sans répéter la ville si elle y est déjà). */
+function addressWithCity(address?: string | null, city?: string | null): string {
+  const street = (address ?? '').trim();
+  const town = (city ?? '').trim();
+  if (!town || street.toLowerCase().includes(town.toLowerCase())) return street || town;
+  return street ? `${street}, ${town}` : town;
+}
+
+/** Cachet proposé au départ, à partir des informations de l'entreprise (la ville fait partie de l'adresse). */
 export function defaultStampConfig(agency: { nom: string; adresse?: string | null; ville?: string | null; telephone?: string | null }): StampConfig {
   return {
     v: 1,
     shape: 'round',
     color: 'blue',
     title: clean(agency.nom, STAMP_LIMITS.title).toUpperCase() || 'AGENCE',
-    address: clean(agency.adresse ?? '', STAMP_LIMITS.address),
+    address: clean(addressWithCity(agency.adresse, agency.ville), STAMP_LIMITS.address),
     tel: clean(agency.telephone ?? '', STAMP_LIMITS.phone),
     gsm: '',
-    bottom: clean(agency.ville ?? '', STAMP_LIMITS.bottom).toUpperCase(),
   };
 }
 
@@ -129,19 +133,25 @@ export function stampSvg(config: StampConfig, size = 120): string {
 
   if (config.shape === 'round') {
     const lines = stampLines(config, 22);
+    // Le nom de l'agence fait tout le tour du rond : le texte est étalé (taille + espacement) sur ~85 % du cercle,
+    // centré en haut ; le reste (adresse, téléphone, GSM) est au centre. Pas d'étoiles ni de ville à part.
+    const radius = 76;
+    const arc = 2 * Math.PI * radius * 0.86;
+    const chars = Math.max(1, config.title.length);
+    const fontSize = Math.max(9, Math.min(22, Math.floor(arc / (chars * 0.66))));
+    const natural = chars * fontSize * 0.66;
+    const spacing = chars > 1 ? Math.min(fontSize * 0.35, Math.max(0, (arc - natural) / (chars - 1))) : 0;
     return `${head(200, 200)}<g transform="rotate(-7 100 100)" opacity="0.92">
       <circle cx="100" cy="100" r="95" fill="none" stroke="${ink}" stroke-width="4"/>
       <circle cx="100" cy="100" r="88" fill="none" stroke="${ink}" stroke-width="1.2"/>
-      <circle cx="100" cy="100" r="64" fill="none" stroke="${ink}" stroke-width="1.2"/>
-      <defs><path id="stampTop" d="M 28 100 A 72 72 0 0 1 172 100"/><path id="stampBottom" d="M 22 100 A 78 78 0 0 0 178 100"/></defs>
-      <text font-size="${fit(config.title, 16, 190)}" font-weight="bold" fill="${ink}" letter-spacing="1"><textPath href="#stampTop" startOffset="50%" text-anchor="middle">${escapeXml(config.title)}</textPath></text>
-      ${config.bottom ? `<text font-size="${fit(config.bottom, 14, 150)}" font-weight="bold" fill="${ink}" letter-spacing="1.5"><textPath href="#stampBottom" startOffset="50%" text-anchor="middle">${escapeXml(config.bottom)}</textPath></text>` : ''}
-      <text x="22" y="106" font-size="14" fill="${ink}" text-anchor="middle">★</text><text x="178" y="106" font-size="14" fill="${ink}" text-anchor="middle">★</text>
-      ${centerLines(lines, 100, 100, 112, 11, ink)}
+      <circle cx="100" cy="100" r="62" fill="none" stroke="${ink}" stroke-width="1.2"/>
+      <defs><path id="stampRing" d="M 100 ${100 + radius} A ${radius} ${radius} 0 1 1 100 ${100 - radius} A ${radius} ${radius} 0 1 1 100 ${100 + radius}"/></defs>
+      <text font-size="${fontSize}" font-weight="bold" fill="${ink}" letter-spacing="${spacing.toFixed(1)}"><textPath href="#stampRing" startOffset="50%" text-anchor="middle">${escapeXml(config.title)}</textPath></text>
+      ${centerLines(lines, 100, 100, 108, 11, ink)}
     </g></svg>`;
   }
 
-  // Cachet rectangulaire ou ovale : titre, filet, lignes centrées, filet, ville — la hauteur suit le nombre de lignes.
+  // Cachet rectangulaire ou ovale : titre, filet, lignes centrées — la hauteur suit le nombre de lignes.
   const oval = config.shape === 'oval';
   const lines = stampLines(config, oval ? 30 : 36);
   const w = 240;
@@ -150,9 +160,7 @@ export function stampSvg(config: StampConfig, size = 120): string {
   const ruleTop = titleBase + 8;
   const firstLine = ruleTop + 18;
   const lastLine = firstLine + Math.max(0, lines.length - 1) * 17;
-  const ruleBottom = config.bottom ? lastLine + 9 : null;
-  const bottomBase = ruleBottom !== null ? ruleBottom + 17 : lastLine;
-  const frameH = (config.bottom ? bottomBase : lines.length > 0 ? lastLine : ruleTop) + 14;
+  const frameH = (lines.length > 0 ? lastLine : ruleTop) + 18;
   const ovalPad = oval ? Math.round(frameH * 0.14) : 0; // l'ovale a besoin de plus de place en haut et en bas
   const h = frameH + 12 + ovalPad * 2;
   const dy = 6 + ovalPad;
@@ -170,6 +178,5 @@ export function stampSvg(config: StampConfig, size = 120): string {
     <text x="120" y="${titleBase + dy}" text-anchor="middle" font-size="${fit(config.title, 20, innerW)}" font-weight="bold" fill="${ink}" letter-spacing="0.8">${escapeXml(config.title)}</text>
     <line x1="${left}" y1="${ruleTop + dy}" x2="${right}" y2="${ruleTop + dy}" stroke="${ink}" stroke-width="1.2"/>
     ${lineText}
-    ${config.bottom && ruleBottom !== null ? `<line x1="${left}" y1="${ruleBottom + dy}" x2="${right}" y2="${ruleBottom + dy}" stroke="${ink}" stroke-width="1.2"/><text x="120" y="${bottomBase + dy}" text-anchor="middle" font-size="${fit(config.bottom, 14, innerW)}" font-weight="bold" fill="${ink}" letter-spacing="1.2">${escapeXml(config.bottom)}</text>` : ''}
   </g></svg>`;
 }

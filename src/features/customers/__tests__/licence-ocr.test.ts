@@ -18,7 +18,6 @@ jest.mock('@/lib/supabase', () => ({ getSupabase: () => ({ functions: { invoke: 
 jest.mock('expo-file-system', () => ({ File: class { base64() { return Promise.resolve('BASE64'); } } }));
 
 const BASE_FORM: CustomerFormValues = {
-  nomComplet: '',
   prenom: '',
   nom: '',
   cinOuPasseport: '',
@@ -81,7 +80,6 @@ describe("création d'un client par OCR (OCR simulé)", () => {
   it('préremplit les champs lus, jamais les champs illisibles', () => {
     expect(draft.fromOcr).toBe(true);
     expect(draft.values).toMatchObject({
-      nomComplet: 'Sara ALAOUI',
       prenom: 'Sara',
       nom: 'ALAOUI',
       numeroPermis: '12/345678',
@@ -102,7 +100,7 @@ describe("création d'un client par OCR (OCR simulé)", () => {
   });
 
   it('signale les champs incertains pour vérification humaine', () => {
-    expect(draft.uncertainFields).toEqual(expect.arrayContaining(['nomComplet', 'prenom']));
+    expect(draft.uncertainFields).toEqual(expect.arrayContaining(['prenom']));
     expect(draft.uncertainFields).not.toContain('nom');
     expect(draft.uncertainDocumentFields).toContain('expiresAt');
     expect(draft.uncertainDocumentFields).not.toContain('reference');
@@ -127,7 +125,7 @@ describe("création d'un client par OCR (OCR simulé)", () => {
   });
 
   it("l'employé corrige un champ extrait avant validation : la valeur corrigée est celle enregistrée", () => {
-    const values = { ...BASE_FORM, ...draft.values, prenom: 'Sarah', nomComplet: 'Sarah ALAOUI' } as CustomerFormValues;
+    const values = { ...BASE_FORM, ...draft.values, prenom: 'Sarah' } as CustomerFormValues;
     const input = toCustomerInput(values);
     expect(input.prenom).toBe('Sarah');
     expect(input.nomComplet).toBe('Sarah ALAOUI');
@@ -139,7 +137,7 @@ describe("création manuelle quand l'OCR échoue", () => {
     expect(EMPTY_CREATION_DRAFT.fromOcr).toBe(false);
     expect(EMPTY_CREATION_DRAFT.pendingDocuments).toHaveLength(0);
 
-    const values: CustomerFormValues = { ...BASE_FORM, nomComplet: 'Client Manuel' };
+    const values: CustomerFormValues = { ...BASE_FORM, prenom: 'Client', nom: 'Manuel' };
     expect(isFormValid(validateCustomerForm(values))).toBe(true);
   });
 
@@ -189,7 +187,7 @@ describe('permis marocain recto + verso (OCR simulé)', () => {
 
   it('prépare le client et un seul document permis avec recto, verso et restrictions', () => {
     const draft = licenceFieldsToDraft(merged, 'file:///recto.jpg', { versoUri: 'file:///verso.jpg' });
-    expect(draft.values).toMatchObject({ nomComplet: 'FOUAD BOUCHNEF', cinOuPasseport: 'Z188822', numeroPermis: '20/086579', dateNaissance: '1975-01-09' });
+    expect(draft.values).toMatchObject({ prenom: 'FOUAD', nom: 'BOUCHNEF', cinOuPasseport: 'Z188822', numeroPermis: '20/086579', dateNaissance: '1975-01-09' });
     expect(draft.pendingDocuments).toHaveLength(1);
     expect(draft.pendingDocuments[0]).toMatchObject({
       type: 'permis',
