@@ -1519,7 +1519,16 @@
       "numberNamePlaceholder": "مثلا: ICE",
       "numberValue": "الرقم",
       "numberAdd": "زيد هاد الرقم",
-      "numberLimit": "وصلتي للعدد الأقصى ديال الأرقام."
+      "numberLimit": "وصلتي للعدد الأقصى ديال الأرقام.",
+      "agencyTitle": "معلومات الوكالة فالعقد",
+      "agencyHelp": "كتتقراو من « مقاولتي » فكل عقد. ما تنساش تلمس « سجل » تما من بعد ما تكتب العنوان والهاتف ديالك.",
+      "agencyFields": {
+        "name": "الاسم",
+        "address": "العنوان",
+        "phone": "الهاتف"
+      },
+      "agencyMissing": "غير مسجل",
+      "agencyEdit": "كمل فمقاولتي"
     }
   }
 }

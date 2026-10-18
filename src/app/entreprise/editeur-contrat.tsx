@@ -15,6 +15,7 @@ import { M3akPalette } from '@/constants/theme';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
 import {
+  AGENCY_HEADER_LINES,
   CLIENT_FIELD_KEYS,
   defaultOptions,
   LIMITS_OPTIONS,
@@ -30,7 +31,6 @@ import { loadImageForPdf } from '@/features/storage/api';
 import { useContractTemplate, useRemoveContractTemplate, useSaveContractOptions } from '@/features/contracts/template-hooks';
 import { useLanguage } from '@/i18n/use-language';
 
-const PREVIEW_LINES = ['{{agence_nom}}', '{{agence_adresse}}'];
 
 function SwitchRow({ label, help, value, onChange }: { label: string; help?: string; value: boolean; onChange: (value: boolean) => void }) {
   return (
@@ -167,7 +167,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
     try {
       const details = detailsQuery.data;
       const agency = { nom: details?.nom ?? agencyName, raisonSociale: details?.raisonSociale, adresse: details?.adresse, ville: details?.ville, telephone: details?.telephone, email: details?.email };
-      const template = templateFromOptions(options, PREVIEW_LINES);
+      const template = templateFromOptions(options, AGENCY_HEADER_LINES);
       const logoDataUri = await loadImageForPdf(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null);
       const uri =
         kind === 'blank'
@@ -230,6 +230,28 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
             <ThemedText type="smallBold">{t('contractTemplate.simple.introTitle')}</ThemedText>
             <ThemedText type="small">{t('contractTemplate.simple.intro')}</ThemedText>
           </View>
+
+          <Card className="gap-2">
+            <ThemedText type="smallBold">{t('contractTemplate.simple.agencyTitle')}</ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('contractTemplate.simple.agencyHelp')}
+            </ThemedText>
+            {(
+              [
+                ['name', detailsQuery.data?.nom],
+                ['address', [detailsQuery.data?.adresse, detailsQuery.data?.ville].filter(Boolean).join(', ')],
+                ['phone', detailsQuery.data?.telephone],
+              ] as const
+            ).map(([key, value]) => (
+              <View key={key} className="flex-row items-center gap-2">
+                <Ionicons name={value ? 'checkmark-circle' : 'alert-circle'} size={18} color={value ? M3akPalette.success : M3akPalette.warning} />
+                <ThemedText type="small" style={{ flex: 1 }}>
+                  {t(`contractTemplate.simple.agencyFields.${key}`)} : {value ? value : t('contractTemplate.simple.agencyMissing')}
+                </ThemedText>
+              </View>
+            ))}
+            <Button label={t('contractTemplate.simple.agencyEdit')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />
+          </Card>
 
           <Section number={1} title={t('contractTemplate.simple.legalTitle')} help={t('contractTemplate.simple.legalHelp')}>
             <TextField label={t('contractTemplate.simple.patente')} value={options.legal.patente} onChangeText={(patente) => change((o) => ({ ...o, legal: { ...o.legal, patente } }))} />

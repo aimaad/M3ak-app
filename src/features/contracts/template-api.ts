@@ -1,12 +1,11 @@
 import { getSupabase } from '@/lib/supabase';
 
-import { defaultOptions, parseOptions, templateFromOptions, type ContractOptions } from './contract-options';
+import { AGENCY_HEADER_LINES, defaultOptions, parseOptions, templateFromOptions, type ContractOptions } from './contract-options';
 import { ensureSignatures, parseTemplate, type ContractTemplate } from './template';
 
 export type StoredTemplate = { template: ContractTemplate; options: ContractOptions | null; updatedAt: string };
 
-/** En-tête enregistré dans le modèle : les informations de l'agence sont lues à chaque contrat (champs automatiques). */
-const AGENCY_LINES = ['{{agence_nom}}', '{{agence_adresse}}'];
+const AGENCY_LINES = AGENCY_HEADER_LINES;
 
 /** Réglages et modèle de l'agence, ou null (= modèle M3ak standard). Un contenu invalide est traité comme absent. */
 export async function getContractTemplate(agencyId: string): Promise<StoredTemplate | null> {

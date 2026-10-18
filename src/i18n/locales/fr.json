@@ -1519,7 +1519,16 @@
       "numberNamePlaceholder": "Ex. : ICE",
       "numberValue": "Numéro",
       "numberAdd": "Ajouter ce numéro",
-      "numberLimit": "Vous avez atteint le nombre maximum de numéros."
+      "numberLimit": "Vous avez atteint le nombre maximum de numéros.",
+      "agencyTitle": "Informations de l'agence sur le contrat",
+      "agencyHelp": "Elles sont lues dans « Mon entreprise » à chaque contrat. N'oubliez pas de toucher « Enregistrer » là-bas après avoir écrit votre adresse et votre téléphone.",
+      "agencyFields": {
+        "name": "Nom",
+        "address": "Adresse",
+        "phone": "Téléphone"
+      },
+      "agencyMissing": "non renseigné",
+      "agencyEdit": "Compléter dans Mon entreprise"
     }
   }
 }

@@ -26,6 +26,9 @@ export type ContractOptions = {
   conditions: Condition[];
 };
 
+/** Lignes d'en-tête du contrat : nom, puis adresse complète (adresse + ville). Une ligne sans information disparaît. */
+export const AGENCY_HEADER_LINES = ['{{agence_nom}}', '{{agence_adresse_complete}}'];
+
 export const LIMITS_OPTIONS = { extraFields: 12, conditions: 40, label: 80, text: 4000, legal: 40, extraNumbers: 8 } as const;
 
 export const DEFAULT_FRANCHISE_TEXT =

@@ -1,5 +1,5 @@
 import { buildContractHtml, contractTemplateContext, contractTemplateValues, resolveTemplate } from '../contract-pdf';
-import { defaultOptions, templateFromOptions } from '../contract-options';
+import { AGENCY_HEADER_LINES, defaultOptions, templateFromOptions } from '../contract-options';
 import { defaultContractTemplate } from '../default-template';
 import { sampleContract } from '../sample-contract';
 import {
@@ -293,7 +293,7 @@ describe('mise en page : recto et verso sur deux feuilles A4', () => {
 
 describe('en-tête sans informations manquantes', () => {
   it('une adresse ou un téléphone non renseignés ne laissent pas de ligne en pointillés', () => {
-    const t = templateFromOptions(defaultOptions(), ['{{agence_nom}}', '{{agence_adresse}}']);
+    const t = templateFromOptions(defaultOptions(), AGENCY_HEADER_LINES);
     const html = buildContractHtml(sampleContract(), { nom: 'Location imad' }, {}, t);
     const header = html.slice(html.indexOf('class="header"'), html.indexOf('CONTRAT DE LOCATION'));
     expect(header).toContain('Location imad');
@@ -302,11 +302,14 @@ describe('en-tête sans informations manquantes', () => {
   });
 
   it('les informations renseignées s\'affichent dans l\'en-tête', () => {
-    const t = templateFromOptions(defaultOptions(), ['{{agence_nom}}', '{{agence_adresse}}']);
-    const html = buildContractHtml(sampleContract(), { nom: 'Location imad', adresse: '12 rue Hassan II', telephone: '+212600000000' }, {}, t);
+    const t = templateFromOptions(defaultOptions(), AGENCY_HEADER_LINES);
+    const html = buildContractHtml(sampleContract(), { nom: 'Location imad', adresse: '12 rue Hassan II', ville: 'Casablanca', telephone: '+212600000000' }, {}, t);
     const header = html.slice(html.indexOf('class="header"'), html.indexOf('CONTRAT DE LOCATION'));
-    expect(header).toContain('12 rue Hassan II');
+    expect(header).toContain('12 rue Hassan II, Casablanca');
     expect(header).toContain('Tél : +212600000000');
+    // ville seule : affichée sans virgule parasite
+    const cityOnly = buildContractHtml(sampleContract(), { nom: 'Location imad', ville: 'Rabat' }, {}, t);
+    expect(cityOnly.slice(cityOnly.indexOf('class="header"'), cityOnly.indexOf('CONTRAT DE LOCATION'))).toContain('Rabat');
   });
 
   it('la feuille est dimensionnée comme un A4 en pixels CSS (794 × 1123) et imprimée en 595 × 842 points', () => {

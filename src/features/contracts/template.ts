@@ -50,7 +50,7 @@ export type ContractTemplate = { v: 1; direction: 'ltr' | 'rtl'; blocks: Block[]
 /** Champs automatiques disponibles dans un modèle. Un champ inconnu devient une ligne à remplir à la main. */
 export const PLACEHOLDERS = [
   'numero', 'date_contrat', 'ville_contrat',
-  'agence_nom', 'agence_raison_sociale', 'agence_adresse', 'agence_ville', 'agence_telephone', 'agence_email',
+  'agence_nom', 'agence_raison_sociale', 'agence_adresse', 'agence_adresse_complete', 'agence_ville', 'agence_telephone', 'agence_email',
   'client_nom', 'client_cin', 'client_telephone',
   'conducteur_principal', 'autres_conducteurs',
   'vehicule', 'marque', 'modele', 'immatriculation',
