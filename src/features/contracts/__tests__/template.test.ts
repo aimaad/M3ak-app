@@ -319,3 +319,15 @@ describe('en-tête sans informations manquantes', () => {
     expect(buildContractHtml(sampleContract(), 'Agence')).toContain('size: 794px 1123px');
   });
 });
+
+describe('pas de page blanche en trop', () => {
+  it('chaque feuille est plus courte que la page réelle d\'un téléphone (~1122,7 px), la dernière ne force aucun saut de page', () => {
+    const html = buildContractHtml(sampleContract(), 'Agence');
+    const height = Number(/\.sheet \{[^}]*height: (\d+)px/.exec(html)?.[1]);
+    expect(height).toBeGreaterThan(1000);
+    expect(height).toBeLessThan(1120);
+    expect(html).toContain('.sheet.last { page-break-after: auto');
+    const minHeights = [...html.matchAll(/min-height:(\d+)px/g)].map((m) => Number(m[1]));
+    expect(minHeights.length).toBeGreaterThan(0);
+  });
+});

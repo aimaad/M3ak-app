@@ -162,7 +162,12 @@ const GAUGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" 
 export const PAGE = { width: 794, height: 1123, padX: 36, padY: 30 } as const;
 export const PRINT_SIZE = { width: 595, height: 842 } as const;
 const CONTENT_W = PAGE.width - 2 * PAGE.padX; // 722
-const CONTENT_H = PAGE.height - 2 * PAGE.padY; // 1063
+/**
+ * Hauteur d'une feuille : volontairement un peu plus courte que la page (1123 px) — la page réelle d'un téléphone mesure
+ * ~1122,7 px, et une feuille de 1123 px laissait déborder une fraction de pixel sur une 3e page blanche.
+ */
+const SHEET_H = 1108;
+const CONTENT_H = SHEET_H - 2 * PAGE.padY; // 1048
 /** Le contenu peut être agrandi (jusqu'à ×1,3) pour bien remplir la feuille, ou réduit (jusqu'à ×0,45) pour y tenir. */
 const MAX_ZOOM = 1.3;
 /** Une feuille faite uniquement de conditions (le verso) peut être plus agrandie pour mieux remplir la page. */
@@ -173,7 +178,8 @@ const CSS = `
   @page { size: ${PAGE.width}px ${PAGE.height}px; margin: 0; }
   * { box-sizing: border-box; }
   body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #211A2E; font-size: 10px; line-height: 1.35; }
-  .sheet { width: ${PAGE.width}px; padding: ${PAGE.padY}px ${PAGE.padX}px; page-break-after: always; break-after: page; overflow: hidden; }
+  .sheet { width: ${PAGE.width}px; height: ${SHEET_H}px; padding: ${PAGE.padY}px ${PAGE.padX}px; page-break-after: always; break-after: page; }
+  html, body { margin: 0; padding: 0; }
   .fit { display: flex; flex-direction: column; justify-content: space-between; }
   .sheet.last { page-break-after: auto; break-after: auto; }
   .box { border: 1.2px solid #211A2E; border-radius: 5px; margin: 4px 0; overflow: hidden; }
