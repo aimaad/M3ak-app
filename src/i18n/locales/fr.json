@@ -1246,7 +1246,8 @@
     "logoMissingPdf": "Le logo de l'agence est obligatoire sur le contrat. Ajoutez-le dans Mon entreprise (le propriétaire).",
     "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez.",
     "continueRental": "Continuer la location",
-    "nextStepHint": "Contrat signé. Il ne reste que le départ : remise des clés depuis la fiche de la location."
+    "nextStepHint": "Contrat signé. Il ne reste que le départ : remise des clés depuis la fiche de la location.",
+    "startHint": "Contrat signé : tout est prêt côté contrat. Vous pouvez démarrer la location (remise des clés)."
   },
   "inspection": {
     "section": "Inspection",

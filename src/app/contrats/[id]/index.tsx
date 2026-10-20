@@ -142,6 +142,7 @@ export default function ContratDetailScreen() {
 
   const canMarkReady = contract.statut === 'preparation';
   const canSign = contract.statut === 'pret_a_signer';
+  const canStartRental = !!rental && (rental.statut === 'confirmee' || rental.statut === 'reservee');
   const canCancel = contract.statut === 'preparation' || contract.statut === 'pret_a_signer' || contract.statut === 'signe';
 
   return (
@@ -223,11 +224,20 @@ export default function ContratDetailScreen() {
             ) : null}
             {contract.statut === 'signe' && rental ? (
               <>
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('contract.nextStepHint')}
-                </ThemedText>
+                {canStartRental ? (
+                  <>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('contract.startHint')}
+                    </ThemedText>
+                    <Button
+                      label={t('locations.startAction')}
+                      onPress={() => router.push({ pathname: '/locations/[id]/depart', params: { id: rental.id, vehicleId: rental.vehicleId } })}
+                    />
+                  </>
+                ) : null}
                 <Button
                   label={t('contract.continueRental')}
+                  variant={canStartRental ? 'secondary' : 'primary'}
                   onPress={() => router.push({ pathname: '/locations/[id]', params: { id: rental.id } })}
                 />
               </>
