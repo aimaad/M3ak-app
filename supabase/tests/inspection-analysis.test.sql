@@ -161,6 +161,32 @@ select pg_temp.try('exigence : location acceptée avec le document CIN',
   $$insert into rentals (agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue) values ('aaaaaaaa-0000-0000-0000-000000000001', 'f2000000-0000-0000-0000-000000000002', 'c3000000-0000-0000-0000-000000000003', 'en_attente_confirmation', now() + interval '30 day', now() + interval '32 day')$$);
 select pg_temp.ck('exigence : le permis par défaut reste exigé à la création d''un client', (select require_licence_at_customer from get_departure_policy('bbbbbbbb-0000-0000-0000-000000000002')), '');
 
+-- Inspection ignorée, analyse déclinée, dommage inscrit au contrat (migration 0050).
+reset role;
+set session_replication_role = replica;
+insert into rentals (id, agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue)
+values ('a3000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001', 'confirmee', now() + interval '40 day', now() + interval '42 day');
+insert into contracts (id, agency_id, rental_id, statut, customer_nom, vehicle_immatriculation, vehicle_marque, vehicle_modele, date_debut_prevue, date_fin_prevue, prix_total, caution_montant)
+values ('c0000000-0000-0000-0000-0000000000c3', 'aaaaaaaa-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000003', 'signe', 'Client Un', '1-A-1', 'Dacia', 'Logan', now() + interval '40 day', now() + interval '42 day', 600, 2000);
+set session_replication_role = origin;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('ignorer : l''employé ignore l''inspection de départ (aucune photo)',
+  $$insert into inspections (id, agency_id, rental_id, vehicle_id, type, statut, skipped) values ('e3000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'a3000000-0000-0000-0000-000000000003', 'f1000000-0000-0000-0000-000000000001', 'depart', 'terminee', true)$$);
+select pg_temp.ck('ignorer : qui et quand sont enregistrés par le serveur',
+  (select skipped_by = '00000000-0000-0000-0000-0000000000a3' and skipped_at is not null from inspections where id = 'e3000000-0000-0000-0000-000000000003'), '');
+select pg_temp.try('ignorer : le départ est accepté sans photos quand l''inspection est ignorée',
+  $$select public.start_rental_with_contract('a3000000-0000-0000-0000-000000000003', 'c0000000-0000-0000-0000-0000000000c3', 1000, 100, 'bon', '[]'::jsonb, null)$$);
+select pg_temp.ck('ignorer : la location est bien en cours', (select statut = 'en_cours' from rentals where id = 'a3000000-0000-0000-0000-000000000003'), '');
+select pg_temp.try('ignorer : on peut reprendre l''inspection (elle n''est plus ignorée)',
+  $$update inspections set skipped = false, statut = 'en_cours' where id = 'e3000000-0000-0000-0000-000000000003'$$);
+select pg_temp.ck('ignorer : le serveur efface alors qui / quand', (select skipped_by is null and skipped_at is null from inspections where id = 'e3000000-0000-0000-0000-000000000003'), '');
+select pg_temp.try('décliner : l''analyse déclinée est un état valide',
+  $$update inspections set analysis_status = 'refusee' where id = 'e1000000-0000-0000-0000-000000000001'$$);
+select pg_temp.ck('contrat : un dommage est inscrit au contrat par défaut', (select count(*) = 0 from damages where dans_contrat = false), '');
+select pg_temp.try('contrat : l''employé peut décider de ne pas inscrire un dommage',
+  $$insert into damages (id, inspection_id, agency_id, zone, type, statut, source, dans_contrat) values ('d9000000-0000-0000-0000-000000000009', 'e1000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'capot', 'rayure', 'confirme', 'manuel', false)$$);
+
 -- Cachet généré (migration 0048) : il suffit, avec le logo, pour signer ; une configuration trop lourde est refusée.
 reset role;
 update agencies set logo_url = 'aaaaaaaa-0000-0000-0000-000000000001/logo.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001';

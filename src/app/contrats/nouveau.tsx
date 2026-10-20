@@ -39,7 +39,8 @@ export default function NouveauContratScreen() {
   const [conditionsParticulieres, setConditionsParticulieres] = useState('');
   const [notes, setNotes] = useState('');
   // État des lieux au départ : repris de l'inspection de départ, que l'employé complète avant de faire signer.
-  const [excluded, setExcluded] = useState<string[]>([]);
+  // Par défaut chaque dommage suit le choix fait à l'inspection (« inscrire au contrat ») ; ici l'employé peut l'inverser.
+  const [flipped, setFlipped] = useState<string[]>([]);
   const [writtenDamage, setWrittenDamage] = useState('');
   const [kmDepart, setKmDepart] = useState<string | null>(null);
   const [carburantDepart, setCarburantDepart] = useState<string | null>(null);
@@ -62,6 +63,7 @@ export default function NouveauContratScreen() {
 
   const inspectionDone = inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee';
   const candidates = contractDamageCandidates(departDamages);
+  const isIncluded = (damage: { id: string; dansContrat: boolean }) => damage.dansContrat !== flipped.includes(damage.id);
   const kmValue = kmDepart ?? (inspectionDepart?.kilometrage != null ? String(inspectionDepart.kilometrage) : '');
   const carburantValue = carburantDepart ?? (inspectionDepart?.niveauCarburant != null ? String(inspectionDepart.niveauCarburant) : '');
   const toNumber = (value: string) => (value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Math.round(Number(value)) : null);
@@ -100,7 +102,7 @@ export default function NouveauContratScreen() {
             ...departureSnapshotValues({
               km: toNumber(kmValue),
               carburant: toNumber(carburantValue),
-              damages: candidates.filter((damage) => !excluded.includes(damage.id)).map((damage) => damageLine(damage, t)),
+              damages: candidates.filter(isIncluded).map((damage) => damageLine(damage, t)),
               written: writtenDamage,
             }),
           },
@@ -212,11 +214,11 @@ export default function NouveauContratScreen() {
                   <ThemedText type="small" style={{ color: '#15803D' }}>{t('contract.form.noDamages')}</ThemedText>
                 ) : null}
                 {candidates.map((damage) => {
-                  const included = !excluded.includes(damage.id);
+                  const included = isIncluded(damage);
                   return (
                     <Pressable
                       key={damage.id}
-                      onPress={() => setExcluded((prev) => (included ? [...prev, damage.id] : prev.filter((id) => id !== damage.id)))}
+                      onPress={() => setFlipped((prev) => (prev.includes(damage.id) ? prev.filter((id) => id !== damage.id) : [...prev, damage.id]))}
                       className="flex-row items-center gap-3 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
                       accessibilityRole="switch"
                       accessibilityState={{ checked: included }}

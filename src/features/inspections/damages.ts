@@ -43,6 +43,8 @@ export type Damage = {
   comparaison: DamageComparison;
   statut: DamageStatus;
   source: 'ia' | 'manuel';
+  /** À l'inspection de départ : le dommage est-il inscrit au contrat ? (choix de l'employé, oui par défaut) */
+  dansContrat: boolean;
 };
 
 /** Seuil en dessous duquel la proposition de l'IA doit être vérifiée de près. */

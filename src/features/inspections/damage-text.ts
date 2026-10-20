@@ -7,6 +7,6 @@ export function damageLine(damage: Pick<Damage, 'zone' | 'type' | 'gravite' | 'd
 }
 
 /** Dommages proposables pour le contrat : ceux que l'employé a confirmés à l'inspection de départ. */
-export function contractDamageCandidates<T extends Pick<Damage, 'statut'>>(damages: T[]): T[] {
+export function contractDamageCandidates<T extends Pick<Damage, 'statut' | 'dansContrat'>>(damages: T[]): T[] {
   return damages.filter((damage) => damage.statut === 'confirme');
 }

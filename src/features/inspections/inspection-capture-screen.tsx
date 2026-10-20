@@ -11,7 +11,14 @@ import { ThemedView } from '@/components/themed-view';
 import { useLanguage } from '@/i18n/use-language';
 
 import { computeAngleProgress } from './angle-progress';
-import { useCompleteInspection, useCreateInspection, useInspectionForRental, useInspectionPhotos } from './hooks';
+import {
+  useCompleteInspection,
+  useCreateInspection,
+  useInspectionForRental,
+  useInspectionPhotos,
+  useResumeInspection,
+  useSkipInspection,
+} from './hooks';
 import { persistCapturedPhoto } from './local-photo-storage';
 import { CAPTURE_ANGLES, CAPTURE_PLAN, isSkippableAngle, type InspectionType, type PhotoAngle } from './types';
 import { usePhotoSync } from './use-photo-sync';
@@ -36,6 +43,8 @@ export function InspectionCaptureScreen({
   const inspectionQuery = useInspectionForRental(rentalId, type);
   const createInspection = useCreateInspection();
   const completeInspection = useCompleteInspection();
+  const skipInspection = useSkipInspection(rentalId, type);
+  const resumeInspection = useResumeInspection(rentalId, type);
   const photosQuery = useInspectionPhotos(inspectionQuery.data?.id);
   const { pendingPhotos, isSyncing, syncNow, addPending } = usePhotoSync(
     inspectionQuery.data?.id,
@@ -52,6 +61,12 @@ export function InspectionCaptureScreen({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inspectionQuery.isLoading, inspectionQuery.data]);
+
+  // On revient prendre les photos d'une inspection qui avait été ignorée : elle redevient « à faire ».
+  useEffect(() => {
+    if (inspectionQuery.data?.skipped && !resumeInspection.isPending) resumeInspection.mutate(inspectionQuery.data.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inspectionQuery.data?.skipped]);
 
   const uploadedAngles = (photosQuery.data ?? []).map((photo) => photo.angle);
   const pendingAngles = pendingPhotos.map((photo) => photo.angle);
@@ -86,6 +101,18 @@ export function InspectionCaptureScreen({
     } finally {
       setIsCapturing(false);
     }
+  }
+
+  /** Ignorer toute l'inspection (aucune photo) : seulement tant qu'aucune photo n'a été prise. */
+  function handleSkipInspection() {
+    Alert.alert(t('locations.journey.skip.title'), t('locations.journey.skip.body'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('locations.journey.skip.confirm'),
+        style: 'destructive',
+        onPress: () => skipInspection.mutate({ agencyId, vehicleId }, { onSuccess: () => router.back() }),
+      },
+    ]);
   }
 
   function handleSkip() {
@@ -173,6 +200,19 @@ export function InspectionCaptureScreen({
                 </ThemedText>
               </View>
             </View>
+          ) : null}
+
+          {coveredAngles.length === 0 && inspection ? (
+            <Pressable
+              onPress={handleSkipInspection}
+              disabled={skipInspection.isPending}
+              className="absolute bottom-4 self-center rounded-full bg-black/60 px-4 py-2"
+              style={{ alignSelf: 'center' }}
+            >
+              <ThemedText type="small" style={{ color: '#ffffff' }}>
+                {t('locations.journey.skip.action')}
+              </ThemedText>
+            </Pressable>
           ) : null}
 
           {pendingPhotos.length > 0 ? (

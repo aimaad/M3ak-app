@@ -1062,6 +1062,17 @@
           "short": "Restituer ou retenir",
           "help": "Rien à faire pour le moment : la caution se règle une fois la location clôturée."
         }
+      },
+      "skip": {
+        "title": "Ignorer l'inspection ?",
+        "body": "Aucune photo ne sera prise. En cas de litige, il n'y aura aucune preuve de l'état de la voiture. Cette décision est enregistrée à votre nom.",
+        "confirm": "Ignorer",
+        "action": "Ignorer l'inspection (sans photos)",
+        "skippedShort": "Ignorée — aucune photo",
+        "skippedNote": "Inspection ignorée : aucune photo n'a été prise, l'état de la voiture ne sera pas prouvé.",
+        "doItAnyway": "Faire l'inspection quand même",
+        "decideShort": "Photos prises — analyser ou non ?",
+        "decideAction": "Choisir : analyser les photos ou non"
       }
     },
     "detailsSection": "Détails",
@@ -1508,7 +1519,21 @@
       }
     },
     "openReport": "Voir le rapport et les dommages",
-    "analyzeNow": "Analyser avec l'IA"
+    "analyzeNow": "Analyser avec l'IA",
+    "decision": {
+      "title": "Analyser les photos avec M3ak ?",
+      "body": "{{count}} photos ont été prises et enregistrées. M3ak peut les analyser pour repérer les dommages (extérieur, roues, intérieur). Vous relirez ensuite chaque dommage un par un.",
+      "yes": "Oui, analyser les photos",
+      "no": "Non, pas d'analyse",
+      "noHint": "Si vous déclinez, les photos restent stockées pour l'inspection et pour la comparaison au retour. Vous pourrez écrire à la main les dommages que vous voyez, s'il y en a.",
+      "declinedTitle": "Analyse déclinée",
+      "declinedBody": "Les {{count}} photos restent stockées pour l'inspection et la comparaison au retour. Si vous voyez un dommage, ajoutez-le ci-dessous ; sinon il n'y a rien à faire.",
+      "skippedTitle": "Inspection ignorée",
+      "skippedBody": "Aucune photo n'a été prise : l'état de la voiture ne sera pas prouvé en cas de litige. Vous pouvez encore faire l'inspection.",
+      "inContract": "Sera inscrit dans le contrat",
+      "notInContract": "Ne sera pas inscrit dans le contrat",
+      "analyzeAnyway": "Analyser quand même"
+    }
   },
   "accueil": {
     "title": "Accueil",

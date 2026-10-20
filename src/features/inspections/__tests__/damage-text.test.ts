@@ -17,8 +17,8 @@ describe('dommages inscrits au contrat', () => {
   });
 
   it("ne propose que les dommages confirmés à l'inspection de départ", () => {
-    const list = [{ statut: 'confirme' }, { statut: 'propose' }, { statut: 'rejete' }] as const;
-    expect(contractDamageCandidates([...list])).toEqual([{ statut: 'confirme' }]);
+    const list = [{ statut: 'confirme', dansContrat: true }, { statut: 'propose', dansContrat: true }, { statut: 'rejete', dansContrat: true }] as const;
+    expect(contractDamageCandidates([...list])).toEqual([{ statut: 'confirme', dansContrat: true }]);
   });
 
   it("fige dans le contrat les dommages choisis, ceux écrits à la main et les relevés", () => {

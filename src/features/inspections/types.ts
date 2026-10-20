@@ -79,9 +79,12 @@ export type Inspection = {
   analyzedAt: string | null;
   aiSummary: string | null;
   failedZones: string[];
+  /** Inspection ignorée par l'employé : aucune photo prise. */
+  skipped: boolean;
 };
 
-export type AnalysisStatus = 'aucune' | 'en_cours' | 'terminee' | 'partielle' | 'echec';
+/** « refusee » : photos prises, mais l'employé a décliné l'analyse par M3ak. */
+export type AnalysisStatus = 'aucune' | 'en_cours' | 'terminee' | 'partielle' | 'echec' | 'refusee';
 
 export type InspectionPhoto = {
   id: string;

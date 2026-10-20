@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -11,6 +11,7 @@ import { ContractStatusBadge } from '@/features/contracts/contract-status-badge'
 import type { Contract } from '@/features/contracts/types';
 import { DepositResolveForm } from '@/features/deposits/deposit-resolve-form';
 import type { Deposit } from '@/features/deposits/types';
+import { useResumeInspection, useSkipInspection } from '@/features/inspections/hooks';
 import type { Inspection } from '@/features/inspections/types';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import type { Payment } from '@/features/payments/types';
@@ -66,14 +67,21 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
     departureOk: departureCheck ? departureCheck.ok : null,
     departureEnforced: departureCheck?.enforced ?? false,
     contractStatus: contract?.statut ?? null,
-    inspectionDepartDone: inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee',
+    // Inspection de départ terminée ET « décidée » : ignorée, ou photos prises puis analysées / analyse déclinée.
+    inspectionDepartDone:
+      (inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee') && (inspectionDepart.skipped || inspectionDepart.analysisStatus !== 'aucune'),
     inspectionRetourDone: inspectionRetour?.statut === 'terminee' || inspectionRetour?.statut === 'validee',
-    retourAnalyzed: inspectionRetour?.analysisStatus === 'terminee' || inspectionRetour?.analysisStatus === 'partielle',
+    retourAnalyzed:
+      !!inspectionRetour && (inspectionRetour.skipped || ['terminee', 'partielle', 'refusee'].includes(inspectionRetour.analysisStatus)),
     acomptePrevu: rental.acomptePrevu,
     acomptePaye: rental.acomptePaye,
     hasDeposit: !!deposit,
     depositOpen: deposit?.statut === 'bloquee',
   });
+  const skipDepart = useSkipInspection(rental.id, 'depart');
+  const skipRetour = useSkipInspection(rental.id, 'retour');
+  const resumeDepart = useResumeInspection(rental.id, 'depart');
+  const resumeRetour = useResumeInspection(rental.id, 'retour');
   const [openKey, setOpenKey] = useState<JourneyStepKey | null | undefined>(undefined);
   if (journey.phase === 'annule' || journey.steps.length === 0) return null;
 
@@ -88,10 +96,31 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
   const goReport = (type: 'depart' | 'retour') => router.push({ pathname: '/locations/[id]/inspection-analyse', params: { id: rental.id, type } });
   const previousTitle = (index: number) => t(`locations.journey.steps.${journey.steps[Math.max(0, index - 1)].key}.title`);
 
+  /** Ignorer l'inspection : aucune photo n'est prise ; on prévient que l'état de la voiture ne sera pas prouvé. */
+  function confirmSkip(type: 'depart' | 'retour') {
+    Alert.alert(t('locations.journey.skip.title'), t('locations.journey.skip.body'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('locations.journey.skip.confirm'),
+        style: 'destructive',
+        onPress: () => (type === 'depart' ? skipDepart : skipRetour).mutate({ agencyId: rental.agencyId, vehicleId: rental.vehicleId }),
+      },
+    ]);
+  }
+
+  function resume(type: 'depart' | 'retour') {
+    const inspection = type === 'depart' ? inspectionDepart : inspectionRetour;
+    if (!inspection) return goInspection(type);
+    (type === 'depart' ? resumeDepart : resumeRetour).mutate(inspection.id, { onSuccess: () => goInspection(type) });
+  }
+
   function summary(step: JourneyStep): string {
     const key = step.key;
     if (key === 'contract' && contract) return contract.numero;
     if (key === 'payment') return rental.acomptePrevu > 0 ? `${mad(rental.acomptePaye)} / ${mad(rental.acomptePrevu)}` : t('locations.journey.steps.payment.noneAsked');
+    if (key === 'inspection' && inspectionDepart?.skipped) return t('locations.journey.skip.skippedShort');
+    if (key === 'inspection_retour' && inspectionRetour?.skipped) return t('locations.journey.skip.skippedShort');
+    if (key === 'inspection' && step.status === 'current' && inspectionDepart?.statut === 'terminee') return t('locations.journey.skip.decideShort');
     if (step.status === 'done') return t('locations.journey.done');
     if (step.status === 'attention') return t('locations.journey.attention');
     return '';
@@ -135,10 +164,22 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
         return (
           <>
             <ThemedText type="small" themeColor="textSecondary">{t('locations.journey.steps.inspection.help')}</ThemedText>
-            {step.status === 'done' ? (
-              <Button label={t('inspection.openReport')} variant="secondary" onPress={() => goReport('depart')} />
+            {inspectionDepart?.skipped ? (
+              <>
+                <ThemedText type="small" style={{ color: M3akPalette.warning }}>{t('locations.journey.skip.skippedNote')}</ThemedText>
+                <Button label={t('locations.journey.skip.doItAnyway')} variant="secondary" onPress={() => resume('depart')} loading={resumeDepart.isPending} />
+              </>
+            ) : inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee' ? (
+              <Button
+                label={step.status === 'done' ? t('inspection.openReport') : t('locations.journey.skip.decideAction')}
+                variant={step.status === 'done' ? 'secondary' : 'primary'}
+                onPress={() => goReport('depart')}
+              />
             ) : (
-              <Button label={t('locations.departInspectionRequired.action')} onPress={() => goInspection('depart')} />
+              <>
+                <Button label={t('locations.departInspectionRequired.action')} onPress={() => goInspection('depart')} />
+                <Button label={t('locations.journey.skip.action')} variant="ghost" size="sm" onPress={() => confirmSkip('depart')} loading={skipDepart.isPending} />
+              </>
             )}
           </>
         );
@@ -179,10 +220,18 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
         return (
           <>
             <ThemedText type="small" themeColor="textSecondary">{t('locations.journey.steps.inspection_retour.help')}</ThemedText>
-            {step.status === 'done' ? (
+            {inspectionRetour?.skipped ? (
+              <>
+                <ThemedText type="small" style={{ color: M3akPalette.warning }}>{t('locations.journey.skip.skippedNote')}</ThemedText>
+                <Button label={t('locations.journey.skip.doItAnyway')} variant="secondary" onPress={() => resume('retour')} loading={resumeRetour.isPending} />
+              </>
+            ) : step.status === 'done' ? (
               <Button label={t('inspection.openReport')} variant="secondary" onPress={() => goReport('retour')} />
             ) : (
-              <Button label={t('inspection.title.retour')} onPress={() => goInspection('retour')} />
+              <>
+                <Button label={t('inspection.title.retour')} onPress={() => goInspection('retour')} />
+                <Button label={t('locations.journey.skip.action')} variant="ghost" size="sm" onPress={() => confirmSkip('retour')} loading={skipRetour.isPending} />
+              </>
             )}
           </>
         );

@@ -22,6 +22,7 @@ type InspectionRow = {
   analyzed_at: string | null;
   ai_summary: string | null;
   failed_zones: string[] | null;
+  skipped?: boolean;
 };
 
 type InspectionPhotoRow = {
@@ -51,6 +52,7 @@ function fromRow(row: InspectionRow): Inspection {
     analyzedAt: row.analyzed_at ?? null,
     aiSummary: row.ai_summary ?? null,
     failedZones: row.failed_zones ?? [],
+    skipped: row.skipped ?? false,
   };
 }
 
@@ -101,6 +103,41 @@ export async function createInspection(
     .select()
     .single();
 
+  if (error) throw error;
+  return fromRow(data as InspectionRow);
+}
+
+/**
+ * Ignore l'inspection (aucune photo) : l'inspection est marquée terminée ET ignorée, avec qui et quand (posés par le
+ * serveur). Si elle existe déjà (sans photo), elle est mise à jour ; sinon elle est créée directement ignorée.
+ */
+export async function skipInspection(agencyId: string, rentalId: string, vehicleId: string, type: InspectionType): Promise<Inspection> {
+  const existing = await getInspectionForRental(rentalId, type);
+  if (existing) {
+    const { data, error } = await getSupabase().from('inspections').update({ skipped: true, statut: 'terminee' }).eq('id', existing.id).select().single();
+    if (error) throw error;
+    return fromRow(data as InspectionRow);
+  }
+  const userId = await getCurrentUserId();
+  const { data, error } = await getSupabase()
+    .from('inspections')
+    .insert({ agency_id: agencyId, rental_id: rentalId, vehicle_id: vehicleId, type, employee_id: userId, skipped: true, statut: 'terminee' })
+    .select()
+    .single();
+  if (error) throw error;
+  return fromRow(data as InspectionRow);
+}
+
+/** L'employé change d'avis : l'inspection ignorée redevient une inspection à faire. */
+export async function resumeInspection(id: string): Promise<Inspection> {
+  const { data, error } = await getSupabase().from('inspections').update({ skipped: false, statut: 'en_cours' }).eq('id', id).select().single();
+  if (error) throw error;
+  return fromRow(data as InspectionRow);
+}
+
+/** L'employé décline l'analyse par M3ak : les photos restent stockées (inspection et comparaison au retour). */
+export async function declineAnalysis(id: string): Promise<Inspection> {
+  const { data, error } = await getSupabase().from('inspections').update({ analysis_status: 'refusee' }).eq('id', id).select().single();
   if (error) throw error;
   return fromRow(data as InspectionRow);
 }
@@ -182,6 +219,7 @@ type DamageRow = {
   comparaison: DamageComparison;
   statut: DamageStatus;
   source: 'ia' | 'manuel';
+  dans_contrat?: boolean;
 };
 
 function damageFromRow(row: DamageRow): Damage {
@@ -202,6 +240,7 @@ function damageFromRow(row: DamageRow): Damage {
     comparaison: row.comparaison,
     statut: row.statut,
     source: row.source,
+    dansContrat: row.dans_contrat ?? true,
   };
 }
 
@@ -219,6 +258,7 @@ export type DamagePatch = Partial<{
   nouveau: boolean;
   description: string | null;
   coutValide: number | null;
+  dansContrat: boolean;
 }>;
 
 /** Décision de l'employé sur un dommage : confirmer, rejeter ou corriger (zone, type, gravité, coût, nouveau ou existant). */
@@ -234,6 +274,7 @@ export async function updateDamage(id: string, patch: DamagePatch): Promise<Dama
       ...(patch.nouveau !== undefined ? { nouveau: patch.nouveau } : {}),
       ...(patch.description !== undefined ? { description: patch.description } : {}),
       ...(patch.coutValide !== undefined ? { cout_valide: patch.coutValide } : {}),
+      ...(patch.dansContrat !== undefined ? { dans_contrat: patch.dansContrat } : {}),
       valide_par: userId,
       valide_le: new Date().toISOString(),
     })

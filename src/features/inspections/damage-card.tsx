@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -20,6 +20,8 @@ type Props = {
   index: number;
   photoPath?: string;
   canChooseNew: boolean;
+  /** Inspection de départ : l'employé choisit si le dommage confirmé est inscrit au contrat. */
+  canChooseContract?: boolean;
   onPatch: (patch: DamagePatch) => Promise<unknown>;
 };
 
@@ -34,7 +36,7 @@ function Badge({ text, color, bg }: { text: string; color: string; bg: string })
 }
 
 /** Un dommage : photo avec cadre, détails, décision de l'employé (confirmer / rejeter / modifier). */
-export function DamageCard({ damage, index, photoPath, canChooseNew, onPatch }: Props) {
+export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseContract, onPatch }: Props) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -114,6 +116,22 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, onPatch }: 
             style={{ borderRadius: 16 }}
           />
         </View>
+      ) : null}
+
+      {canChooseContract && damage.statut === 'confirme' ? (
+        <Pressable
+          onPress={() => run({ dansContrat: !damage.dansContrat })}
+          className="flex-row items-center gap-3 rounded-2xl bg-[#FAF9FF] px-3 py-2.5"
+          accessibilityRole="switch"
+          accessibilityState={{ checked: damage.dansContrat }}
+        >
+          <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: M3akPalette.mauve, backgroundColor: damage.dansContrat ? M3akPalette.mauve : '#fff' }}>
+            {damage.dansContrat ? <ThemedText type="smallBold" style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
+          </View>
+          <ThemedText type="small" style={{ flex: 1 }}>
+            {t(damage.dansContrat ? 'inspection.decision.inContract' : 'inspection.decision.notInContract')}
+          </ThemedText>
+        </Pressable>
       ) : null}
 
       {editing ? (

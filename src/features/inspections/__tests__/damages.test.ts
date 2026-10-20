@@ -17,6 +17,7 @@ const base: Damage = {
   comparaison: 'comparee',
   statut: 'propose',
   source: 'ia',
+  dansContrat: true,
 };
 const damage = (over: Partial<Damage>): Damage => ({ ...base, ...over });
 

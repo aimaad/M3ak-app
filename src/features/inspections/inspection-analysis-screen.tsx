@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -19,6 +19,8 @@ import { DamageEditor, parseCost, type DamageDraft } from './damage-editor';
 import { countDamages, pendingNewDamages, sortDamages } from './damages';
 import {
   useAnalyzeInspection,
+  useDeclineAnalysis,
+  useResumeInspection,
   useCreateManualDamage,
   useInspectionDamages,
   useInspectionForRental,
@@ -64,8 +66,10 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Résultat d'une inspection : lance l'analyse IA des photos (une seule fois, automatiquement), puis l'employé relit
- * chaque dommage proposé et décide (confirmer, rejeter, corriger, ou en ajouter un que l'IA a manqué).
+ * Après la prise des photos, l'employé DÉCIDE : faire analyser les photos par M3ak (puis relire chaque dommage proposé :
+ * confirmer, rejeter, corriger, choisir de l'inscrire au contrat ou non), ou décliner l'analyse (les photos restent
+ * stockées pour l'inspection et la comparaison au retour, et il écrit lui-même les dommages éventuels). Dans les deux
+ * cas il peut ajouter à la main un dommage que l'IA n'a pas vu.
  * Au retour, les dommages nouveaux et confirmés alimentent la retenue sur caution et le rapport.
  */
 export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
@@ -77,31 +81,27 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
   const departPhotosQuery = useInspectionPhotos(type === 'retour' ? departQuery.data?.id : undefined);
   const damagesQuery = useInspectionDamages(inspection?.id);
   const analyze = useAnalyzeInspection(rentalId, type);
+  const decline = useDeclineAnalysis(rentalId, type);
+  const resume = useResumeInspection(rentalId, type);
   const updateDamage = useUpdateDamage(inspection?.id ?? '');
   const createDamage = useCreateManualDamage(inspection?.id ?? '', agencyId);
   const [skipAi, setSkipAi] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
-  const started = useRef(false);
 
   const photos = photosQuery.data ?? [];
   const departPhotos = departPhotosQuery.data ?? [];
   const damages = damagesQuery.data ?? [];
   const hasDepart = type === 'retour' && departPhotos.length > 0;
 
-  // Analyse automatique, une seule fois, dès que l'inspection et ses photos sont connues.
-  useEffect(() => {
-    if (started.current || !inspection || !photosQuery.isSuccess) return;
-    if (inspection.analysisStatus !== 'aucune' || photos.length === 0) return;
-    started.current = true;
-    analyze.mutate(inspection.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inspection?.id, inspection?.analysisStatus, photosQuery.isSuccess, photos.length]);
-
   const running = analyze.isPending;
-  const failed = !skipAi && (analyze.isError || inspection?.analysisStatus === 'echec');
+  const skipped = !!inspection?.skipped;
+  const failed = !skipAi && !skipped && (analyze.isError || inspection?.analysisStatus === 'echec');
   const analyzed = inspection && (inspection.analysisStatus === 'terminee' || inspection.analysisStatus === 'partielle');
-  const manualMode = !!inspection && !running && !failed && !analyzed;
+  // Photos prises mais l'employé n'a pas encore choisi : analyser avec M3ak, ou non ?
+  const undecided = !!inspection && !skipped && inspection.analysisStatus === 'aucune' && photos.length > 0 && photosQuery.isSuccess;
+  const declined = inspection?.analysisStatus === 'refusee';
+  const manualMode = !!inspection && !skipped && !running && !failed && !analyzed && !undecided;
 
   function relaunch() {
     if (!inspection) return;
@@ -156,6 +156,31 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
         <ScrollView contentContainerClassName="gap-4 px-6 pb-12" keyboardShouldPersistTaps="handled">
           {!inspection || photosQuery.isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : null}
 
+          {skipped && inspection ? (
+            <Card className="gap-3">
+              <ThemedText type="smallBold">{t('inspection.decision.skippedTitle')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('inspection.decision.skippedBody')}
+              </ThemedText>
+              <Button label={t('locations.journey.skip.doItAnyway')} variant="secondary" loading={resume.isPending} onPress={() => resume.mutate(inspection.id, { onSuccess: () => router.replace({ pathname: type === 'depart' ? '/locations/[id]/inspection-depart' : '/locations/[id]/inspection-retour', params: { id: rentalId } }) })} />
+              <Button label={t('inspection.analysis.inspectionDone')} onPress={() => router.back()} />
+            </Card>
+          ) : null}
+
+          {undecided && inspection && !running ? (
+            <Card className="gap-4">
+              <ThemedText type="subtitle">{t('inspection.decision.title')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('inspection.decision.body', { count: photos.length })}
+              </ThemedText>
+              <Button label={t('inspection.decision.yes')} icon="sparkles-outline" onPress={() => analyze.mutate(inspection.id)} />
+              <Button label={t('inspection.decision.no')} variant="secondary" loading={decline.isPending} onPress={() => decline.mutate(inspection.id)} />
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('inspection.decision.noHint')}
+              </ThemedText>
+            </Card>
+          ) : null}
+
           {running ? (
             <Card className="items-center gap-3 py-8">
               <ActivityIndicator color={M3akPalette.mauve} size="large" />
@@ -178,6 +203,20 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
 
           {inspection && !running && (analyzed || manualMode) ? (
             <>
+              {declined ? (
+                <Card className="gap-2">
+                  <ThemedText type="smallBold">{t('inspection.decision.declinedTitle')}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('inspection.decision.declinedBody', { count: photos.length })}
+                  </ThemedText>
+                  <Button
+                    label={t('inspection.decision.analyzeAnyway')}
+                    variant="secondary"
+                    onPress={() => analyze.mutate(inspection.id)}
+                  />
+                </Card>
+              ) : null}
+
               {analyzed ? (
                 <Card className="gap-3">
                   <ThemedText type="subtitle" style={{ color: type === 'retour' && counts.nouveaux > 0 ? '#B91C1C' : '#15803D' }}>
@@ -245,6 +284,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
                     index={index + 1}
                     photoPath={damage.photoId ? photoPathById.get(damage.photoId) : undefined}
                     canChooseNew={type === 'retour'}
+                    canChooseContract={type === 'depart'}
                     onPatch={(patch) => updateDamage.mutateAsync({ id: damage.id, patch })}
                   />
                 ))}
