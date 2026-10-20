@@ -984,6 +984,111 @@
       "title": "Inspection de départ obligatoire",
       "body": "Prenez d'abord les photos du véhicule (inspection de départ). La location ne peut pas démarrer tant que l'inspection de départ n'est pas terminée : ces photos prouvent l'état de la voiture avant la location.",
       "action": "Faire l'inspection de départ"
+    },
+    "journey": {
+      "title": {
+        "depart": "Préparer le départ",
+        "retour": "Retour du véhicule",
+        "termine": "Clôture de la location"
+      },
+      "progress": "{{done}} sur {{total}} étapes terminées",
+      "allDone": "Tout est terminé ✓",
+      "done": "Terminé",
+      "attention": "À regarder (non bloquant)",
+      "locked": "Terminez d'abord : {{step}}",
+      "steps": {
+        "confirmation": {
+          "title": "Confirmer la location",
+          "short": "Valider la réservation",
+          "help": "La location est en attente : confirmez-la pour passer aux étapes suivantes."
+        },
+        "checks": {
+          "title": "Vérifications avant départ",
+          "short": "Pièces d'identité et permis",
+          "help": "Contrôlez les documents du client et des conducteurs, puis confirmez la vérification."
+        },
+        "contract": {
+          "title": "Contrat",
+          "short": "Créer, faire lire et signer",
+          "help": "Créez le contrat, faites-le lire au client, puis faites-le signer.",
+          "view": "Voir le contrat",
+          "open": "Ouvrir le contrat"
+        },
+        "inspection": {
+          "title": "Inspection de départ",
+          "short": "Photos du véhicule (obligatoire)",
+          "help": "Prenez les photos du véhicule : elles prouvent son état avant la location."
+        },
+        "payment": {
+          "title": "Acompte",
+          "short": "Encaisser l'acompte",
+          "noneAsked": "Aucun acompte demandé",
+          "paid": "Déjà encaissé",
+          "notRequired": "L'acompte n'est pas encore encaissé : vous pouvez tout de même démarrer la location."
+        },
+        "start": {
+          "title": "Démarrer la location",
+          "short": "Kilométrage, carburant, remise des clés",
+          "help": "Tout est prêt : enregistrez le kilométrage et le carburant, puis remettez les clés au client."
+        },
+        "inspection_retour": {
+          "title": "Inspection de retour",
+          "short": "Photos au retour du véhicule",
+          "help": "Reprenez les mêmes photos qu'au départ : l'IA les compare pour trouver les nouveaux dommages."
+        },
+        "damages": {
+          "title": "Dommages et rapport",
+          "short": "Relire les dommages détectés",
+          "help": "Relisez les dommages proposés par l'IA, confirmez ou corrigez-les, puis envoyez le rapport.",
+          "open": "Voir les dommages et le rapport"
+        },
+        "return": {
+          "title": "Retour du véhicule",
+          "short": "Kilométrage, carburant, clôture",
+          "help": "Enregistrez le kilométrage et le carburant au retour pour clôturer la location."
+        },
+        "deposit": {
+          "title": "Caution",
+          "short": "Restituer ou retenir",
+          "help": "Rien à faire pour le moment : la caution se règle une fois la location clôturée."
+        }
+      }
+    },
+    "detailsSection": "Détails",
+    "wizard": {
+      "stepOf": "Étape {{current}} sur {{total}}",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "driversCount_one": "{{count}} conducteur ajouté",
+      "driversCount_other": "{{count}} conducteurs ajoutés",
+      "driversNone": "Le client conduit lui-même",
+      "afterCreate": "Après la création, un parcours guidé vous mènera pas à pas : confirmation, vérifications, contrat, inspection de départ, acompte puis départ.",
+      "steps": {
+        "client": {
+          "title": "Client",
+          "help": "Qui loue la voiture ? Cherchez le client par nom, téléphone ou CIN."
+        },
+        "vehicule": {
+          "title": "Véhicule",
+          "help": "Choisissez la voiture à louer."
+        },
+        "dates": {
+          "title": "Dates et lieux",
+          "help": "Choisissez le départ et le retour. Les jours déjà réservés sont grisés."
+        },
+        "conducteurs": {
+          "title": "Conducteurs",
+          "help": "Par défaut le client conduit lui-même. Ajoutez un autre conducteur principal ou des conducteurs supplémentaires si besoin (facultatif)."
+        },
+        "prix": {
+          "title": "Prix et caution",
+          "help": "Vérifiez le prix, ajoutez des frais ou une remise, et fixez l'acompte et la caution."
+        },
+        "recap": {
+          "title": "Récapitulatif",
+          "help": "Relisez tout avant de créer la location."
+        }
+      }
     }
   },
   "contract": {
