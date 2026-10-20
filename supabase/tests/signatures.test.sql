@@ -107,6 +107,12 @@ select pg_temp.try('contrat : la date de signature ne peut plus être modifiée'
 select pg_temp.try('contrat : un contrat signé reste modifiable ailleurs (pdf)',
   $$update contracts set pdf_path = 'x.pdf' where id = 'c0000000-0000-0000-0000-0000000000c1'$$);
 
+select pg_temp.try('contrat signé : le prix ne peut plus être modifié', $$update contracts set prix_total = 1 where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_signed_fields_locked');
+select pg_temp.try('contrat signé : le client ne peut plus être modifié', $$update contracts set customer_nom = 'Autre' where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_signed_fields_locked');
+select pg_temp.try('contrat signé : les dates ne peuvent plus être modifiées', $$update contracts set date_fin_prevue = date_fin_prevue + interval '5 day' where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_signed_fields_locked');
+select pg_temp.try('contrat signé : les conditions particulières sont verrouillées', $$update contracts set conditions_particulieres = 'x' where id = 'c0000000-0000-0000-0000-0000000000c1'$$, 'contract_signed_fields_locked');
+select pg_temp.try('contrat signé : les notes internes restent modifiables', $$update contracts set notes = 'rappel' where id = 'c0000000-0000-0000-0000-0000000000c1'$$);
+
 -- Signatures de contrat : ajout seul
 select pg_temp.try('stockage : dépôt de la copie figée de la signature du client',
   $$insert into storage.objects (bucket_id, name) values ('signatures', 'aaaaaaaa-0000-0000-0000-000000000001/contracts/c0000000-0000-0000-0000-0000000000c1/client-1.json')$$);
