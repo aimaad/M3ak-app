@@ -14,6 +14,14 @@ export function useUnsavedChangesGuard(dirty: boolean, onSave?: () => Promise<bo
   const { t } = useLanguage();
   const leaving = useRef(false);
 
+  // Sur iPhone, le glissement « retour » ferme l'écran nativement avant que l'application puisse le retenir : l'écran est
+  // alors retiré côté système mais pas côté JS (erreur « removed natively but didn't get removed from JS state »).
+  // Tant qu'il y a des modifications non enregistrées, on désactive donc ce glissement ; le bouton retour reste protégé.
+  useEffect(() => {
+    navigation.setOptions({ gestureEnabled: !dirty });
+    return () => navigation.setOptions({ gestureEnabled: true });
+  }, [dirty, navigation]);
+
   useEffect(() => {
     if (!dirty) return;
     return navigation.addListener('beforeRemove', (event) => {
