@@ -250,3 +250,13 @@ describe('jauge de carburant automatique', () => {
     expect(html).toContain('75 %</text>');
   });
 });
+
+describe('correction de contrat', () => {
+  it('garde le texte de dommage écrit à la main pour le préremplir à la correction', () => {
+    const { departureSnapshotValues } = require('../snapshot');
+    const values = departureSnapshotValues({ km: 10, carburant: 50, damages: ['Capot — Rayure'], written: ' Rétroviseur cassé ' });
+    expect(values.dommages_ecrits_depart).toBe('Rétroviseur cassé');
+    expect(values.dommages_depart).toContain('Capot — Rayure');
+    expect(departureSnapshotValues({ km: null, carburant: null, damages: [], written: '' }).dommages_ecrits_depart).toBeUndefined();
+  });
+});

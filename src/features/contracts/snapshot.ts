@@ -56,6 +56,8 @@ export function departureSnapshotValues(input: { km: number | null; carburant: n
     ...(input.km != null ? { km_depart: String(input.km) } : {}),
     ...(input.carburant != null ? { carburant_depart: `${input.carburant} %` } : {}),
     ...(damages ? { dommages_depart: damages.slice(0, 2000) } : {}),
+    // Copie du texte écrit à la main, pour le retrouver tel quel quand on corrige le contrat.
+    ...(input.written.trim() ? { dommages_ecrits_depart: input.written.trim().slice(0, 2000) } : {}),
   };
   return values;
 }

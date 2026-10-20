@@ -1209,7 +1209,9 @@
       "inContract": "Sera inscrit dans le contrat",
       "notInContract": "Ne sera pas inscrit dans le contrat",
       "writtenDamage": "Autres dommages constatés (à écrire)",
-      "writtenDamagePlaceholder": "Ex. petite rayure sur le pare-chocs avant gauche"
+      "writtenDamagePlaceholder": "Ex. petite rayure sur le pare-chocs avant gauche",
+      "editTitle": "Corriger le contrat",
+      "editHelp": "Vous corrigez le contrat {{numero}}. Les informations du client, de la voiture, des dates et du prix sont relues depuis la location : corrigez-les d'abord sur la location si besoin. L'ancien contrat sera annulé et remplacé par un nouveau numéro."
     },
     "additionalDrivers": "Conducteurs supplémentaires",
     "sign": {
@@ -1250,7 +1252,8 @@
     "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez.",
     "continueRental": "Continuer la location",
     "nextStepHint": "Contrat signé. Il ne reste que le départ : remise des clés depuis la fiche de la location.",
-    "startHint": "Contrat signé : tout est prêt côté contrat. Vous pouvez démarrer la location (remise des clés)."
+    "startHint": "Contrat signé : tout est prêt côté contrat. Vous pouvez démarrer la location (remise des clés).",
+    "editAction": "Modifier le contrat"
   },
   "inspection": {
     "section": "Inspection",

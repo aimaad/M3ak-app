@@ -6,6 +6,7 @@ import type { HandwrittenSignature } from '@/features/signatures/signature';
 import {
   cancelContract,
   createContract,
+  replaceContract,
   getContract,
   getContractForRental,
   listContracts,
@@ -63,6 +64,25 @@ export function useCreateContract() {
       input: ContractCreateInput;
       snapshot: Parameters<typeof createContract>[2];
     }) => createContract(agencyId, input, snapshot),
+    onSuccess: (contract) => invalidate(contract),
+  });
+}
+
+export function useReplaceContract() {
+  const invalidate = useInvalidateContracts();
+
+  return useMutation({
+    mutationFn: ({
+      oldContractId,
+      agencyId,
+      input,
+      snapshot,
+    }: {
+      oldContractId: string;
+      agencyId: string;
+      input: ContractCreateInput;
+      snapshot: Parameters<typeof createContract>[2];
+    }) => replaceContract(oldContractId, agencyId, input, snapshot),
     onSuccess: (contract) => invalidate(contract),
   });
 }

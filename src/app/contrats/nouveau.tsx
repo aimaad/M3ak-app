@@ -12,7 +12,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
-import { useCreateContract } from '@/features/contracts/hooks';
+import { useContract, useCreateContract, useReplaceContract } from '@/features/contracts/hooks';
 import { buildSnapshotValues, departureSnapshotValues } from '@/features/contracts/snapshot';
 import { ACCESSORY_KEYS, VEHICLE_CONDITIONS, type AccessoryKey, type VehicleCondition } from '@/features/contracts/types';
 import { useCustomer, useDrivers } from '@/features/customers/hooks';
@@ -24,7 +24,7 @@ import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function NouveauContratScreen() {
-  const { rentalId } = useLocalSearchParams<{ rentalId: string }>();
+  const { rentalId, replace } = useLocalSearchParams<{ rentalId: string; replace?: string }>();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
   const { data: rental, isLoading: isLoadingRental, isError: isRentalError } = useRental(rentalId);
@@ -33,20 +33,25 @@ export default function NouveauContratScreen() {
   const { data: drivers } = useDrivers(customer?.id);
   const { data: additionalDrivers } = useRentalAdditionalDrivers(rental?.id);
   const createContract = useCreateContract();
+  const replaceContract = useReplaceContract();
+  // Correction d'un contrat non signé : le formulaire est prérempli avec l'ancien contrat
+  // (« annule » reste accepté : un nouvel essai après un échec de création doit pouvoir aboutir).
+  const { data: oldContract } = useContract(replace);
+  const old = replace && oldContract && (oldContract.statut === 'preparation' || oldContract.statut === 'pret_a_signer' || oldContract.statut === 'annule') ? oldContract : null;
   const { data: inspectionDepart } = useInspectionForRental(rental?.id, 'depart');
   const { data: departDamages = [] } = useInspectionDamages(inspectionDepart?.id);
 
-  const [conditionsParticulieres, setConditionsParticulieres] = useState('');
-  const [notes, setNotes] = useState('');
+  const [conditionsEdit, setConditionsEdit] = useState<string | null>(null);
+  const [notesEdit, setNotesEdit] = useState<string | null>(null);
   // État des lieux au départ : repris de l'inspection de départ, que l'employé complète avant de faire signer.
   // Par défaut chaque dommage suit le choix fait à l'inspection (« inscrire au contrat ») ; ici l'employé peut l'inverser.
   const [flipped, setFlipped] = useState<string[]>([]);
-  const [writtenDamage, setWrittenDamage] = useState('');
+  const [writtenEdit, setWrittenEdit] = useState<string | null>(null);
   const [kmDepart, setKmDepart] = useState<string | null>(null);
   const [carburantDepart, setCarburantDepart] = useState<string | null>(null);
-  const [etatDepart, setEtatDepart] = useState<VehicleCondition | null>(null);
-  const [accessoires, setAccessoires] = useState<AccessoryKey[]>([]);
-  const [observations, setObservations] = useState('');
+  const [etatEdit, setEtatEdit] = useState<VehicleCondition | null>(null);
+  const [accessoiresEdit, setAccessoiresEdit] = useState<AccessoryKey[] | null>(null);
+  const [observationsEdit, setObservationsEdit] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const driver = useMemo(
@@ -61,23 +66,36 @@ export default function NouveauContratScreen() {
   });
   const principalName = driver?.nomComplet ?? principalDriver?.nomComplet ?? null;
 
+  const conditionsParticulieres = conditionsEdit ?? old?.conditionsParticulieres ?? '';
+  const notes = notesEdit ?? old?.notes ?? '';
+  const writtenDamage = writtenEdit ?? old?.snapshotValues?.dommages_ecrits_depart ?? '';
+  const etatDepart = etatEdit ?? old?.etatDepart ?? null;
+  const accessoires = accessoiresEdit ?? old?.accessoiresDepart ?? [];
+  const observations = observationsEdit ?? old?.observationsDepart ?? '';
+  const setConditionsParticulieres = setConditionsEdit;
+  const setNotes = setNotesEdit;
+  const setWrittenDamage = setWrittenEdit;
+  const setEtatDepart = setEtatEdit;
+  const setObservations = setObservationsEdit;
+  const setAccessoires = (update: (prev: AccessoryKey[]) => AccessoryKey[]) => setAccessoiresEdit(update(accessoires));
+
   const inspectionDone = inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee';
   const candidates = contractDamageCandidates(departDamages);
   const isIncluded = (damage: { id: string; dansContrat: boolean }) => damage.dansContrat !== flipped.includes(damage.id);
-  const kmValue = kmDepart ?? (inspectionDepart?.kilometrage != null ? String(inspectionDepart.kilometrage) : '');
-  const carburantValue = carburantDepart ?? (inspectionDepart?.niveauCarburant != null ? String(inspectionDepart.niveauCarburant) : '');
+  const kmValue = kmDepart ?? old?.snapshotValues?.km_depart ?? (inspectionDepart?.kilometrage != null ? String(inspectionDepart.kilometrage) : '');
+  const carburantValue = carburantDepart ?? old?.snapshotValues?.carburant_depart?.replace(/\D/g, '') ?? (inspectionDepart?.niveauCarburant != null ? String(inspectionDepart.niveauCarburant) : '');
   const toNumber = (value: string) => (value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Math.round(Number(value)) : null);
 
   const isLoading = isLoadingRental || agencyQuery.isLoading;
   const isError = isRentalError || isVehicleError || isCustomerError || agencyQuery.isError;
-  const canSubmit = !!rental && !!vehicle && !!customer && !!agencyQuery.data;
+  const canSubmit = (!replace || !!old) && !!rental && !!vehicle && !!customer && !!agencyQuery.data;
 
   async function handleSubmit() {
     if (!canSubmit || !rental || !vehicle || !customer || !agencyQuery.data) return;
     setSubmitError(null);
 
     try {
-      const contract = await createContract.mutateAsync({
+      const payload = {
         agencyId: agencyQuery.data.agencyId,
         input: {
           rentalId: rental.id,
@@ -108,7 +126,10 @@ export default function NouveauContratScreen() {
           },
           departure: { etatDepart, accessoiresDepart: accessoires, observationsDepart: observations.trim() || null },
         },
-      });
+      };
+      const contract = old
+        ? await replaceContract.mutateAsync({ ...payload, oldContractId: old.id })
+        : await createContract.mutateAsync(payload);
       router.replace(`/contrats/${contract.id}`);
     } catch (err) {
       console.error('Échec de création du contrat :', err);
@@ -119,7 +140,7 @@ export default function NouveauContratScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t('contract.form.newTitle')} showBack />
+        <ScreenHeader title={t(old ? 'contract.form.editTitle' : 'contract.form.newTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#7C3AED" />
@@ -148,6 +169,12 @@ export default function NouveauContratScreen() {
                 {rental.prixTotal != null ? `${rental.prixTotal.toLocaleString('fr-FR')} MAD` : '—'} · {t('locations.cautionBlocked')} {rental.cautionMontant.toLocaleString('fr-FR')} MAD
               </ThemedText>
             </Card>
+
+            {old ? (
+              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: '#EDE9FE' }}>
+                <ThemedText type="small">{t('contract.form.editHelp', { numero: old.numero })}</ThemedText>
+              </View>
+            ) : null}
 
             <View className="gap-3">
               <ThemedText type="smallBold">{t('contract.form.departureTitle')}</ThemedText>
@@ -273,10 +300,10 @@ export default function NouveauContratScreen() {
             ) : null}
 
             <Button
-              label={createContract.isPending ? t('contract.form.saving') : t('contract.form.save')}
+              label={createContract.isPending || replaceContract.isPending ? t('contract.form.saving') : t('contract.form.save')}
               onPress={handleSubmit}
-              disabled={createContract.isPending}
-              loading={createContract.isPending}
+              disabled={createContract.isPending || replaceContract.isPending}
+              loading={createContract.isPending || replaceContract.isPending}
               style={{ marginTop: 8 }}
             />
           </ScrollView>

@@ -228,6 +228,24 @@ export async function cancelContract(id: string): Promise<Contract> {
 }
 
 /**
+ * Correction d'un contrat pas encore signé : l'ancien est annulé (il reste dans l'historique) puis le nouveau est créé
+ * avec les données actuelles de la location. Si la création échoue, un nouvel essai ne ré-annule pas l'ancien.
+ */
+export async function replaceContract(
+  oldContractId: string,
+  agencyId: string,
+  input: ContractCreateInput,
+  snapshot: Parameters<typeof createContract>[2]
+): Promise<Contract> {
+  const old = await getContract(oldContractId);
+  if (old && old.statut !== 'annule') {
+    if (old.statut !== 'preparation' && old.statut !== 'pret_a_signer') throw new Error('contract_not_editable');
+    await cancelContract(oldContractId);
+  }
+  return createContract(agencyId, input, snapshot);
+}
+
+/**
  * Départ atomique : rental (statut, km, carburant), véhicule (statut,
  * kilométrage) et contrat (statut, état des lieux) mis à jour ensemble dans
  * une seule transaction côté serveur (RPC `start_rental_with_contract`),

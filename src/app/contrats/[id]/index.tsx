@@ -256,6 +256,14 @@ export default function ContratDetailScreen() {
               </ThemedText>
             ) : null}
 
+            {canMarkReady || canSign ? (
+              <Button
+                label={t('contract.editAction')}
+                variant="secondary"
+                onPress={() => router.push({ pathname: '/contrats/nouveau', params: { rentalId: contract.rentalId, replace: contract.id } })}
+              />
+            ) : null}
+
             {canCancel ? <Button label={t('contract.cancelAction')} variant="danger" onPress={handleCancel} /> : null}
           </View>
         </ScrollView>
