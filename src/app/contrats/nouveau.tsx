@@ -18,6 +18,7 @@ import { ACCESSORY_KEYS, VEHICLE_CONDITIONS, type AccessoryKey, type VehicleCond
 import { useCustomer, useDrivers } from '@/features/customers/hooks';
 import { getDriverById } from '@/features/rentals/drivers-api';
 import { contractDamageCandidates, damageLine } from '@/features/inspections/damage-text';
+import type { Damage } from '@/features/inspections/damages';
 import { useInspectionDamages, useInspectionForRental } from '@/features/inspections/hooks';
 import { useRental, useRentalAdditionalDrivers } from '@/features/rentals/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
@@ -82,7 +83,10 @@ export default function NouveauContratScreen() {
 
   const inspectionDone = inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee';
   const candidates = contractDamageCandidates(departDamages);
-  const isIncluded = (damage: { id: string; dansContrat: boolean }) => damage.dansContrat !== flipped.includes(damage.id);
+  // À la correction d'un contrat, on repart de ce qui était inscrit dans l'ancien contrat ; sinon du choix fait à l'inspection.
+  const oldDamageLines = old ? (old.snapshotValues?.dommages_depart ?? '').split('\n') : null;
+  const defaultIncluded = (damage: Damage) => (oldDamageLines ? oldDamageLines.includes(damageLine(damage, t)) : damage.dansContrat);
+  const isIncluded = (damage: Damage) => defaultIncluded(damage) !== flipped.includes(damage.id);
   const kmValue = kmDepart ?? old?.snapshotValues?.km_depart ?? (inspectionDepart?.kilometrage != null ? String(inspectionDepart.kilometrage) : '');
   const carburantValue = carburantDepart ?? old?.snapshotValues?.carburant_depart?.replace(/\D/g, '') ?? (inspectionDepart?.niveauCarburant != null ? String(inspectionDepart.niveauCarburant) : '');
   const toNumber = (value: string) => (value.trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0 ? Math.round(Number(value)) : null);
