@@ -12,7 +12,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WizardProgress } from '@/components/wizard-progress';
 import { useMyAgency } from '@/features/agency/hooks';
-import { useCustomers } from '@/features/customers/hooks';
+import { useCustomers, useOwnerDocuments } from '@/features/customers/hooks';
+import { customerHasIdentity } from '@/features/customers/documents';
 import { searchCustomers } from '@/features/customers/search';
 import type { Customer } from '@/features/customers/types';
 import { hasBookingConflict, vehicleAvailability } from '@/features/rentals/availability';
@@ -103,6 +104,10 @@ export default function NouvelleLocationScreen() {
     conflict
   );
   const showErrors = touched;
+  // Exigence du propriétaire : certaines agences n'acceptent de créer une location que pour un client avec CIN ou passeport.
+  const customerDocuments = useOwnerDocuments(customer ? { kind: 'customer', id: customer.id } : undefined);
+  const identityMissing =
+    !!policyQuery.data?.requireIdAtRental && !!customer && customerDocuments.isSuccess && !customerHasIdentity({ cinOuPasseport: customer.cinOuPasseport, documents: customerDocuments.data });
 
   const priceBreakdown = useMemo(() => {
     if (!vehicle || !startISO || !endISO || endISO <= startISO) return null;
@@ -160,10 +165,13 @@ export default function NouvelleLocationScreen() {
       }
       router.replace(`/locations/${rental.id}`);
     } catch (error) {
+      const message = (error as { message?: string } | null)?.message ?? '';
       setSubmitError(
-        error instanceof Error && error.message === RENTAL_CONFLICT_ERROR
+        message === RENTAL_CONFLICT_ERROR
           ? t('locations.form.errors.conflict')
-          : t('locations.form.createError')
+          : message.includes('customer_id_required')
+            ? t('locations.wizard.identityRequiredBody', { name: customer?.nomComplet ?? '' })
+            : t('locations.form.createError')
       );
     } finally {
       setSubmittingAs(null);
@@ -181,7 +189,7 @@ export default function NouvelleLocationScreen() {
   }
 
   function handleNext() {
-    if (!isStepValid(stepKey, errors)) {
+    if (!isStepValid(stepKey, errors) || (stepKey === 'client' && identityMissing)) {
       setTouched(true);
       return;
     }
@@ -190,7 +198,7 @@ export default function NouvelleLocationScreen() {
 
   /** Au récapitulatif, une erreur renvoie vers l'étape à corriger. */
   function submitFromRecap(statutInitial: 'en_attente_confirmation' | 'confirmee') {
-    const invalid = firstInvalidStep(errors);
+    const invalid = firstInvalidStep(errors) ?? (identityMissing ? 'client' : null);
     if (invalid) {
       goTo(WIZARD_STEPS.indexOf(invalid));
       setTouched(true);
@@ -237,6 +245,18 @@ export default function NouvelleLocationScreen() {
               }}
               error={fieldError('customerId')}
             />
+          ) : null}
+
+          {stepKey === 'client' && identityMissing && customer ? (
+            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FEE2E2' }}>
+              <ThemedText type="smallBold" style={{ color: '#991B1B' }}>
+                {t('locations.wizard.identityRequiredTitle')}
+              </ThemedText>
+              <ThemedText type="small" style={{ color: '#991B1B' }}>
+                {t('locations.wizard.identityRequiredBody', { name: customer.nomComplet })}
+              </ThemedText>
+              <Button label={t('locations.wizard.completeCustomer')} size="sm" onPress={() => router.push(`/clients/${customer.id}/modifier`)} />
+            </View>
           ) : null}
 
           {stepKey === 'dates' ? (

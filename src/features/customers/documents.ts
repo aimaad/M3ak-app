@@ -170,3 +170,13 @@ export function documentToFormValues(doc: CustomerDocument): DocumentFormValues 
     notes: doc.notes ?? '',
   };
 }
+
+/**
+ * Le client a-t-il une pièce d'identité enregistrée ? Oui s'il a un numéro de CIN / passeport sur sa fiche, ou un
+ * document « CIN » / « passeport » (avec un numéro ou un fichier) dans son dossier. Sert à appliquer l'exigence du
+ * propriétaire à la création d'une location (le serveur applique la même règle).
+ */
+export function customerHasIdentity(customer: { cinOuPasseport: string | null; documents?: { type: string; reference: string | null; path: string | null }[] }): boolean {
+  if (customer.cinOuPasseport?.trim()) return true;
+  return (customer.documents ?? []).some((doc) => (doc.type === 'cin' || doc.type === 'passeport') && (!!doc.reference?.trim() || !!doc.path));
+}

@@ -220,7 +220,17 @@
       },
       "maxAdditional": "Conducteurs supplémentaires maximum par location",
       "saved": "Exigences enregistrées.",
-      "saveError": "Impossible d'enregistrer."
+      "saveError": "Impossible d'enregistrer.",
+      "creationTitle": "À la création",
+      "creationHelp": "Ce que l'équipe doit avoir avant de créer un client ou une location. C'est vous qui décidez.",
+      "requireIdAtRental": {
+        "label": "CIN ou passeport obligatoire pour une location",
+        "hint": "Impossible de créer une location pour un client sans CIN ni passeport enregistré (numéro ou document)."
+      },
+      "requireLicenceAtCustomer": {
+        "label": "Permis obligatoire pour créer un client",
+        "hint": "Un client particulier ne peut être créé qu'avec les photos recto et verso de son permis, son numéro et sa date d'expiration."
+      }
     },
     "stamp": {
       "title": "Cachet de l'agence",
@@ -1104,7 +1114,10 @@
         "maintenance": "En maintenance",
         "indisponible": "Indisponible",
         "archived": "Archivée"
-      }
+      },
+      "identityRequiredTitle": "CIN ou passeport obligatoire",
+      "identityRequiredBody": "{{name}} n'a ni CIN ni passeport enregistré. Le propriétaire de l'agence exige l'un des deux pour créer une location. Complétez la fiche du client, puis revenez ici.",
+      "completeCustomer": "Compléter la fiche du client"
     }
   },
   "contract": {

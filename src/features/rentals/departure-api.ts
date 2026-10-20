@@ -29,6 +29,8 @@ type PolicyRow = {
   require_manual_confirmation: boolean;
   confirmation_role: 'employee' | 'manager';
   max_additional_drivers: number;
+  require_id_at_rental?: boolean;
+  require_licence_at_customer?: boolean;
 };
 
 export async function getDeparturePolicy(agencyId: string): Promise<DeparturePolicy> {
@@ -49,6 +51,8 @@ export async function getDeparturePolicy(agencyId: string): Promise<DeparturePol
     requireManualConfirmation: row.require_manual_confirmation,
     confirmationRole: row.confirmation_role,
     maxAdditionalDrivers: row.max_additional_drivers,
+    requireIdAtRental: row.require_id_at_rental ?? false,
+    requireLicenceAtCustomer: row.require_licence_at_customer ?? true,
   };
 }
 
@@ -63,6 +67,8 @@ export async function saveDeparturePolicy(agencyId: string, policy: DeparturePol
     require_manual_confirmation: policy.requireManualConfirmation,
     confirmation_role: policy.confirmationRole,
     max_additional_drivers: policy.maxAdditionalDrivers,
+    require_id_at_rental: policy.requireIdAtRental,
+    require_licence_at_customer: policy.requireLicenceAtCustomer,
   });
   if (error) throw error;
 }

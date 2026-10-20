@@ -9,6 +9,8 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ZoomableImage } from '@/components/zoomable-image';
 import { M3akPalette } from '@/constants/theme';
+import { useMyAgency } from '@/features/agency/hooks';
+import { useDeparturePolicy } from '@/features/rentals/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
 import {
@@ -76,6 +78,7 @@ export function CustomerForm({
   onSubmit,
 }: CustomerFormProps) {
   const { t } = useLanguage();
+  const agencyQuery = useMyAgency();
   const [values, setValues] = useState<CustomerFormValues>(() => ({
     ...(initialValues ?? EMPTY_CUSTOMER_VALUES),
     ...draft.values,
@@ -135,7 +138,9 @@ export function CustomerForm({
     ]);
   }
 
-  const licenceRequired = mode === 'create' && !isEntreprise;
+  // Le propriétaire décide si le permis est obligatoire à la création d'un client (oui par défaut).
+  const policyQuery = useDeparturePolicy(agencyQuery.data?.agencyId);
+  const licenceRequired = mode === 'create' && !isEntreprise && (policyQuery.data?.requireLicenceAtCustomer ?? true);
   const gaps = licenceRequired ? licenceGaps(entries, values.numeroPermis) : [];
 
   function handleSubmit() {

@@ -129,6 +129,38 @@ select pg_temp.try('départ : accepté avec l''inspection terminée et ses photo
   $$select public.start_rental_with_contract('a2000000-0000-0000-0000-000000000002', 'c0000000-0000-0000-0000-0000000000c2', 1000, 100, 'bon', '[]'::jsonb, null)$$);
 select pg_temp.ck('départ : la location est bien passée en cours', (select statut = 'en_cours' from rentals where id = 'a2000000-0000-0000-0000-000000000002'), '');
 
+-- Exigence du propriétaire : CIN ou passeport pour créer une location (migration 0049).
+reset role;
+set session_replication_role = replica;
+insert into vehicles (id, agency_id, immatriculation, marque, modele, prix_jour)
+values ('f2000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '2-A-2', 'Renault', 'Clio', 350);
+insert into customers (id, agency_id, nom_complet, telephone) values
+  ('c2000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', 'Client Sans Papier', '0661000002'),
+  ('c3000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', 'Client Avec Doc', '0661000003');
+set session_replication_role = origin;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('exigence : par défaut, une location sans CIN est possible',
+  $$insert into rentals (agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue) values ('aaaaaaaa-0000-0000-0000-000000000001', 'f2000000-0000-0000-0000-000000000002', 'c2000000-0000-0000-0000-000000000002', 'en_attente_confirmation', now() + interval '10 day', now() + interval '12 day')$$);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.try('exigence : le propriétaire exige le CIN pour une location',
+  $$insert into agency_departure_policies (agency_id, require_id_at_rental) values ('aaaaaaaa-0000-0000-0000-000000000001', true)$$);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('exigence : refusée si le client n''a ni CIN ni passeport',
+  $$insert into rentals (agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue) values ('aaaaaaaa-0000-0000-0000-000000000001', 'f2000000-0000-0000-0000-000000000002', 'c2000000-0000-0000-0000-000000000002', 'en_attente_confirmation', now() + interval '20 day', now() + interval '22 day')$$, 'customer_id_required');
+select pg_temp.try('exigence : un employé ne peut pas la désactiver',
+  $$update agency_departure_policies set require_id_at_rental = false where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001'$$);
+select pg_temp.ck('exigence : elle est toujours active après la tentative', (select require_id_at_rental from agency_departure_policies where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001'), '');
+select pg_temp.try('exigence : acceptée quand le client a un numéro de CIN sur sa fiche',
+  $$update customers set cin_ou_passeport = 'Z188822' where id = 'c2000000-0000-0000-0000-000000000002'$$);
+select pg_temp.try('exigence : location acceptée avec le CIN de la fiche',
+  $$insert into rentals (agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue) values ('aaaaaaaa-0000-0000-0000-000000000001', 'f2000000-0000-0000-0000-000000000002', 'c2000000-0000-0000-0000-000000000002', 'en_attente_confirmation', now() + interval '20 day', now() + interval '22 day')$$);
+select pg_temp.try('exigence : un document « CIN » du dossier suffit aussi',
+  $$insert into customer_documents (agency_id, customer_id, doc_type, reference) values ('aaaaaaaa-0000-0000-0000-000000000001', 'c3000000-0000-0000-0000-000000000003', 'cin', 'F670782')$$);
+select pg_temp.try('exigence : location acceptée avec le document CIN',
+  $$insert into rentals (agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue) values ('aaaaaaaa-0000-0000-0000-000000000001', 'f2000000-0000-0000-0000-000000000002', 'c3000000-0000-0000-0000-000000000003', 'en_attente_confirmation', now() + interval '30 day', now() + interval '32 day')$$);
+select pg_temp.ck('exigence : le permis par défaut reste exigé à la création d''un client', (select require_licence_at_customer from get_departure_policy('bbbbbbbb-0000-0000-0000-000000000002')), '');
+
 -- Cachet généré (migration 0048) : il suffit, avec le logo, pour signer ; une configuration trop lourde est refusée.
 reset role;
 update agencies set logo_url = 'aaaaaaaa-0000-0000-0000-000000000001/logo.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001';

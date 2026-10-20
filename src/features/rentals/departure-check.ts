@@ -48,6 +48,10 @@ export type DeparturePolicy = {
   requireManualConfirmation: boolean;
   confirmationRole: 'employee' | 'manager';
   maxAdditionalDrivers: number;
+  /** Exige un CIN ou un passeport enregistré pour créer une location (décision du propriétaire). */
+  requireIdAtRental: boolean;
+  /** Exige le permis (recto, verso, numéro, expiration) pour créer un client particulier (décision du propriétaire). */
+  requireLicenceAtCustomer: boolean;
 };
 
 export type DepartureCheck = {
@@ -112,6 +116,8 @@ export function parseDepartureCheck(raw: unknown): DepartureCheck {
       requireManualConfirmation: asBool(policy.require_manual_confirmation),
       confirmationRole: policy.confirmation_role === 'manager' ? 'manager' : 'employee',
       maxAdditionalDrivers: asNumber(policy.max_additional_drivers, 3),
+      requireIdAtRental: asBool(policy.require_id_at_rental),
+      requireLicenceAtCustomer: policy.require_licence_at_customer === undefined ? true : asBool(policy.require_licence_at_customer),
     },
     parties,
     blockingCount: asNumber(source.blocking_count),
@@ -182,4 +188,6 @@ export const DEFAULT_DEPARTURE_POLICY: DeparturePolicy = {
   requireManualConfirmation: true,
   confirmationRole: 'employee',
   maxAdditionalDrivers: 3,
+  requireIdAtRental: false,
+  requireLicenceAtCustomer: true,
 };

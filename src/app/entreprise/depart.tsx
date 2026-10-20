@@ -21,7 +21,9 @@ type BooleanKey =
   | 'requireCustomerIdDocument'
   | 'requireDriverLicence'
   | 'requireLicenceValidUntilEnd'
-  | 'requireManualConfirmation';
+  | 'requireManualConfirmation'
+  | 'requireIdAtRental'
+  | 'requireLicenceAtCustomer';
 
 const TOGGLES: BooleanKey[] = [
   'requireDriverLicence',
@@ -109,6 +111,22 @@ export default function PolitiqueDepartScreen() {
                 value={policy.blockDeparture}
                 onChange={(next) => update('blockDeparture', next)}
               />
+            </Card>
+
+            <Card className="gap-1">
+              <ThemedText type="smallBold">{t('entreprise.departurePolicy.creationTitle')}</ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                {t('entreprise.departurePolicy.creationHelp')}
+              </ThemedText>
+              {(['requireIdAtRental', 'requireLicenceAtCustomer'] as const).map((key) => (
+                <Toggle
+                  key={key}
+                  label={t(`entreprise.departurePolicy.${key}.label`)}
+                  hint={t(`entreprise.departurePolicy.${key}.hint`)}
+                  value={policy[key]}
+                  onChange={(next) => update(key, next)}
+                />
+              ))}
             </Card>
 
             <Card className="gap-1">
