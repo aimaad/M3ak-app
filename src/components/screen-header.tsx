@@ -19,7 +19,7 @@ export function ScreenHeader({ title, subtitle, showBack, right }: ScreenHeaderP
   return (
     <View className="gap-1 px-6 pb-4 pt-2">
       <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
+        <View className="flex-1 flex-row items-center gap-3">
           {showBack ? (
             <Pressable
               onPress={() => router.back()}
@@ -30,11 +30,11 @@ export function ScreenHeader({ title, subtitle, showBack, right }: ScreenHeaderP
               <ThemedText type="smallBold">{backArrow}</ThemedText>
             </Pressable>
           ) : null}
-          <ThemedText type="subtitle" className="font-cairo-semibold">
+          <ThemedText type="subtitle" className="flex-1 font-cairo-semibold" numberOfLines={2}>
             {title}
           </ThemedText>
         </View>
-        {right}
+        {right ? <View className="ms-3 shrink-0">{right}</View> : null}
       </View>
       {subtitle ? (
         <ThemedText type="default" themeColor="textSecondary">
