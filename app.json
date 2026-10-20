@@ -47,7 +47,14 @@
           "cameraPermission": "M3ak a besoin de la caméra pour l'inspection photo des véhicules."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-notifications",
+        {
+          "color": "#7C3AED",
+          "defaultChannel": "default"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

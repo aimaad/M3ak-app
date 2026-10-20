@@ -16,6 +16,8 @@ import { useMyAgency, useMyProfile, useUpdateMyProfile, useUploadMemberAvatar } 
 import type { MemberProfile } from '@/features/agency/types';
 import { signOut, updateMyPassword } from '@/features/auth/api';
 import { isPasswordChangeFormValid, validatePasswordChangeForm } from '@/features/auth/validation';
+import { unregisterThisDevice } from '@/features/notifications/push';
+import { NotificationSettings } from '@/features/notifications/notification-settings';
 import { useRemoveMySignature, useSignature } from '@/features/signatures/hooks';
 import { SignatureView } from '@/features/signatures/signature-pad';
 import { getInitials } from '@/lib/initials';
@@ -270,7 +272,12 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
         />
       </View>
 
-      <Button label={t('auth.signOut')} variant="danger" onPress={() => signOut()} />
+      <NotificationSettings agencyId={agencyId} />
+
+      <Button label={t('auth.signOut')} variant="danger" onPress={async () => {
+          await unregisterThisDevice();
+          await signOut();
+        }} />
     </ScrollView>
   );
 }

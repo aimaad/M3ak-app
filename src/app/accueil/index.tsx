@@ -24,6 +24,7 @@ import {
   OperationsSection,
   PerformanceSection,
 } from '@/features/dashboard/sections';
+import { NotificationBell } from '@/features/notifications/notification-bell';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
@@ -110,13 +111,16 @@ export default function AccueilScreen() {
           title={t('accueil.greeting', { name: agencyQuery.data?.memberName ?? '' })}
           subtitle={today}
           right={
-            <Pressable onPress={() => router.push('/profil')} hitSlop={8}>
-              <Avatar
-                path={profileQuery.data?.photoPath}
-                size={40}
-                initials={getInitials(profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName)}
-              />
-            </Pressable>
+            <View className="flex-row items-center gap-3">
+              <NotificationBell />
+              <Pressable onPress={() => router.push('/profil')} hitSlop={8}>
+                <Avatar
+                  path={profileQuery.data?.photoPath}
+                  size={40}
+                  initials={getInitials(profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName)}
+                />
+              </Pressable>
+            </View>
           }
         />
 

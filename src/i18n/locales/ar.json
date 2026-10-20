@@ -2067,5 +2067,151 @@
     "stay": "بقى",
     "save": "سجل وخرج",
     "discard": "خرج بلا تسجيل"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "empty": "لا توجد إشعارات حالياً. ستجد هنا كل ما يحدث في وكالتك.",
+    "loadError": "تعذر تحميل الإشعارات.",
+    "clearAll": "حذف الكل",
+    "clearConfirmTitle": "حذف كل الإشعارات؟",
+    "clearConfirmBody": "ستختفي من قائمتك أنت فقط. يحتفظ باقي أعضاء الفريق بإشعاراتهم.",
+    "dismiss": "حذف",
+    "call": "اتصال {{phone}}",
+    "open": "فتح",
+    "settings": "الإشعارات",
+    "ago": {
+      "now": "الآن",
+      "minutes": "منذ {{count}} د",
+      "hours": "منذ {{count}} س",
+      "days": "منذ {{count}} ي"
+    },
+    "prefs": {
+      "title": "الإشعارات",
+      "enabled": "تلقي الإشعارات",
+      "enabledHint": "مواعيد الإرجاع، التأخيرات، الدفعات، الصيانة… عند الإيقاف لن تصلك أي إشعارات.",
+      "push": "إشعارات على هذا الهاتف",
+      "pushHint": "تصلك حتى عندما يكون التطبيق مغلقاً.",
+      "pushUnavailable": "إشعارات شاشة القفل لا تعمل في Expo Go: تصل مع التطبيق المثبت على الهاتف.",
+      "categories": "أنواع الإشعارات",
+      "saveError": "تعذر حفظ هذا الإعداد. أعد المحاولة."
+    },
+    "categories": {
+      "rental": "الكراءات",
+      "reminder": "تذكيرات (إرجاع، تسليم، تأخر)",
+      "payment": "الدفعات والضمانات",
+      "contract": "العقود",
+      "inspection": "الفحوصات",
+      "maintenance": "الصيانة",
+      "team": "الفريق",
+      "customer": "الزبناء"
+    },
+    "kinds": {
+      "return_tomorrow": {
+        "title": "إرجاع مبرمج غداً",
+        "body": "على {{customer}} إرجاع {{vehicle}} ({{plate}}) غداً. اتصل به: {{phone}}"
+      },
+      "return_today": {
+        "title": "إرجاع مبرمج اليوم",
+        "body": "على {{customer}} إرجاع {{vehicle}} ({{plate}}) اليوم. الهاتف: {{phone}}"
+      },
+      "return_late": {
+        "title": "تأخر في الإرجاع",
+        "body": "لم يرجع {{customer}} السيارة {{vehicle}} ({{plate}}). اتصل به: {{phone}}"
+      },
+      "departure_today": {
+        "title": "تسليم مبرمج اليوم",
+        "body": "سيأخذ {{customer}} السيارة {{vehicle}} ({{plate}}) اليوم."
+      },
+      "departure_tomorrow": {
+        "title": "تسليم مبرمج غداً",
+        "body": "سيأخذ {{customer}} السيارة {{vehicle}} ({{plate}}) غداً."
+      },
+      "departure_late": {
+        "title": "الزبون متأخر عن الاستلام",
+        "body": "لم يأت {{customer}} لأخذ {{vehicle}} ({{plate}}). الهاتف: {{phone}}"
+      },
+      "maintenance_due": {
+        "title": "صيانة مطلوبة",
+        "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} قبل {{date}}."
+      },
+      "maintenance_overdue": {
+        "title": "صيانة متأخرة",
+        "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} كانت مبرمجة في {{date}}."
+      },
+      "licence_expiring": {
+        "title": "رخصة السياقة توشك على الانتهاء",
+        "body": "تنتهي رخصة {{customer}} في {{date}}. الهاتف: {{phone}}"
+      },
+      "rental_created": {
+        "title": "كراء جديد",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_confirmed": {
+        "title": "تم تأكيد الكراء",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_started": {
+        "title": "تم تسجيل التسليم",
+        "body": "غادر {{customer}} بالسيارة {{vehicle}} ({{plate}})."
+      },
+      "rental_returned": {
+        "title": "تم إرجاع السيارة",
+        "body": "أرجع {{customer}} السيارة {{vehicle}} ({{plate}})."
+      },
+      "rental_cancelled": {
+        "title": "تم إلغاء الكراء",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_extended": {
+        "title": "تم تمديد الكراء",
+        "body": "يحتفظ {{customer}} بـ {{vehicle}} ({{plate}}) إلى غاية {{end}}."
+      },
+      "payment_received": {
+        "title": "تم استلام دفعة",
+        "body": "{{amount}} درهم من {{customer}} ({{vehicle}})."
+      },
+      "deposit_retained": {
+        "title": "اقتطاع من الضمانة",
+        "body": "تم اقتطاع {{amount}} درهم من ضمانة {{customer}}."
+      },
+      "contract_signed": {
+        "title": "تم توقيع العقد",
+        "body": "{{contract}} · {{customer}} · {{vehicle}}"
+      },
+      "inspection_analyzed": {
+        "title": "تم تحليل الفحص",
+        "body": "{{vehicle}}: تم رصد {{count}} ضرر."
+      },
+      "inspection_skipped": {
+        "title": "تم تخطي الفحص",
+        "body": "تم تخطي فحص {{vehicle}}."
+      },
+      "vehicle_maintenance": {
+        "title": "سيارة في الصيانة",
+        "body": "دخلت {{vehicle}} ({{plate}}) الصيانة."
+      },
+      "member_joined": {
+        "title": "عضو جديد في الفريق",
+        "body": "انضم {{name}} إلى فريقكم."
+      },
+      "customer_created": {
+        "title": "زبون جديد",
+        "body": "{{customer}}"
+      }
+    },
+    "maintenance": {
+      "vidange": "تغيير الزيت",
+      "assurance": "التأمين",
+      "visite_technique": "الفحص التقني",
+      "freins": "الفرامل",
+      "pneus": "العجلات",
+      "autre": "الصيانة"
+    },
+    "branch": "الفرع",
+    "total": "{{count}} إشعار",
+    "fallback": {
+      "title": "إشعار",
+      "body": "لديك إشعار جديد."
+    }
   }
 }

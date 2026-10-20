@@ -2067,5 +2067,151 @@
     "stay": "Rester",
     "save": "Enregistrer et quitter",
     "discard": "Quitter sans enregistrer"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification pour le moment. Vous serez prévenu ici de tout ce qui se passe dans votre agence.",
+    "loadError": "Impossible de charger les notifications.",
+    "clearAll": "Tout supprimer",
+    "clearConfirmTitle": "Supprimer toutes les notifications ?",
+    "clearConfirmBody": "Elles disparaîtront de votre liste uniquement. Les autres membres de l'équipe gardent les leurs.",
+    "dismiss": "Supprimer",
+    "call": "Appeler {{phone}}",
+    "open": "Ouvrir",
+    "settings": "Notifications",
+    "ago": {
+      "now": "À l'instant",
+      "minutes": "Il y a {{count}} min",
+      "hours": "Il y a {{count}} h",
+      "days": "Il y a {{count}} j"
+    },
+    "prefs": {
+      "title": "Notifications",
+      "enabled": "Recevoir les notifications",
+      "enabledHint": "Retours à prévoir, retards, paiements, maintenance… Désactivé, plus aucune notification ne vous est envoyée.",
+      "push": "Notifications sur ce téléphone",
+      "pushHint": "Reçues même quand l'application est fermée.",
+      "pushUnavailable": "Les notifications sur l'écran de verrouillage ne fonctionnent pas dans Expo Go : elles arrivent avec l'application installée sur le téléphone.",
+      "categories": "Types de notifications",
+      "saveError": "Impossible d'enregistrer ce réglage. Réessayez."
+    },
+    "categories": {
+      "rental": "Locations",
+      "reminder": "Rappels (retours, départs, retards)",
+      "payment": "Paiements et cautions",
+      "contract": "Contrats",
+      "inspection": "Inspections",
+      "maintenance": "Maintenance",
+      "team": "Équipe",
+      "customer": "Clients"
+    },
+    "kinds": {
+      "return_tomorrow": {
+        "title": "Retour prévu demain",
+        "body": "{{customer}} doit rendre {{vehicle}} ({{plate}}) demain. Appelez-le : {{phone}}"
+      },
+      "return_today": {
+        "title": "Retour prévu aujourd'hui",
+        "body": "{{customer}} doit rendre {{vehicle}} ({{plate}}) aujourd'hui. Tél : {{phone}}"
+      },
+      "return_late": {
+        "title": "Retour en retard",
+        "body": "{{customer}} n'a pas rendu {{vehicle}} ({{plate}}). Contactez-le : {{phone}}"
+      },
+      "departure_today": {
+        "title": "Départ prévu aujourd'hui",
+        "body": "{{customer}} vient chercher {{vehicle}} ({{plate}}) aujourd'hui."
+      },
+      "departure_tomorrow": {
+        "title": "Départ prévu demain",
+        "body": "{{customer}} vient chercher {{vehicle}} ({{plate}}) demain."
+      },
+      "departure_late": {
+        "title": "Client en retard au départ",
+        "body": "{{customer}} n'est pas venu chercher {{vehicle}} ({{plate}}). Tél : {{phone}}"
+      },
+      "maintenance_due": {
+        "title": "Entretien à prévoir",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} avant le {{date}}."
+      },
+      "maintenance_overdue": {
+        "title": "Entretien en retard",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} devait être fait le {{date}}."
+      },
+      "licence_expiring": {
+        "title": "Permis bientôt expiré",
+        "body": "Le permis de {{customer}} expire le {{date}}. Tél : {{phone}}"
+      },
+      "rental_created": {
+        "title": "Nouvelle location",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_confirmed": {
+        "title": "Location confirmée",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_started": {
+        "title": "Départ enregistré",
+        "body": "{{customer}} est parti avec {{vehicle}} ({{plate}})."
+      },
+      "rental_returned": {
+        "title": "Voiture rendue",
+        "body": "{{customer}} a rendu {{vehicle}} ({{plate}})."
+      },
+      "rental_cancelled": {
+        "title": "Location annulée",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_extended": {
+        "title": "Location prolongée",
+        "body": "{{customer}} garde {{vehicle}} ({{plate}}) jusqu'au {{end}}."
+      },
+      "payment_received": {
+        "title": "Paiement reçu",
+        "body": "{{amount}} MAD de {{customer}} ({{vehicle}})."
+      },
+      "deposit_retained": {
+        "title": "Retenue sur caution",
+        "body": "{{amount}} MAD retenus sur la caution de {{customer}}."
+      },
+      "contract_signed": {
+        "title": "Contrat signé",
+        "body": "{{contract}} · {{customer}} · {{vehicle}}"
+      },
+      "inspection_analyzed": {
+        "title": "Inspection analysée",
+        "body": "{{vehicle}} : {{count}} dommage(s) détecté(s)."
+      },
+      "inspection_skipped": {
+        "title": "Inspection ignorée",
+        "body": "L'inspection de {{vehicle}} a été ignorée."
+      },
+      "vehicle_maintenance": {
+        "title": "Véhicule en maintenance",
+        "body": "{{vehicle}} ({{plate}}) est passé en maintenance."
+      },
+      "member_joined": {
+        "title": "Nouveau membre dans l'équipe",
+        "body": "{{name}} a rejoint votre équipe."
+      },
+      "customer_created": {
+        "title": "Nouveau client",
+        "body": "{{customer}}"
+      }
+    },
+    "maintenance": {
+      "vidange": "la vidange",
+      "assurance": "l'assurance",
+      "visite_technique": "la visite technique",
+      "freins": "les freins",
+      "pneus": "les pneus",
+      "autre": "l'entretien"
+    },
+    "branch": "Filiale",
+    "total": "{{count}} notification(s)",
+    "fallback": {
+      "title": "Notification",
+      "body": "Vous avez une nouvelle notification."
+    }
   }
 }

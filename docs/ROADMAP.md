@@ -56,6 +56,7 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Contrat complet bilingue (14 articles, état des lieux, parties) + signature manuscrite du personnel (profil) et du client (après lecture du contrat) collées dans le PDF — voir `docs/CONTRATS-SIGNATURES.md` (migration 0037)
 - [x] Contrat réglable par le propriétaire en un écran simple (interrupteurs, mentions légales, informations en plus, conditions) — migrations 0040 et 0042
 - [x] Contrat par défaut au format carnet de location (cadres, paiement, km, carburant, état du véhicule, verso) + éditeur de modèle (modifier, supprimer, ajouter des champs et cadres) — migration 0041
+- [x] Système de notifications complet : cloche + page, règles propriétaire / filiale / employé, rappels (retours, retards, entretien, permis), réglages par utilisateur, push (EAS) — voir `docs/NOTIFICATIONS.md` (migration 0053)
 - [ ] Faire relire les conditions générales du contrat par un juriste
 - [ ] Politique de conservation du journal de traçabilité (durée, purge) — à définir
 - [ ] Politique de conservation des documents (durée, purge) — à définir par l'agence

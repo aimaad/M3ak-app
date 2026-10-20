@@ -68,7 +68,7 @@ describe("confidentialité de l'OCR", () => {
 
   it("les fonctions serveur n'utilisent que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'generate-insights', 'scan-document', 'send-invite']);
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'generate-insights', 'scan-document', 'send-invite', 'send-push']);
     const read = (file: string) => fs.readFileSync(path.join(functionsDir, file), 'utf8');
 
     const scan = read('scan-document/index.ts');

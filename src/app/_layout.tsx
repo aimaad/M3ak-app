@@ -15,6 +15,7 @@ import { useColorScheme } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { SessionProvider, useSession } from '@/features/auth/session-context';
+import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
 
 const PUBLIC_SEGMENTS = new Set(['login', 'signup', 'mot-de-passe-oublie']);
 
@@ -66,6 +67,7 @@ export default function RootLayout() {
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <AuthGate>
             <Stack screenOptions={{ headerShown: false }} />
+            <NotificationsBootstrap />
           </AuthGate>
         </ThemeProvider>
       </SessionProvider>
