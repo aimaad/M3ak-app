@@ -257,7 +257,7 @@ describe('mise en page : recto et verso sur deux feuilles A4', () => {
     for (const word of ['Conducteur 1', 'Paiement', 'Kilométrage', 'Franchise sinistre', 'Signature du locataire']) expect(front).toContain(word);
     expect(front).not.toContain('Article 1');
     expect(back).toContain('Article 1');
-    expect(back).toContain('Article 14');
+    expect(back).toContain('Article 12');
     expect(back).not.toContain('Conducteur 1');
   });
 
@@ -271,14 +271,14 @@ describe('mise en page : recto et verso sur deux feuilles A4', () => {
     }
   });
 
-  it('les hauteurs estimées restent proches de celles mesurées sur un rendu réel (recto ≈ 896 px, verso ≈ 546 px)', () => {
+  it('les hauteurs estimées restent proches de celles mesurées sur un rendu réel (recto ≈ 945 px, verso ≈ 685 px)', () => {
     const c = sampleContract();
     const template = resolveTemplate(c, agency);
     const [front, back] = estimateSheetHeights(template, { values: contractTemplateValues(c, agency), context: contractTemplateContext(c), clientName: 'x', agencyName: 'y' });
     expect(front).toBeGreaterThan(830);
     expect(front).toBeLessThan(990);
-    expect(back).toBeGreaterThan(500);
-    expect(back).toBeLessThan(620);
+    expect(back).toBeGreaterThan(620);
+    expect(back).toBeLessThan(760);
   });
 
   it('un verso très chargé est moins agrandi plutôt que coupé ou reporté', () => {

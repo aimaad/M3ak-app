@@ -190,6 +190,21 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
     ]);
   }
 
+  /** Remet seulement les conditions générales par défaut (les mentions légales et réglages restent). */
+  function handleResetConditions() {
+    Alert.alert(t('contractTemplate.simple.resetConditionsTitle'), t('contractTemplate.simple.resetConditionsBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('contractTemplate.simple.resetConditions'),
+        style: 'destructive',
+        onPress: () => {
+          change((o) => ({ ...o, conditions: defaultOptions().conditions }));
+          setOpenCondition(null);
+        },
+      },
+    ]);
+  }
+
   function handleReset() {
     Alert.alert(t('contractTemplate.simple.resetTitle'), t('contractTemplate.simple.resetBody'), [
       { text: t('common.cancel'), style: 'cancel' },
@@ -354,6 +369,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
                 );
               })}
               <Button label={t('contractTemplate.simple.addCondition')} variant="secondary" size="sm" icon="add" onPress={addCondition} />
+              <Button label={t('contractTemplate.simple.resetConditions')} variant="ghost" size="sm" onPress={handleResetConditions} />
             </Section>
           ) : null}
 

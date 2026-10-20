@@ -10,7 +10,7 @@ describe('réglages simples du contrat', () => {
   it('le modèle fabriqué avec les réglages par défaut est valide et complet', () => {
     expect(parseTemplate(templateFromOptions(defaultOptions(), LINES))).not.toBeNull();
     const html = render();
-    for (const word of ['Conducteur 1', 'Conducteur 2', 'Paiement', 'Kilométrage', 'Niveau de carburant', 'Franchise sinistre', 'État du véhicule (Départ)', 'Article 1', 'Article 14']) {
+    for (const word of ['Conducteur 1', 'Conducteur 2', 'Paiement', 'Kilométrage', 'Niveau de carburant', 'Franchise sinistre', 'État du véhicule (Départ)', 'Article 1', 'Article 12']) {
       expect(html).toContain(word);
     }
   });

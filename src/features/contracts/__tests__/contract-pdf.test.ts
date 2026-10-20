@@ -124,16 +124,18 @@ describe('contrat complet (conditions, parties, signatures)', () => {
   it('contient toutes les conditions générales en français ET en arabe', () => {
     const html = buildContractHtml(makeContract(), agency);
     expect(html).toContain('Article 1');
-    expect(html).toContain('Article 14');
-    expect(html).toContain('Dépôt de garantie');
-    expect(html).toContain('المادة 14');
+    expect(html).toContain('Article 12');
+    expect(html).toContain('Caution et prolongation');
+    expect(html).toContain('المادة 12');
     expect(html).toContain('الضمانة');
-    expect(html).toContain('loi n° 09-08');
+    expect(html).toContain('24 heures');
     expect(html).toContain('Marrakech');
   });
 
-  it('indique le montant de la caution dans les conditions', () => {
-    expect(buildContractHtml(makeContract({ cautionMontant: 2500 }), agency).replace(/\s/g, ' ')).toMatch(/caution de 2.500 MAD/);
+  it('indique le montant de la caution sur le recto et le nom de l\'agence dans les conditions', () => {
+    const html = buildContractHtml(makeContract({ cautionMontant: 2500 }), agency).replace(/\s/g, ' ');
+    expect(html).toMatch(/Caution :<\/span><span class="fvalue">2.500 MAD/);
+    expect(html).toContain('Agence Atlas se réserve le plein droit');
   });
 
   it('affiche les coordonnées de l\'agence (sans e-mail)', () => {

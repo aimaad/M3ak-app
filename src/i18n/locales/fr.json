@@ -1869,7 +1869,10 @@
         "phone": "Téléphone"
       },
       "agencyMissing": "non renseigné",
-      "agencyEdit": "Compléter dans Mon entreprise"
+      "agencyEdit": "Compléter dans Mon entreprise",
+      "resetConditions": "Remettre les conditions par défaut",
+      "resetConditionsTitle": "Remettre les conditions par défaut ?",
+      "resetConditionsBody": "Toutes vos conditions générales seront remplacées par le texte par défaut M3ak (conditions du carnet de location). Vos mentions légales et vos autres réglages ne changent pas. N'oubliez pas d'enregistrer."
     }
   },
   "unsaved": {

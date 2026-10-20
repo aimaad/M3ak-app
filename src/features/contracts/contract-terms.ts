@@ -1,7 +1,8 @@
 /**
  * Conditions générales du contrat de location (français + arabe).
- * Modèle standard marocain rédigé pour M3ak : il n'a PAS été validé par un juriste. Chaque agence doit le faire
- * relire (et compléter par ses « conditions particulières ») avant un usage commercial.
+ * Texte par défaut : les conditions du carnet de location habituel d'une agence marocaine (fournies par l'utilisateur),
+ * avec le nom de l'agence en champ automatique et une version arabe. Il n'a PAS été validé par un juriste ni relu par
+ * un arabophone : chaque agence peut le modifier entièrement dans « Mon contrat » et doit le faire relire.
  */
 export type TermsContext = {
   /** Montant de la caution déjà formaté, ex. « 2 000 MAD ». */
@@ -16,161 +17,172 @@ export type ContractArticle = {
   ar: { title: string; body: string };
 };
 
+/** Nom de l'agence dans les textes : champ automatique, remplacé par le nom réel au moment d'imprimer. */
+const AGENCY = '{{agence_nom}}';
+
 export function contractArticles(ctx: TermsContext): ContractArticle[] {
   const city = ctx.city.trim();
   return [
     {
-      id: 'objet',
+      id: 'conditions',
       fr: {
-        title: 'Objet du contrat',
-        body: "L'Agence loue au Locataire, sans chauffeur, le véhicule désigné au présent contrat, avec ses accessoires, pour la durée indiquée. Le véhicule reste la propriété exclusive de l'Agence.",
+        title: 'Conditions de location',
+        body: `Tout locataire et conducteurs autorisés, désignés par ${AGENCY} au recto du présent contrat, sont tenus de fournir une carte d'identité ou un passeport en cours de validité, et un permis de conduire (1 an de validité minimum).
+La location est consentie pour une durée ferme précisée au recto du présent contrat.
+La journée de location correspond à 24 heures, à partir de l'heure de la prise en charge de la voiture. Toute journée commencée est due.
+${AGENCY} se réserve le plein droit de mettre fin à la location et de récupérer le véhicule par tout moyen, sans justification ni indemnité, au cas où le locataire n'aurait pas respecté l'une des obligations du présent contrat lui revenant, ou si intervient un problème de règlement : rejet du chèque, refus de la carte de crédit, dépassement du nombre de jours de location autorisé par ce contrat.
+En tout état de cause, le client doit avoir réglé l'intégralité de la période de location avant la prise du véhicule.
+Dès remise du véhicule, le locataire et les conducteurs agréés deviennent entièrement responsables envers ${AGENCY} de l'exécution intégrale des présentes conditions.`,
       },
       ar: {
-        title: 'موضوع العقد',
-        body: 'تكري الوكالة للمكتري، بدون سائق، السيارة المحددة في هذا العقد مع ملحقاتها، طيلة المدة المبينة أعلاه. وتبقى السيارة ملكا خالصا للوكالة.',
+        title: 'شروط الكراء',
+        body: `على كل مكتر وسائق مرخص له، محدد من طرف ${AGENCY} في الوجه الأول من هذا العقد، الإدلاء ببطاقة التعريف أو جواز السفر ساري المفعول، وبرخصة سياقة (مدة صلاحيتها سنة واحدة على الأقل).
+يُبرم الكراء لمدة ثابتة محددة في الوجه الأول من هذا العقد.
+يوم الكراء يساوي 24 ساعة ابتداء من ساعة تسلم السيارة، وكل يوم بدأ يُستحق أداؤه.
+تحتفظ ${AGENCY} بكامل الحق في إنهاء الكراء واسترجاع السيارة بأي وسيلة، دون مبرر ولا تعويض، إذا لم يحترم المكتري أحد التزاماته بموجب هذا العقد، أو إذا حدثت مشكلة في الأداء: رفض الشيك، رفض البطاقة البنكية، تجاوز عدد أيام الكراء المسموح بها في هذا العقد.
+وفي جميع الأحوال، يجب على الزبون أداء كامل مدة الكراء قبل تسلم السيارة.
+بمجرد تسلم السيارة، يصبح المكتري والسائقون المعتمدون مسؤولين كليا تجاه ${AGENCY} عن التنفيذ الكامل لهذه الشروط.`,
       },
     },
     {
-      id: 'duree',
+      id: 'mecanique',
       fr: {
-        title: 'Durée et restitution',
-        body: "La location court de la date et heure de départ à la date et heure de retour prévues. Le Locataire restitue le véhicule, ses clés et ses documents au lieu convenu, à l'heure prévue. Tout retard non autorisé par l'Agence peut donner lieu à une facturation supplémentaire. Toute prolongation doit être demandée et acceptée avant l'échéance.",
+        title: 'Mécanique',
+        body: `L'usure mécanique normale est à la charge de ${AGENCY}. Toutes les réparations provenant d'une usure anormale, d'une négligence de la part du client ou d'un accident sont à la charge du client. Les pièces défectueuses remplacées devront être présentées avec la facture régulièrement acquittée, mentionnant le montant intégral de la réparation.`,
       },
       ar: {
-        title: 'المدة والإرجاع',
-        body: 'يبدأ الكراء من تاريخ وساعة الانطلاق وينتهي في تاريخ وساعة الإرجاع المتفق عليهما. يلتزم المكتري بإرجاع السيارة ومفاتيحها ووثائقها في المكان والوقت المتفق عليهما. كل تأخير غير مرخص من الوكالة قد يترتب عنه أداء مبلغ إضافي. ويجب طلب كل تمديد وقبوله قبل انتهاء المدة.',
+        title: 'الميكانيك',
+        body: `الاستهلاك الميكانيكي العادي على عاتق ${AGENCY}. أما جميع الإصلاحات الناتجة عن استهلاك غير عادي أو إهمال من الزبون أو حادثة فهي على عاتق الزبون. ويجب الإدلاء بالقطع المعيبة المستبدلة مع الفاتورة المؤداة بصفة قانونية والمبينة للمبلغ الكامل للإصلاح.`,
       },
     },
     {
-      id: 'prix',
+      id: 'pneumatiques',
       fr: {
-        title: 'Prix et paiement',
-        body: "Le prix total de la location est celui indiqué au contrat. Il est payable selon les modalités convenues avec l'Agence. Les frais supplémentaires (retard, carburant manquant, dommages, amendes) sont dus en plus et peuvent être déduits de la caution.",
+        title: 'Pneumatiques',
+        body: `Le locataire déclare que les cinq pneumatiques de la voiture sont en bon état, sans coupures, et que leur usure est normale. En cas de détérioration de l'un d'entre eux pour une cause autre que l'usure normale, le locataire s'engage à le remplacer immédiatement par un pneu de même dimension et de la même marque que ceux qui équipaient le véhicule loué.`,
       },
       ar: {
-        title: 'الثمن والأداء',
-        body: 'ثمن الكراء الإجمالي هو المبين في العقد، ويؤدى حسب الكيفيات المتفق عليها مع الوكالة. أما المصاريف الإضافية (التأخير، الوقود الناقص، الأضرار، الغرامات) فهي مستحقة زيادة على ذلك ويمكن خصمها من الضمانة.',
-      },
-    },
-    {
-      id: 'caution',
-      fr: {
-        title: 'Dépôt de garantie (caution)',
-        body: `Le Locataire verse une caution de ${ctx.caution}. Elle garantit l'exécution du contrat. Elle est restituée à la fin de la location après vérification du véhicule, déduction faite, le cas échéant, des dommages constatés, du carburant manquant, des frais de retard, des amendes et de toute somme due à l'Agence. Si la retenue dépasse la caution, le Locataire règle la différence.`,
-      },
-      ar: {
-        title: 'الضمانة',
-        body: `يدفع المكتري ضمانة قدرها ${ctx.caution} لضمان تنفيذ العقد. وتُرد له عند نهاية الكراء بعد فحص السيارة، مع خصم الأضرار المعاينة والوقود الناقص ومصاريف التأخير والغرامات وكل مبلغ مستحق للوكالة. وإذا فاق المبلغ المخصوم قيمة الضمانة، يؤدي المكتري الفرق.`,
-      },
-    },
-    {
-      id: 'conducteurs',
-      fr: {
-        title: 'Conducteurs autorisés',
-        body: "Seuls le Locataire et les conducteurs désignés au contrat, titulaires d'un permis de conduire valide, sont autorisés à conduire. Le Locataire est responsable de la conduite de toute personne à qui il confie le véhicule en dehors de cette liste.",
-      },
-      ar: {
-        title: 'السائقون المرخص لهم',
-        body: 'لا يحق بسياقة السيارة إلا المكتري والسائقون المحددون في العقد، شريطة أن يكونوا حاملين لرخصة سياقة سارية. ويتحمل المكتري مسؤولية كل شخص يسلمه السيارة خارج هذه اللائحة.',
-      },
-    },
-    {
-      id: 'usage',
-      fr: {
-        title: 'Usage du véhicule',
-        body: "Le véhicule doit être utilisé en bon père de famille, conformément au code de la route. Il est interdit : de le sous-louer ou le prêter hors conducteurs désignés ; de l'utiliser pour des courses, compétitions, apprentissage de la conduite, remorquage ou transport de marchandises dangereuses ou illicites ; de conduire sous l'emprise de l'alcool ou de stupéfiants ; de le sortir du territoire marocain sans accord écrit de l'Agence.",
-      },
-      ar: {
-        title: 'استعمال السيارة',
-        body: 'يجب استعمال السيارة استعمال رب الأسرة الحريص ووفق مدونة السير. ويمنع: كراؤها من الباطن أو إعارتها لغير السائقين المحددين؛ واستعمالها في السباقات أو تعليم السياقة أو الجر أو نقل مواد خطيرة أو ممنوعة؛ والسياقة تحت تأثير الكحول أو المخدرات؛ وإخراجها من التراب المغربي دون إذن كتابي من الوكالة.',
+        title: 'العجلات',
+        body: `يصرح المكتري بأن العجلات الخمس للسيارة في حالة جيدة وبدون تمزقات وأن استهلاكها عادي. وفي حالة تلف إحداها لسبب غير الاستهلاك العادي، يلتزم المكتري باستبدالها فورا بعجلة من نفس القياس ونفس العلامة التي كانت تجهز السيارة المكراة.`,
       },
     },
     {
       id: 'etat',
       fr: {
-        title: 'État du véhicule et accessoires',
-        body: "Le véhicule est remis en bon état de marche, avec les accessoires listés à l'état des lieux de départ. Le Locataire le restitue dans le même état, hors usure normale. Les accessoires manquants ou détériorés sont à sa charge. Le Locataire vérifie régulièrement les niveaux et la pression des pneus.",
+        title: 'État du véhicule',
+        body: `Le locataire ne pourra en aucun cas réclamer à ${AGENCY} des dommages et intérêts, soit pour retard de remise de la voiture ou annulation de la location, soit pour réparation nécessaire due à l'usure normale et effectuée au cours de la location.
+${AGENCY} dégage toute responsabilité pour les utilisations illégales des voitures par les locataires.
+Garanties optionnelles et assurances complémentaires : le locataire est garanti suivant les conditions générales des polices d'assurance contractées par ${AGENCY}, à savoir : les accidents causés aux tiers, selon la franchise, et la responsabilité civile.
+Pour l'incendie et le vol des accessoires, vêtements et de tous les objets à l'intérieur de la voiture et du coffre, le conducteur reste son propre assureur.`,
       },
       ar: {
-        title: 'حالة السيارة وملحقاتها',
-        body: 'تُسلم السيارة في حالة جيدة للسير مع الملحقات المسجلة في معاينة الانطلاق. ويلتزم المكتري بإرجاعها في الحالة نفسها باستثناء الاستهلاك العادي. والملحقات المفقودة أو المتلفة على نفقته. ويتعهد بمراقبة مستويات السوائل وضغط العجلات بانتظام.',
-      },
-    },
-    {
-      id: 'carburant',
-      fr: {
-        title: 'Carburant et kilométrage',
-        body: "Le véhicule est restitué avec le même niveau de carburant qu'au départ ; tout manque est facturé. Le kilométrage autorisé et les éventuels suppléments sont précisés dans les conditions particulières, le cas échéant. Le kilométrage relevé au départ et au retour fait foi.",
-      },
-      ar: {
-        title: 'الوقود والمسافة المقطوعة',
-        body: 'تُرجع السيارة بنفس مستوى الوقود الذي سُلمت به، وكل نقص يُحتسب على المكتري. تُحدد المسافة المسموح بها والمصاريف الإضافية المحتملة في الشروط الخاصة إن وجدت. ويُعتد بعداد الكيلومترات المسجل عند الانطلاق والإرجاع.',
-      },
-    },
-    {
-      id: 'assurance',
-      fr: {
-        title: 'Assurance et responsabilité',
-        body: "Le véhicule bénéficie de l'assurance obligatoire de responsabilité civile souscrite par l'Agence. Les garanties, franchises et exclusions sont celles du contrat d'assurance de l'Agence, consultable sur demande. Le Locataire reste responsable des dommages non couverts, notamment en cas de faute lourde, de non-respect des conditions du contrat, de conduite par une personne non autorisée ou sous l'emprise de l'alcool ou de stupéfiants, ainsi que des dommages aux pneus, vitres, intérieur et dessous de caisse sauf stipulation contraire.",
-      },
-      ar: {
-        title: 'التأمين والمسؤولية',
-        body: 'تستفيد السيارة من التأمين الإجباري عن المسؤولية المدنية الذي اكتتبته الوكالة. وتخضع الضمانات والتحملات والاستثناءات لعقد تأمين الوكالة الذي يمكن الاطلاع عليه عند الطلب. ويبقى المكتري مسؤولا عن الأضرار غير المغطاة، خاصة في حالة الخطأ الجسيم أو مخالفة شروط العقد أو السياقة من طرف شخص غير مرخص له أو تحت تأثير الكحول أو المخدرات، وكذا عن أضرار العجلات والزجاج والداخل وأسفل السيارة ما لم ينص على خلاف ذلك.',
+        title: 'حالة السيارة',
+        body: `لا يحق للمكتري بأي حال من الأحوال أن يطالب ${AGENCY} بتعويضات، سواء بسبب التأخر في تسليم السيارة أو إلغاء الكراء، أو بسبب إصلاح ضروري ناتج عن الاستهلاك العادي وأُنجز أثناء مدة الكراء.
+تخلي ${AGENCY} مسؤوليتها عن الاستعمالات غير القانونية للسيارات من طرف المكترين.
+الضمانات الاختيارية والتأمينات التكميلية: يستفيد المكتري من الضمان وفق الشروط العامة لعقود التأمين التي اكتتبتها ${AGENCY}، وهي: الحوادث التي تلحق الغير، حسب التحمل، والمسؤولية المدنية.
+وفي حالة الحريق وسرقة الملحقات والملابس وجميع الأشياء الموجودة داخل السيارة وفي الصندوق، يبقى السائق مؤمنا لنفسه.`,
       },
     },
     {
       id: 'accident',
       fr: {
-        title: 'Accident, vol et panne',
-        body: "En cas d'accident, de vol ou de panne, le Locataire prévient immédiatement l'Agence, établit un constat amiable signé des parties et, en cas de vol ou de dégât volontaire, dépose plainte auprès des autorités. Il n'engage aucune réparation sans l'accord de l'Agence et ne reconnaît aucune responsabilité auprès des tiers.",
+        title: 'Accident et constat',
+        body: `Le client doit rendre le constat de police ou de gendarmerie dûment rempli ; à défaut, il prend en charge toutes les sommes pour la réparation du véhicule, dans la limite de la franchise.
+Le client ne devra en aucun cas discuter de la responsabilité de l'accident, ni transiger avec les tiers, ni faire acte pouvant gêner ou engager la compagnie d'assurance dans le règlement du sinistre.`,
       },
       ar: {
-        title: 'الحادثة والسرقة والعطب',
-        body: 'في حالة حادثة أو سرقة أو عطب، يخبر المكتري الوكالة فورا، ويحرر محضرا ودياً موقعا من الأطراف، ويقدم شكاية لدى السلطات في حالة السرقة أو التخريب. ولا يقوم بأي إصلاح دون موافقة الوكالة ولا يعترف بأي مسؤولية أمام الغير.',
+        title: 'الحادثة والمحضر',
+        body: `يجب على الزبون تسليم محضر الشرطة أو الدرك مملوءا بصفة قانونية؛ وإلا تحمل جميع المبالغ اللازمة لإصلاح السيارة، في حدود التحمل.
+ولا يجوز للزبون بأي حال من الأحوال أن يناقش مسؤولية الحادثة، ولا أن يتصالح مع الغير، ولا أن يقوم بأي تصرف من شأنه عرقلة شركة التأمين أو إلزامها في تسوية الحادثة.`,
       },
     },
     {
-      id: 'infractions',
+      id: 'parties-inferieures',
       fr: {
-        title: 'Infractions et amendes',
-        body: "Le Locataire supporte les amendes, contraventions, frais de fourrière et péages liés à la période de location. L'Agence peut communiquer son identité aux autorités et déduire ces sommes de la caution, même après la restitution du véhicule.",
+        title: 'Parties inférieures, intérieur et bris de glace',
+        body: `Le locataire demeure responsable des dégâts occasionnés aux parties inférieures du véhicule, pour quelque cause que ce soit, même s'il a souscrit au rachat de la franchise (CDW). Les parties inférieures s'entendent des organes situés sous le châssis :
+- les dégradations à l'intérieur du véhicule ;
+- les dommages causés aux pneumatiques et aux jantes ;
+- radiateur, cardan, etc., qui ne sont pas couverts par l'assureur.
+Le locataire est également responsable des dégâts occasionnés au pare-brise, ou de tout autre bris de glace ou de feux de signalisation.`,
       },
       ar: {
-        title: 'المخالفات والغرامات',
-        body: 'يتحمل المكتري الغرامات والمخالفات ومصاريف الحجز والأداءات المتعلقة بمدة الكراء. ويحق للوكالة الإدلاء بهويته للسلطات وخصم هذه المبالغ من الضمانة، حتى بعد إرجاع السيارة.',
+        title: 'الأجزاء السفلية والداخل وكسر الزجاج',
+        body: `يبقى المكتري مسؤولا عن الأضرار التي تلحق الأجزاء السفلية للسيارة، مهما كان سببها، حتى وإن اكتتب في إعادة شراء التحمل (CDW). ويقصد بالأجزاء السفلية الأعضاء الموجودة تحت الهيكل:
+- التلف الذي يلحق داخل السيارة؛
+- الأضرار التي تلحق العجلات والجانطات؛
+- المبرد والكاردان وغيرها مما لا يغطيه المؤمن.
+كما يكون المكتري مسؤولا عن الأضرار التي تلحق الزجاج الأمامي، أو أي كسر آخر للزجاج أو لأضواء الإشارة.`,
       },
     },
     {
-      id: 'resiliation',
+      id: 'decheance',
       fr: {
-        title: 'Résiliation',
-        body: "En cas de manquement grave du Locataire (usage interdit, non-paiement, fausse déclaration, conducteur non autorisé), l'Agence peut résilier le contrat sans préavis et reprendre le véhicule là où il se trouve, aux frais du Locataire.",
+        title: 'Déchéance des garanties',
+        body: `Enfin, le locataire est déchu des garanties vol, incendie et dommages causés au véhicule si tout conducteur est en état d'ivresse, sous l'emprise d'un état alcoolique, sous l'effet de drogues ou de toute autre substance modifiant les réflexes indispensables à la conduite.`,
       },
       ar: {
-        title: 'الفسخ',
-        body: 'في حالة إخلال جسيم من المكتري (استعمال ممنوع، عدم الأداء، تصريح كاذب، سائق غير مرخص له)، يحق للوكالة فسخ العقد دون إنذار مسبق واسترجاع السيارة من مكان وجودها على نفقة المكتري.',
+        title: 'سقوط الضمانات',
+        body: `وأخيرا، يسقط حق المكتري في ضمانات السرقة والحريق والأضرار اللاحقة بالسيارة إذا كان أي سائق في حالة سكر، أو تحت تأثير الكحول، أو المخدرات، أو أي مادة أخرى تؤثر على ردود الفعل الضرورية للسياقة.`,
       },
     },
     {
-      id: 'donnees',
+      id: 'caution',
       fr: {
-        title: 'Données personnelles',
-        body: "Les données du Locataire (identité, permis, contact) sont traitées par l'Agence pour la gestion du contrat, conformément à la loi n° 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel. Le Locataire peut exercer ses droits d'accès, de rectification et d'opposition auprès de l'Agence.",
+        title: 'Caution et prolongation',
+        body: `Le locataire paiera d'avance ; la caution déposée par lui ne pourra en aucun cas servir à une prolongation de la location, ni tenir lieu de provision correspondante, sous peine de l'exposer à des poursuites judiciaires pour détournement de véhicule et abus de confiance.
+Cependant, le loueur se réserve le droit de refuser la prolongation de la location, avec obligation pour le locataire de restituer immédiatement le véhicule.`,
       },
       ar: {
-        title: 'المعطيات الشخصية',
-        body: 'تعالج الوكالة معطيات المكتري (الهوية، الرخصة، بيانات الاتصال) لتدبير هذا العقد طبقا للقانون رقم 09-08 المتعلق بحماية الأشخاص الذاتيين تجاه معالجة المعطيات ذات الطابع الشخصي. وللمكتري الحق في الولوج والتصحيح والتعرض لدى الوكالة.',
+        title: 'الضمانة وتمديد الكراء',
+        body: `يؤدي المكتري المبلغ مسبقا؛ ولا يمكن بأي حال من الأحوال أن تُستعمل الضمانة التي أودعها لتمديد الكراء، ولا أن تعوض المؤونة المقابلة، وإلا تعرض لمتابعات قضائية من أجل اختلاس السيارة وخيانة الأمانة.
+غير أن المكري يحتفظ بالحق في رفض تمديد الكراء، مع التزام المكتري بإرجاع السيارة فورا.`,
       },
     },
     {
-      id: 'litiges',
+      id: 'assurance-vol',
       fr: {
-        title: 'Droit applicable et litiges',
-        body: `Le présent contrat est soumis au droit marocain. À défaut d'accord amiable, tout litige relève des tribunaux compétents${city ? ` de ${city}` : ' du siège de l’Agence'}.`,
+        title: 'Assurance vol',
+        body: `Le locataire est assuré contre le vol, mais cette garantie ne peut jouer que sous réserve de la restitution des clés, de la carte grise du véhicule et des autres documents nécessaires à la circulation, ainsi que d'une déclaration de vol dûment remplie par la police ou la gendarmerie. La franchise reste à la charge du client.`,
       },
       ar: {
-        title: 'القانون المطبق والنزاعات',
-        body: `يخضع هذا العقد للقانون المغربي. وعند تعذر الحل الودي، يؤول الاختصاص في كل نزاع إلى المحاكم المختصة${city ? ` بـ ${city}` : ' بمقر الوكالة'}.`,
+        title: 'التأمين ضد السرقة',
+        body: `المكتري مؤمن ضد السرقة، غير أن هذا الضمان لا يسري إلا بشرط إرجاع المفاتيح والبطاقة الرمادية للسيارة والوثائق الأخرى اللازمة للسير، وكذا تصريح بالسرقة مملوء بصفة قانونية لدى الشرطة أو الدرك. ويبقى التحمل على عاتق الزبون.`,
+      },
+    },
+    {
+      id: 'restitution',
+      fr: {
+        title: 'Restitution du véhicule',
+        body: `Le véhicule doit être restitué pendant les heures d'ouverture de l'agence de location, à la date, l'heure et l'endroit prévus au contrat. Il doit également être restitué avec les documents, équipements et accessoires nécessaires à la circulation.
+Si le locataire ne peut restituer les documents de circulation ou les clés du véhicule, il demeure redevable à ${AGENCY} des jours d'immobilisation, et ce jusqu'à production par lui d'une attestation de perte, ainsi que des frais de délivrance du duplicata.`,
+      },
+      ar: {
+        title: 'إرجاع السيارة',
+        body: `يجب إرجاع السيارة خلال ساعات عمل وكالة الكراء، في التاريخ والساعة والمكان المحددين في العقد. كما يجب إرجاعها مع الوثائق والتجهيزات والملحقات اللازمة للسير.
+وإذا تعذر على المكتري إرجاع وثائق السير أو مفاتيح السيارة، يبقى مدينا لـ ${AGENCY} بأيام التوقف، وذلك إلى حين الإدلاء بشهادة الضياع، إضافة إلى مصاريف استخراج النسخة الثانية.`,
+      },
+    },
+    {
+      id: 'amendes',
+      fr: {
+        title: 'Amendes et contraventions',
+        body: `Le locataire et/ou les conducteurs agréés sont responsables des amendes, contraventions et procès-verbaux établis à leur encontre. Il s'engage à rembourser le montant à ${AGENCY} si celle-ci était amenée à en faire l'avance.`,
+      },
+      ar: {
+        title: 'الغرامات والمخالفات',
+        body: `المكتري و/أو السائقون المعتمدون مسؤولون عن الغرامات والمخالفات والمحاضر المحررة في حقهم. ويلتزم برد مبلغها إلى ${AGENCY} إذا اضطرت إلى أدائها مسبقا.`,
+      },
+    },
+    {
+      id: 'juridiction',
+      fr: {
+        title: 'Juridiction',
+        body: `En cas de litige qui pourrait naître de l'exécution du présent contrat, les tribunaux ${city ? `de ${city}` : "du siège de l'agence"} seront seuls compétents.`,
+      },
+      ar: {
+        title: 'الاختصاص القضائي',
+        body: `في حالة نزاع قد ينشأ عن تنفيذ هذا العقد، تكون المحاكم ${city ? `بـ ${city}` : 'بمقر الوكالة'} وحدها المختصة.`,
       },
     },
   ];
