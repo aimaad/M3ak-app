@@ -1211,7 +1211,9 @@
       "viewerDone": "✓ Vous êtes arrivé à la fin : vous pouvez fermer"
     },
     "logoMissingPdf": "Le logo de l'agence est obligatoire sur le contrat. Ajoutez-le dans Mon entreprise (le propriétaire).",
-    "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez."
+    "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez.",
+    "continueRental": "Continuer la location",
+    "nextStepHint": "Contrat signé. La suite (inspection de départ, acompte, départ) se fait depuis la fiche de la location."
   },
   "inspection": {
     "section": "Inspection",

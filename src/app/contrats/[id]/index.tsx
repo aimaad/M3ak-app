@@ -222,14 +222,15 @@ export default function ContratDetailScreen() {
               />
             ) : null}
             {contract.statut === 'signe' && rental ? (
-              <Button
-                label={t('locations.startAction')}
-                variant="secondary"
-                size="sm"
-                onPress={() =>
-                  router.push({ pathname: '/locations/[id]/depart', params: { id: rental.id, vehicleId: rental.vehicleId } })
-                }
-              />
+              <>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('contract.nextStepHint')}
+                </ThemedText>
+                <Button
+                  label={t('contract.continueRental')}
+                  onPress={() => router.push({ pathname: '/locations/[id]', params: { id: rental.id } })}
+                />
+              </>
             ) : null}
 
             <Button
