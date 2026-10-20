@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
+import { Pager } from '@/components/pager';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextField } from '@/components/text-field';
@@ -26,6 +27,7 @@ import { useVehicles } from '@/features/vehicles/hooks';
 import { StatusFilterChips } from '@/features/vehicles/status-filter-chips';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { isRTL } from '@/i18n';
+import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 import type { Vehicle } from '@/features/vehicles/types';
 
@@ -74,6 +76,7 @@ export default function FlotteScreen() {
     () => sortVehicles(filterVehicles(vehicles, filters), sort),
     [vehicles, filters, sort]
   );
+  const pagination = usePagination(filtered, `${JSON.stringify(filters)}${sort}`);
 
   if (agencyQuery.isLoading) {
     return (
@@ -209,7 +212,7 @@ export default function FlotteScreen() {
           </View>
         ) : (
           <FlatList
-            data={filtered}
+            data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-32"
             refreshControl={
@@ -222,6 +225,7 @@ export default function FlotteScreen() {
             renderItem={({ item }) => (
               <VehicleCard vehicle={item} onPress={() => router.push(`/flotte/${item.id}`)} />
             )}
+            ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">

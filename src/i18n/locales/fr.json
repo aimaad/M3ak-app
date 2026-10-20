@@ -14,7 +14,10 @@
     "camera": "Caméra",
     "gallery": "Galerie",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {{page}} / {{count}}"
   },
   "auth": {
     "title": "Connexion",

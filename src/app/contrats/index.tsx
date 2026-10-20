@@ -6,12 +6,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
+import { Pager } from '@/components/pager';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import { useContracts } from '@/features/contracts/hooks';
 import { CONTRACT_STATUSES } from '@/features/contracts/types';
 import type { Contract, ContractStatus } from '@/features/contracts/types';
+import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 
 function formatDate(iso: string): string {
@@ -36,6 +38,7 @@ export default function ContratsScreen() {
       );
     });
   }, [contractsQuery.data, query, statusFilter]);
+  const pagination = usePagination(filtered, `${query}|${statusFilter}`);
 
   return (
     <ThemedView className="flex-1">
@@ -80,7 +83,7 @@ export default function ContratsScreen() {
           </View>
         ) : (
           <FlatList
-            data={filtered}
+            data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-10"
             renderItem={({ item }) => (
@@ -99,6 +102,7 @@ export default function ContratsScreen() {
                 </ThemedText>
               </PressableCard>
             )}
+            ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">

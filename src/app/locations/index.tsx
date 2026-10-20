@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
+import { Pager } from '@/components/pager';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useCustomers } from '@/features/customers/hooks';
@@ -17,6 +18,7 @@ import type { Rental } from '@/features/rentals/types';
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { isRTL } from '@/i18n';
+import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 
 const EMPTY_RENTALS: Rental[] = [];
@@ -32,6 +34,7 @@ export default function LocationsScreen() {
   const rentals = rentalsQuery.data ?? EMPTY_RENTALS;
   const counts = useMemo(() => countRentalsByStatus(rentals), [rentals]);
   const filtered = useMemo(() => filterRentalsByStatus(rentals, statusFilter), [rentals, statusFilter]);
+  const pagination = usePagination(filtered, statusFilter);
 
   const vehiclesById = useMemo(() => {
     const map = new Map<string, Vehicle>();
@@ -88,7 +91,7 @@ export default function LocationsScreen() {
           </View>
         ) : (
           <FlatList
-            data={filtered}
+            data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-32"
             refreshControl={
@@ -106,6 +109,7 @@ export default function LocationsScreen() {
                 onPress={() => router.push(`/locations/${item.id}`)}
               />
             )}
+            ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">

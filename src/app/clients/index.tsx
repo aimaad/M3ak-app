@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
+import { Pager } from '@/components/pager';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { CustomerCard } from '@/features/customers/customer-card';
@@ -21,6 +22,7 @@ import { useCustomers } from '@/features/customers/hooks';
 import { CUSTOMER_TYPES } from '@/features/customers/types';
 import type { Customer, CustomerType } from '@/features/customers/types';
 import { isRTL } from '@/i18n';
+import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 
 const EMPTY_CUSTOMERS: Customer[] = [];
@@ -50,6 +52,7 @@ export default function ClientsScreen() {
   const archived = useMemo(() => countArchived(customers), [customers]);
   const expiringDocs = useMemo(() => countExpiringSoonDocuments(customers), [customers]);
   const filtered = useMemo(() => filterCustomers(customers, filters), [customers, filters]);
+  const pagination = usePagination(filtered, filters);
 
   return (
     <ThemedView className="flex-1">
@@ -131,7 +134,7 @@ export default function ClientsScreen() {
           </View>
         ) : (
           <FlatList
-            data={filtered}
+            data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-32"
             refreshControl={
@@ -144,6 +147,7 @@ export default function ClientsScreen() {
             renderItem={({ item }) => (
               <CustomerCard customer={item} onPress={() => router.push(`/clients/${item.id}`)} />
             )}
+            ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">
