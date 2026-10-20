@@ -231,3 +231,22 @@ describe('contrat fait après l\'inspection de départ', () => {
     expect(buildContractHtml(contract, agency, {}, undefined, { kmDepart: 45300 })).toContain('45300');
   });
 });
+
+describe('jauge de carburant automatique', () => {
+  const { fuelPercent, gaugeSvg } = require('../template-render');
+  it('lit le pourcentage relevé', () => {
+    expect(fuelPercent('50 %')).toBe(50);
+    expect(fuelPercent('')).toBeNull();
+    expect(fuelPercent('250 %')).toBe(100);
+  });
+  it("dessine l'aiguille au bon endroit (50 % = verticale, 100 % = à droite)", () => {
+    expect(gaugeSvg(50)).toContain('x2="80.0" y2="12.0"');
+    expect(gaugeSvg(100)).toContain('x2="138.0" y2="70.0"');
+    expect(gaugeSvg(null)).not.toContain('#B91C1C');
+  });
+  it('apparaît dans le contrat quand le carburant de départ est connu', () => {
+    const base = sampleContract();
+    const html = buildContractHtml({ ...base, snapshotValues: { carburant_depart: '75 %' } }, { nom: 'Agence' });
+    expect(html).toContain('75 %</text>');
+  });
+});

@@ -144,7 +144,7 @@ function renderBlock(block: Block, input: RenderInput, rtlDefault: boolean): str
     case 'vehicleDiagram':
       return `<div class="box"><div class="boxbody diagram"><div class="diagram-svg">${CAR_SVG}</div><div class="diagram-side"><div class="banner dark">${html(block.title, values)}</div><div class="legend">${html(block.legend ?? 'R: rayures\nB: bosses\nE: éclats\nC: cassures', values)}</div></div></div></div>`;
     case 'fuelGauge':
-      return `<div class="box"><div class="boxbody gauge">${block.title ? `<div class="gauge-title">${html(block.title, values)}</div>` : ''}${GAUGE_SVG}</div></div>`;
+      return `<div class="box"><div class="boxbody gauge">${block.title ? `<div class="gauge-title">${html(block.title, values)}</div>` : ''}${gaugeSvg(fuelPercent(values.carburant_depart))}</div></div>`;
     case 'signatures':
       return `<div class="signatures">${block.boxes.map((box) => signatureBox(box.label, box.role, input)).join('')}</div>`;
     case 'rule':
@@ -160,7 +160,26 @@ function renderBlock(block: Block, input: RenderInput, rtlDefault: boolean): str
 
 const CAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 150" width="70" height="116"><rect x="12" y="8" width="66" height="134" rx="26" fill="none" stroke="#211A2E" stroke-width="2.5"/><rect x="22" y="34" width="46" height="26" rx="6" fill="none" stroke="#211A2E" stroke-width="2"/><rect x="22" y="92" width="46" height="24" rx="6" fill="none" stroke="#211A2E" stroke-width="2"/><rect x="4" y="30" width="9" height="20" rx="3" fill="#211A2E"/><rect x="77" y="30" width="9" height="20" rx="3" fill="#211A2E"/><rect x="4" y="100" width="9" height="20" rx="3" fill="#211A2E"/><rect x="77" y="100" width="9" height="20" rx="3" fill="#211A2E"/><line x1="45" y1="62" x2="45" y2="90" stroke="#211A2E" stroke-width="1.5"/></svg>`;
 
-const GAUGE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke="#211A2E" stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke="#211A2E" stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke="#211A2E" stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke="#211A2E" stroke-width="1.5"/><text x="8" y="82" font-size="10" fill="#211A2E">0</text><text x="12" y="34" font-size="10" fill="#211A2E">1/4</text><text x="68" y="10" font-size="10" fill="#211A2E">2/4</text><text x="122" y="34" font-size="10" fill="#211A2E">3/4</text><text x="142" y="82" font-size="10" fill="#211A2E">4/4</text></svg>`;
+const GAUGE_BASE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke="#211A2E" stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke="#211A2E" stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke="#211A2E" stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke="#211A2E" stroke-width="1.5"/><text x="8" y="82" font-size="10" fill="#211A2E">0</text><text x="12" y="34" font-size="10" fill="#211A2E">1/4</text><text x="68" y="10" font-size="10" fill="#211A2E">2/4</text><text x="122" y="34" font-size="10" fill="#211A2E">3/4</text><text x="142" y="82" font-size="10" fill="#211A2E">4/4</text>`;
+/** Lit « 50 % » (ou 50) et renvoie un pourcentage entre 0 et 100, ou null si le niveau n'est pas connu. */
+export function fuelPercent(raw: string | undefined | null): number | null {
+  const match = /(\d+(?:[.,]\d+)?)/.exec(raw ?? '');
+  if (!match) return null;
+  const value = Number(match[1].replace(',', '.'));
+  return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : null;
+}
+
+/** Jauge dessinée avec l'aiguille et l'arc rempli au niveau relevé au départ ; vide à cocher à la main si inconnu. */
+export function gaugeSvg(percent: number | null): string {
+  if (percent == null) return GAUGE_BASE + '</svg>';
+  const angle = Math.PI * (1 - percent / 100);
+  const x = (80 + 58 * Math.cos(angle)).toFixed(1);
+  const y = (70 - 58 * Math.sin(angle)).toFixed(1);
+  const needle = `<line x1="80" y1="70" x2="${x}" y2="${y}" stroke="#B91C1C" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#B91C1C"/>`;
+  const arc = percent > 0 ? `<path d="M16 70 A64 64 0 0 1 ${(80 + 64 * Math.cos(angle)).toFixed(1)} ${(70 - 64 * Math.sin(angle)).toFixed(1)}" fill="none" stroke="#B91C1C" stroke-width="5" opacity="0.35"/>` : '';
+  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke="#211A2E" stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill="#B91C1C">${Math.round(percent)} %</text></svg>`;
+}
+
 
 /** Feuille A4 en pixels CSS (96 dpi) : 794 × 1123. L'impression, elle, est demandée en points : 595 × 842 (`PRINT_SIZE`). */
 export const PAGE = { width: 794, height: 1123, padX: 36, padY: 30 } as const;
