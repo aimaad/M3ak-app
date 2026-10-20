@@ -9,6 +9,7 @@ import { TextField } from '@/components/text-field';
 import { useMyProfile, useMyAgency } from '@/features/agency/hooks';
 import { useBranches } from '@/features/branches/hooks';
 import { findDocument } from '@/features/storage/documents';
+import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
 import { VEHICLE_DOCUMENTS_BUCKET } from './api';
@@ -272,7 +273,7 @@ export function VehicleForm({
       <TextField
         label={t('vehicle.fields.niveauCarburant')}
         value={values.niveauCarburant}
-        onChangeText={(v) => update('niveauCarburant', v)}
+        onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))}
         keyboardType="number-pad"
         placeholder={t('vehicle.fields.niveauCarburantPlaceholder')}
         error={

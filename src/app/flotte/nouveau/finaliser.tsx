@@ -38,6 +38,7 @@ import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card
 import { findDuplicateInList } from '@/features/vehicles/duplicates';
 import { duplicateVehicleField, toVehicleInput, validateVehicleForm, type VehicleFormValues } from '@/features/vehicles/validation';
 import { VehiclePhotoPicker } from '@/features/vehicles/vehicle-photo-picker';
+import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
 type FormState = {
@@ -481,7 +482,7 @@ export default function FinaliserVehiculeScreen() {
               <TextField
                 label={t('vehicle.fields.niveauCarburant')}
                 value={values.niveauCarburant}
-                onChangeText={(v) => update('niveauCarburant', v)}
+                onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))}
                 keyboardType="number-pad"
                 placeholder={t('vehicle.fields.niveauCarburantPlaceholder')}
               />

@@ -19,6 +19,7 @@ import { validateOdometerForm } from '@/features/rentals/validation';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useInspectionForRental } from '@/features/inspections/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
+import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function DepartScreen() {
@@ -169,7 +170,7 @@ export default function DepartScreen() {
           <TextField
             label={t('locations.depart.carburant')}
             value={carburant}
-            onChangeText={setCarburant}
+            onChangeText={(v) => setCarburant(clampPercentInput(v))}
             keyboardType="number-pad"
             error={touched && odometerErrors.carburant ? t('locations.form.errors.invalid_number') : undefined}
           />

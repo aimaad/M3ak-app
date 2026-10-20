@@ -16,6 +16,7 @@ import { computeFraisCarburant, computeFraisRetard, computeRetardMinutes } from 
 import { useRental } from '@/features/rentals/hooks';
 import { validateOdometerForm } from '@/features/rentals/validation';
 import { useVehicle } from '@/features/vehicles/hooks';
+import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function RetourScreen() {
@@ -134,7 +135,7 @@ export default function RetourScreen() {
           <TextField
             label={t('locations.retour.carburant')}
             value={carburant}
-            onChangeText={setCarburant}
+            onChangeText={(v) => setCarburant(clampPercentInput(v))}
             keyboardType="number-pad"
             error={touched && odometerErrors.carburant ? t('locations.form.errors.invalid_number') : undefined}
           />

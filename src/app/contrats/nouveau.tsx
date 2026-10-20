@@ -21,6 +21,7 @@ import { contractDamageCandidates, damageLine } from '@/features/inspections/dam
 import { useInspectionDamages, useInspectionForRental } from '@/features/inspections/hooks';
 import { useRental, useRentalAdditionalDrivers } from '@/features/rentals/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
+import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function NouveauContratScreen() {
@@ -196,7 +197,7 @@ export default function NouveauContratScreen() {
 
               <View className="flex-row gap-2">
                 <TextField label={t('locations.depart.kilometrage')} value={kmValue} onChangeText={setKmDepart} keyboardType="number-pad" className="flex-1" />
-                <TextField label={t('locations.depart.carburant')} value={carburantValue} onChangeText={setCarburantDepart} keyboardType="number-pad" className="flex-1" />
+                <TextField label={t('locations.depart.carburant')} value={carburantValue} onChangeText={(v) => setCarburantDepart(clampPercentInput(v))} keyboardType="number-pad" className="flex-1" />
               </View>
 
               <View className="gap-1.5">
