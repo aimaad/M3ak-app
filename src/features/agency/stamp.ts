@@ -121,6 +121,44 @@ function centerLines(lines: string[], cx: number, middle: number, width: number,
     .join('');
 }
 
+/** Largeur approximative (en « em ») d'une lettre capitale grasse Helvetica/Arial : sert à répartir les lettres sur l'arc. */
+const CHAR_WIDTH: Record<string, number> = {
+  A: 0.72, B: 0.72, C: 0.72, D: 0.72, E: 0.67, F: 0.61, G: 0.78, H: 0.72, I: 0.28, J: 0.56, K: 0.72, L: 0.61, M: 0.83,
+  N: 0.72, O: 0.78, P: 0.67, Q: 0.78, R: 0.72, S: 0.67, T: 0.61, U: 0.72, V: 0.67, W: 0.94, X: 0.67, Y: 0.67, Z: 0.61, ' ': 0.3,
+};
+const charWidth = (char: string) => CHAR_WIDTH[char] ?? (/[0-9]/.test(char) ? 0.56 : 0.6);
+
+/**
+ * Nom de l'agence écrit en rond, lettre par lettre : chaque lettre est posée et tournée individuellement (au lieu d'un
+ * texte « sur un chemin »), ce qui donne le même dessin dans le PDF et dans l'application, et centre le nom en haut.
+ * Le nom est agrandi / espacé pour occuper jusqu'à ~300° du cercle.
+ */
+function ringText(title: string, cx: number, cy: number, ink: string): string {
+  const text = title.toUpperCase();
+  const chars = [...text];
+  const bandCenter = 75; // entre l'anneau intérieur (r = 62) et l'anneau extérieur (r = 88)
+  const span = 2 * Math.PI * bandCenter * (300 / 360);
+  const em = chars.reduce((sum, char) => sum + charWidth(char), 0);
+  const fontSize = Math.max(9, Math.min(22, Math.floor(span / (em * 1.06))));
+  const spacing = chars.length > 1 ? Math.min(fontSize * 0.3, Math.max(0, (span - em * fontSize) / (chars.length - 1))) : 0;
+  const total = em * fontSize + spacing * (chars.length - 1);
+  const baseRadius = bandCenter - fontSize * 0.36; // lettre centrée dans la bande
+  let cursor = -total / 2;
+  return chars
+    .map((char) => {
+      const width = charWidth(char) * fontSize;
+      const middle = cursor + width / 2;
+      cursor += width + spacing;
+      if (char === ' ') return '';
+      const angle = middle / bandCenter; // radians, depuis le haut, dans le sens des aiguilles d'une montre
+      const x = cx + baseRadius * Math.sin(angle);
+      const y = cy - baseRadius * Math.cos(angle);
+      const degrees = (angle * 180) / Math.PI;
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" font-size="${fontSize}" font-weight="bold" fill="${ink}" transform="rotate(${degrees.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)})">${escapeXml(char)}</text>`;
+    })
+    .join('');
+}
+
 /**
  * SVG du cachet (chaîne prête pour le PDF ou react-native-svg). `size` = largeur en px ; le cachet est légèrement penché,
  * comme un tampon posé à la main.
@@ -133,20 +171,11 @@ export function stampSvg(config: StampConfig, size = 120): string {
 
   if (config.shape === 'round') {
     const lines = stampLines(config, 22);
-    // Le nom de l'agence fait tout le tour du rond : le texte est étalé (taille + espacement) sur ~85 % du cercle,
-    // centré en haut ; le reste (adresse, téléphone, GSM) est au centre. Pas d'étoiles ni de ville à part.
-    const radius = 76;
-    const arc = 2 * Math.PI * radius * 0.86;
-    const chars = Math.max(1, config.title.length);
-    const fontSize = Math.max(9, Math.min(22, Math.floor(arc / (chars * 0.66))));
-    const natural = chars * fontSize * 0.66;
-    const spacing = chars > 1 ? Math.min(fontSize * 0.35, Math.max(0, (arc - natural) / (chars - 1))) : 0;
     return `${head(200, 200)}<g transform="rotate(-7 100 100)" opacity="0.92">
       <circle cx="100" cy="100" r="95" fill="none" stroke="${ink}" stroke-width="4"/>
       <circle cx="100" cy="100" r="88" fill="none" stroke="${ink}" stroke-width="1.2"/>
       <circle cx="100" cy="100" r="62" fill="none" stroke="${ink}" stroke-width="1.2"/>
-      <defs><path id="stampRing" d="M 100 ${100 + radius} A ${radius} ${radius} 0 1 1 100 ${100 - radius} A ${radius} ${radius} 0 1 1 100 ${100 + radius}"/></defs>
-      <text font-size="${fontSize}" font-weight="bold" fill="${ink}" letter-spacing="${spacing.toFixed(1)}"><textPath href="#stampRing" startOffset="50%" text-anchor="middle">${escapeXml(config.title)}</textPath></text>
+      ${ringText(config.title, 100, 100, ink)}
       ${centerLines(lines, 100, 100, 108, 11, ink)}
     </g></svg>`;
   }

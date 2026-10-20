@@ -30,8 +30,10 @@ describe('cachet de l\'agence', () => {
   it('dessine un vrai cachet : anneaux, texte en arc, lignes et couleur d\'encre', () => {
     const svg = stampSvg(config);
     expect(svg).toContain('<circle');
-    expect(svg).toContain('textPath');
-    expect(svg).toContain('ATLAS CARS');
+    expect(svg).not.toContain('textPath'); // lettres posées une à une : même rendu partout
+    expect(svg).toContain('rotate(');
+    expect(svg).toContain('>A</text>');
+    expect(svg.match(/font-weight="bold"/g)?.length).toBeGreaterThan(10);
     expect(svg).not.toContain('★'); // plus d'étoiles : le nom prend tout le rond
     expect(svg).toContain(STAMP_INK.blue);
     expect(stampSvg({ ...config, shape: 'rect', color: 'red' })).toContain('<rect');
