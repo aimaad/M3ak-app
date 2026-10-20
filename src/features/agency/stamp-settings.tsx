@@ -1,7 +1,7 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useMemo, useState } from 'react';
 import { Alert, Image, View } from 'react-native';
-import { SvgXml } from 'react-native-svg';
+import { WebView } from 'react-native-webview';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -44,6 +44,11 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
   const dirty = !!draft && !sameConfig(draft, details.stampConfig);
   const previewConfig = draft ?? initial;
   const xml = useMemo(() => stampSvg(previewConfig, 170), [previewConfig]);
+  const previewHtml = useMemo(
+    () => `<html><head><meta name="viewport" content="width=170, initial-scale=1, user-scalable=no" /><style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}svg{display:block}</style></head><body>${xml}</body></html>`,
+    [xml]
+  );
+  const previewHeight = Number(/height="(\d+)"/.exec(xml)?.[1] ?? 170);
 
   async function pickPhoto(source: 'library' | 'camera') {
     const permission = source === 'library' ? await ImagePicker.requestMediaLibraryPermissionsAsync() : await ImagePicker.requestCameraPermissionsAsync();
@@ -81,7 +86,15 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
           </View>
         ) : (
           <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: '#EAE5F2' }}>
-            <SvgXml xml={xml} width={170} height={Number(/height="(\d+)"/.exec(xml)?.[1] ?? 170)} />
+            {/* Aperçu dessiné par le même moteur que le PDF du contrat : ce qu'on voit ici est exactement ce qui s'imprime. */}
+            <WebView
+              originWhitelist={['*']}
+              source={{ html: previewHtml }}
+              scrollEnabled={false}
+              pointerEvents="none"
+              opaque={false}
+              style={{ width: 170, height: previewHeight, backgroundColor: 'transparent' }}
+            />
             <ThemedText type="small" themeColor="textSecondary">
               {saved ? t('entreprise.stamp.saved') : t('entreprise.stamp.notSaved')}
             </ThemedText>
