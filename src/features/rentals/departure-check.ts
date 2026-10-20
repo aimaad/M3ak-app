@@ -52,6 +52,10 @@ export type DeparturePolicy = {
   requireIdAtRental: boolean;
   /** Exige le permis (recto, verso, numéro, expiration) pour créer un client particulier (décision du propriétaire). */
   requireLicenceAtCustomer: boolean;
+  /** Les employés peuvent ignorer la prise de photos de l'inspection (décision du propriétaire). */
+  allowSkipInspection: boolean;
+  /** Les employés peuvent refuser l'analyse de M3ak (décision du propriétaire). */
+  allowDeclineAi: boolean;
 };
 
 export type DepartureCheck = {
@@ -118,6 +122,8 @@ export function parseDepartureCheck(raw: unknown): DepartureCheck {
       maxAdditionalDrivers: asNumber(policy.max_additional_drivers, 3),
       requireIdAtRental: asBool(policy.require_id_at_rental),
       requireLicenceAtCustomer: policy.require_licence_at_customer === undefined ? true : asBool(policy.require_licence_at_customer),
+      allowSkipInspection: policy.allow_skip_inspection === undefined ? true : asBool(policy.allow_skip_inspection),
+      allowDeclineAi: policy.allow_decline_ai === undefined ? true : asBool(policy.allow_decline_ai),
     },
     parties,
     blockingCount: asNumber(source.blocking_count),
@@ -190,4 +196,6 @@ export const DEFAULT_DEPARTURE_POLICY: DeparturePolicy = {
   maxAdditionalDrivers: 3,
   requireIdAtRental: false,
   requireLicenceAtCustomer: true,
+  allowSkipInspection: true,
+  allowDeclineAi: true,
 };

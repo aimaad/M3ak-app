@@ -11,6 +11,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ZoomableImage } from '@/components/zoomable-image';
 import { M3akPalette } from '@/constants/theme';
+import { useInspectionPermissions } from '@/features/inspections/permissions';
 import { useLanguage } from '@/i18n/use-language';
 
 import { analysisErrorMessageKey } from './analysis-api';
@@ -82,6 +83,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
   const damagesQuery = useInspectionDamages(inspection?.id);
   const analyze = useAnalyzeInspection(rentalId, type);
   const decline = useDeclineAnalysis(rentalId, type);
+  const permissions = useInspectionPermissions(agencyId);
   const resume = useResumeInspection(rentalId, type);
   const updateDamage = useUpdateDamage(inspection?.id ?? '');
   const createDamage = useCreateManualDamage(inspection?.id ?? '', agencyId);
@@ -174,10 +176,18 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
                 {t('inspection.decision.body', { count: photos.length })}
               </ThemedText>
               <Button label={t('inspection.decision.yes')} icon="sparkles-outline" onPress={() => analyze.mutate(inspection.id)} />
-              <Button label={t('inspection.decision.no')} variant="secondary" loading={decline.isPending} onPress={() => decline.mutate(inspection.id)} />
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('inspection.decision.noHint')}
-              </ThemedText>
+              {permissions.canDecline ? (
+                <>
+                  <Button label={t('inspection.decision.no')} variant="secondary" loading={decline.isPending} onPress={() => decline.mutate(inspection.id)} />
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('inspection.decision.noHint')}
+                  </ThemedText>
+                </>
+              ) : (
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('inspection.decision.mandatory')}
+                </ThemedText>
+              )}
             </Card>
           ) : null}
 

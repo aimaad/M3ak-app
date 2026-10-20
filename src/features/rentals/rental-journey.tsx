@@ -12,6 +12,7 @@ import type { Contract } from '@/features/contracts/types';
 import { DepositResolveForm } from '@/features/deposits/deposit-resolve-form';
 import type { Deposit } from '@/features/deposits/types';
 import { useResumeInspection, useSkipInspection } from '@/features/inspections/hooks';
+import { useInspectionPermissions } from '@/features/inspections/permissions';
 import type { Inspection } from '@/features/inspections/types';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import type { Payment } from '@/features/payments/types';
@@ -78,6 +79,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
     hasDeposit: !!deposit,
     depositOpen: deposit?.statut === 'bloquee',
   });
+  const permissions = useInspectionPermissions(rental.agencyId);
   const skipDepart = useSkipInspection(rental.id, 'depart');
   const skipRetour = useSkipInspection(rental.id, 'retour');
   const resumeDepart = useResumeInspection(rental.id, 'depart');
@@ -178,7 +180,9 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
             ) : (
               <>
                 <Button label={t('locations.departInspectionRequired.action')} onPress={() => goInspection('depart')} />
-                <Button label={t('locations.journey.skip.action')} variant="ghost" size="sm" onPress={() => confirmSkip('depart')} loading={skipDepart.isPending} />
+                {permissions.canSkip ? (
+                  <Button label={t('locations.journey.skip.action')} variant="ghost" size="sm" onPress={() => confirmSkip('depart')} loading={skipDepart.isPending} />
+                ) : null}
               </>
             )}
           </>
@@ -230,7 +234,9 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
             ) : (
               <>
                 <Button label={t('inspection.title.retour')} onPress={() => goInspection('retour')} />
-                <Button label={t('locations.journey.skip.action')} variant="ghost" size="sm" onPress={() => confirmSkip('retour')} loading={skipRetour.isPending} />
+                {permissions.canSkip ? (
+                  <Button label={t('locations.journey.skip.action')} variant="ghost" size="sm" onPress={() => confirmSkip('retour')} loading={skipRetour.isPending} />
+                ) : null}
               </>
             )}
           </>

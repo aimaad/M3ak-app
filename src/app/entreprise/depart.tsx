@@ -23,7 +23,9 @@ type BooleanKey =
   | 'requireLicenceValidUntilEnd'
   | 'requireManualConfirmation'
   | 'requireIdAtRental'
-  | 'requireLicenceAtCustomer';
+  | 'requireLicenceAtCustomer'
+  | 'allowSkipInspection'
+  | 'allowDeclineAi';
 
 const TOGGLES: BooleanKey[] = [
   'requireDriverLicence',
@@ -118,7 +120,7 @@ export default function PolitiqueDepartScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {t('entreprise.departurePolicy.creationHelp')}
               </ThemedText>
-              {(['requireIdAtRental', 'requireLicenceAtCustomer'] as const).map((key) => (
+              {(['requireIdAtRental', 'requireLicenceAtCustomer', 'allowSkipInspection', 'allowDeclineAi'] as const).map((key) => (
                 <Toggle
                   key={key}
                   label={t(`entreprise.departurePolicy.${key}.label`)}

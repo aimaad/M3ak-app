@@ -18,6 +18,8 @@ Une location **ne peut pas démarrer** tant que l'inspection de départ n'est pa
   - **Non** : statut `refusee`. Les photos restent stockées (comparaison au retour) ; l'employé peut saisir des dommages à la main, ou « Analyser quand même ».
   - **Oui** : analyse, puis validation des dommages un par un ; pour chaque dommage confirmé, un interrupteur décide s'il est **inscrit au contrat** (`damages.dans_contrat`). Saisie manuelle possible en plus.
 
+Le **propriétaire décide** (écran Entreprise → Politique de départ → exigences) si les employés peuvent ignorer la prise de photos (`allow_skip_inspection`) et refuser l'analyse M3ak (`allow_decline_ai`) — migration 0051, appliqué aussi par le serveur (`inspection_skip_not_allowed`, `inspection_decline_not_allowed`). Le gérant et le propriétaire peuvent toujours. Par défaut : autorisé, comme avant.
+
 ## Confidentialité et sécurité
 - Même règle que la lecture de documents : clé Gemini **de l'entreprise** uniquement, accord du propriétaire obligatoire (sinon `ocr_disabled` / `ocr_not_configured`, rien n'est envoyé).
 - La fonction vérifie d'abord, avec le droit de l'appelant (RLS), qu'il peut voir l'inspection (entreprise et filiale). Les photos ne sont lues avec le rôle service qu'ensuite. Ni images ni résultats ne sont journalisés.

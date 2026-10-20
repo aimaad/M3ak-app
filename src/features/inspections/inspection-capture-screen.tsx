@@ -5,6 +5,8 @@ import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { useInspectionPermissions } from '@/features/inspections/permissions';
+
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -44,6 +46,7 @@ export function InspectionCaptureScreen({
   const createInspection = useCreateInspection();
   const completeInspection = useCompleteInspection();
   const skipInspection = useSkipInspection(rentalId, type);
+  const permissions = useInspectionPermissions(agencyId);
   const resumeInspection = useResumeInspection(rentalId, type);
   const photosQuery = useInspectionPhotos(inspectionQuery.data?.id);
   const { pendingPhotos, isSyncing, syncNow, addPending } = usePhotoSync(
@@ -202,7 +205,7 @@ export function InspectionCaptureScreen({
             </View>
           ) : null}
 
-          {coveredAngles.length === 0 && inspection ? (
+          {coveredAngles.length === 0 && inspection && permissions.canSkip ? (
             <Pressable
               onPress={handleSkipInspection}
               disabled={skipInspection.isPending}

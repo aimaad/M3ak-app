@@ -31,6 +31,8 @@ type PolicyRow = {
   max_additional_drivers: number;
   require_id_at_rental?: boolean;
   require_licence_at_customer?: boolean;
+  allow_skip_inspection?: boolean;
+  allow_decline_ai?: boolean;
 };
 
 export async function getDeparturePolicy(agencyId: string): Promise<DeparturePolicy> {
@@ -53,6 +55,8 @@ export async function getDeparturePolicy(agencyId: string): Promise<DeparturePol
     maxAdditionalDrivers: row.max_additional_drivers,
     requireIdAtRental: row.require_id_at_rental ?? false,
     requireLicenceAtCustomer: row.require_licence_at_customer ?? true,
+    allowSkipInspection: row.allow_skip_inspection ?? true,
+    allowDeclineAi: row.allow_decline_ai ?? true,
   };
 }
 
@@ -69,6 +73,8 @@ export async function saveDeparturePolicy(agencyId: string, policy: DeparturePol
     max_additional_drivers: policy.maxAdditionalDrivers,
     require_id_at_rental: policy.requireIdAtRental,
     require_licence_at_customer: policy.requireLicenceAtCustomer,
+    allow_skip_inspection: policy.allowSkipInspection,
+    allow_decline_ai: policy.allowDeclineAi,
   });
   if (error) throw error;
 }

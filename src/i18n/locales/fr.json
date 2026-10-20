@@ -233,6 +233,14 @@
       "requireLicenceAtCustomer": {
         "label": "Permis obligatoire pour créer un client",
         "hint": "Un client particulier ne peut être créé qu'avec les photos recto et verso de son permis, son numéro et sa date d'expiration."
+      },
+      "allowSkipInspection": {
+        "label": "Les employés peuvent ignorer la prise de photos",
+        "hint": "Si c'est désactivé, l'inspection de départ et de retour (photos) devient obligatoire pour les employés. Le gérant et le propriétaire peuvent toujours l'ignorer."
+      },
+      "allowDeclineAi": {
+        "label": "Les employés peuvent refuser l'analyse M3ak",
+        "hint": "Si c'est désactivé, après les photos, l'analyse des dommages par M3ak est obligatoire pour les employés."
       }
     },
     "stamp": {
@@ -1539,7 +1547,8 @@
       "skippedBody": "Aucune photo n'a été prise : l'état de la voiture ne sera pas prouvé en cas de litige. Vous pouvez encore faire l'inspection.",
       "inContract": "Sera inscrit dans le contrat",
       "notInContract": "Ne sera pas inscrit dans le contrat",
-      "analyzeAnyway": "Analyser quand même"
+      "analyzeAnyway": "Analyser quand même",
+      "mandatory": "L'analyse par M3ak est obligatoire dans cette agence."
     }
   },
   "accueil": {

@@ -187,6 +187,25 @@ select pg_temp.ck('contrat : un dommage est inscrit au contrat par défaut', (se
 select pg_temp.try('contrat : l''employé peut décider de ne pas inscrire un dommage',
   $$insert into damages (id, inspection_id, agency_id, zone, type, statut, source, dans_contrat) values ('d9000000-0000-0000-0000-000000000009', 'e1000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', 'capot', 'rayure', 'confirme', 'manuel', false)$$);
 
+-- Politique du propriétaire : ignorer l'inspection / refuser l'analyse (migration 0051).
+reset role;
+select pg_temp.ck('politique : par défaut les employés peuvent ignorer et refuser', (select allow_skip_inspection and allow_decline_ai from get_departure_policy('bbbbbbbb-0000-0000-0000-000000000002')), '');
+update inspections set analysis_status = 'aucune' where id = 'e1000000-0000-0000-0000-000000000001';
+update agency_departure_policies set allow_skip_inspection = false, allow_decline_ai = false where agency_id = 'aaaaaaaa-0000-0000-0000-000000000001';
+set session_replication_role = replica;
+insert into rentals (id, agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue)
+values ('a4000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001', 'confirmee', now() + interval '50 day', now() + interval '52 day');
+set session_replication_role = origin;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
+select pg_temp.try('politique : l''employé ne peut pas ignorer si le propriétaire l''interdit',
+  $$insert into inspections (id, agency_id, rental_id, vehicle_id, type, statut, skipped) values ('e4000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', 'a4000000-0000-0000-0000-000000000004', 'f1000000-0000-0000-0000-000000000001', 'depart', 'terminee', true)$$, 'inspection_skip_not_allowed');
+select pg_temp.try('politique : l''employé ne peut pas refuser l''analyse si le propriétaire l''interdit',
+  $$update inspections set analysis_status = 'refusee' where id = 'e1000000-0000-0000-0000-000000000001'$$, 'inspection_decline_not_allowed');
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');
+select pg_temp.try('politique : le gérant peut toujours ignorer',
+  $$insert into inspections (id, agency_id, rental_id, vehicle_id, type, statut, skipped) values ('e4000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', 'a4000000-0000-0000-0000-000000000004', 'f1000000-0000-0000-0000-000000000001', 'depart', 'terminee', true)$$);
+
 -- Cachet généré (migration 0048) : il suffit, avec le logo, pour signer ; une configuration trop lourde est refusée.
 reset role;
 update agencies set logo_url = 'aaaaaaaa-0000-0000-0000-000000000001/logo.png' where id = 'aaaaaaaa-0000-0000-0000-000000000001';
