@@ -1010,14 +1010,14 @@
         "contract": {
           "title": "Contrat",
           "short": "Créer, faire lire et signer",
-          "help": "Créez le contrat, faites-le lire au client, puis faites-le signer.",
+          "help": "Le contrat se fait en dernier : il reprend l'inspection (dommages choisis, kilométrage, carburant) et l'acompte. Créez-le, faites-le lire au client, puis faites-le signer.",
           "view": "Voir le contrat",
           "open": "Ouvrir le contrat"
         },
         "inspection": {
           "title": "Inspection de départ",
           "short": "Photos du véhicule (obligatoire)",
-          "help": "Prenez les photos du véhicule : elles prouvent son état avant la location."
+          "help": "Prenez les photos du véhicule : elles prouvent son état avant la location. Vous choisirez ensuite quels dommages inscrire au contrat."
         },
         "payment": {
           "title": "Acompte",
@@ -1173,7 +1173,16 @@
       "createError": "Impossible de créer ce contrat.",
       "errors": {
         "required": "Ce champ est obligatoire."
-      }
+      },
+      "departureTitle": "État des lieux au départ",
+      "departureHelp": "Le contrat se fait en dernier : il reprend l'inspection de départ. Choisissez les dommages à inscrire (le client les lira et signera), et écrivez ceux que l'app n'aurait pas vus.",
+      "inspectionFirst": "L'inspection de départ n'est pas encore faite : ses dommages et ses relevés ne seront pas dans le contrat. Faites-la d'abord.",
+      "damagesTitle": "Dommages existants à inscrire au contrat",
+      "noDamages": "Aucun dommage confirmé à l'inspection de départ.",
+      "inContract": "Sera inscrit dans le contrat",
+      "notInContract": "Ne sera pas inscrit dans le contrat",
+      "writtenDamage": "Autres dommages constatés (à écrire)",
+      "writtenDamagePlaceholder": "Ex. petite rayure sur le pare-chocs avant gauche"
     },
     "additionalDrivers": "Conducteurs supplémentaires",
     "sign": {
@@ -1213,7 +1222,7 @@
     "logoMissingPdf": "Le logo de l'agence est obligatoire sur le contrat. Ajoutez-le dans Mon entreprise (le propriétaire).",
     "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez.",
     "continueRental": "Continuer la location",
-    "nextStepHint": "Contrat signé. La suite (inspection de départ, acompte, départ) se fait depuis la fiche de la location."
+    "nextStepHint": "Contrat signé. Il ne reste que le départ : remise des clés depuis la fiche de la location."
   },
   "inspection": {
     "section": "Inspection",

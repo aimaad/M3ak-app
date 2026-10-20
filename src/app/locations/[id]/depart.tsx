@@ -35,11 +35,23 @@ export default function DepartScreen() {
   // La politique de l'agence bloque le départ tant que la liste de contrôle n'est pas satisfaite (le serveur le refuse aussi).
   const departureBlocked = !!departureCheck.data && departureCheck.data.enforced && !departureCheck.data.ok;
 
-  const [kilometrage, setKilometrage] = useState(vehicle ? String(vehicle.kilometrage) : '');
-  const [carburant, setCarburant] = useState('100');
-  const [etatDepart, setEtatDepart] = useState<VehicleCondition | null>(null);
-  const [accessoires, setAccessoires] = useState<AccessoryKey[]>([]);
-  const [observations, setObservations] = useState('');
+  // Le contrat est fait avant le départ : il connaît déjà les relevés de l'inspection et l'état des lieux. On les reprend ;
+  // l'employé peut tout corriger au moment de la remise des clés.
+  const snapshot = (contract?.snapshotValues ?? {}) as Record<string, string | undefined>;
+  const [kmInput, setKmInput] = useState<string | null>(null);
+  const [carburantInput, setCarburantInput] = useState<string | null>(null);
+  const [etatInput, setEtatInput] = useState<VehicleCondition | null>(null);
+  const [accessoiresInput, setAccessoiresInput] = useState<AccessoryKey[] | null>(null);
+  const [observationsInput, setObservationsInput] = useState<string | null>(null);
+  const kilometrage = kmInput ?? snapshot.km_depart ?? (vehicle ? String(vehicle.kilometrage) : '');
+  const carburant = carburantInput ?? (snapshot.carburant_depart ? snapshot.carburant_depart.replace(/[^\d]/g, '') : '100');
+  const etatDepart = etatInput ?? contract?.etatDepart ?? null;
+  const accessoires = accessoiresInput ?? contract?.accessoiresDepart ?? [];
+  const observations = observationsInput ?? contract?.observationsDepart ?? '';
+  const setKilometrage = setKmInput;
+  const setCarburant = setCarburantInput;
+  const setEtatDepart = setEtatInput;
+  const setObservations = setObservationsInput;
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,7 +59,10 @@ export default function DepartScreen() {
   const contractErrors = validateDepartContractForm({ etatDepart, accessoiresDepart: accessoires, observationsDepart: observations });
 
   function toggleAccessoire(key: AccessoryKey) {
-    setAccessoires((prev) => (prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key]));
+    setAccessoiresInput((prev) => {
+      const current = prev ?? accessoires;
+      return current.includes(key) ? current.filter((a) => a !== key) : [...current, key];
+    });
   }
 
   async function handleSubmit() {

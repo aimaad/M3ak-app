@@ -93,9 +93,10 @@ export function contractTemplateValues(contract: Contract, info: ContractAgencyI
     avance: paid.length > 0 ? money(advance) : '',
     reste: contract.prixTotal != null && paid.length > 0 ? money(Math.max(0, contract.prixTotal - advance)) : '',
     mode_paiement: methods,
-    km_depart: extras.kmDepart != null ? String(extras.kmDepart) : '',
+    // Avant le départ réel, le contrat reprend les relevés de l'inspection de départ (figés à sa création).
+    km_depart: extras.kmDepart != null ? String(extras.kmDepart) : ((contract.snapshotValues as TemplateValues | null)?.km_depart ?? ''),
     km_retour: extras.kmRetour != null ? String(extras.kmRetour) : '',
-    carburant_depart: extras.carburantDepart != null ? `${extras.carburantDepart} %` : '',
+    carburant_depart: extras.carburantDepart != null ? `${extras.carburantDepart} %` : ((contract.snapshotValues as TemplateValues | null)?.carburant_depart ?? ''),
     numero: contract.numero,
     date_contrat: formatDateTime(contract.createdAt),
     ville_contrat: info.ville ?? '',
@@ -132,7 +133,7 @@ export function contractTemplateContext(contract: Contract): TemplateContext {
   return {
     hasDrivers: !!contract.driverNom || contract.autresConducteurs.length > 0,
     hasConditions: !!contract.conditionsParticulieres,
-    hasDeparture: !!contract.etatDepart,
+    hasDeparture: !!contract.etatDepart || !!(contract.snapshotValues as TemplateValues | null)?.dommages_depart,
   };
 }
 

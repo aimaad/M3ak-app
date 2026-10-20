@@ -205,7 +205,7 @@ export function templateFromOptions(options: ContractOptions, agencyLines: strin
     type: 'box',
     showIf: 'hasDeparture',
     title: 'État des lieux au départ',
-    rows: [row('État général', '{{etat_depart}}'), row('Accessoires remis', '{{accessoires_depart}}'), row('Observations', '{{observations_depart}}', true)],
+    rows: [row('État général', '{{etat_depart}}'), row('Accessoires remis', '{{accessoires_depart}}'), row('Dommages existants', '{{dommages_depart}}', true), row('Observations', '{{observations_depart}}', true)],
   });
   blocks.push({ type: 'box', showIf: 'hasConditions', title: 'Conditions particulières', rows: [], text: '{{conditions_particulieres}}' });
 

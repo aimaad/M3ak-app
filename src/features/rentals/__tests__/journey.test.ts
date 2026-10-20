@@ -17,7 +17,7 @@ const status = (input: Partial<JourneyInput>) => Object.fromEntries(computeJourn
 
 describe('parcours avant le départ', () => {
   it("commence par la confirmation et verrouille tout le reste", () => {
-    expect(status({})).toEqual({ confirmation: 'current', checks: 'locked', contract: 'locked', inspection: 'locked', payment: 'done', start: 'locked' });
+    expect(status({})).toEqual({ confirmation: 'current', checks: 'locked', inspection: 'locked', payment: 'done', contract: 'locked', start: 'locked' });
     expect(computeJourney(base).currentKey).toBe('confirmation');
   });
 
@@ -25,12 +25,18 @@ describe('parcours avant le départ', () => {
     expect(computeJourney({ ...base, rentalStatus: 'confirmee' }).currentKey).toBe('checks');
   });
 
-  it('suit l\'ordre : vérifications, contrat, inspection, puis le départ', () => {
+  it("suit l'ordre : vérifications, inspection, acompte, puis le contrat à la fin, puis le départ", () => {
     const confirmed = { ...base, rentalStatus: 'confirmee' as const, departureOk: true };
-    expect(computeJourney(confirmed).currentKey).toBe('contract');
-    expect(computeJourney({ ...confirmed, contractStatus: 'pret_a_signer' }).currentKey).toBe('contract');
-    expect(computeJourney({ ...confirmed, contractStatus: 'signe' }).currentKey).toBe('inspection');
-    expect(computeJourney({ ...confirmed, contractStatus: 'signe', inspectionDepartDone: true }).currentKey).toBe('start');
+    expect(computeJourney(confirmed).currentKey).toBe('inspection');
+    const inspected = { ...confirmed, inspectionDepartDone: true };
+    expect(computeJourney(inspected).currentKey).toBe('contract'); // acompte non demandé : rien à encaisser
+    expect(computeJourney({ ...inspected, contractStatus: 'pret_a_signer' }).currentKey).toBe('contract');
+    expect(computeJourney({ ...inspected, contractStatus: 'signe' }).currentKey).toBe('start');
+  });
+
+  it("le contrat n'est possible qu'une fois l'inspection faite : il reprend ses dommages", () => {
+    const journey = computeJourney({ ...base, rentalStatus: 'confirmee', departureOk: true, contractStatus: null });
+    expect(journey.steps.find((s) => s.key === 'contract')?.status).toBe('locked');
   });
 
   it("une vérification non en règle bloque seulement si l'agence l'a décidé", () => {
@@ -38,7 +44,7 @@ describe('parcours avant le départ', () => {
     expect(computeJourney({ ...confirmed, departureEnforced: true }).currentKey).toBe('checks');
     const soft = computeJourney({ ...confirmed, departureEnforced: false });
     expect(soft.steps.find((s) => s.key === 'checks')?.status).toBe('attention');
-    expect(soft.currentKey).toBe('contract');
+    expect(soft.currentKey).toBe('inspection');
   });
 
   it("l'acompte non encaissé est signalé sans empêcher le départ", () => {
@@ -46,6 +52,8 @@ describe('parcours avant le départ', () => {
     const journey = computeJourney(ready);
     expect(journey.steps.find((s) => s.key === 'payment')?.status).toBe('attention');
     expect(journey.currentKey).toBe('start');
+    // sans contrat signé, l'acompte non encaissé ne fait que se signaler : la prochaine étape est le contrat
+    expect(computeJourney({ ...ready, contractStatus: null }).currentKey).toBe('contract');
     expect(computeJourney({ ...ready, acomptePaye: 500 }).steps.find((s) => s.key === 'payment')?.status).toBe('done');
     expect(computeJourney({ ...ready, acomptePrevu: 0 }).steps.find((s) => s.key === 'payment')?.status).toBe('done');
   });

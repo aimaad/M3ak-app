@@ -60,7 +60,7 @@ export const PLACEHOLDERS = [
   'client_permis', 'client_permis_delivre_le', 'client_permis_delivre_a', 'client_passeport',
   'conducteur2_prenom', 'conducteur2_nom', 'conducteur2_permis', 'conducteur2_cin',
   'prix_jour', 'nombre_jours', 'avance', 'reste', 'mode_paiement',
-  'km_depart', 'km_retour', 'carburant_depart',
+  'km_depart', 'km_retour', 'carburant_depart', 'dommages_depart',
 ] as const;
 export type Placeholder = (typeof PLACEHOLDERS)[number];
 const PLACEHOLDER_SET = new Set<string>(PLACEHOLDERS);

@@ -45,3 +45,17 @@ export function buildSnapshotValues(customer: Customer, additionalDrivers: Pick<
   };
   return Object.fromEntries(Object.entries(values).filter(([, value]) => typeof value === 'string' && value.trim() !== '')) as SnapshotValues;
 }
+
+/**
+ * Relevés et dommages de l'inspection de départ, figés dans le contrat à sa création : kilométrage et carburant lus
+ * à l'inspection, dommages que l'employé a choisi d'inscrire, et ce qu'il a écrit à la main.
+ */
+export function departureSnapshotValues(input: { km: number | null; carburant: number | null; damages: string[]; written: string }): SnapshotValues {
+  const damages = [...input.damages, input.written.trim()].filter(Boolean).join('\n');
+  const values: SnapshotValues = {
+    ...(input.km != null ? { km_depart: String(input.km) } : {}),
+    ...(input.carburant != null ? { carburant_depart: `${input.carburant} %` } : {}),
+    ...(damages ? { dommages_depart: damages.slice(0, 2000) } : {}),
+  };
+  return values;
+}

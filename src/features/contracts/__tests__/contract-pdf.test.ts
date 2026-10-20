@@ -1,5 +1,6 @@
 import { assertContractIsComplete, buildContractHtml } from '../contract-pdf';
 import type { Contract } from '../types';
+import { sampleContract } from '../sample-contract';
 
 // Tests exécutés par Jest (Node) : on lit les sources avec require, sans dépendre des types Node.
 declare const __dirname: string;
@@ -203,5 +204,30 @@ describe('cachet de l\'agence', () => {
     for (const evil of ['javascript:alert(1)', 'data:text/html;base64,PHNjcmlwdD4=', 'data:image/svg+xml;base64,AAAA', `${png}" onerror="x`, 'https://evil.test/x.png']) {
       expect(buildContractHtml(makeContract(), 'Agence Test', { stampDataUri: evil })).not.toContain('class="stamp"');
     }
+  });
+});
+
+describe('contrat fait après l\'inspection de départ', () => {
+  const agency = { nom: 'Agence Atlas', adresse: '12 rue Hassan II', ville: 'Marrakech', telephone: '+212600000000' };
+  const base = sampleContract();
+
+  it('reprend les dommages choisis, le kilométrage et le carburant relevés à l\'inspection', () => {
+    const contract = { ...base, etatDepart: 'bon' as const, snapshotValues: { dommages_depart: 'Capot — Rayure (Léger)\nPetite rayure pare-chocs', km_depart: '45210', carburant_depart: '50 %' } };
+    const html = buildContractHtml(contract, agency);
+    expect(html).toContain('Dommages existants');
+    expect(html).toContain('Capot — Rayure (Léger)');
+    expect(html).toContain('Petite rayure pare-chocs');
+    expect(html).toContain('45210');
+    expect(html).toContain('50 %');
+  });
+
+  it("sans dommage inscrit, la ligne « Dommages existants » n'apparaît pas", () => {
+    const html = buildContractHtml({ ...base, etatDepart: 'bon' as const, snapshotValues: {} }, agency);
+    expect(html).not.toContain('Dommages existants');
+  });
+
+  it('les relevés réels du départ passent avant ceux de l\'inspection', () => {
+    const contract = { ...base, snapshotValues: { km_depart: '100' } };
+    expect(buildContractHtml(contract, agency, {}, undefined, { kmDepart: 45300 })).toContain('45300');
   });
 });

@@ -4,7 +4,7 @@ import type { RentalStatus } from './types';
 
 /**
  * Parcours d'une location, étape par étape : ce qu'il reste à faire AVANT le départ (confirmation, vérifications,
- * contrat, inspection, acompte, départ), puis AU RETOUR (inspection, dommages, retour, caution). Une seule étape est
+ * inspection, acompte, contrat, départ), puis AU RETOUR (inspection, dommages, retour, caution). Une seule étape est
  * « en cours » à la fois ; les suivantes restent verrouillées tant que la précédente n'est pas terminée.
  */
 export type JourneyStepKey =
@@ -80,10 +80,12 @@ export function computeJourney(input: JourneyInput): Journey {
     { key: 'confirmation', done: confirmed },
     // Vérification non en règle mais non bloquante pour cette agence : on le signale sans bloquer la suite.
     { key: 'checks', done: checksOk, passable: confirmed && input.departureOk === false && !input.departureEnforced },
-    { key: 'contract', done: contractSigned },
+    // Le contrat vient APRÈS l'inspection et l'acompte : il reprend alors tout (dommages existants, kilométrage,
+    // carburant, paiement) et le client signe un document complet.
     { key: 'inspection', done: input.inspectionDepartDone },
     // L'acompte n'empêche pas le départ (le serveur ne l'exige pas) : il reste affiché tant qu'il n'est pas encaissé.
     { key: 'payment', done: input.acomptePrevu <= 0 || input.acomptePaye >= input.acomptePrevu, passable: true },
+    { key: 'contract', done: contractSigned },
     { key: 'start', done: false },
   ];
   return { phase: 'depart', ...resolve(drafts) };

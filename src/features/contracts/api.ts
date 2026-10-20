@@ -148,6 +148,8 @@ export async function createContract(
     cautionMontant: number;
     /** Informations complémentaires du client et du deuxième conducteur (voir snapshot.ts). */
     snapshotValues?: Record<string, string>;
+    /** État des lieux au départ déjà connu à la création (le contrat est fait après l'inspection de départ). */
+    departure?: { etatDepart: VehicleCondition | null; accessoiresDepart: AccessoryKey[]; observationsDepart: string | null };
   }
 ): Promise<Contract> {
   const userId = await getCurrentUserId();
@@ -170,6 +172,13 @@ export async function createContract(
       prix_total: snapshot.prixTotal,
       caution_montant: snapshot.cautionMontant,
       snapshot_values: snapshot.snapshotValues ?? null,
+      ...(snapshot.departure
+        ? {
+            etat_depart: snapshot.departure.etatDepart,
+            accessoires_depart: snapshot.departure.accessoiresDepart,
+            observations_depart: snapshot.departure.observationsDepart,
+          }
+        : {}),
       conditions_particulieres: input.conditionsParticulieres,
       notes: input.notes,
       created_by: userId,

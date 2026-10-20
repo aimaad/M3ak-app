@@ -6,6 +6,9 @@
 3. **Validation** : l'employé confirme, rejette ou corrige chaque dommage (emplacement, type, gravité, coût, nouveau / déjà présent), ou en ajoute un que l'IA a manqué. Le coût est proposé par l'IA et modifiable.
 4. **Retenue et rapport** (retour) : seuls les dommages **nouveaux ET confirmés** comptent. La retenue est proposée, modifiable, plafonnée à la caution, et ne peut pas être validée tant qu'un nouveau dommage est « à valider ». Rapport PDF (synthèse, dommages, photos départ / retour, caution) partageable, et message WhatsApp.
 
+## Inspection avant contrat
+Le contrat est l'avant-dernière étape du parcours (juste avant le départ) : il reprend tout ce qui a été recueilli. À la création du contrat, l'employé voit la liste des dommages **confirmés** à l'inspection de départ et choisit, un par un, ceux à inscrire au contrat (le client les lira et signera). Il peut aussi écrire à la main un dommage que l'app n'a pas vu. Le kilométrage et le carburant lus à l'inspection, l'état général, les accessoires et les observations sont repris dans le contrat (rubrique « État des lieux au départ »). Au départ réel, l'écran de remise des clés est prérempli avec ces valeurs.
+
 ## Départ conditionné à l'inspection
 Une location **ne peut pas démarrer** tant que l'inspection de départ n'est pas terminée (au moins 8 photos ; le guide actuel en demande 24). L'écran de la location affiche un bandeau « Inspection de départ obligatoire » avec un bouton, l'écran de départ renvoie vers l'inspection, et le serveur refuse aussi (`departure_inspection_required`, migration 0047) : contourner l'écran ne suffit pas.
 
