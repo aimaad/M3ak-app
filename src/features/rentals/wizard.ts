@@ -1,9 +1,13 @@
 import type { RentalFormErrors } from './validation';
 
 /** Étapes de la création d'une location : une question à la fois, dans cet ordre. */
-export type WizardStepKey = 'client' | 'vehicule' | 'dates' | 'conducteurs' | 'prix' | 'recap';
+export type WizardStepKey = 'dates' | 'vehicule' | 'client' | 'conducteurs' | 'prix' | 'recap';
 
-export const WIZARD_STEPS: WizardStepKey[] = ['client', 'vehicule', 'dates', 'conducteurs', 'prix', 'recap'];
+/**
+ * Dans l'ordre d'une vraie demande au comptoir : « je voudrais une voiture du … au … » → on saisit d'abord les DATES,
+ * on propose seulement les voitures LIBRES à ces dates, puis on choisit le client, les conducteurs et le prix.
+ */
+export const WIZARD_STEPS: WizardStepKey[] = ['dates', 'vehicule', 'client', 'conducteurs', 'prix', 'recap'];
 
 /** Erreurs de validation qui concernent chaque étape (les conducteurs sont facultatifs ; le récapitulatif reprend tout). */
 const STEP_FIELDS: Record<WizardStepKey, (keyof RentalFormErrors)[]> = {

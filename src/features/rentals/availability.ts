@@ -65,3 +65,60 @@ export function bookedDates(existingRentals: RentalForAvailability[]): string[] 
   }
   return Array.from(dates).sort();
 }
+
+export type VehicleForAvailability = {
+  id: string;
+  statut: string;
+  archivedAt: string | null;
+};
+
+export type RentalWithVehicle = RentalForAvailability & { vehicleId: string };
+
+export type UnavailableReason =
+  | { kind: 'booked'; freeFrom: string }
+  | { kind: 'maintenance' }
+  | { kind: 'indisponible' }
+  | { kind: 'archived' };
+
+export type VehicleAvailability<V extends VehicleForAvailability> = {
+  available: V[];
+  unavailable: { vehicle: V; reason: UnavailableReason }[];
+};
+
+/**
+ * Pour une période choisie par le client, sépare les véhicules libres de ceux qui ne le sont pas, avec la raison :
+ * déjà réservé (et à partir de quand il se libère), en maintenance, indisponible ou archivé. L'employé choisit
+ * ainsi la voiture parmi celles qui peuvent vraiment être louées, au lieu de découvrir le conflit après coup.
+ */
+export function vehicleAvailability<V extends VehicleForAvailability>(
+  vehicles: V[],
+  rentals: RentalWithVehicle[],
+  range: DateRange
+): VehicleAvailability<V> {
+  const available: V[] = [];
+  const unavailable: VehicleAvailability<V>['unavailable'] = [];
+  for (const vehicle of vehicles) {
+    if (vehicle.archivedAt) {
+      unavailable.push({ vehicle, reason: { kind: 'archived' } });
+      continue;
+    }
+    if (vehicle.statut === 'maintenance') {
+      unavailable.push({ vehicle, reason: { kind: 'maintenance' } });
+      continue;
+    }
+    if (vehicle.statut === 'indisponible') {
+      unavailable.push({ vehicle, reason: { kind: 'indisponible' } });
+      continue;
+    }
+    const conflicts = rentals.filter(
+      (rental) => rental.vehicleId === vehicle.id && isBlocking(rental.statut) && rangesOverlap({ start: rental.dateDebutPrevue, end: rental.dateFinPrevue }, range)
+    );
+    if (conflicts.length > 0) {
+      const freeFrom = conflicts.reduce((latest, rental) => (rental.dateFinPrevue > latest ? rental.dateFinPrevue : latest), conflicts[0].dateFinPrevue);
+      unavailable.push({ vehicle, reason: { kind: 'booked', freeFrom } });
+    } else {
+      available.push(vehicle);
+    }
+  }
+  return { available, unavailable };
+}

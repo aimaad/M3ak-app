@@ -4,6 +4,7 @@ import { Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
+import { Card, PressableCard } from '@/components/card';
 import { PickerField } from '@/components/picker-field';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
@@ -14,9 +15,9 @@ import { useMyAgency } from '@/features/agency/hooks';
 import { useCustomers } from '@/features/customers/hooks';
 import { searchCustomers } from '@/features/customers/search';
 import type { Customer } from '@/features/customers/types';
-import { bookedDates, hasBookingConflict } from '@/features/rentals/availability';
+import { hasBookingConflict, vehicleAvailability } from '@/features/rentals/availability';
 import { DateRangeCalendar, type DateRangeValue } from '@/features/rentals/date-range-calendar';
-import { useCreateRental, useDeparturePolicy, useSaveRentalDrivers, useVehicleRentals } from '@/features/rentals/hooks';
+import { useCreateRental, useDeparturePolicy, useRentals, useSaveRentalDrivers, useVehicleRentals } from '@/features/rentals/hooks';
 import { EMPTY_DRIVERS_SELECTION, rentalDriversErrorKey, type RentalDriversSelection } from '@/features/rentals/rental-drivers';
 import { RentalDriversEditor } from '@/features/rentals/rental-drivers-editor';
 import { computeRentalPrice } from '@/features/rentals/pricing';
@@ -39,7 +40,9 @@ export default function NouvelleLocationScreen() {
   const customersQuery = useCustomers();
   const createRental = useCreateRental();
 
-  const [vehicle, setVehicle] = useState<Vehicle | null>(null);
+  const [pickedVehicle, setPickedVehicle] = useState<Vehicle | null>(null);
+  const [vehicleQuery, setVehicleQuery] = useState('');
+  const [showUnavailable, setShowUnavailable] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [driversSelection, setDriversSelection] = useState<RentalDriversSelection>(EMPTY_DRIVERS_SELECTION);
   const [range, setRange] = useState<DateRangeValue>({ start: null, end: null });
@@ -61,14 +64,21 @@ export default function NouvelleLocationScreen() {
   const policyQuery = useDeparturePolicy(agencyQuery.data?.agencyId);
   const saveRentalDriversMutation = useSaveRentalDrivers();
 
-  const vehicleRentalsQuery = useVehicleRentals(vehicle?.id);
-  const disabledDates = useMemo(
-    () => bookedDates(vehicleRentalsQuery.data ?? []),
-    [vehicleRentalsQuery.data]
-  );
-
   const startISO = range.start ? toISO(range.start, heureDepart) : null;
   const endISO = range.end ? toISO(range.end, heureRetour) : null;
+  const hasPeriod = !!startISO && !!endISO && endISO > startISO;
+
+  // Voitures libres pour les dates demandées (le client demande une période, on lui propose ce qui est disponible).
+  const allRentalsQuery = useRentals();
+  const availability = useMemo(
+    () => (hasPeriod ? vehicleAvailability(vehiclesQuery.data ?? [], allRentalsQuery.data ?? [], { start: startISO as string, end: endISO as string }) : null),
+    [hasPeriod, vehiclesQuery.data, allRentalsQuery.data, startISO, endISO]
+  );
+  // La voiture choisie n'est gardée que si elle est encore libre à ces dates (sinon on a changé les dates après coup).
+  const vehicle = pickedVehicle && availability?.available.some((v) => v.id === pickedVehicle.id) ? pickedVehicle : null;
+  const pickedBecameUnavailable = !!pickedVehicle && !vehicle && hasPeriod && !!availability;
+
+  const vehicleRentalsQuery = useVehicleRentals(vehicle?.id);
 
   const conflict =
     !!startISO &&
@@ -229,32 +239,13 @@ export default function NouvelleLocationScreen() {
             />
           ) : null}
 
-          {stepKey === 'vehicule' ? (
-            <PickerField
-              label={t('locations.vehicle')}
-              placeholder={t('locations.form.vehiclePlaceholder')}
-              searchPlaceholder={t('locations.form.vehicleSearch')}
-              items={vehiclesQuery.data ?? []}
-              selectedItem={vehicle}
-              getId={(v) => v.id}
-              getLabel={(v) => `${v.marque} ${v.modele}`}
-              getSubLabel={(v) => v.immatriculation}
-              filterItems={(items, query) => filterVehicles(items, { ...DEFAULT_VEHICLE_FILTERS, query })}
-              onSelect={(v) => {
-                setVehicle(v);
-                setRange({ start: null, end: null });
-              }}
-              error={fieldError('vehicleId')}
-            />
-          ) : null}
-
           {stepKey === 'dates' ? (
             <>
               <View className="gap-1.5">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('locations.period')}
                 </ThemedText>
-                <DateRangeCalendar disabledDates={disabledDates} value={range} onChange={setRange} />
+                <DateRangeCalendar disabledDates={[]} value={range} onChange={(next) => { setRange(next); }} />
                 <View className="flex-row gap-2">
                   <TextField label={t('locations.heureDepart')} value={heureDepart} onChangeText={setHeureDepart} placeholder="09:00" className="flex-1" />
                   <TextField label={t('locations.heureRetour')} value={heureRetour} onChangeText={setHeureRetour} placeholder="18:00" className="flex-1" />
@@ -264,9 +255,100 @@ export default function NouvelleLocationScreen() {
                     {t(`locations.form.errors.${errors.dates}`)}
                   </ThemedText>
                 ) : null}
+                {availability ? (
+                  <ThemedText type="smallBold" style={{ color: availability.available.length > 0 ? '#15803D' : '#B91C1C' }}>
+                    {availability.available.length > 0
+                      ? t('locations.wizard.availableCount', { count: availability.available.length })
+                      : t('locations.wizard.noneAvailable')}
+                  </ThemedText>
+                ) : null}
               </View>
               <TextField label={t('locations.lieuDepart')} value={lieuDepart} onChangeText={setLieuDepart} placeholder={t('vehicle.fields.optionalPlaceholder')} />
               <TextField label={t('locations.lieuRetour')} value={lieuRetour} onChangeText={setLieuRetour} placeholder={t('vehicle.fields.optionalPlaceholder')} />
+            </>
+          ) : null}
+
+          {stepKey === 'vehicule' ? (
+            <>
+              {!availability ? (
+                <ThemedText type="small" style={{ color: '#B91C1C' }}>
+                  {t('locations.wizard.pickDatesFirst')}
+                </ThemedText>
+              ) : (
+                <>
+                  <ThemedText type="smallBold">
+                    {t('locations.wizard.forPeriod', { start: formatDate(startISO), end: formatDate(endISO) })}
+                  </ThemedText>
+                  {pickedBecameUnavailable ? (
+                    <ThemedText type="small" style={{ color: '#B45309' }}>
+                      {t('locations.wizard.pickedUnavailable', { vehicle: `${pickedVehicle?.marque} ${pickedVehicle?.modele}` })}
+                    </ThemedText>
+                  ) : null}
+                  <TextField value={vehicleQuery} onChangeText={setVehicleQuery} placeholder={t('locations.form.vehicleSearch')} />
+                  {(() => {
+                    const free = filterVehicles(availability.available, { ...DEFAULT_VEHICLE_FILTERS, query: vehicleQuery });
+                    if (availability.available.length === 0) {
+                      return (
+                        <ThemedText type="small" themeColor="textSecondary">
+                          {t('locations.wizard.noneAvailableHelp')}
+                        </ThemedText>
+                      );
+                    }
+                    return free.map((v) => {
+                      const price = computeRentalPrice(startISO as string, endISO as string, { prixJour: v.prixJour, prixSemaine: v.prixSemaine, prixMois: v.prixMois }, 0, 0);
+                      const selected = vehicle?.id === v.id;
+                      return (
+                        <PressableCard
+                          key={v.id}
+                          onPress={() => setPickedVehicle(v)}
+                          className="gap-1"
+                          style={{ borderWidth: 2, borderColor: selected ? '#7C3AED' : 'transparent' }}
+                        >
+                          <View className="flex-row items-center justify-between">
+                            <ThemedText type="smallBold">{`${v.marque} ${v.modele}`}</ThemedText>
+                            {selected ? <ThemedText type="smallBold" style={{ color: '#7C3AED' }}>✓</ThemedText> : null}
+                          </View>
+                          <ThemedText type="small" themeColor="textSecondary">{v.immatriculation}</ThemedText>
+                          <View className="flex-row items-center justify-between">
+                            <ThemedText type="small">{`${v.prixJour.toLocaleString('fr-FR')} MAD/j`}</ThemedText>
+                            <ThemedText type="smallBold" themeColor="primary">
+                              {t('locations.wizard.totalForPeriod', { total: money(price.total), days: price.dureeJours })}
+                            </ThemedText>
+                          </View>
+                        </PressableCard>
+                      );
+                    });
+                  })()}
+                  {showErrors && errors.vehicleId ? (
+                    <ThemedText type="small" style={{ color: '#DC2626' }}>
+                      {t(`locations.form.errors.${errors.vehicleId}`)}
+                    </ThemedText>
+                  ) : null}
+
+                  {availability.unavailable.length > 0 ? (
+                    <View className="gap-2">
+                      <Button
+                        label={t(showUnavailable ? 'locations.wizard.hideUnavailable' : 'locations.wizard.showUnavailable', { count: availability.unavailable.length })}
+                        variant="ghost"
+                        size="sm"
+                        onPress={() => setShowUnavailable((value) => !value)}
+                      />
+                      {showUnavailable
+                        ? availability.unavailable.map(({ vehicle: v, reason }) => (
+                            <Card key={v.id} padded={false} className="gap-0.5 px-4 py-3" style={{ opacity: 0.65 }}>
+                              <ThemedText type="smallBold">{`${v.marque} ${v.modele} · ${v.immatriculation}`}</ThemedText>
+                              <ThemedText type="small" themeColor="textSecondary">
+                                {reason.kind === 'booked'
+                                  ? t('locations.wizard.reasons.booked', { date: formatDate(reason.freeFrom) })
+                                  : t(`locations.wizard.reasons.${reason.kind}`)}
+                              </ThemedText>
+                            </Card>
+                          ))
+                        : null}
+                    </View>
+                  ) : null}
+                </>
+              )}
             </>
           ) : null}
 

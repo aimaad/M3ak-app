@@ -1069,12 +1069,12 @@
           "help": "Qui loue la voiture ? Cherchez le client par nom, téléphone ou CIN."
         },
         "vehicule": {
-          "title": "Véhicule",
-          "help": "Choisissez la voiture à louer."
+          "title": "Voiture libre",
+          "help": "Voici les voitures disponibles pour ces dates, avec le prix de la période. Choisissez-en une."
         },
         "dates": {
           "title": "Dates et lieux",
-          "help": "Choisissez le départ et le retour. Les jours déjà réservés sont grisés."
+          "help": "Quand le client veut-il la voiture ? Choisissez le départ et le retour : M3ak vous montrera ensuite seulement les voitures libres à ces dates."
         },
         "conducteurs": {
           "title": "Conducteurs",
@@ -1088,6 +1088,22 @@
           "title": "Récapitulatif",
           "help": "Relisez tout avant de créer la location."
         }
+      },
+      "availableCount_one": "{{count}} voiture libre à ces dates",
+      "availableCount_other": "{{count}} voitures libres à ces dates",
+      "noneAvailable": "Aucune voiture libre à ces dates : changez les dates.",
+      "noneAvailableHelp": "Aucune voiture n'est libre pour cette période. Revenez à l'étape précédente pour proposer d'autres dates au client.",
+      "pickDatesFirst": "Choisissez d'abord les dates (étape précédente).",
+      "forPeriod": "Voitures libres du {{start}} au {{end}}",
+      "pickedUnavailable": "{{vehicle}} n'est plus libre à ces dates : choisissez une autre voiture.",
+      "totalForPeriod": "{{total}} pour {{days}} j",
+      "showUnavailable": "Voir les {{count}} voiture(s) non disponibles",
+      "hideUnavailable": "Masquer les voitures non disponibles",
+      "reasons": {
+        "booked": "Déjà réservée — libre à partir du {{date}}",
+        "maintenance": "En maintenance",
+        "indisponible": "Indisponible",
+        "archived": "Archivée"
       }
     }
   },
