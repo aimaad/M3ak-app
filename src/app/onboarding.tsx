@@ -102,7 +102,7 @@ export default function OnboardingScreen() {
             <Pressable
               onPress={() => setMode('create')}
               className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-                mode === 'create' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                mode === 'create' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
               }`}
             >
               <ThemedText type="smallBold" style={{ color: mode === 'create' ? '#ffffff' : '#211A2E' }}>
@@ -112,7 +112,7 @@ export default function OnboardingScreen() {
             <Pressable
               onPress={() => setMode('join')}
               className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-                mode === 'join' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                mode === 'join' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
               }`}
             >
               <ThemedText type="smallBold" style={{ color: mode === 'join' ? '#ffffff' : '#211A2E' }}>

@@ -289,7 +289,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
             <TextField label={t('contractTemplate.simple.if')} value={options.legal.if} onChangeText={(value) => change((o) => ({ ...o, legal: { ...o.legal, if: value } }))} />
             <TextField label={t('contractTemplate.simple.cnss')} value={options.legal.cnss} onChangeText={(cnss) => change((o) => ({ ...o, legal: { ...o.legal, cnss } }))} />
             {options.legal.extra.map((item, index) => (
-              <View key={`${item.label}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-[#EAE5F2] bg-[#FAF9FF] px-4 py-2">
+              <View key={`${item.label}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-[#E4DCF5] bg-[#FAF9FF] px-4 py-2">
                 <ThemedText type="default" style={{ flex: 1 }}>
                   {item.label} : {item.value}
                 </ThemedText>
@@ -331,7 +331,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
 
           <Section number={4} title={t('contractTemplate.simple.extraTitle')} help={t('contractTemplate.simple.extraHelp')}>
             {options.extraFields.map((name, index) => (
-              <View key={`${name}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-[#EAE5F2] bg-[#FAF9FF] px-4 py-2">
+              <View key={`${name}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-[#E4DCF5] bg-[#FAF9FF] px-4 py-2">
                 <ThemedText type="default" style={{ flex: 1 }}>
                   {name}
                 </ThemedText>
@@ -349,15 +349,15 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
               {options.conditions.map((condition, index) => {
                 const open = openCondition === index;
                 return (
-                  <View key={index} className="rounded-2xl border border-[#EAE5F2] bg-white">
+                  <View key={index} className="rounded-2xl border border-[#E4DCF5] bg-white">
                     <Pressable onPress={() => setOpenCondition(open ? null : index)} className="flex-row items-center gap-3 px-4 py-3">
                       <ThemedText type="smallBold" style={{ flex: 1 }} numberOfLines={1}>
                         {`${index + 1}. ${condition.titleFr || condition.titleAr || t('contractTemplate.simple.newCondition')}`}
                       </ThemedText>
-                      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color="#81778F" />
+                      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color="#5E5575" />
                     </Pressable>
                     {open ? (
-                      <View className="gap-3 border-t border-[#EAE5F2] px-4 py-4">
+                      <View className="gap-3 border-t border-[#E4DCF5] px-4 py-4">
                         <TextField label={t('contractTemplate.simple.conditionTitleFr')} value={condition.titleFr} onChangeText={(titleFr) => updateCondition(index, { titleFr })} />
                         <TextField label={t('contractTemplate.simple.conditionTextFr')} value={condition.textFr} onChangeText={(textFr) => updateCondition(index, { textFr })} multiline />
                         <TextField label={t('contractTemplate.simple.conditionTitleAr')} value={condition.titleAr} onChangeText={(titleAr) => updateCondition(index, { titleAr })} />
@@ -376,7 +376,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
           <Button label={t('contractTemplate.simple.reset')} variant="ghost" size="sm" onPress={handleReset} disabled={remove.isPending} />
         </ScrollView>
 
-        <View className="gap-2 border-t border-[#EAE5F2] bg-white px-6 py-3">
+        <View className="gap-2 border-t border-[#E4DCF5] bg-white px-6 py-3">
           {error ? (
             <ThemedText type="small" style={{ color: M3akPalette.danger }}>
               {error}

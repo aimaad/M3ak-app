@@ -29,7 +29,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -39,7 +39,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 }
 
 const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
-  ok: '#81778F',
+  ok: '#5E5575',
   bientot: M3akPalette.warning,
   expire: M3akPalette.danger,
 };
@@ -273,7 +273,7 @@ export default function VehicleDetailScreen() {
                 ) : null}
               </View>
               {maintenanceItems.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
+                <View className="gap-1 rounded-3xl border border-dashed border-[#E4DCF5] bg-white p-4">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('maintenance.empty')}
                   </ThemedText>
@@ -296,7 +296,7 @@ export default function VehicleDetailScreen() {
                       </View>
                       <ThemedText
                         type="small"
-                        style={{ color: item.statut === 'effectuee' ? '#15803D' : item.statut === 'en_cours' ? '#0369A1' : '#81778F' }}
+                        style={{ color: item.statut === 'effectuee' ? '#15803D' : item.statut === 'en_cours' ? '#0369A1' : '#5E5575' }}
                       >
                         {item.statut === 'effectuee'
                           ? t('maintenance.done')

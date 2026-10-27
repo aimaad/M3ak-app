@@ -36,7 +36,7 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
   const { t } = useLanguage();
 
   return (
-    <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-3">
+    <View className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white p-3">
       <View className="flex-row items-center justify-between gap-2">
         <ThemedText type="smallBold" style={{ flex: 1 }}>
           {party.name}
@@ -56,7 +56,7 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
         party.documents.map((doc) => {
           const status = documentExpiryStatus({ expiresAt: doc.expiresAt });
           const color =
-            status === 'expired' ? M3akPalette.danger : status === 'expiring_soon' ? M3akPalette.warning : '#81778F';
+            status === 'expired' ? M3akPalette.danger : status === 'expiring_soon' ? M3akPalette.warning : '#5E5575';
           return (
             <ThemedText key={doc.id} type="small" style={{ color }}>
               {`${t(`customer.documentTypes.${doc.type}`)} · ${

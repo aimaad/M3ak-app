@@ -186,7 +186,7 @@ export default function DepartScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatDepart(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
                   >
                     <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`contract.condition.${condition}`)}
@@ -213,7 +213,7 @@ export default function DepartScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
                   >
                     <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`contract.accessory.${key}`)}

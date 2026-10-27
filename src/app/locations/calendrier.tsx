@@ -4,14 +4,18 @@ import { ActivityIndicator, FlatList, Pressable, ScrollView, View } from 'react-
 import { Calendar, type DateData } from 'react-native-calendars';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { M3akPalette, Shadows } from '@/constants/theme';
 import { useCustomers } from '@/features/customers/hooks';
 import type { Customer } from '@/features/customers/types';
 import { RENTAL_STATUS_FILTERS, type RentalStatusFilter } from '@/features/rentals/filters';
 import { useRentals } from '@/features/rentals/hooks';
-import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
+import { setCalendarLocale } from '@/features/rentals/calendar-locale';
+import { CALENDAR_THEME } from '@/features/rentals/calendar-theme';
+import { RENTAL_STATUS_STYLES, RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import type { Rental } from '@/features/rentals/types';
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
@@ -37,7 +41,8 @@ function formatDay(iso: string): string {
 }
 
 export default function CalendrierScreen() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  setCalendarLocale(language);
   const rentalsQuery = useRentals();
   const vehiclesQuery = useVehicles();
   const customersQuery = useCustomers();
@@ -80,14 +85,25 @@ export default function CalendrierScreen() {
 
   const markedDates = useMemo(() => {
     const marks: Record<string, object> = {};
-    for (const day of daysWithBookings.keys()) {
-      marks[day] = { marked: true, dotColor: '#7C3AED', selected: day === selectedDay, selectedColor: '#EDE9FE' };
+    for (const [day, rentals] of daysWithBookings.entries()) {
+      // Un point par statut présent ce jour-là (3 au plus), de la couleur du statut.
+      const statuses = [...new Set(rentals.map((rental) => rental.statut))].slice(0, 3);
+      marks[day] = {
+        dots: statuses.map((status) => ({ key: status, color: RENTAL_STATUS_STYLES[status].dot })),
+        selected: day === selectedDay,
+        selectedColor: M3akPalette.mauve,
+      };
     }
     if (selectedDay && !marks[selectedDay]) {
-      marks[selectedDay] = { selected: true, selectedColor: '#EDE9FE' };
+      marks[selectedDay] = { selected: true, selectedColor: M3akPalette.mauve };
     }
     return marks;
   }, [daysWithBookings, selectedDay]);
+
+  const legendStatuses = useMemo(
+    () => RENTAL_STATUS_FILTERS.filter((status): status is Exclude<RentalStatusFilter, 'tous' | 'reservee'> => status !== 'tous' && status !== 'reservee'),
+    []
+  );
 
   const visibleRentals = useMemo(() => {
     const list = selectedDay ? (daysWithBookings.get(selectedDay) ?? []) : filteredRentals;
@@ -118,10 +134,10 @@ export default function CalendrierScreen() {
                 key={status}
                 onPress={() => setStatusFilter(status)}
                 className={`rounded-full border px-4 py-2 ${
-                  statusFilter === status ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
+                  statusFilter === status ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#211A2E' }}>
+                <ThemedText type="small" style={{ color: statusFilter === status ? '#FFFFFF' : M3akPalette.ink }}>
                   {t(`locations.status.${status}`)}
                 </ThemedText>
               </Pressable>
@@ -131,10 +147,10 @@ export default function CalendrierScreen() {
             <Pressable
               onPress={() => setVehicleFilter('tous')}
               className={`rounded-full border px-4 py-2 ${
-                vehicleFilter === 'tous' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                vehicleFilter === 'tous' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
               }`}
             >
-              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#ffffff' : '#211A2E' }}>
+              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#FFFFFF' : M3akPalette.ink }}>
                 {t('locations.calendar.allVehicles')}
               </ThemedText>
             </Pressable>
@@ -143,10 +159,10 @@ export default function CalendrierScreen() {
                 key={v.id}
                 onPress={() => setVehicleFilter(v.id)}
                 className={`rounded-full border px-4 py-2 ${
-                  vehicleFilter === v.id ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                  vehicleFilter === v.id ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#ffffff' : '#211A2E' }}>
+                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#FFFFFF' : M3akPalette.ink }}>
                   {v.immatriculation}
                 </ThemedText>
               </Pressable>
@@ -160,16 +176,31 @@ export default function CalendrierScreen() {
           </View>
         ) : (
           <View className="flex-1">
-            <Calendar
-              markedDates={markedDates}
-              onDayPress={(day: DateData) => setSelectedDay((prev) => (prev === day.dateString ? null : day.dateString))}
-              theme={{ todayTextColor: '#7C3AED', arrowColor: '#7C3AED', dotColor: '#7C3AED' }}
-              style={{ borderBottomWidth: 1, borderBottomColor: '#EAE5F2' }}
-            />
+            <Card padded={false} className="mx-6 overflow-hidden pb-2">
+              <Calendar
+                key={language}
+                firstDay={1}
+                markingType="multi-dot"
+                markedDates={markedDates}
+                onDayPress={(day: DateData) => setSelectedDay((prev) => (prev === day.dateString ? null : day.dateString))}
+                enableSwipeMonths
+                theme={CALENDAR_THEME}
+              />
+              <View className="flex-row flex-wrap gap-x-4 gap-y-2 px-4 pt-3">
+                {legendStatuses.map((status) => (
+                  <View key={status} className="flex-row items-center gap-1.5">
+                    <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: RENTAL_STATUS_STYLES[status].dot }} />
+                    <ThemedText type="small" style={{ color: M3akPalette.muted, fontSize: 12 }}>
+                      {t(`locations.status.${status}`)}
+                    </ThemedText>
+                  </View>
+                ))}
+              </View>
+            </Card>
 
             {selectedDay ? (
-              <Pressable onPress={() => setSelectedDay(null)} className="px-6 py-2">
-                <ThemedText type="small" themeColor="primary">
+              <Pressable onPress={() => setSelectedDay(null)} className="min-h-11 justify-center px-6">
+                <ThemedText type="smallBold" themeColor="primary">
                   {`${formatDay(selectedDay)} · ${t('locations.calendar.viewList')}`}
                 </ThemedText>
               </Pressable>
@@ -178,7 +209,7 @@ export default function CalendrierScreen() {
             <FlatList
               data={visibleRentals}
               keyExtractor={(item) => item.id}
-              contentContainerClassName="gap-3 px-6 pb-10 pt-3"
+              contentContainerClassName="gap-3 px-6 pb-10 pt-4"
               renderItem={({ item }) => {
                 const vehicle = vehiclesById.get(item.vehicleId);
                 const customer = customersById.get(item.customerId);
@@ -188,15 +219,21 @@ export default function CalendrierScreen() {
                 return (
                   <Pressable
                     onPress={() => router.push(`/locations/${item.id}`)}
-                    className="gap-1 rounded-2xl border border-[#EAE5F2] bg-white p-3"
+                    className="flex-row overflow-hidden rounded-2xl border border-[#E4DCF5] bg-white"
+                    style={Shadows.card}
                   >
-                    <View className="flex-row items-center justify-between">
-                      <ThemedText type="smallBold">{label}</ThemedText>
-                      <RentalStatusBadge status={item.statut} />
+                    <View style={{ width: 5, backgroundColor: RENTAL_STATUS_STYLES[item.statut].dot }} />
+                    <View className="flex-1 gap-2 p-4">
+                      <View className="flex-row items-start justify-between gap-2">
+                        <ThemedText type="smallBold" className="flex-1">
+                          {label}
+                        </ThemedText>
+                        <RentalStatusBadge status={item.statut} />
+                      </View>
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {item.numero} · {formatDay(item.dateDebutPrevue)} → {formatDay(item.dateFinPrevue)}
+                      </ThemedText>
                     </View>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {item.numero} · {formatDay(item.dateDebutPrevue)} → {formatDay(item.dateFinPrevue)}
-                    </ThemedText>
                   </Pressable>
                 );
               }}

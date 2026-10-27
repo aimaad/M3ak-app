@@ -27,7 +27,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -192,7 +192,7 @@ export default function ClientDetailScreen() {
             <View className="gap-2">
               <ThemedText type="smallBold">{t('customer.historySection')}</ThemedText>
               {rentals.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-[#EAE5F2] bg-white p-4">
+                <View className="gap-1 rounded-3xl border border-dashed border-[#E4DCF5] bg-white p-4">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('customer.historyPlaceholder')}
                   </ThemedText>

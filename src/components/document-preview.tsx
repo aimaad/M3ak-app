@@ -20,7 +20,7 @@ export function DocumentPreview({ label, bucket, path, emptyLabel }: DocumentPre
         {label}
       </ThemedText>
       {!path ? (
-        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white">
+        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#E4DCF5] bg-white">
           <ThemedText type="small" themeColor="textSecondary">
             {emptyLabel}
           </ThemedText>

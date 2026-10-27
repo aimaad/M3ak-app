@@ -8,7 +8,7 @@ const STATUS_STYLES: Record<VehicleStatus, StatusStyle> = {
   maintenance: { background: '#FEE2E2', text: '#DC2626', dot: '#DC2626' },
   a_inspecter: { background: '#211A2E', text: '#FFFFFF', dot: '#C4B5FD' },
   en_preparation: { background: '#FEF3C7', text: '#B45309', dot: '#B45309' },
-  indisponible: { background: '#F1EEF7', text: '#81778F', dot: '#81778F' },
+  indisponible: { background: '#F1EEF7', text: '#5E5575', dot: '#5E5575' },
 };
 
 export function statusStyle(status: VehicleStatus): StatusStyle {

@@ -30,7 +30,7 @@ function formatDateTime(iso: string): string {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>

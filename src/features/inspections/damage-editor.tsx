@@ -43,7 +43,7 @@ export function DamageEditor({ initial, canChooseNew, saving, error, saveLabel, 
   const costInvalid = draft.cost.trim() !== '' && parseCost(draft.cost) === null;
 
   return (
-    <View className="gap-3 border-t border-[#EAE5F2] pt-3">
+    <View className="gap-3 border-t border-[#E4DCF5] pt-3">
       <View className="gap-1.5">
         <ThemedText type="small" themeColor="textSecondary">
           {t('inspection.analysis.damages.zone')}

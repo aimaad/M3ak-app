@@ -369,7 +369,7 @@ export function CustomerForm({
       </CollapsibleSection>
 
       {mode === 'create' ? (
-        <View className="rounded-2xl border border-dashed border-[#EAE5F2] bg-white p-4">
+        <View className="rounded-2xl border border-dashed border-[#E4DCF5] bg-white p-4">
           <ThemedText type="small" themeColor="textSecondary">
             {t('customer.afterCreateHint')}
           </ThemedText>

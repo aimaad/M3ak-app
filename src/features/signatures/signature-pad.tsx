@@ -66,7 +66,7 @@ export function SignaturePad({ height, clearLabel, placeholder, onChange, onDraw
           setMeasuredHeight(Math.round(event.nativeEvent.layout.height));
         }}
         style={height ? { height } : { flex: 1, minHeight: 160 }}
-        className="overflow-hidden rounded-2xl border-2 border-dashed border-[#B3A6C2] bg-white"
+        className="overflow-hidden rounded-2xl border-2 border-dashed border-[#8A82A0] bg-white"
       >
         <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
           <Svg width="100%" height="100%">
@@ -83,7 +83,7 @@ export function SignaturePad({ height, clearLabel, placeholder, onChange, onDraw
           </View>
         ) : null}
       </View>
-      <Pressable onPress={() => setStrokes([])} disabled={strokes.length === 0} className="self-end rounded-full border border-[#EAE5F2] bg-white px-4 py-2">
+      <Pressable onPress={() => setStrokes([])} disabled={strokes.length === 0} className="self-end rounded-full border border-[#E4DCF5] bg-white px-4 py-2">
         <ThemedText type="small" style={{ color: strokes.length === 0 ? M3akPalette.mauve : '#211A2E', opacity: strokes.length === 0 ? 0.4 : 1 }}>
           {clearLabel}
         </ThemedText>

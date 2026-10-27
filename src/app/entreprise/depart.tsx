@@ -44,8 +44,8 @@ function Toggle({ label, hint, value, onChange }: { label: string; hint: string;
           {hint}
         </ThemedText>
       </View>
-      <View className={`rounded-full px-3 py-1 ${value ? 'bg-[#7C3AED]' : 'bg-[#EAE5F2]'}`}>
-        <ThemedText type="small" style={{ color: value ? '#ffffff' : '#81778F' }}>
+      <View className={`rounded-full px-3 py-1 ${value ? 'bg-[#7C3AED]' : 'bg-[#E4DCF5]'}`}>
+        <ThemedText type="small" style={{ color: value ? '#ffffff' : '#5E5575' }}>
           {value ? t('common.yes') : t('common.no')}
         </ThemedText>
       </View>

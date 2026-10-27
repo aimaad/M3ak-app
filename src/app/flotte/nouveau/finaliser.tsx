@@ -354,7 +354,7 @@ export default function FinaliserVehiculeScreen() {
                 <Pressable
                   onPress={() => setBranchId(null)}
                   className={`rounded-full border px-4 py-2 ${
-                    branchId === null ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                    branchId === null ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
                   }`}
                 >
                   <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : '#211A2E' }}>
@@ -366,7 +366,7 @@ export default function FinaliserVehiculeScreen() {
                     key={branch.id}
                     onPress={() => setBranchId(branch.id)}
                     className={`rounded-full border px-4 py-2 ${
-                      branchId === branch.id ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                      branchId === branch.id ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
                     }`}
                   >
                     <ThemedText type="small" style={{ color: branchId === branch.id ? '#ffffff' : '#211A2E' }}>
@@ -383,7 +383,7 @@ export default function FinaliserVehiculeScreen() {
               {t('vehicle.fields.statut')}
             </ThemedText>
             {statusLocked ? (
-              <View className="rounded-2xl border border-dashed border-[#EAE5F2] bg-white px-4 py-3">
+              <View className="rounded-2xl border border-dashed border-[#E4DCF5] bg-white px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
                 </ThemedText>

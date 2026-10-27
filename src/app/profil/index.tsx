@@ -139,13 +139,13 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
         <View className="flex-row gap-2">
           <Pressable
             onPress={() => handlePickAvatar('camera')}
-            className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2"
+            className="rounded-full border border-[#E4DCF5] bg-white px-4 py-2"
           >
             <ThemedText type="small">{t('common.camera')}</ThemedText>
           </Pressable>
           <Pressable
             onPress={() => handlePickAvatar('library')}
-            className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2"
+            className="rounded-full border border-[#E4DCF5] bg-white px-4 py-2"
           >
             <ThemedText type="small">{t('common.gallery')}</ThemedText>
           </Pressable>
@@ -154,14 +154,14 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
       </View>
 
       <Card padded={false} className="px-4">
-        <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+        <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
           <ThemedText type="default" themeColor="textSecondary">
             {t('profil.fields.type')}
           </ThemedText>
           <ThemedText type="smallBold">{t(`equipe.roles.${profile.role}`)}</ThemedText>
         </View>
         {profile.branchNom ? (
-          <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+          <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
             <ThemedText type="default" themeColor="textSecondary">
               {t('profil.fields.branch')}
             </ThemedText>

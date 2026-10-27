@@ -43,7 +43,7 @@ export function PickerField<T>({
 
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
-        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#DC2626]' : 'border-[#EAE5F2]'} bg-white`}
+        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#DC2626]' : 'border-[#E4DCF5]'} bg-white`}
       >
         <ThemedText type="default" themeColor={selectedItem ? undefined : 'textSecondary'}>
           {selectedItem ? getLabel(selectedItem) : placeholder}
@@ -56,7 +56,7 @@ export function PickerField<T>({
       ) : null}
 
       {expanded ? (
-        <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-3">
+        <View className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white p-3">
           <TextField placeholder={searchPlaceholder} value={query} onChangeText={setQuery} />
           <ScrollView className="max-h-52" keyboardShouldPersistTaps="handled">
             {filtered.map((item) => {

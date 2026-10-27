@@ -8,10 +8,9 @@ import {
   useFonts,
 } from '@expo-google-fonts/cairo';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
+import { DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 import type { ReactNode } from 'react';
 
 import { SessionProvider, useSession } from '@/features/auth/session-context';
@@ -43,7 +42,6 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Cairo_400Regular,
     Cairo_500Medium,
@@ -64,7 +62,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={DefaultTheme}>
           <AuthGate>
             <Stack screenOptions={{ headerShown: false }} />
             <NotificationsBootstrap />

@@ -78,14 +78,14 @@ export function DriverList({
       {driversQuery.isLoading ? (
         <ActivityIndicator color="#7C3AED" />
       ) : (driversQuery.data ?? []).length === 0 ? (
-        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white">
+        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-[#E4DCF5] bg-white">
           <ThemedText type="small" themeColor="textSecondary">
             {t('customer.noDrivers')}
           </ThemedText>
         </View>
       ) : (
         (driversQuery.data ?? []).map((driver) => (
-          <View key={driver.id} className="gap-3 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+          <View key={driver.id} className="gap-3 rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3">
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <ThemedText type="smallBold">{driver.nomComplet}</ThemedText>
@@ -124,7 +124,7 @@ export function DriverList({
       )}
 
       {showForm ? (
-        <View className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white p-4">
+        <View className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white p-4">
           <TextField
             label={t('customer.fields.prenom')}
             value={values.prenom}
@@ -168,7 +168,7 @@ export function DriverList({
       ) : (
         <Pressable
           onPress={() => setShowForm(true)}
-          className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+          className="items-center rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3"
         >
           <ThemedText type="small" themeColor="primary">
             {`+ ${t('customer.addDriver')}`}

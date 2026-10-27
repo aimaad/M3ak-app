@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ActivityIndicator, Pressable, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { M3akPalette, Shadows } from '@/constants/theme';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'md' | 'sm';
@@ -17,10 +17,10 @@ type ButtonProps = Omit<PressableProps, 'children' | 'style' | 'className'> & {
 };
 
 const VARIANT_STYLES: Record<ButtonVariant, { bg: string; bgDisabled: string; text: string; border?: string }> = {
-  primary: { bg: M3akPalette.mauve, bgDisabled: '#C9B8F5', text: '#FFFFFF' },
-  secondary: { bg: '#FFFFFF', bgDisabled: '#FFFFFF', text: M3akPalette.mauve, border: '#EAE5F2' },
+  primary: { bg: M3akPalette.mauve, bgDisabled: '#BFA9F5', text: '#FFFFFF' },
+  secondary: { bg: M3akPalette.mauveSoft, bgDisabled: M3akPalette.mauveSoft, text: M3akPalette.mauveDeep, border: '#E4DCF5' },
   ghost: { bg: 'transparent', bgDisabled: 'transparent', text: M3akPalette.mauve },
-  danger: { bg: '#FFFFFF', bgDisabled: '#FFFFFF', text: M3akPalette.danger, border: '#EAE5F2' },
+  danger: { bg: M3akPalette.dangerLight, bgDisabled: M3akPalette.dangerLight, text: '#B91C1C', border: '#FECACA' },
 };
 
 export function Button({ label, variant = 'primary', size = 'md', loading, icon, disabled, style, ...rest }: ButtonProps) {
@@ -30,16 +30,16 @@ export function Button({ label, variant = 'primary', size = 'md', loading, icon,
   return (
     <Pressable
       disabled={isDisabled}
-      className={`flex-row items-center justify-center gap-2 rounded-2xl ${size === 'sm' ? 'px-4 py-2.5' : 'px-4 py-4'} ${
-        palette.border ? 'border' : ''
-      }`}
-      style={({ pressed }) => [
+      className={`flex-row items-center justify-center gap-2 rounded-2xl active:opacity-90 ${size === 'sm' ? 'px-4 py-2.5' : 'px-4 py-4'}`}
+      style={[
         {
           backgroundColor: isDisabled ? palette.bgDisabled : palette.bg,
-          borderColor: palette.border,
-          opacity: isDisabled && variant !== 'primary' ? 0.5 : pressed ? 0.85 : 1,
-          transform: [{ scale: pressed && !isDisabled ? 0.98 : 1 }],
+          borderColor: palette.border ?? 'transparent',
+          borderWidth: palette.border ? 1 : 0,
+          opacity: isDisabled && variant !== 'primary' ? 0.5 : 1,
+          minHeight: 44,
         },
+        variant === 'primary' && !isDisabled ? Shadows.button : null,
         style,
       ]}
       {...rest}

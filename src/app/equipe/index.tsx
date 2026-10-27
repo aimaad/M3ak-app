@@ -212,7 +212,7 @@ export default function EquipeScreen() {
                       ? (branches.find((b) => b.id === invite.branchId)?.nom ?? null)
                       : null;
                     return (
-                      <View key={invite.id} className="gap-2 rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+                      <View key={invite.id} className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3">
                         <View className="flex-row items-start justify-between gap-3">
                           <View className="flex-1">
                             <ThemedText type="smallBold">{inviteName(invite)}</ThemedText>

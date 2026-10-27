@@ -120,7 +120,7 @@ export default function JournalScreen() {
           </ThemedText>
         ) : null}
         {filters.granularity !== 'all' && filters.granularity !== 'custom' ? (
-          <View className="flex-row items-center justify-between rounded-2xl border border-[#EAE5F2] bg-white px-2 py-1">
+          <View className="flex-row items-center justify-between rounded-2xl border border-[#E4DCF5] bg-white px-2 py-1">
             <Button
               label={isRtl ? '›' : '‹'}
               variant="ghost"

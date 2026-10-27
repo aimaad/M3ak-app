@@ -85,7 +85,7 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
             </ThemedText>
           </View>
         ) : (
-          <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: '#EAE5F2' }}>
+          <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: '#E4DCF5' }}>
             {/* Aperçu dessiné par le même moteur que le PDF du contrat : ce qu'on voit ici est exactement ce qui s'imprime. */}
             <WebView
               originWhitelist={['*']}
@@ -125,7 +125,7 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
               disabled={!draft || (!dirty && !hasPhoto) || saveConfig.isPending}
             />
 
-            <View className="gap-2 border-t border-[#EAE5F2] pt-3">
+            <View className="gap-2 border-t border-[#E4DCF5] pt-3">
               <ThemedText type="small" themeColor="textSecondary">{t('entreprise.stamp.photoHelp')}</ThemedText>
               <View className="flex-row flex-wrap gap-2">
                 <Button label={t('common.camera')} variant="secondary" size="sm" disabled={uploadStamp.isPending} onPress={() => pickPhoto('camera')} />

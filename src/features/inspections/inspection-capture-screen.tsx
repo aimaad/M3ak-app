@@ -260,7 +260,7 @@ export function InspectionCaptureScreen({
                       ? 'border-[#7C3AED] bg-[#7C3AED]'
                       : done
                         ? 'border-[#15803D] bg-[#DCFCE7]'
-                        : 'border-[#EAE5F2] bg-white'
+                        : 'border-[#E4DCF5] bg-white'
                   }`}
                 >
                   <ThemedText

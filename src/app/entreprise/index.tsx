@@ -42,7 +42,7 @@ function valuesFromDetails(details: AgencyDetails): AgencyDetailsFormValues {
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+    <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
       <ThemedText type="default" themeColor="textSecondary">
         {label}
       </ThemedText>
@@ -126,7 +126,7 @@ function DocumentReadingSettings({ agencyId, isOwner }: { agencyId: string; isOw
   }
 
   return (
-    <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <View className="gap-2 rounded-3xl border border-[#E4DCF5] bg-white p-4">
       <ThemedText type="smallBold">{t('ocr.settingsTitle')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {!settings.cloudAvailable
@@ -177,7 +177,7 @@ function AiInsightsSettings({ agencyId, isOwner }: { agencyId: string; isOwner: 
   }
 
   return (
-    <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <View className="gap-2 rounded-3xl border border-[#E4DCF5] bg-white p-4">
       <ThemedText type="smallBold">{t('ocr.insights.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {!settings.cloudAvailable ? t('ocr.insights.unavailable') : settings.insightsEnabled ? t('ocr.insights.on') : t('ocr.insights.off')}
@@ -224,7 +224,7 @@ function AiChatSettings({ agencyId, isOwner }: { agencyId: string; isOwner: bool
   }
 
   return (
-    <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <View className="gap-2 rounded-3xl border border-[#E4DCF5] bg-white p-4">
       <ThemedText type="smallBold">{t('ocr.chat.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {!settings.cloudAvailable ? t('ocr.chat.unavailable') : settings.chatEnabled ? t('ocr.chat.on') : t('ocr.chat.off')}
@@ -357,7 +357,7 @@ function EntrepriseForm({
           />
         </>
       ) : (
-        <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+        <View className="rounded-3xl border border-[#E4DCF5] bg-white px-4">
           <InfoRow label={t('entreprise.fields.nom')} value={values.nom || '—'} />
           <InfoRow label={t('entreprise.fields.raisonSociale')} value={values.raisonSociale || '—'} />
           <InfoRow label={t('entreprise.fields.email')} value={values.email || '—'} />

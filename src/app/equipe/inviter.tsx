@@ -24,7 +24,7 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
     <Pressable
       onPress={onPress}
       className={`rounded-full border px-4 py-2 ${
-        selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+        selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
       }`}
     >
       <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>

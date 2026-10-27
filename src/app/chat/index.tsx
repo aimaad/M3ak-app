@@ -9,6 +9,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
+import { ChatAvatar } from '@/features/chat/chat-bubble';
 import { useConversations, useDeleteConversation } from '@/features/chat/hooks';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -55,7 +56,8 @@ export default function ChatListScreen() {
             ListHeaderComponent={<Button label={t('chat.newConversation')} icon="sparkles-outline" onPress={() => router.push('/chat/nouveau')} style={{ marginBottom: 8 }} />}
             renderItem={({ item }) => (
               <PressableCard onPress={() => router.push({ pathname: '/chat/[id]', params: { id: item.id } })} className="flex-row items-center gap-3">
-                <View className="flex-1 gap-1">
+                <ChatAvatar size={40} />
+                <View className="flex-1 gap-0.5">
                   <ThemedText type="smallBold" numberOfLines={2}>
                     {item.title || t('chat.untitled')}
                   </ThemedText>
@@ -63,15 +65,29 @@ export default function ChatListScreen() {
                     {formatDate(item.updatedAt)}
                   </ThemedText>
                 </View>
-                <Pressable onPress={() => confirmDelete(item.id)} hitSlop={10} accessibilityLabel={t('chat.delete')}>
-                  <Ionicons name="trash-outline" size={20} color="#DC2626" />
+                <Pressable
+                  onPress={() => confirmDelete(item.id)}
+                  hitSlop={10}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('chat.delete')}
+                  className="h-11 w-11 items-center justify-center rounded-full bg-[#FEE2E2]"
+                >
+                  <Ionicons name="trash-outline" size={18} color="#B91C1C" />
                 </Pressable>
               </PressableCard>
             )}
             ListEmptyComponent={
-              <ThemedText type="default" themeColor="textSecondary" className="pt-8 text-center">
-                {conversations.isLoading ? '' : t('chat.noConversations')}
-              </ThemedText>
+              conversations.isLoading ? undefined : (
+                <View className="items-center gap-3 px-6 pt-10">
+                  <ChatAvatar size={64} />
+                  <ThemedText type="smallBold" style={{ fontSize: 18, textAlign: 'center' }}>
+                    {t('chat.welcomeTitle')}
+                  </ThemedText>
+                  <ThemedText type="default" themeColor="textSecondary" style={{ textAlign: 'center' }}>
+                    {t('chat.noConversations')}
+                  </ThemedText>
+                </View>
+              )
             }
           />
         )}

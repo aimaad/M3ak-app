@@ -9,7 +9,7 @@ type LogoProps = {
 
 export function Logo({ variant = 'mauve', size = 'md' }: LogoProps) {
   const mainColor = variant === 'white' ? '#FFFFFF' : M3akPalette.mauve;
-  const labelColor = variant === 'white' ? 'rgba(255,255,255,0.72)' : '#81778F';
+  const labelColor = variant === 'white' ? 'rgba(255,255,255,0.72)' : '#5E5575';
   const mainSize = size === 'lg' ? 40 : 24;
   const labelSize = size === 'lg' ? 13 : 10;
 

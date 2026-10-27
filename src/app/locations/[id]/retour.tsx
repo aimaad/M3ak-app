@@ -151,7 +151,7 @@ export default function RetourScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatRetour(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
                   >
                     <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
                       {t(`contract.condition.${condition}`)}
@@ -178,7 +178,7 @@ export default function RetourScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#DC2626] bg-[#FEE2E2]' : 'border-[#EAE5F2] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#DC2626] bg-[#FEE2E2]' : 'border-[#E4DCF5] bg-white'}`}
                   >
                     <ThemedText type="small" style={{ color: selected ? '#DC2626' : '#211A2E' }}>
                       {t(`contract.accessory.${key}`)}
@@ -219,7 +219,7 @@ export default function RetourScreen() {
                 onChangeText={setJustification}
               />
               <Pressable onPress={() => setAppliquerFrais((prev) => !prev)} className="flex-row items-center gap-2">
-                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#B3A6C2] bg-white'}`}>
+                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#8A82A0] bg-white'}`}>
                   {appliquerFrais ? <ThemedText type="small" style={{ color: '#ffffff' }}>✓</ThemedText> : null}
                 </View>
                 <ThemedText type="small">{t('contract.applyFeesLabel', { amount: totalFrais })}</ThemedText>

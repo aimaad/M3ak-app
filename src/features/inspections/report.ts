@@ -98,12 +98,12 @@ export function buildReportHtml(data: ReportData): string {
 
   return `<!doctype html><html dir="${rtl ? 'rtl' : 'ltr'}"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width"/><style>
   body{font-family:-apple-system,Helvetica,Arial,sans-serif;color:#211A2E;font-size:12px;margin:0;padding:28px}
-  h1{font-size:20px;margin:0 0 4px} h2{font-size:14px;margin:18px 0 6px;border-bottom:1px solid #EAE5F2;padding-bottom:4px}
+  h1{font-size:20px;margin:0 0 4px} h2{font-size:14px;margin:18px 0 6px;border-bottom:1px solid #E4DCF5;padding-bottom:4px}
   .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
   .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin:8px 0}
   .meta div span{color:#6B6280}
   .banner{border-radius:10px;padding:10px 12px;margin:10px 0;font-weight:bold;background:${counts.nouveaux > 0 ? '#FEE2E2' : '#DCFCE7'};color:${counts.nouveaux > 0 ? '#991B1B' : '#166534'}}
-  table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid #EAE5F2;padding:5px 6px;text-align:${rtl ? 'right' : 'left'};vertical-align:top}
+  table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid #E4DCF5;padding:5px 6px;text-align:${rtl ? 'right' : 'left'};vertical-align:top}
   th{background:#FAF9FF;font-size:11px} .num{text-align:${rtl ? 'left' : 'right'};white-space:nowrap} .desc{color:#6B6280;font-size:11px}
   .new{color:#B91C1C;font-weight:bold} .old{color:#B45309} .red{color:#B91C1C} .sum{width:60%;margin-${rtl ? 'right' : 'left'}:auto} .tot td{font-weight:bold;font-size:13px}
   .pair{page-break-inside:avoid;margin:8px 0} .cap{font-weight:bold;margin-bottom:3px} .imgs{display:flex;gap:8px} figure{margin:0;flex:1} img{width:100%;max-height:200px;object-fit:contain;background:#000;border-radius:6px} figcaption{font-size:10px;color:#6B6280;text-align:center}

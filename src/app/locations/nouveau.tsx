@@ -385,7 +385,7 @@ export default function NouvelleLocationScreen() {
           {stepKey === 'prix' ? (
             <>
               {priceBreakdown ? (
-                <View className="gap-1 rounded-2xl border border-[#EAE5F2] bg-white p-4">
+                <View className="gap-1 rounded-2xl border border-[#E4DCF5] bg-white p-4">
                   <View className="flex-row items-center justify-between">
                     <ThemedText type="small" themeColor="textSecondary">
                       {t('locations.priceBreakdown.duree', { count: priceBreakdown.dureeJours })}
@@ -398,7 +398,7 @@ export default function NouvelleLocationScreen() {
                     </ThemedText>
                     <ThemedText type="small">{`${priceBreakdown.sousTotal.toLocaleString('fr-FR')} MAD`}</ThemedText>
                   </View>
-                  <View className="mt-1 flex-row items-center justify-between border-t border-[#EAE5F2] pt-2">
+                  <View className="mt-1 flex-row items-center justify-between border-t border-[#E4DCF5] pt-2">
                     <ThemedText type="smallBold">{t('locations.priceBreakdown.total')}</ThemedText>
                     <ThemedText type="smallBold" themeColor="primary">{`${priceBreakdown.total.toLocaleString('fr-FR')} MAD`}</ThemedText>
                   </View>
@@ -414,7 +414,7 @@ export default function NouvelleLocationScreen() {
 
           {stepKey === 'recap' ? (
             <>
-              <View className="rounded-2xl border border-[#EAE5F2] bg-white px-4">
+              <View className="rounded-2xl border border-[#E4DCF5] bg-white px-4">
                 {(
                   [
                     [t('locations.customer'), customer?.nomComplet ?? '—'],
@@ -428,7 +428,7 @@ export default function NouvelleLocationScreen() {
                     ...(notes.trim() ? [[t('locations.notes'), notes.trim()]] : []),
                   ] as [string, string][]
                 ).map(([label, value]) => (
-                  <View key={label} className="border-b border-[#EAE5F2] py-3 last:border-b-0">
+                  <View key={label} className="border-b border-[#E4DCF5] py-3 last:border-b-0">
                     <ThemedText type="small" themeColor="textSecondary">
                       {label}
                     </ThemedText>
@@ -454,7 +454,7 @@ export default function NouvelleLocationScreen() {
           ) : null}
         </ScrollView>
 
-        <View className="gap-2 border-t border-[#EAE5F2] bg-white px-6 py-3">
+        <View className="gap-2 border-t border-[#E4DCF5] bg-white px-6 py-3">
           {isLast ? (
             <>
               <Button label={t('locations.form.saveAsConfirmed')} onPress={() => submitFromRecap('confirmee')} disabled={busy} loading={submittingAs === 'confirmee'} />

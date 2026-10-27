@@ -52,7 +52,7 @@ function OptionCard({
           {subtitle}
         </ThemedText>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#B3A6C2" />
+      <Ionicons name="chevron-forward" size={18} color="#8A82A0" />
     </PressableCard>
   );
 }

@@ -16,7 +16,7 @@ export function CollapsibleSection({ title, badge, defaultOpen = false, children
   const [open, setOpen] = useState(defaultOpen);
 
   return (
-    <View className="gap-3 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <View className="gap-3 rounded-3xl border border-[#E4DCF5] bg-white p-4">
       <Pressable onPress={() => setOpen((prev) => !prev)} className="flex-row items-center justify-between" hitSlop={6}>
         <View className="flex-1 flex-row items-center gap-2">
           <ThemedText type="smallBold">{title}</ThemedText>

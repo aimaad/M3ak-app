@@ -2295,6 +2295,9 @@
       "unavailable": "Le Chat M3ak n'est pas disponible pour le moment (vérifiez votre connexion).",
       "failed": "Impossible de répondre pour le moment. Réessayez.",
       "quota": "Le quota de la clé IA de votre entreprise est atteint. Contactez M3AK : la clé doit passer sur une offre avec facturation, ou attendre la réinitialisation du quota."
-    }
+    },
+    "online": "Répond à partir de vos données",
+    "welcomeTitle": "Bonjour, je suis M3ak",
+    "tryAsking": "Essayez par exemple"
   }
 }

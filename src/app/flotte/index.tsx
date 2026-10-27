@@ -39,7 +39,7 @@ function KpiTile({ label, value, onPress }: { label: string; value: number; onPr
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      className="min-w-[130px] gap-1 rounded-3xl border border-[#EAE5F2] bg-white px-4 py-3"
+      className="min-w-[130px] gap-1 rounded-3xl border border-[#E4DCF5] bg-white px-4 py-3"
     >
       <ThemedText type="title" themeColor="primary">
         {value}
@@ -151,7 +151,7 @@ export default function FlotteScreen() {
                 <Pressable
                   onPress={() => setFilters((prev) => ({ ...prev, marque: 'toutes' }))}
                   className={`rounded-full border px-4 py-2 ${
-                    filters.marque === 'toutes' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
+                    filters.marque === 'toutes' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'
                   }`}
                 >
                   <ThemedText type="small" style={{ color: filters.marque === 'toutes' ? '#ffffff' : '#211A2E' }}>
@@ -163,7 +163,7 @@ export default function FlotteScreen() {
                     key={marque}
                     onPress={() => setFilters((prev) => ({ ...prev, marque }))}
                     className={`rounded-full border px-4 py-2 ${
-                      filters.marque === marque ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
+                      filters.marque === marque ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'
                     }`}
                   >
                     <ThemedText type="small" style={{ color: filters.marque === marque ? '#ffffff' : '#211A2E' }}>
@@ -184,7 +184,7 @@ export default function FlotteScreen() {
                     key={option}
                     onPress={() => setSort(option)}
                     className={`rounded-full border px-4 py-2 ${
-                      sort === option ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                      sort === option ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
                     }`}
                   >
                     <ThemedText type="small" style={{ color: sort === option ? '#ffffff' : '#211A2E' }}>

@@ -26,7 +26,7 @@ export function MonthChart({ points, locale }: { points: MonthlyPoint[]; locale:
                 className="w-full rounded-t-md"
                 style={{
                   height: barHeight,
-                  backgroundColor: point.total > 0 ? (isCurrent ? M3akPalette.mauveDeep : M3akPalette.mauve) : '#EAE5F2',
+                  backgroundColor: point.total > 0 ? (isCurrent ? M3akPalette.mauveDeep : M3akPalette.mauve) : '#E4DCF5',
                 }}
               />
             </View>

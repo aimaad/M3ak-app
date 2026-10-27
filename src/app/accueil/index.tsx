@@ -10,7 +10,7 @@ import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { M3akPalette, Shadows } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
@@ -138,11 +138,12 @@ export default function AccueilScreen() {
           >
             <Pressable
               onPress={() => router.push('/chat')}
-              className="flex-row items-center gap-3 rounded-2xl border border-[#EAE5F2] bg-white p-4"
+              className="flex-row items-center gap-3 rounded-3xl border border-[#E4DCF5] bg-white p-4"
+              style={Shadows.card}
               accessibilityRole="button"
             >
-              <View className="h-11 w-11 items-center justify-center rounded-full" style={{ backgroundColor: '#F3EEFF' }}>
-                <Ionicons name="chatbubbles" size={22} color={M3akPalette.mauve} />
+              <View className="h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: M3akPalette.mauve, ...Shadows.button, shadowOpacity: 0.25 }}>
+                <Ionicons name="sparkles" size={22} color="#FFFFFF" />
               </View>
               <View className="flex-1 gap-0.5">
                 <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>

@@ -52,7 +52,7 @@ export default function ContratsScreen() {
         <View className="flex-row flex-wrap gap-2 px-6 pb-4">
           <Pressable
             onPress={() => setStatusFilter('tous')}
-            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'}`}
+            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'}`}
           >
             <ThemedText type="small" style={{ color: statusFilter === 'tous' ? '#ffffff' : '#211A2E' }}>
               {t('flotte.status.tous')}
@@ -62,7 +62,7 @@ export default function ContratsScreen() {
             <Pressable
               key={status}
               onPress={() => setStatusFilter(status)}
-              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'}`}
+              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'}`}
             >
               <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#211A2E' }}>
                 {t(`contract.status.${status}`)}

@@ -43,8 +43,8 @@ type Props = {
 const STATUS_COLOR = {
   expired: M3akPalette.danger,
   expiring_soon: M3akPalette.warning,
-  ok: '#81778F',
-  no_date: '#81778F',
+  ok: '#5E5575',
+  no_date: '#5E5575',
 } as const;
 
 function formatDate(iso: string): string {
@@ -197,7 +197,7 @@ function DocumentCard({
       </ThemedText>
 
       {editing ? (
-        <View className="gap-3 border-t border-[#EAE5F2] pt-3">
+        <View className="gap-3 border-t border-[#E4DCF5] pt-3">
           <DocumentForm
             values={values}
             onChange={setValues}
@@ -304,7 +304,7 @@ export function CustomerDocumentsSection({ agencyId, owner, canDelete, title }: 
           {t('customer.documentsManager.loadError')}
         </ThemedText>
       ) : documents.length === 0 ? (
-        <View className="items-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white px-4 py-5">
+        <View className="items-center rounded-2xl border border-dashed border-[#E4DCF5] bg-white px-4 py-5">
           <ThemedText type="small" themeColor="textSecondary" className="text-center">
             {t('customer.documentsManager.empty')}
           </ThemedText>

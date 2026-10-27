@@ -43,7 +43,7 @@ function hasOnlyEmptyFields(line: string, values: TemplateValues): boolean {
 }
 
 const SIZE_PX = { xs: 9, sm: 11, md: 12, lg: 15, xl: 20 } as const;
-const COLOR = { default: '#211A2E', muted: '#81778F', accent: '#5B21B6' } as const;
+const COLOR = { default: '#211A2E', muted: '#5E5575', accent: '#5B21B6' } as const;
 
 function html(text: string, values: TemplateValues): string {
   return escapeHtml(fillPlaceholders(text, values)).replace(/\n/g, '<br />');
@@ -224,15 +224,15 @@ const CSS = `
   .gauge svg { width: 120px; height: 64px; }
   .gauge-title { font-size: 9.5px; font-weight: bold; }
   .heading { margin: 8px 0 4px; padding-bottom: 2px; }
-  .underlined { border-bottom: 1px solid #EAE5F2; }
+  .underlined { border-bottom: 1px solid #E4DCF5; }
   .boxed { border: 1px solid #211A2E; padding: 4px 6px; }
   .para { margin: 4px 0; }
   .list { margin: 4px 0; padding-inline-start: 18px; }
   table { width: 100%; border-collapse: collapse; margin-top: 3px; }
   td { padding: 2px 0; vertical-align: top; }
-  .fields td.label { color: #81778F; width: 24%; padding-inline-end: 6px; }
+  .fields td.label { color: #5E5575; width: 24%; padding-inline-end: 6px; }
   table.bordered td { border: 1px solid #C9C0D8; padding: 3px 5px; }
-  .cols td { padding: 4px 6px; border-bottom: 1px solid #EAE5F2; font-size: 8px; }
+  .cols td { padding: 4px 6px; border-bottom: 1px solid #E4DCF5; font-size: 8px; }
   .cols.bordered td { border: 1px solid #C9C0D8; }
   .terms td { padding: 4px 8px; font-size: 7px; line-height: 1.3; text-align: justify; }
   .terms td + td { border-inline-start: 1px solid #C9C0D8; }
@@ -249,7 +249,7 @@ const CSS = `
   .sign-area svg.sig { max-height: 58px; }
   .stamp { height: 80px; max-width: 95px; object-fit: contain; margin-inline-start: 6px; }
   .sign-name { font-weight: bold; }
-  .sign-date { color: #81778F; font-size: 8px; }
+  .sign-date { color: #5E5575; font-size: 8px; }
 `;
 
 const isHalf = (block: Block) => (block.type === 'box' || block.type === 'fuelGauge' || block.type === 'vehicleDiagram') && block.width === 'half';

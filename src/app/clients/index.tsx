@@ -29,7 +29,7 @@ const EMPTY_CUSTOMERS: Customer[] = [];
 
 function KpiTile({ label, value }: { label: string; value: number }) {
   return (
-    <View className="min-w-[130px] gap-1 rounded-3xl border border-[#EAE5F2] bg-white px-4 py-3">
+    <View className="min-w-[130px] gap-1 rounded-3xl border border-[#E4DCF5] bg-white px-4 py-3">
       <ThemedText type="title" themeColor="primary">
         {value}
       </ThemedText>
@@ -95,7 +95,7 @@ export default function ClientsScreen() {
               <Pressable
                 onPress={() => setFilters((prev) => ({ ...prev, typeClient: 'tous' }))}
                 className={`rounded-full border px-4 py-2 ${
-                  filters.typeClient === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
+                  filters.typeClient === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'
                 }`}
               >
                 <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : '#211A2E' }}>
@@ -107,7 +107,7 @@ export default function ClientsScreen() {
                   key={type}
                   onPress={() => setFilters((prev) => ({ ...prev, typeClient: type }))}
                   className={`rounded-full border px-4 py-2 ${
-                    filters.typeClient === type ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#EAE5F2] bg-white'
+                    filters.typeClient === type ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'
                   }`}
                 >
                   <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : '#211A2E' }}>

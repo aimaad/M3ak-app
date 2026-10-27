@@ -16,7 +16,7 @@ export function Pager({ page, pageCount, onChange }: Props) {
       <Pressable
         onPress={() => onChange(page - 1)}
         disabled={prevDisabled}
-        className={`rounded-full border border-[#EAE5F2] bg-white px-4 py-2 ${prevDisabled ? 'opacity-40' : ''}`}
+        className={`rounded-full border border-[#E4DCF5] bg-white px-4 py-2 ${prevDisabled ? 'opacity-40' : ''}`}
       >
         <ThemedText type="small">{t('common.previous')}</ThemedText>
       </Pressable>
@@ -26,7 +26,7 @@ export function Pager({ page, pageCount, onChange }: Props) {
       <Pressable
         onPress={() => onChange(page + 1)}
         disabled={nextDisabled}
-        className={`rounded-full border border-[#EAE5F2] bg-white px-4 py-2 ${nextDisabled ? 'opacity-40' : ''}`}
+        className={`rounded-full border border-[#E4DCF5] bg-white px-4 py-2 ${nextDisabled ? 'opacity-40' : ''}`}
       >
         <ThemedText type="small">{t('common.next')}</ThemedText>
       </Pressable>

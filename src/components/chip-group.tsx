@@ -25,7 +25,7 @@ export function ChipGroup<T extends string>({
             onPress={() => !disabled && onSelect(option)}
             disabled={disabled}
             className={`rounded-full border px-4 py-2 ${
-              isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+              isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
             } ${disabled ? 'opacity-50' : ''}`}
           >
             <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>

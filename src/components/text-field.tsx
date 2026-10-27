@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { TextInput, View, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
@@ -9,7 +10,8 @@ type TextFieldProps = TextInputProps & {
   warning?: string;
 };
 
-export function TextField({ label, error, warning, className, ...rest }: TextFieldProps) {
+export function TextField({ label, error, warning, className, onFocus, onBlur, ...rest }: TextFieldProps) {
+  const [focused, setFocused] = useState(false);
   return (
     <View className="gap-1.5">
       {label ? (
@@ -18,10 +20,18 @@ export function TextField({ label, error, warning, className, ...rest }: TextFie
         </ThemedText>
       ) : null}
       <TextInput
-        placeholderTextColor="#B3A6C2"
-        className={`rounded-2xl border px-4 py-3 text-base text-[#211A2E] ${
-          error ? 'border-[#DC2626]' : warning ? 'border-[#F59E0B]' : 'border-[#EAE5F2]'
+        placeholderTextColor="#8A82A0"
+        className={`rounded-2xl border px-4 py-3 text-base text-[#1E1633] ${
+          error ? 'border-[#DC2626]' : warning ? 'border-[#F59E0B]' : focused ? 'border-[#7C3AED]' : 'border-[#E4DCF5]'
         } bg-white ${className ?? ''}`}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         {...rest}
       />
       {error ? (

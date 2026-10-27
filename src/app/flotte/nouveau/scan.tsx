@@ -471,7 +471,7 @@ export default function ScannerCarteGriseScreen() {
               <RegistrationInfo fields={merged} t={t} />
 
               <View className="flex-row gap-2">
-                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
+                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3">
                   <ThemedText type="small">{t('vehicle.quickCreate.retake')}</ThemedText>
                 </Pressable>
               </View>

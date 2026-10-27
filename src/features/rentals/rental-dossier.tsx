@@ -23,7 +23,7 @@ const dateTime = (iso: string | null | undefined) =>
 
 function Row({ label, value, last }: { label: string; value: ReactNode; last?: boolean }) {
   return (
-    <View className={`flex-row items-start justify-between gap-3 py-3 ${last ? '' : 'border-b border-[#EAE5F2]'}`}>
+    <View className={`flex-row items-start justify-between gap-3 py-3 ${last ? '' : 'border-b border-[#E4DCF5]'}`}>
       <ThemedText type="default" themeColor="textSecondary" className="flex-shrink">
         {label}
       </ThemedText>

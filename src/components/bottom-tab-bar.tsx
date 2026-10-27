@@ -36,7 +36,7 @@ const SECTIONS: {
   },
 ];
 
-const INACTIVE_COLOR = '#B3A6C2';
+const INACTIVE_COLOR = '#8A82A0';
 
 export function BottomTabBar({ current }: { current: SectionKey }) {
   const { t } = useLanguage();
@@ -46,7 +46,7 @@ export function BottomTabBar({ current }: { current: SectionKey }) {
   return (
     <View
       className="absolute inset-x-0 bottom-0 flex-row border-t bg-white"
-      style={{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }}
+      style={[{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }, { shadowColor: '#5B21B6', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 12 }]}
     >
       {SECTIONS.map((section) => {
         const selected = section.key === current;
@@ -54,21 +54,23 @@ export function BottomTabBar({ current }: { current: SectionKey }) {
           <Pressable
             key={section.key}
             onPress={() => !selected && router.replace(section.href)}
-            className="flex-1 items-center gap-1 pt-2"
+            className="min-h-14 flex-1 items-center gap-1 pt-2"
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
           >
             <View
-              className="h-7 w-11 items-center justify-center rounded-full"
-              style={{ backgroundColor: selected ? M3akPalette.mauveLight : 'transparent' }}
+              className="h-8 w-14 items-center justify-center rounded-full"
+              style={{ backgroundColor: selected ? M3akPalette.mauve : 'transparent' }}
             >
               <Ionicons
                 name={selected ? section.iconActive : section.icon}
-                size={20}
-                color={selected ? M3akPalette.mauve : INACTIVE_COLOR}
+                size={21}
+                color={selected ? '#FFFFFF' : INACTIVE_COLOR}
               />
             </View>
             <ThemedText
               type="small"
-              style={{ color: selected ? M3akPalette.mauve : INACTIVE_COLOR, fontSize: 11 }}
+              style={{ color: selected ? M3akPalette.mauveDeep : M3akPalette.muted, fontSize: 11, fontWeight: selected ? '700' : '500' }}
             >
               {t(section.labelKey)}
             </ThemedText>
