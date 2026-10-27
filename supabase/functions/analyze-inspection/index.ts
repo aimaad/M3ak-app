@@ -294,7 +294,7 @@ Deno.serve(async (request) => {
             : 'Voici le RETOUR (avec le départ quand il existe) : liste tous les dommages visibles, et marque comme nouveaux ceux absents au départ, au format JSON demandé.',
         });
         try {
-          const result = await callGeminiJson(apiKey, SYSTEM_PROMPT, parts);
+          const result = await callGeminiJson(apiKey, SYSTEM_PROMPT, parts, { qualityFirst: true });
           const raw = result.json as Record<string, unknown>;
           all = all.concat(sanitizeDamages(raw, included, (angle) => departPhotos.has(angle), isDepart));
           observations.push({
