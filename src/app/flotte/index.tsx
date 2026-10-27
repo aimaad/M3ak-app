@@ -98,7 +98,7 @@ export default function FlotteScreen() {
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('flotte.title')} subtitle={t('flotte.subtitle', { count: counts.tous })} />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
+        <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
           <KpiTile label={t('flotte.kpi.total')} value={counts.tous} />
           <KpiTile
             label={t('flotte.kpi.disponible')}
@@ -147,7 +147,7 @@ export default function FlotteScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {t('flotte.filterByBrand')}
               </ThemedText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+              <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
                 <Pressable
                   onPress={() => setFilters((prev) => ({ ...prev, marque: 'toutes' }))}
                   className={`rounded-full border px-4 py-2 ${
@@ -178,7 +178,7 @@ export default function FlotteScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {t('flotte.sortBy')}
               </ThemedText>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+              <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
                 {SORT_OPTIONS.map((option) => (
                   <Pressable
                     key={option}

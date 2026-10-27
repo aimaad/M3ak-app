@@ -59,7 +59,7 @@ export default function ClientsScreen() {
       <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('clients.title')} subtitle={t('clients.subtitle', { count: active })} />
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
+        <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
           <KpiTile label={t('clients.kpi.active')} value={active} />
           <KpiTile label={t('clients.kpi.archived')} value={archived} />
           <KpiTile label={t('clients.kpi.docsExpirant')} value={expiringDocs} />

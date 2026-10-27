@@ -247,7 +247,7 @@ export function InspectionCaptureScreen({
               );
             })}
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+          <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
             {CAPTURE_ANGLES.map((angle) => {
               const done = coveredAngles.includes(angle);
               const selected = angle === activeAngle;

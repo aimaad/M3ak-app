@@ -143,7 +143,7 @@ export default function JournalScreen() {
 
       <View className="gap-2">
         <ThemedText type="smallBold">{t('journal.filters.employee')}</ThemedText>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false}>
           <ChipGroup<string>
             options={['all', ...people.map((m) => m.userId)]}
             selected={filters.actorId ?? 'all'}

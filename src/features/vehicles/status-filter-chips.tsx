@@ -15,7 +15,7 @@ export function StatusFilterChips({ value, onChange, counts }: StatusFilterChips
   const { t } = useLanguage();
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6">
+    <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6">
       {STATUS_FILTERS.map((status) => {
         const selected = status === value;
         return (

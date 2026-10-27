@@ -8,12 +8,14 @@ type TextFieldProps = TextInputProps & {
   error?: string;
   /** Mise en garde non bloquante, par ex. « à vérifier » pour un champ lu par OCR avec un doute. */
   warning?: string;
+  /** Classes du conteneur (libellé + champ), par ex. « flex-1 » pour deux champs côte à côte. `className` reste celui du champ. */
+  containerClassName?: string;
 };
 
-export function TextField({ label, error, warning, className, onFocus, onBlur, ...rest }: TextFieldProps) {
+export function TextField({ label, error, warning, className, containerClassName, onFocus, onBlur, ...rest }: TextFieldProps) {
   const [focused, setFocused] = useState(false);
   return (
-    <View className="gap-1.5">
+    <View className={`gap-1.5 ${containerClassName ?? ''}`}>
       {label ? (
         <ThemedText type="small" themeColor="textSecondary">
           {label}

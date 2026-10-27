@@ -200,8 +200,8 @@ export default function NouveauContratScreen() {
               ) : null}
 
               <View className="flex-row gap-2">
-                <TextField label={t('locations.depart.kilometrage')} value={kmValue} onChangeText={setKmDepart} keyboardType="number-pad" className="flex-1" />
-                <TextField label={t('locations.depart.carburant')} value={carburantValue} onChangeText={(v) => setCarburantDepart(clampPercentInput(v))} keyboardType="number-pad" className="flex-1" />
+                <TextField label={t('locations.depart.kilometrage')} value={kmValue} onChangeText={setKmDepart} keyboardType="number-pad" containerClassName="flex-1" />
+                <TextField label={t('locations.depart.carburant')} value={carburantValue} onChangeText={(v) => setCarburantDepart(clampPercentInput(v))} keyboardType="number-pad" containerClassName="flex-1" />
               </View>
 
               <View className="gap-1.5">

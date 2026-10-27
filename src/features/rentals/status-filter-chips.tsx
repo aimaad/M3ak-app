@@ -15,7 +15,7 @@ export function RentalStatusFilterChips({ value, onChange, counts }: RentalStatu
   const { t } = useLanguage();
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6">
+    <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6">
       {RENTAL_STATUS_FILTERS.map((status) => {
         const selected = status === value;
         return (

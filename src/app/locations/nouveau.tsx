@@ -269,8 +269,8 @@ export default function NouvelleLocationScreen() {
                 </ThemedText>
                 <DateRangeCalendar disabledDates={[]} value={range} onChange={(next) => { setRange(next); }} />
                 <View className="flex-row gap-2">
-                  <TextField label={t('locations.heureDepart')} value={heureDepart} onChangeText={setHeureDepart} placeholder="09:00" className="flex-1" />
-                  <TextField label={t('locations.heureRetour')} value={heureRetour} onChangeText={setHeureRetour} placeholder="18:00" className="flex-1" />
+                  <TextField label={t('locations.heureDepart')} value={heureDepart} onChangeText={setHeureDepart} placeholder="09:00" containerClassName="flex-1" />
+                  <TextField label={t('locations.heureRetour')} value={heureRetour} onChangeText={setHeureRetour} placeholder="18:00" containerClassName="flex-1" />
                 </View>
                 {showErrors && errors.dates ? (
                   <ThemedText type="small" style={{ color: '#DC2626' }}>

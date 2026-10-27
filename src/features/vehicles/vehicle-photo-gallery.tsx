@@ -60,7 +60,7 @@ export function VehiclePhotoGallery({
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+    <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
       {photos.map((photo) => (
         <GalleryThumbnail key={photo.path} photo={photo} canDelete={canDelete} onDelete={() => onDelete(photo)} />
       ))}

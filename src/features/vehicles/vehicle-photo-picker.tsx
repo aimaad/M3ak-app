@@ -42,7 +42,7 @@ export function VehiclePhotoPicker({ label, localUris, onAdd, onRemove }: Vehicl
       </ThemedText>
 
       {localUris.length > 0 ? (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+        <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
           {localUris.map((uri) => (
             <View key={uri} className="relative">
               <Image source={{ uri }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />

@@ -132,7 +132,7 @@ export default function CalendrierScreen() {
         />
 
         <View className="gap-2 px-6 pb-3">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+          <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
             {RENTAL_STATUS_FILTERS.filter((s) => s !== 'reservee').map((status) => (
               <Pressable
                 key={status}
@@ -147,7 +147,7 @@ export default function CalendrierScreen() {
               </Pressable>
             ))}
           </ScrollView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+          <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
             <Pressable
               onPress={() => setVehicleFilter('tous')}
               className={`rounded-full border px-4 py-2 ${
