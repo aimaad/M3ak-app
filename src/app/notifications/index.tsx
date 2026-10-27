@@ -72,7 +72,7 @@ export default function NotificationsScreen() {
             data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-10"
-            refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={() => query.refetch()} tintColor={M3akPalette.mauve} />}
+            refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={() => void query.refetch()} tintColor={M3akPalette.mauve} />}
             renderItem={({ item }) => {
               const view = notificationView(item, t, language);
               const colors = SEVERITY_COLORS[item.severity];

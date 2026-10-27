@@ -42,7 +42,7 @@ export default function MaintenanceScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={maintenanceQuery.isFetching}
-                onRefresh={() => maintenanceQuery.refetch()}
+                onRefresh={() => void maintenanceQuery.refetch()}
                 tintColor="#7C3AED"
               />
             }

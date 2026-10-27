@@ -140,7 +140,7 @@ export default function ClientsScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={customersQuery.isFetching}
-                onRefresh={() => customersQuery.refetch()}
+                onRefresh={() => void customersQuery.refetch()}
                 tintColor="#7C3AED"
               />
             }

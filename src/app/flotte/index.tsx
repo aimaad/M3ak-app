@@ -218,7 +218,7 @@ export default function FlotteScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={vehiclesQuery.isFetching}
-                onRefresh={() => vehiclesQuery.refetch()}
+                onRefresh={() => void vehiclesQuery.refetch()}
                 tintColor="#7C3AED"
               />
             }

@@ -239,7 +239,7 @@ export default function JournalScreen() {
                   disabled={entriesQuery.isFetchingNextPage}
                   loading={entriesQuery.isFetchingNextPage}
                 />
-              ) : null
+              ) : undefined
             }
           />
         )}

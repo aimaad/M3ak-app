@@ -97,7 +97,7 @@ export default function LocationsScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={rentalsQuery.isFetching}
-                onRefresh={() => rentalsQuery.refetch()}
+                onRefresh={() => void rentalsQuery.refetch()}
                 tintColor="#7C3AED"
               />
             }
