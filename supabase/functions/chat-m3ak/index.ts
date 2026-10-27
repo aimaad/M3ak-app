@@ -180,20 +180,22 @@ Deno.serve(async (request: Request) => {
       }
       if (next.kind === 'invalid' || step === MAX_TOOL_STEPS) break;
 
-      const call = toRpcCall(next.tool, next.args);
-      if (!call) {
-        transcript.push(`Outil ${next.tool} : arguments refusés (donne les arguments obligatoires).`);
-        continue;
-      }
       // Avec le JWT de l'utilisateur : la RLS (entreprise + filiale) s'applique.
-      const { data, error } = await withTimeout('tool', supabase.rpc(call.fn, call.params), 20_000);
-      if (error) {
-        console.error('Échec outil chat :', call.fn, error.code);
-        transcript.push(`Outil ${next.tool} : indisponible.`);
-        continue;
+      for (const requested of next.calls) {
+        const call = toRpcCall(requested.tool, requested.args);
+        if (!call) {
+          transcript.push(`Outil ${requested.tool} : arguments refusés (donne les arguments obligatoires).`);
+          continue;
+        }
+        const { data, error } = await withTimeout('tool', supabase.rpc(call.fn, call.params), 20_000);
+        if (error) {
+          console.error('Échec outil chat :', call.fn, error.code);
+          transcript.push(`Outil ${requested.tool} : indisponible.`);
+          continue;
+        }
+        results.push(data);
+        transcript.push(`Outil ${requested.tool} ${JSON.stringify(requested.args)} → ${JSON.stringify(data).slice(0, 8_000)}`);
       }
-      results.push(data);
-      transcript.push(`Outil ${next.tool} ${JSON.stringify(next.args)} → ${JSON.stringify(data).slice(0, 12_000)}`);
     }
   } catch (error) {
     if (error instanceof StageTimeoutError) {

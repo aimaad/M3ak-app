@@ -12,7 +12,7 @@ L'employé pose une question en français, en arabe ou en darija ; M3ak répond 
 ## Comment ça marche
 1. L'app appelle la fonction serveur `chat-m3ak` (jamais de clé dans l'app).
 2. La fonction envoie la question à Gemini (clé de **l'entreprise**) avec la date du jour (heure du Maroc) et la liste des **outils** autorisés.
-3. Gemini ne lit jamais la base : il demande un outil à la fois (`rentals`, `returns_due`, `departures_due`, `available_vehicles`, `vehicle_damages`, `vehicle_maintenance`, `customer_history`, maximum 4 par question). Chaque outil est une fonction SQL **en lecture seule** exécutée avec les **droits de l'utilisateur** : un employé de filiale ne voit que sa filiale, une autre entreprise ne voit rien (RLS, testé dans `supabase/tests/chat.test.sql`).
+3. Gemini ne lit jamais la base : il demande un outil à la fois (`rentals`, `returns_due`, `departures_due`, `available_vehicles`, `vehicle_damages`, `vehicle_maintenance`, `customer_history`, 3 tours de recherche par question, 3 recherches par tour). Chaque outil est une fonction SQL **en lecture seule** exécutée avec les **droits de l'utilisateur** : un employé de filiale ne voit que sa filiale, une autre entreprise ne voit rien (RLS, testé dans `supabase/tests/chat.test.sql`).
 4. Gemini écrit la réponse à partir des résultats. Les **sources** (locations) affichées sont limitées à celles réellement vues dans les résultats : l'IA ne peut pas citer un lien inventé.
 
 ## Règles

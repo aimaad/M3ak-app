@@ -34,8 +34,17 @@ describe('toRpcCall (outils autorisés)', () => {
 
 describe('parseModelStep', () => {
   it('reconnaît un outil et une réponse', () => {
-    expect(parseModelStep({ action: 'tool', tool: 'rentals', args: { vehicle: 'x' } })).toEqual({ kind: 'tool', tool: 'rentals', args: { vehicle: 'x' } });
+    expect(parseModelStep({ action: 'tool', tool: 'rentals', args: { vehicle: 'x' } })).toEqual({ kind: 'tools', calls: [{ tool: 'rentals', args: { vehicle: 'x' } }] });
     expect(parseModelStep({ action: 'answer', answer: 'Karim.', source_rental_ids: [ID1, 'pas-un-uuid', 5] })).toEqual({ kind: 'answer', answer: 'Karim.', sourceIds: [ID1] });
+  });
+  it('accepte plusieurs outils d’un coup (3 au plus) et écarte ceux qui sont interdits', () => {
+    const step = parseModelStep({
+      action: 'tools',
+      calls: [{ tool: 'returns_due' }, { tool: 'available_vehicles' }, { tool: 'drop_table' }, { tool: 'rentals' }, { tool: 'customer_history', args: { customer: 'x' } }],
+    });
+    expect(step.kind === 'tools' && step.calls.map((c) => c.tool)).toEqual(['returns_due', 'available_vehicles']);
+    expect(parseModelStep({ action: 'tools', calls: [{ tool: 'drop_table' }] }).kind).toBe('invalid');
+    expect(parseModelStep({ action: 'tools', calls: 'rentals' }).kind).toBe('invalid');
   });
   it('refuse un outil non autorisé, une réponse vide ou n’importe quoi', () => {
     expect(parseModelStep({ action: 'tool', tool: 'delete_everything' }).kind).toBe('invalid');
