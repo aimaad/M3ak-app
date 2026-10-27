@@ -76,20 +76,15 @@
   },
   "onboarding": {
     "title": "Bienvenue",
-    "subtitle": "Créez votre agence ou rejoignez-en une avec un code",
-    "createTab": "Créer une agence",
+    "subtitle": "Entrez le code d'invitation reçu pour rejoindre votre agence",
     "joinTab": "Rejoindre",
-    "ownerName": "Votre nom",
-    "agencyName": "Nom de l'agence",
-    "agencyCity": "Ville",
-    "createAction": "Créer mon agence",
-    "createError": "Impossible de créer l'agence. Réessayez.",
     "inviteCode": "Code d'invitation",
     "joinAction": "Rejoindre l'agence",
     "errors": {
       "required": "Remplissez les champs obligatoires."
     },
-    "joinHint": "Vous êtes connecté avec {{email}}. Ce doit être l'adresse e-mail qui a reçu l'invitation."
+    "joinHint": "Vous êtes connecté avec {{email}}. Ce doit être l'adresse e-mail qui a reçu l'invitation.",
+    "noAgencyNote": "Les agences sont créées par M3ak. Contactez-nous pour ouvrir votre accès."
   },
   "equipe": {
     "title": "Équipe",
@@ -2305,5 +2300,16 @@
     "online": "Répond à partir de vos données",
     "welcomeTitle": "Bonjour, je suis M3ak",
     "tryAsking": "Essayez par exemple"
+  },
+  "access": {
+    "blockedTitle": "Accès terminé",
+    "blockedExpired": "Votre période d'essai est terminée. Contactez M3ak pour continuer à utiliser l'application.",
+    "blockedSuspended": "L'accès de votre agence est suspendu. Contactez M3ak pour le réactiver.",
+    "blockedHint": "Vos données sont conservées en sécurité : elles seront de nouveau disponibles dès la réactivation.",
+    "recheck": "Vérifier à nouveau",
+    "stillBlocked": "L'accès est toujours fermé.",
+    "trialBannerTitle": "Période d'essai",
+    "trialLastDay": "Dernier jour d'essai aujourd'hui.",
+    "trialDays": "Il vous reste {{days}} jour(s) d'essai."
   }
 }

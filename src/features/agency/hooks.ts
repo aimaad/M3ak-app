@@ -1,13 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { PersonName } from '@/features/auth/names';
 import { useSession } from '@/features/auth/session-context';
 import type { UploadProgress } from '@/features/storage/api';
 
 import {
-  createAgency,
   createAgencyInvite,
   getAgencyDetails,
+  getMyAgencyAccess,
   getMyAgencyMembership,
   getMyMemberProfile,
   listAgencyInvites,
@@ -38,15 +37,16 @@ export function useMyAgency() {
   });
 }
 
-export function useCreateAgency() {
-  const queryClient = useQueryClient();
+export function useAgencyAccess() {
+  const { session } = useSession();
 
-  return useMutation({
-    mutationFn: ({ nom, ville, owner }: { nom: string; ville: string | null; owner: PersonName }) =>
-      createAgency(nom, ville, owner),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-agency'] });
-    },
+  return useQuery({
+    queryKey: ['agency-access', session?.user.id],
+    queryFn: getMyAgencyAccess,
+    enabled: !!session,
+    // Revérifie régulièrement : l'essai peut se terminer pendant que l'app est ouverte.
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnMount: 'always',
   });
 }
 
@@ -57,6 +57,7 @@ export function useRedeemInvite() {
     mutationFn: (code: string) => redeemInvite(code),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-agency'] });
+      queryClient.invalidateQueries({ queryKey: ['agency-access'] });
     },
   });
 }

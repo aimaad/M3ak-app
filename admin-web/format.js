@@ -78,6 +78,10 @@ export function adminErrorMessage(error) {
   if (message.includes('invalid_tier')) return "Offre inconnue (choisissez gratuite ou payante).";
   if (message.includes('key_not_set')) return "Aucune clé en place : saisissez une clé.";
   if (message.includes('invalid_pricing')) return 'Tarif invalide (nombres positifs).';
+  if (message.includes('invalid_email')) return 'Adresse e-mail invalide.';
+  if (message.includes('invalid_name')) return "Nom de l'agence invalide (2 à 120 caractères).";
+  if (message.includes('invalid_days')) return 'Nombre de jours invalide (entre 1 et 3650).';
+  if (message.includes('owner_exists')) return 'Cette agence a déjà un propriétaire.';
   if (message.includes('not_allowed')) return 'Accès réservé aux administrateurs M3AK.';
   if (message.includes('Invalid login')) return 'E-mail ou mot de passe incorrect.';
   if (/network|fetch|internet/i.test(message)) return 'Connexion impossible. Vérifiez votre connexion internet, puis réessayez.';
@@ -102,4 +106,14 @@ export function isValidCode(code) {
 
 export function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email ?? '').trim());
+}
+
+/** État d'accès d'une agence pour la console : { kind: 'ok' | 'warn' | 'off', label }. */
+export function accessStatus(agency, now = new Date()) {
+  if (agency.suspended) return { kind: 'off', label: 'Suspendue' };
+  if (!agency.access_until) return { kind: 'ok', label: 'Illimité' };
+  const end = new Date(agency.access_until);
+  const days = Math.ceil((end.getTime() - now.getTime()) / 86400000);
+  if (days <= 0) return { kind: 'off', label: 'Essai terminé' };
+  return { kind: days <= 2 ? 'warn' : 'ok', label: `Essai : ${days} j restant${days > 1 ? 's' : ''}` };
 }

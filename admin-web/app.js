@@ -1,7 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/+esm';
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config.js';
-import { adminErrorMessage, costLabel, formatDate, formatInt, formatMad, formatUsd, isValidCode, isValidEmail, normalizeCode, parseDecimal, periodRange, summarize, validateKey, validateNewPassword } from './format.js';
+import { accessStatus, adminErrorMessage, costLabel, formatDate, formatInt, formatMad, formatUsd, isValidCode, isValidEmail, normalizeCode, parseDecimal, periodRange, summarize, validateKey, validateNewPassword } from './format.js';
 
 // Session conservée seulement pour l'onglet (sessionStorage) : fermer l'onglet déconnecte.
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -11,7 +11,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 const app = document.getElementById('app');
 const sessionBox = document.getElementById('session');
 const sessionEmail = document.getElementById('session-email');
-const state = { period: 'month', overview: null, editing: null };
+const state = { period: 'month', overview: null, editing: null, agencies: [], created: null };
 
 /** Création de nœuds DOM : tout texte venant de la base (noms d'entreprises…) passe par des nœuds texte, jamais par du HTML brut. */
 function h(tag, props = {}, ...children) {
@@ -175,6 +175,10 @@ async function loadOverview() {
   const { data, error } = await supabase.rpc('admin_ocr_overview', { p_from: from, p_to: to });
   if (error) throw error;
   state.overview = data;
+  const { data: list, error: listError } = await supabase.rpc('admin_list_agencies');
+  // Tant que la migration d'accès (0057) n'est pas appliquée, la section « Accès » reste simplement vide.
+  state.agencies = listError ? [] : list;
+  state.accessReady = !listError;
 }
 
 async function refresh() {
@@ -251,6 +255,7 @@ function renderDashboard(flash) {
         h('tbody', {}, rows.length ? rows : h('tr', {}, h('td', { colspan: 13 }, 'Aucune entreprise.')))
       )
     ),
+    state.accessReady ? accessSection() : h('p', { class: 'note' }, 'Exécutez la migration 0057 dans Supabase pour gérer la création des agences et la durée d’accès.'),
     pricingCard(pricing),
     h('p', { class: 'note' }, 'Les coûts sont des ESTIMATIONS : nombre de tokens × tarif saisi ci-dessus, uniquement pour les clés déclarées « payantes ». La facture réelle est celle de Google (console Google Cloud / AI Studio) ; vérifiez-y les montants avant de refacturer une entreprise.')
   );
@@ -296,6 +301,114 @@ function pricingCard(pricing) {
     message,
     h('div', { class: 'actions' }, save)
   );
+}
+
+// ---------- Création d'agences et durée d'accès ----------
+function accessSection() {
+  const nom = h('input', { maxlength: 120, autocomplete: 'off' });
+  const ville = h('input', { maxlength: 80, autocomplete: 'off' });
+  const prenom = h('input', { autocomplete: 'off' });
+  const nomFamille = h('input', { autocomplete: 'off' });
+  const email = h('input', { type: 'email', autocomplete: 'off' });
+  const days = h('input', { inputmode: 'numeric', value: '5' });
+  const message = h('p', { class: 'error', role: 'alert', hidden: true });
+  const save = h('button', { class: 'btn', type: 'button' }, 'Créer l’agence');
+
+  save.addEventListener('click', async () => {
+    message.hidden = true;
+    const trial = days.value.trim() === '' ? null : Number.parseInt(days.value, 10);
+    if (!isValidEmail(email.value) || nom.value.trim().length < 2 || (trial !== null && !(trial >= 1))) {
+      message.textContent = 'Renseignez le nom de l’agence, l’e-mail du client et un nombre de jours valide (vide = illimité).';
+      message.hidden = false;
+      return;
+    }
+    save.disabled = true;
+    const { data, error } = await supabase.rpc('admin_create_agency', {
+      p_nom: nom.value.trim(),
+      p_ville: ville.value.trim(),
+      p_owner_email: email.value.trim(),
+      p_owner_prenom: prenom.value.trim(),
+      p_owner_nom: nomFamille.value.trim(),
+      p_trial_days: trial,
+    });
+    save.disabled = false;
+    if (error) {
+      message.textContent = adminErrorMessage(error);
+      message.hidden = false;
+      return;
+    }
+    state.created = { nom: nom.value.trim(), email: data.email, code: data.invite_code };
+    await refresh();
+  });
+
+  const created = state.created
+    ? h('div', { class: 'note' },
+        h('strong', {}, `Agence « ${state.created.nom} » créée.`),
+        h('p', {}, 'Donnez ce code au client (il ne sera plus affiché) :'),
+        h('p', {}, h('strong', { class: 'code' }, state.created.code)),
+        h('p', {}, `Le client doit créer son compte dans l’application avec l’e-mail ${state.created.email} (et confirmer cet e-mail), puis saisir ce code dans « Rejoindre ». Le code est valable 30 jours.`))
+    : null;
+
+  const rows = state.agencies.map((a) => {
+    const status = accessStatus(a);
+    const extend = (n) => setAccess(a, { p_days: n });
+    return h('tr', {},
+      h('td', {}, h('strong', {}, a.nom), a.ville ? h('div', { class: 'hint' }, a.ville) : null),
+      h('td', {}, a.owner_email ?? h('span', { class: 'pill warn' }, 'Code non utilisé')),
+      h('td', {}, h('span', { class: `pill ${status.kind}` }, status.label)),
+      h('td', {}, a.access_until ? formatDate(a.access_until) : '—'),
+      h('td', { class: 'actions' },
+        h('button', { class: 'btn small', type: 'button', onclick: () => extend(5) }, '+5 jours'),
+        h('button', { class: 'btn small', type: 'button', onclick: () => extend(30) }, '+30 jours'),
+        h('button', { class: 'btn small ghost', type: 'button', onclick: () => setAccess(a, { p_unlimited: true, p_suspended: false }) }, 'Illimité'),
+        a.suspended
+          ? h('button', { class: 'btn small', type: 'button', onclick: () => setAccess(a, { p_suspended: false }) }, 'Réactiver')
+          : h('button', { class: 'btn small danger', type: 'button', onclick: () => setAccess(a, { p_suspended: true }) }, 'Suspendre')
+      )
+    );
+  });
+
+  return h('section', {},
+    h('div', { class: 'card' },
+      h('h2', {}, 'Créer l’agence d’un client'),
+      h('p', { class: 'muted' }, 'Seul cet écran peut créer une agence. Laissez « jours d’essai » vide pour un accès illimité.'),
+      h('div', { class: 'grid2' },
+        h('label', {}, 'Nom de l’agence', nom),
+        h('label', {}, 'Ville', ville),
+        h('label', {}, 'Prénom du propriétaire', prenom),
+        h('label', {}, 'Nom du propriétaire', nomFamille),
+        h('label', {}, 'E-mail du propriétaire', email),
+        h('label', {}, 'Jours d’essai', days)
+      ),
+      message,
+      h('div', { class: 'actions' }, save)
+    ),
+    created,
+    h('div', { class: 'card table-wrap' },
+      h('h2', {}, 'Accès des agences'),
+      h('table', {},
+        h('thead', {}, h('tr', {}, ...['Agence', 'Propriétaire', 'Accès', 'Fin de l’accès', ''].map((label) => h('th', {}, label)))),
+        h('tbody', {}, rows.length ? rows : h('tr', {}, h('td', { colspan: 5 }, 'Aucune agence.')))
+      )
+    )
+  );
+}
+
+async function setAccess(agency, args) {
+  if (args.p_suspended === true && !window.confirm(`Suspendre « ${agency.nom} » ? Ses utilisateurs seront bloqués immédiatement.`)) return;
+  const { error } = await supabase.rpc('admin_set_agency_access', {
+    p_agency_id: agency.agency_id,
+    p_days: null,
+    p_unlimited: false,
+    p_suspended: null,
+    ...args,
+  });
+  if (error) {
+    window.alert(adminErrorMessage(error));
+    return;
+  }
+  state.created = null;
+  await refresh();
 }
 
 // ---------- Clé d'une entreprise ----------

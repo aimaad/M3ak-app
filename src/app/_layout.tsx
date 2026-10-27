@@ -13,6 +13,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
+import { useAgencyAccess } from '@/features/agency/hooks';
 import { SessionProvider, useSession } from '@/features/auth/session-context';
 import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
 
@@ -33,6 +34,26 @@ function AuthGate({ children }: { children: ReactNode }) {
       router.replace('/login');
     }
   }, [session, isLoading, configError, segments]);
+
+  return children;
+}
+
+/**
+ * Ferme l'application dès que l'accès de l'agence est expiré ou suspendu (le serveur refuse déjà
+ * toutes les données ; ici on affiche simplement l'écran explicatif).
+ */
+function AccessGate({ children }: { children: ReactNode }) {
+  const { session } = useSession();
+  const access = useAgencyAccess();
+  const segments = useSegments();
+  const onBlockedScreen = segments[0] === 'acces-bloque';
+
+  useEffect(() => {
+    if (!session || !access.data) return;
+    if (!access.data.hasAccess && !onBlockedScreen) {
+      router.replace('/acces-bloque');
+    }
+  }, [session, access.data, onBlockedScreen]);
 
   return children;
 }
@@ -64,8 +85,10 @@ export default function RootLayout() {
       <SessionProvider>
         <ThemeProvider value={DefaultTheme}>
           <AuthGate>
-            <Stack screenOptions={{ headerShown: false }} />
-            <NotificationsBootstrap />
+            <AccessGate>
+              <Stack screenOptions={{ headerShown: false }} />
+              <NotificationsBootstrap />
+            </AccessGate>
           </AuthGate>
         </ThemeProvider>
       </SessionProvider>

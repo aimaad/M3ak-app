@@ -11,7 +11,8 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette, Shadows } from '@/constants/theme';
-import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import { daysLeft, shouldShowTrialBanner } from '@/features/agency/access';
+import { useAgencyAccess, useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
@@ -56,6 +57,8 @@ export default function AccueilScreen() {
   const role = agencyQuery.data?.role;
   const agencyDetails = useAgencyDetails(role === 'owner' ? agencyQuery.data?.agencyId : undefined);
   const logoMissing = role === 'owner' && !!agencyDetails.data && !agencyDetails.data.logoUrl;
+  const accessQuery = useAgencyAccess();
+  const trialDays = shouldShowTrialBanner(accessQuery.data ?? null) ? daysLeft(accessQuery.data?.accessUntil ?? null) : null;
   const sections = dashboardSections(role);
 
   const { metrics, vehicles, maintenanceItems, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics();
@@ -156,6 +159,17 @@ export default function AccueilScreen() {
             <ThemedText type="small" themeColor="textSecondary">
               {t(`accueil.roleView.${role ?? 'employee'}`)}
             </ThemedText>
+
+            {trialDays !== null ? (
+              <View className="gap-1 rounded-2xl bg-[#FEF3C7] px-4 py-3">
+                <ThemedText type="smallBold" style={{ color: '#92400E' }}>
+                  {t('access.trialBannerTitle')}
+                </ThemedText>
+                <ThemedText type="small" style={{ color: '#92400E' }}>
+                  {trialDays <= 1 ? t('access.trialLastDay') : t('access.trialDays', { days: trialDays })}
+                </ThemedText>
+              </View>
+            ) : null}
 
             {logoMissing ? (
               <Pressable onPress={() => router.push('/entreprise')} className="gap-1 rounded-2xl bg-[#FEE2E2] px-4 py-3">

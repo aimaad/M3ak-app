@@ -1,9 +1,9 @@
 import { FunctionsHttpError } from '@supabase/supabase-js';
 
-import { buildFullName, type PersonName } from '@/features/auth/names';
 import { uploadFile, uploadFileWithProgress, type UploadProgress } from '@/features/storage/api';
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
+import { parseAgencyAccess, type AgencyAccess } from './access';
 import { logoContentType } from './logo-validation';
 import { parseStampConfig, type StampConfig } from './stamp';
 import type {
@@ -89,40 +89,10 @@ export async function getMyAgencyMembership(): Promise<AgencyMembership | null> 
   };
 }
 
-export async function createAgency(
-  nom: string,
-  ville: string | null,
-  owner: PersonName
-): Promise<AgencyMembership> {
-  const ownerName = buildFullName(owner);
-  const supabase = getSupabase();
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error('Non connecté');
-
-  const { data: agency, error: agencyError } = await supabase
-    .from('agencies')
-    .insert({ nom, ville, created_by: userId })
-    .select()
-    .single();
-  if (agencyError) throw agencyError;
-
-  const { error: memberError } = await supabase.from('agency_members').insert({
-    agency_id: agency.id,
-    user_id: userId,
-    role: 'owner',
-    prenom: owner.prenom.trim(),
-    nom: owner.nom.trim(),
-    nom_complet: ownerName,
-  });
-  if (memberError) throw memberError;
-
-  return {
-    agencyId: agency.id,
-    role: 'owner',
-    memberName: ownerName,
-    agencyName: agency.nom,
-    agencyCity: agency.ville,
-  };
+export async function getMyAgencyAccess(): Promise<AgencyAccess | null> {
+  const { data, error } = await getSupabase().rpc('my_agency_access');
+  if (error) throw error;
+  return parseAgencyAccess(data);
 }
 
 export async function redeemInvite(code: string): Promise<AgencyRole> {

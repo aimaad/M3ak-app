@@ -2,7 +2,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { adminErrorMessage, costLabel, isValidCode, isValidEmail, normalizeCode, parseDecimal, periodRange, summarize, validateKey, validateNewPassword } = require('../format.js');
+const { accessStatus, adminErrorMessage, costLabel, isValidCode, isValidEmail, normalizeCode, parseDecimal, periodRange, summarize, validateKey, validateNewPassword } = require('../format.js');
 
 const read = (file) => fs.readFileSync(path.join(__dirname, '..', file), 'utf8');
 const squash = (text) => text.replace(/[\s  ]/g, ' ');
@@ -102,7 +102,18 @@ describe('garde-fous de sécurité de la console', () => {
   });
   it("n'appelle que les fonctions d'administration contrôlées côté serveur", () => {
     const rpcs = [...app.matchAll(/rpc\('([a-z_]+)'/g)].map((m) => m[1]).sort();
-    expect([...new Set(rpcs)]).toEqual(['admin_clear_ocr_key', 'admin_ocr_overview', 'admin_set_ocr_key', 'admin_set_ocr_key_tier', 'admin_set_ocr_pricing', 'is_platform_admin']);
+    expect([...new Set(rpcs)]).toEqual(['admin_clear_ocr_key', 'admin_create_agency', 'admin_list_agencies', 'admin_ocr_overview', 'admin_set_agency_access', 'admin_set_ocr_key', 'admin_set_ocr_key_tier', 'admin_set_ocr_pricing', 'is_platform_admin']);
     expect(app).not.toMatch(/\.from\(/);
+  });
+});
+
+describe('accessStatus', () => {
+  const now = new Date('2030-01-10T12:00:00Z');
+  it('illimité sans date', () => expect(accessStatus({ access_until: null, suspended: false }, now)).toEqual({ kind: 'ok', label: 'Illimité' }));
+  it('suspendue prime sur la date', () => expect(accessStatus({ access_until: '2031-01-01T00:00:00Z', suspended: true }, now).label).toBe('Suspendue'));
+  it('essai terminé', () => expect(accessStatus({ access_until: '2030-01-09T00:00:00Z', suspended: false }, now).label).toBe('Essai terminé'));
+  it('compte les jours restants, alerte à 2 jours', () => {
+    expect(accessStatus({ access_until: '2030-01-15T11:00:00Z', suspended: false }, now)).toEqual({ kind: 'ok', label: 'Essai : 5 j restants' });
+    expect(accessStatus({ access_until: '2030-01-11T11:00:00Z', suspended: false }, now).kind).toBe('warn');
   });
 });
