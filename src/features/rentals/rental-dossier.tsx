@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { CollapsibleSection } from '@/components/collapsible-section';
+import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import type { Contract } from '@/features/contracts/types';
 import type { Deposit } from '@/features/deposits/types';
@@ -21,18 +21,7 @@ const money = (value: number | null | undefined) => (value == null ? '—' : `${
 const dateTime = (iso: string | null | undefined) =>
   iso ? new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
 
-function Row({ label, value, last }: { label: string; value: ReactNode; last?: boolean }) {
-  return (
-    <View className={`flex-row items-start justify-between gap-3 py-3 ${last ? '' : 'border-b border-[#E4DCF5]'}`}>
-      <ThemedText type="default" themeColor="textSecondary" className="flex-shrink">
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold" className="max-w-[60%] text-end">
-        {value}
-      </ThemedText>
-    </View>
-  );
-}
+const Row = InfoRow;
 
 function LinkButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (

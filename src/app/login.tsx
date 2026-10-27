@@ -47,7 +47,8 @@ export default function LoginScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1 px-6">
+      <SafeAreaView className="flex-1">
+        <View className="flex-1 px-6">
         <View className="flex-row justify-end gap-2 pt-2">
           {SUPPORTED_LANGUAGES.map((code) => {
             const selected = code === language;
@@ -121,6 +122,7 @@ export default function LoginScreen() {
               </ThemedText>
             </Pressable>
           </View>
+        </View>
         </View>
       </SafeAreaView>
     </ThemedView>

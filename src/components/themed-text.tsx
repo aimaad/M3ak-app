@@ -2,19 +2,21 @@ import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
 import { Fonts, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { fixPlateDirection } from '@/lib/plate';
 
 export type ThemedTextProps = TextProps & {
   type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
   themeColor?: ThemeColor;
 };
 
-export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
+export function ThemedText({ style, type = 'default', themeColor, children, ...rest }: ThemedTextProps) {
   const theme = useTheme();
 
   return (
     <Text
       style={[
-        { color: theme[themeColor ?? 'text'] },
+        // flexShrink : dans une ligne, un texte long passe à la ligne au lieu de déborder sur son voisin (React Native ne réduit pas par défaut).
+        { color: theme[themeColor ?? 'text'], flexShrink: 1 },
         type === 'default' && styles.default,
         type === 'title' && styles.title,
         type === 'small' && styles.small,
@@ -26,7 +28,9 @@ export function ThemedText({ style, type = 'default', themeColor, ...rest }: The
         style,
       ]}
       {...rest}
-    />
+    >
+      {typeof children === 'string' ? fixPlateDirection(children) : children}
+    </Text>
   );
 }
 

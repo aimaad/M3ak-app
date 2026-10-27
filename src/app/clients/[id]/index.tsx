@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { Card, PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
+import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
@@ -24,17 +25,6 @@ import { useCustomerRentals } from '@/features/rentals/hooks';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useAllPayments } from '@/features/payments/hooks';
 import { useLanguage } from '@/i18n/use-language';
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-row items-center justify-between border-b border-[#E4DCF5] py-3">
-      <ThemedText type="default" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold">{value}</ThemedText>
-    </View>
-  );
-}
 
 function formatShortDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
