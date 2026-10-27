@@ -102,7 +102,7 @@ describe('garde-fous de sécurité de la console', () => {
   });
   it("n'appelle que les fonctions d'administration contrôlées côté serveur", () => {
     const rpcs = [...app.matchAll(/rpc\('([a-z_]+)'/g)].map((m) => m[1]).sort();
-    expect([...new Set(rpcs)]).toEqual(['admin_clear_ocr_key', 'admin_create_agency', 'admin_list_agencies', 'admin_ocr_overview', 'admin_set_agency_access', 'admin_set_ocr_key', 'admin_set_ocr_key_tier', 'admin_set_ocr_pricing', 'is_platform_admin']);
+    expect([...new Set(rpcs)]).toEqual(['admin_clear_ocr_key', 'admin_create_agency', 'admin_list_agencies', 'admin_ocr_overview', 'admin_reissue_owner_code', 'admin_set_agency_access', 'admin_set_ocr_key', 'admin_set_ocr_key_tier', 'admin_set_ocr_pricing', 'is_platform_admin']);
     expect(app).not.toMatch(/\.from\(/);
   });
 });

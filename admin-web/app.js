@@ -346,6 +346,7 @@ function accessSection() {
         h('strong', {}, `Agence « ${state.created.nom} » créée.`),
         h('p', {}, 'Donnez ce code au client (il ne sera plus affiché) :'),
         h('p', {}, h('strong', { class: 'code' }, state.created.code)),
+        h('button', { class: 'btn small ghost', type: 'button', onclick: () => { state.created = null; renderDashboard(); } }, 'J’ai copié le code, masquer'),
         h('p', {}, `Le client doit créer son compte dans l’application avec l’e-mail ${state.created.email} (et confirmer cet e-mail), puis saisir ce code dans « Rejoindre ». Le code est valable 30 jours.`))
     : null;
 
@@ -358,6 +359,7 @@ function accessSection() {
       h('td', {}, h('span', { class: `pill ${status.kind}` }, status.label)),
       h('td', {}, a.access_until ? formatDate(a.access_until) : '—'),
       h('td', { class: 'actions' },
+        a.owner_email ? null : h('button', { class: 'btn small', type: 'button', onclick: () => reissueCode(a) }, 'Nouveau code'),
         h('button', { class: 'btn small', type: 'button', onclick: () => extend(5) }, '+5 jours'),
         h('button', { class: 'btn small', type: 'button', onclick: () => extend(30) }, '+30 jours'),
         h('button', { class: 'btn small ghost', type: 'button', onclick: () => setAccess(a, { p_unlimited: true, p_suspended: false }) }, 'Illimité'),
@@ -394,6 +396,22 @@ function accessSection() {
   );
 }
 
+async function reissueCode(agency) {
+  const email = window.prompt(`E-mail du propriétaire de « ${agency.nom} » (le client devra créer son compte avec cet e-mail) :`);
+  if (email === null) return;
+  if (!isValidEmail(email)) {
+    window.alert('Adresse e-mail invalide.');
+    return;
+  }
+  const { data, error } = await supabase.rpc('admin_reissue_owner_code', { p_agency_id: agency.agency_id, p_owner_email: email.trim() });
+  if (error) {
+    window.alert(adminErrorMessage(error));
+    return;
+  }
+  state.created = { nom: agency.nom, email: data.email, code: data.invite_code };
+  await refresh();
+}
+
 async function setAccess(agency, args) {
   if (args.p_suspended === true && !window.confirm(`Suspendre « ${agency.nom} » ? Ses utilisateurs seront bloqués immédiatement.`)) return;
   const { error } = await supabase.rpc('admin_set_agency_access', {
@@ -407,7 +425,6 @@ async function setAccess(agency, args) {
     window.alert(adminErrorMessage(error));
     return;
   }
-  state.created = null;
   await refresh();
 }
 
