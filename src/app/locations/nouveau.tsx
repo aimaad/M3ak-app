@@ -71,9 +71,11 @@ export default function NouvelleLocationScreen() {
 
   // Voitures libres pour les dates demandées (le client demande une période, on lui propose ce qui est disponible).
   const allRentalsQuery = useRentals();
+  // Tant que les locations existantes ne sont pas chargées, on n'affiche rien : sinon toutes les voitures paraîtraient libres.
+  const rentalsReady = allRentalsQuery.isSuccess && vehiclesQuery.isSuccess;
   const availability = useMemo(
-    () => (hasPeriod ? vehicleAvailability(vehiclesQuery.data ?? [], allRentalsQuery.data ?? [], { start: startISO as string, end: endISO as string }) : null),
-    [hasPeriod, vehiclesQuery.data, allRentalsQuery.data, startISO, endISO]
+    () => (hasPeriod && rentalsReady ? vehicleAvailability(vehiclesQuery.data ?? [], allRentalsQuery.data ?? [], { start: startISO as string, end: endISO as string }) : null),
+    [hasPeriod, rentalsReady, vehiclesQuery.data, allRentalsQuery.data, startISO, endISO]
   );
   // La voiture choisie n'est gardée que si elle est encore libre à ces dates (sinon on a changé les dates après coup).
   const vehicle = pickedVehicle && availability?.available.some((v) => v.id === pickedVehicle.id) ? pickedVehicle : null;
@@ -291,8 +293,8 @@ export default function NouvelleLocationScreen() {
           {stepKey === 'vehicule' ? (
             <>
               {!availability ? (
-                <ThemedText type="small" style={{ color: '#B91C1C' }}>
-                  {t('locations.wizard.pickDatesFirst')}
+                <ThemedText type="small" style={hasPeriod ? undefined : { color: '#B91C1C' }} themeColor={hasPeriod ? 'textSecondary' : undefined}>
+                  {hasPeriod ? t('locations.wizard.checking') : t('locations.wizard.pickDatesFirst')}
                 </ThemedText>
               ) : (
                 <>
@@ -329,6 +331,13 @@ export default function NouvelleLocationScreen() {
                             {selected ? <ThemedText type="smallBold" style={{ color: '#7C3AED' }}>✓</ThemedText> : null}
                           </View>
                           <ThemedText type="small" themeColor="textSecondary">{v.immatriculation}</ThemedText>
+                          {availability.pendingOverlaps[v.id]?.map((pending) => (
+                            <View key={pending.id} className="flex-row items-start gap-1.5 rounded-xl bg-[#FEF3C7] px-3 py-2">
+                              <ThemedText type="small" style={{ flex: 1, color: '#92400E' }}>
+                                {t('locations.wizard.pendingOverlap', { start: formatDate(pending.dateDebutPrevue), end: formatDate(pending.dateFinPrevue) })}
+                              </ThemedText>
+                            </View>
+                          ))}
                           <View className="flex-row items-center justify-between">
                             <ThemedText type="small">{`${v.prixJour.toLocaleString('fr-FR')} MAD/j`}</ThemedText>
                             <ThemedText type="smallBold" themeColor="primary">

@@ -116,4 +116,27 @@ describe('véhicules libres pour une période', () => {
     expect(result.unavailable.map((u) => u.reason.kind)).toEqual(['maintenance', 'indisponible', 'archived']);
     expect(result.available.map((x) => x.id)).toEqual(['ok']);
   });
+
+  it('une réservation qui finit après le début de la demande (même jour, heure plus tardive) bloque la voiture', () => {
+    // Retour prévu le 10 juin à 18 h ; la nouvelle location commence le 10 juin à 09 h : les heures se chevauchent.
+    const result = vehicleAvailability([v('a')], [rental('a', '2026-06-05T09:00:00Z', '2026-06-10T18:00:00Z')], range);
+    expect(result.available).toEqual([]);
+    expect(result.unavailable[0].reason).toEqual({ kind: 'booked', freeFrom: '2026-06-10T18:00:00Z' });
+  });
+
+  it('compare des instants, pas des textes : le format « +00:00 » de la base et « .000Z » de JavaScript donnent le même résultat', () => {
+    const fromDatabase = rental('a', '2026-06-05T09:00:00+00:00', '2026-06-10T09:00:30+00:00');
+    expect(vehicleAvailability([v('a')], [fromDatabase], { start: '2026-06-10T09:00:00.000Z', end: '2026-06-12T09:00:00.000Z' }).available).toEqual([]);
+    // fin exactement égale au début de la demande : pas de chevauchement, quel que soit le format
+    const touching = rental('a', '2026-06-05T09:00:00+00:00', '2026-06-10T09:00:00+00:00');
+    expect(vehicleAvailability([v('a')], [touching], { start: '2026-06-10T09:00:00.000Z', end: '2026-06-12T09:00:00.000Z' }).available.map((x) => x.id)).toEqual(['a']);
+  });
+
+  it('signale une réservation en attente qui chevauche sans bloquer la voiture', () => {
+    const pending = rental('a', '2026-06-11T09:00:00Z', '2026-06-13T09:00:00Z', 'en_attente_confirmation');
+    const result = vehicleAvailability([v('a'), v('b')], [pending], range);
+    expect(result.available.map((x) => x.id)).toEqual(['a', 'b']);
+    expect(result.pendingOverlaps.a).toEqual([pending]);
+    expect(result.pendingOverlaps.b).toBeUndefined();
+  });
 });

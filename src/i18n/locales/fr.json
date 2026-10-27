@@ -1139,7 +1139,9 @@
       },
       "identityRequiredTitle": "CIN ou passeport obligatoire",
       "identityRequiredBody": "{{name}} n'a ni CIN ni passeport enregistré. Le propriétaire de l'agence exige l'un des deux pour créer une location. Complétez la fiche du client, puis revenez ici.",
-      "completeCustomer": "Compléter la fiche du client"
+      "completeCustomer": "Compléter la fiche du client",
+      "checking": "Vérification des disponibilités…",
+      "pendingOverlap": "⚠ Une réservation EN ATTENTE existe du {{start}} au {{end}} : elle ne bloque pas la voiture, mais ne pourra plus être confirmée si vous la louez maintenant."
     },
     "dossier": {
       "vehicleSection": "Voiture",

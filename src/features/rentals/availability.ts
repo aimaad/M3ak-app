@@ -14,8 +14,10 @@ function isBlocking(statut: RentalStatus): boolean {
   return BLOCKING_RENTAL_STATUSES.includes(statut);
 }
 
+/** Instants comparés en millisecondes : la base renvoie « …+00:00 », JavaScript « …000Z », et comparer les textes n'est pas fiable. */
 function rangesOverlap(a: DateRange, b: DateRange): boolean {
-  return a.start < b.end && b.start < a.end;
+  const [aStart, aEnd, bStart, bEnd] = [a.start, a.end, b.start, b.end].map((value) => new Date(value).getTime());
+  return aStart < bEnd && bStart < aEnd;
 }
 
 /**
@@ -83,6 +85,11 @@ export type UnavailableReason =
 export type VehicleAvailability<V extends VehicleForAvailability> = {
   available: V[];
   unavailable: { vehicle: V; reason: UnavailableReason }[];
+  /**
+   * Voitures libres, mais avec une réservation « en attente de confirmation » qui chevauche la période : elle ne bloque
+   * pas la voiture, mais sa confirmation sera refusée si on loue la voiture entre-temps. À signaler à l'employé.
+   */
+  pendingOverlaps: Record<string, RentalWithVehicle[]>;
 };
 
 /**
@@ -97,6 +104,7 @@ export function vehicleAvailability<V extends VehicleForAvailability>(
 ): VehicleAvailability<V> {
   const available: V[] = [];
   const unavailable: VehicleAvailability<V>['unavailable'] = [];
+  const pendingOverlaps: VehicleAvailability<V>['pendingOverlaps'] = {};
   for (const vehicle of vehicles) {
     if (vehicle.archivedAt) {
       unavailable.push({ vehicle, reason: { kind: 'archived' } });
@@ -114,11 +122,18 @@ export function vehicleAvailability<V extends VehicleForAvailability>(
       (rental) => rental.vehicleId === vehicle.id && isBlocking(rental.statut) && rangesOverlap({ start: rental.dateDebutPrevue, end: rental.dateFinPrevue }, range)
     );
     if (conflicts.length > 0) {
-      const freeFrom = conflicts.reduce((latest, rental) => (rental.dateFinPrevue > latest ? rental.dateFinPrevue : latest), conflicts[0].dateFinPrevue);
+      const freeFrom = conflicts.reduce((latest, rental) => (new Date(rental.dateFinPrevue).getTime() > new Date(latest).getTime() ? rental.dateFinPrevue : latest), conflicts[0].dateFinPrevue);
       unavailable.push({ vehicle, reason: { kind: 'booked', freeFrom } });
     } else {
       available.push(vehicle);
+      const pending = rentals.filter(
+        (rental) =>
+          rental.vehicleId === vehicle.id &&
+          rental.statut === 'en_attente_confirmation' &&
+          rangesOverlap({ start: rental.dateDebutPrevue, end: rental.dateFinPrevue }, range)
+      );
+      if (pending.length > 0) pendingOverlaps[vehicle.id] = pending;
     }
   }
-  return { available, unavailable };
+  return { available, unavailable, pendingOverlaps };
 }
