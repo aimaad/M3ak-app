@@ -20,7 +20,7 @@ function Bubble({ message, onOpenSource }: { message: ChatMessage; onOpenSource:
   return (
     <View className={`max-w-[88%] gap-2 ${mine ? 'self-end' : 'self-start'}`}>
       <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: mine ? M3akPalette.mauve : '#fff', borderWidth: mine ? 0 : 1, borderColor: '#EAE5F2' }}>
-        <ThemedText type="default" style={{ color: mine ? '#fff' : undefined }} selectable>
+        <ThemedText type="default" style={{ color: mine ? '#FFFFFF' : '#211A2E' }} selectable>
           {message.content}
         </ThemedText>
       </View>
@@ -91,7 +91,7 @@ export default function ChatConversationScreen() {
                 <View className="flex-row flex-wrap gap-2">
                   {SUGGESTIONS.map((key) => (
                     <Pressable key={key} onPress={() => send(t(`chat.suggestions.${key}`))} className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2">
-                      <ThemedText type="small">{t(`chat.suggestions.${key}`)}</ThemedText>
+                      <ThemedText type="small" style={{ color: '#211A2E' }}>{t(`chat.suggestions.${key}`)}</ThemedText>
                     </Pressable>
                   ))}
                 </View>
@@ -107,7 +107,7 @@ export default function ChatConversationScreen() {
                 <Bubble message={{ id: 'pending', role: 'user', content: pendingQuestion, sources: [], createdAt: '' }} onOpenSource={() => {}} />
                 <View className="flex-row items-center gap-2 self-start rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3">
                   <ActivityIndicator color={M3akPalette.mauve} size="small" />
-                  <ThemedText type="small" themeColor="textSecondary">
+                  <ThemedText type="small" style={{ color: '#6B6480' }}>
                     {t('chat.thinking')}
                   </ThemedText>
                 </View>
@@ -129,7 +129,8 @@ export default function ChatConversationScreen() {
               multiline
               maxLength={600}
               className="max-h-28 min-h-11 flex-1 rounded-2xl border border-[#EAE5F2] px-4 py-2"
-              style={{ fontFamily: 'Cairo_400Regular', textAlignVertical: 'top' }}
+              style={{ fontFamily: 'Cairo_400Regular', textAlignVertical: 'top', color: '#211A2E' }}
+              placeholderTextColor="#8B84A0"
               editable={!ask.isPending}
             />
             <Pressable
