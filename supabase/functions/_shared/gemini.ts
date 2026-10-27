@@ -117,6 +117,19 @@ async function discoverModels(apiKey: string): Promise<string[]> {
   }
 }
 
+/** Modèles qui viennent de refuser (quota 429, absent 404) : on ne les réessaie pas tout de suite, ça ferait perdre du temps. */
+const cooldown = new Map<string, number>();
+const COOLDOWN_MS: Record<number, number> = { 429: 60_000, 404: 3_600_000 };
+
+function coolDown(apiKey: string, model: string, status: number) {
+  const duration = COOLDOWN_MS[status];
+  if (duration) cooldown.set(`${apiKey.slice(-8)}:${model}`, Date.now() + duration);
+}
+
+function isCooling(apiKey: string, model: string): boolean {
+  return (cooldown.get(`${apiKey.slice(-8)}:${model}`) ?? 0) > Date.now();
+}
+
 async function candidateModels(apiKey: string): Promise<string[]> {
   const discovered = await discoverModels(apiKey);
   // Un modèle « lite » a un quota gratuit bien plus large (ex. 500 demandes/jour contre 20) : on alterne les deux familles,
@@ -128,7 +141,9 @@ async function candidateModels(apiKey: string): Promise<string[]> {
     if (full[index]) interleaved.push(full[index]);
     if (lite[index]) interleaved.push(lite[index]);
   }
-  return [...new Set([LATEST_ALIAS, ...interleaved.slice(0, 4), ...FALLBACK_MODELS, ...interleaved.slice(4)])].slice(0, MAX_MODELS_TRIED);
+  const ordered = [...new Set([LATEST_ALIAS, ...interleaved.slice(0, 4), ...FALLBACK_MODELS, ...interleaved.slice(4)])].slice(0, MAX_MODELS_TRIED);
+  const available = ordered.filter((model) => !isCooling(apiKey, model));
+  return available.length > 0 ? available : ordered;
 }
 
 /**
@@ -146,8 +161,11 @@ export async function callGeminiJson(apiKey: string, systemPrompt: string, parts
       const remaining = PROVIDER_DEADLINE_MS - (Date.now() - started);
       if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
       try {
-        return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(PER_CALL_TIMEOUT_MS, remaining));
+        const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(PER_CALL_TIMEOUT_MS, remaining));
+        console.log('Gemini', model, 'OK', `${Date.now() - started} ms`);
+        return result;
       } catch (error) {
+        if (error instanceof ProviderHttpError) coolDown(apiKey, model, error.status);
         lastError = error;
         // Diagnostic : quel modèle a répondu quoi (jamais la clé ni le contenu envoyé).
         console.error('Gemini', model, error instanceof ProviderHttpError ? `HTTP ${error.status}` : error instanceof StageTimeoutError ? 'timeout' : 'erreur');
