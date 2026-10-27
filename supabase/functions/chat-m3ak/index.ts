@@ -151,6 +151,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const started = Date.now();
+  console.log('chat: question reçue', { langue: language, conversation: history.length > 0 ? 'existante' : 'nouvelle' });
   const prompt = systemPrompt(new Date(), language);
   const results: unknown[] = [];
   const transcript: string[] = [];
@@ -173,6 +174,7 @@ Deno.serve(async (request: Request) => {
       totalUsage = { inputTokens: totalUsage.inputTokens + result.usage.inputTokens, outputTokens: totalUsage.outputTokens + result.usage.outputTokens };
 
       const next = parseModelStep(result.json);
+      console.log('chat: tour', step, next.kind, next.kind === 'tools' ? next.calls.map((c) => c.tool).join(',') : '', `${Date.now() - started} ms`);
       if (next.kind === 'answer') {
         answer = next.answer;
         sourceIds = next.sourceIds;
@@ -194,6 +196,7 @@ Deno.serve(async (request: Request) => {
           continue;
         }
         results.push(data);
+        console.log('chat: outil', requested.tool, Array.isArray(data) ? `${data.length} lignes` : 'résultat');
         transcript.push(`Outil ${requested.tool} ${JSON.stringify(requested.args)} → ${JSON.stringify(data).slice(0, 8_000)}`);
       }
     }
@@ -211,10 +214,12 @@ Deno.serve(async (request: Request) => {
   }
 
   if (!answer) {
+    console.error('chat: aucune réponse exploitable');
     await recordUsage(admin, agencyId, false, 'empty', model, totalUsage);
     return json({ ok: false, error: 'chat_no_answer' });
   }
 
+  console.log('chat: réponse prête', `${Date.now() - started} ms`);
   const sources = pickSources(sourceIds, seenRentals(results));
   try {
     await withTimeout('save', supabase.from('chat_convo_messages').insert([
