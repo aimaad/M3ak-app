@@ -6,6 +6,7 @@ import type { Customer } from '@/features/customers/types';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
 
+import { OverlapBadge } from './overlap-badge';
 import { RentalStatusBadge } from './rental-status-badge';
 import type { Rental } from './types';
 
@@ -18,11 +19,14 @@ export function RentalCard({
   vehicle,
   customer,
   onPress,
+  overlap = false,
 }: {
   rental: Rental;
   vehicle: Vehicle | undefined;
   customer: Customer | undefined;
   onPress: () => void;
+  /** Chevauche une autre location active de la même voiture. */
+  overlap?: boolean;
 }) {
   const { t } = useLanguage();
 
@@ -42,6 +46,7 @@ export function RentalCard({
       <ThemedText type="small" themeColor="textSecondary">
         {formatDate(rental.dateDebutPrevue)} → {formatDate(rental.dateFinPrevue)}
       </ThemedText>
+      {overlap ? <OverlapBadge /> : null}
     </PressableCard>
   );
 }

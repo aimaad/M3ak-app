@@ -21,14 +21,12 @@ function rangesOverlap(a: DateRange, b: DateRange): boolean {
 }
 
 /**
- * true si la période proposée chevauche une réservation qui bloque
- * réellement la disponibilité (confirmée, en cours, ou l'ancien statut
- * "reservee"). Les brouillons / en attente de confirmation ne bloquent pas
- * la disponibilité — voir BLOCKING_RENTAL_STATUSES dans status-transitions.ts
- * pour la justification de ce choix. La protection définitive contre les
- * accès concurrents est assurée côté base par une contrainte d'exclusion
- * (voir migrations/0013_rentals_booking_system.sql) : cette fonction ne sert
- * qu'à donner un retour immédiat dans l'interface.
+ * true si la période proposée chevauche une réservation qui bloque la voiture
+ * (en attente de confirmation, confirmée, en cours, ou l'ancien statut
+ * "reservee") : voir BLOCKING_RENTAL_STATUSES dans status-transitions.ts.
+ * La protection définitive contre les accès concurrents est assurée côté base
+ * (contrainte d'exclusion de la migration 0014 et déclencheur de la migration
+ * 0056) : cette fonction ne sert qu'à donner un retour immédiat dans l'interface.
  */
 export function hasBookingConflict(
   existingRentals: RentalForAvailability[],
@@ -85,11 +83,6 @@ export type UnavailableReason =
 export type VehicleAvailability<V extends VehicleForAvailability> = {
   available: V[];
   unavailable: { vehicle: V; reason: UnavailableReason }[];
-  /**
-   * Voitures libres, mais avec une réservation « en attente de confirmation » qui chevauche la période : elle ne bloque
-   * pas la voiture, mais sa confirmation sera refusée si on loue la voiture entre-temps. À signaler à l'employé.
-   */
-  pendingOverlaps: Record<string, RentalWithVehicle[]>;
 };
 
 /**
@@ -104,7 +97,6 @@ export function vehicleAvailability<V extends VehicleForAvailability>(
 ): VehicleAvailability<V> {
   const available: V[] = [];
   const unavailable: VehicleAvailability<V>['unavailable'] = [];
-  const pendingOverlaps: VehicleAvailability<V>['pendingOverlaps'] = {};
   for (const vehicle of vehicles) {
     if (vehicle.archivedAt) {
       unavailable.push({ vehicle, reason: { kind: 'archived' } });
@@ -126,14 +118,34 @@ export function vehicleAvailability<V extends VehicleForAvailability>(
       unavailable.push({ vehicle, reason: { kind: 'booked', freeFrom } });
     } else {
       available.push(vehicle);
-      const pending = rentals.filter(
-        (rental) =>
-          rental.vehicleId === vehicle.id &&
-          rental.statut === 'en_attente_confirmation' &&
-          rangesOverlap({ start: rental.dateDebutPrevue, end: rental.dateFinPrevue }, range)
-      );
-      if (pending.length > 0) pendingOverlaps[vehicle.id] = pending;
     }
   }
-  return { available, unavailable, pendingOverlaps };
+  return { available, unavailable };
+}
+
+/**
+ * Identifiants des locations qui chevauchent une autre location active de la MÊME voiture (doubles réservations créées
+ * avant la règle de la migration 0056, ou en attente). Elles sont signalées dans l'app pour que l'employé annule ou
+ * déplace l'une des deux.
+ */
+export function overlappingRentalIds(rentals: RentalWithVehicle[]): Set<string> {
+  const byVehicle = new Map<string, RentalWithVehicle[]>();
+  for (const rental of rentals) {
+    if (!isBlocking(rental.statut)) continue;
+    const list = byVehicle.get(rental.vehicleId) ?? [];
+    list.push(rental);
+    byVehicle.set(rental.vehicleId, list);
+  }
+  const overlapping = new Set<string>();
+  for (const list of byVehicle.values()) {
+    for (let i = 0; i < list.length; i++) {
+      for (let j = i + 1; j < list.length; j++) {
+        if (rangesOverlap({ start: list[i].dateDebutPrevue, end: list[i].dateFinPrevue }, { start: list[j].dateDebutPrevue, end: list[j].dateFinPrevue })) {
+          overlapping.add(list[i].id);
+          overlapping.add(list[j].id);
+        }
+      }
+    }
+  }
+  return overlapping;
 }

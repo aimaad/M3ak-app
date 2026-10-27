@@ -14,6 +14,8 @@ import type { Customer } from '@/features/customers/types';
 import { RENTAL_STATUS_FILTERS, type RentalStatusFilter } from '@/features/rentals/filters';
 import { useRentals } from '@/features/rentals/hooks';
 import { setCalendarLocale } from '@/features/rentals/calendar-locale';
+import { overlappingRentalIds } from '@/features/rentals/availability';
+import { OverlapBadge } from '@/features/rentals/overlap-badge';
 import { CALENDAR_THEME } from '@/features/rentals/calendar-theme';
 import { RENTAL_STATUS_STYLES, RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import type { Rental } from '@/features/rentals/types';
@@ -70,6 +72,8 @@ export default function CalendrierScreen() {
       return true;
     });
   }, [rentalsQuery.data, statusFilter, vehicleFilter]);
+
+  const overlapping = useMemo(() => overlappingRentalIds(rentalsQuery.data ?? []), [rentalsQuery.data]);
 
   const daysWithBookings = useMemo(() => {
     const map = new Map<string, Rental[]>();
@@ -233,6 +237,7 @@ export default function CalendrierScreen() {
                       <ThemedText type="small" themeColor="textSecondary">
                         {item.numero} · {formatDay(item.dateDebutPrevue)} → {formatDay(item.dateFinPrevue)}
                       </ThemedText>
+                      {overlapping.has(item.id) ? <OverlapBadge /> : null}
                     </View>
                   </Pressable>
                 );

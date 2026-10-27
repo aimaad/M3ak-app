@@ -16,8 +16,11 @@ import { useInspectionForRental } from '@/features/inspections/hooks';
 import { AddPaymentForm } from '@/features/payments/add-payment-form';
 import { usePaymentsForRental } from '@/features/payments/hooks';
 import { ExtendRentalForm } from '@/features/rentals/extend-rental-form';
-import { useCancelRental, useConfirmRental, useDepartureCheck, useDeparturePolicy, useRental } from '@/features/rentals/hooks';
+import { RENTAL_CONFLICT_ERROR } from '@/features/rentals/api';
+import { overlappingRentalIds } from '@/features/rentals/availability';
+import { useCancelRental, useConfirmRental, useDepartureCheck, useDeparturePolicy, useRental, useVehicleRentals } from '@/features/rentals/hooks';
 import { RentalDriversSection } from '@/features/rentals/rental-drivers-section';
+import { OverlapBadge } from '@/features/rentals/overlap-badge';
 import { RentalDossier } from '@/features/rentals/rental-dossier';
 import { RentalJourney } from '@/features/rentals/rental-journey';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
@@ -52,6 +55,7 @@ export default function LocationDetailScreen() {
   const { data: customer } = useCustomer(rental?.customerId);
   const { data: deposit } = useDeposit(rental?.id);
   const { data: payments = [] } = usePaymentsForRental(rental?.id);
+  const vehicleRentalsQuery = useVehicleRentals(rental?.vehicleId);
   const { data: inspectionDepart } = useInspectionForRental(rental?.id, 'depart');
   const { data: inspectionRetour } = useInspectionForRental(rental?.id, 'retour');
   const { data: contract } = useContractForRental(rental?.id);
@@ -86,7 +90,8 @@ export default function LocationDetailScreen() {
   function handleConfirm() {
     if (!rental) return;
     confirmRental.mutate(rental.id, {
-      onError: () => Alert.alert(t('common.appName'), t('locations.confirmError')),
+      onError: (error) =>
+        Alert.alert(t('common.appName'), t(error instanceof Error && error.message === RENTAL_CONFLICT_ERROR ? 'locations.confirmConflict' : 'locations.confirmError')),
     });
   }
 
@@ -118,6 +123,15 @@ export default function LocationDetailScreen() {
         />
 
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
+          {overlappingRentalIds(vehicleRentalsQuery.data ?? []).has(rental.id) ? (
+            <View className="gap-1 rounded-2xl border border-[#FECACA] bg-[#FEE2E2] p-4">
+              <OverlapBadge />
+              <ThemedText type="small" style={{ color: '#991B1B' }}>
+                {t('locations.overlap.warning')}
+              </ThemedText>
+            </View>
+          ) : null}
+
           <View className="flex-row items-center justify-between">
             <RentalStatusBadge status={rental.statut} />
             <ThemedText type="small" themeColor="textSecondary">

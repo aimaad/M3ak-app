@@ -1,4 +1,4 @@
-import { bookedDates, hasBookingConflict, vehicleAvailability, type RentalForAvailability } from '../availability';
+import { overlappingRentalIds, bookedDates, hasBookingConflict, vehicleAvailability, type RentalForAvailability } from '../availability';
 
 function makeRental(overrides: Partial<RentalForAvailability>): RentalForAvailability {
   return {
@@ -55,9 +55,14 @@ describe('hasBookingConflict', () => {
     ).toBe(false);
   });
 
-  it('ne bloque pas la disponibilité pour une réservation en attente de confirmation', () => {
+  it('bloque la disponibilité pour une réservation en attente de confirmation (la voiture est déjà promise)', () => {
     const existing = [makeRental({ statut: 'en_attente_confirmation' })];
-    expect(hasBookingConflict(existing, { start: '2026-03-12', end: '2026-03-13' })).toBe(false);
+    expect(hasBookingConflict(existing, { start: '2026-03-12', end: '2026-03-13' })).toBe(true);
+  });
+
+  it('ne bloque pas pour une location annulée ou terminée', () => {
+    expect(hasBookingConflict([makeRental({ statut: 'annulee' })], { start: '2026-03-12', end: '2026-03-13' })).toBe(false);
+    expect(hasBookingConflict([makeRental({ statut: 'terminee' })], { start: '2026-03-12', end: '2026-03-13' })).toBe(false);
   });
 });
 
@@ -102,13 +107,14 @@ describe('véhicules libres pour une période', () => {
     expect(result.unavailable).toEqual([{ vehicle: v('b'), reason: { kind: 'booked', freeFrom: '2026-06-20T09:00:00Z' } }]);
   });
 
-  it("ne tient pas compte des locations en attente ou annulées (elles ne bloquent pas)", () => {
+  it('une location en attente bloque la voiture ; une location annulée, non', () => {
     const result = vehicleAvailability(
       [v('a'), v('b')],
       [rental('a', '2026-06-11T09:00:00Z', '2026-06-13T09:00:00Z', 'en_attente_confirmation'), rental('b', '2026-06-11T09:00:00Z', '2026-06-13T09:00:00Z', 'annulee')],
       range
     );
-    expect(result.available.map((x) => x.id)).toEqual(['a', 'b']);
+    expect(result.available.map((x) => x.id)).toEqual(['b']);
+    expect(result.unavailable.map((u) => u.vehicle.id)).toEqual(['a']);
   });
 
   it('écarte les voitures en maintenance, indisponibles ou archivées, avec la raison', () => {
@@ -131,12 +137,26 @@ describe('véhicules libres pour une période', () => {
     const touching = rental('a', '2026-06-05T09:00:00+00:00', '2026-06-10T09:00:00+00:00');
     expect(vehicleAvailability([v('a')], [touching], { start: '2026-06-10T09:00:00.000Z', end: '2026-06-12T09:00:00.000Z' }).available.map((x) => x.id)).toEqual(['a']);
   });
+});
 
-  it('signale une réservation en attente qui chevauche sans bloquer la voiture', () => {
-    const pending = rental('a', '2026-06-11T09:00:00Z', '2026-06-13T09:00:00Z', 'en_attente_confirmation');
-    const result = vehicleAvailability([v('a'), v('b')], [pending], range);
-    expect(result.available.map((x) => x.id)).toEqual(['a', 'b']);
-    expect(result.pendingOverlaps.a).toEqual([pending]);
-    expect(result.pendingOverlaps.b).toBeUndefined();
+describe('chevauchements existants', () => {
+  const r = (id: string, vehicleId: string, start: string, end: string, statut: 'confirmee' | 'en_attente_confirmation' | 'annulee' = 'en_attente_confirmation') => ({ id, vehicleId, dateDebutPrevue: start, dateFinPrevue: end, statut });
+
+  it('repère les deux locations d\'une même voiture qui se chevauchent', () => {
+    const ids = overlappingRentalIds([
+      r('1', 'a', '2026-06-10T09:00:00Z', '2026-06-12T18:00:00Z'),
+      r('2', 'a', '2026-06-12T09:00:00Z', '2026-06-14T18:00:00Z'),
+      r('3', 'a', '2026-06-20T09:00:00Z', '2026-06-22T18:00:00Z'),
+      r('4', 'b', '2026-06-10T09:00:00Z', '2026-06-12T18:00:00Z'),
+    ]);
+    expect([...ids].sort()).toEqual(['1', '2']);
+  });
+  it('ignore les locations annulées et les créneaux qui se touchent', () => {
+    const ids = overlappingRentalIds([
+      r('1', 'a', '2026-06-10T09:00:00Z', '2026-06-12T18:00:00Z'),
+      r('2', 'a', '2026-06-12T18:00:00+00:00', '2026-06-14T18:00:00Z'),
+      r('3', 'a', '2026-06-11T09:00:00Z', '2026-06-13T18:00:00Z', 'annulee'),
+    ]);
+    expect(ids.size).toBe(0);
   });
 });

@@ -10,6 +10,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useCustomers } from '@/features/customers/hooks';
 import type { Customer } from '@/features/customers/types';
+import { overlappingRentalIds } from '@/features/rentals/availability';
 import { countRentalsByStatus, filterRentalsByStatus, type RentalStatusFilter } from '@/features/rentals/filters';
 import { useRentals } from '@/features/rentals/hooks';
 import { RentalCard } from '@/features/rentals/rental-card';
@@ -33,6 +34,7 @@ export default function LocationsScreen() {
 
   const rentals = rentalsQuery.data ?? EMPTY_RENTALS;
   const counts = useMemo(() => countRentalsByStatus(rentals), [rentals]);
+  const overlapping = useMemo(() => overlappingRentalIds(rentals), [rentals]);
   const filtered = useMemo(() => filterRentalsByStatus(rentals, statusFilter), [rentals, statusFilter]);
   const pagination = usePagination(filtered, statusFilter);
 
@@ -107,6 +109,7 @@ export default function LocationsScreen() {
                 vehicle={vehiclesById.get(item.vehicleId)}
                 customer={customersById.get(item.customerId)}
                 onPress={() => router.push(`/locations/${item.id}`)}
+                overlap={overlapping.has(item.id)}
               />
             )}
             ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}

@@ -331,13 +331,6 @@ export default function NouvelleLocationScreen() {
                             {selected ? <ThemedText type="smallBold" style={{ color: '#7C3AED' }}>✓</ThemedText> : null}
                           </View>
                           <ThemedText type="small" themeColor="textSecondary">{v.immatriculation}</ThemedText>
-                          {availability.pendingOverlaps[v.id]?.map((pending) => (
-                            <View key={pending.id} className="flex-row items-start gap-1.5 rounded-xl bg-[#FEF3C7] px-3 py-2">
-                              <ThemedText type="small" style={{ flex: 1, color: '#92400E' }}>
-                                {t('locations.wizard.pendingOverlap', { start: formatDate(pending.dateDebutPrevue), end: formatDate(pending.dateFinPrevue) })}
-                              </ThemedText>
-                            </View>
-                          ))}
                           <View className="flex-row items-center justify-between">
                             <ThemedText type="small">{`${v.prixJour.toLocaleString('fr-FR')} MAD/j`}</ThemedText>
                             <ThemedText type="smallBold" themeColor="primary">

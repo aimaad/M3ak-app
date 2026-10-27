@@ -1140,8 +1140,7 @@
       "identityRequiredTitle": "CIN ou passeport obligatoire",
       "identityRequiredBody": "{{name}} n'a ni CIN ni passeport enregistré. Le propriétaire de l'agence exige l'un des deux pour créer une location. Complétez la fiche du client, puis revenez ici.",
       "completeCustomer": "Compléter la fiche du client",
-      "checking": "Vérification des disponibilités…",
-      "pendingOverlap": "⚠ Une réservation EN ATTENTE existe du {{start}} au {{end}} : elle ne bloque pas la voiture, mais ne pourra plus être confirmée si vous la louez maintenant."
+      "checking": "Vérification des disponibilités…"
     },
     "dossier": {
       "vehicleSection": "Voiture",
@@ -1175,7 +1174,12 @@
       "noNewDamage": "Aucun nouveau dommage.",
       "openInspectionRetour": "Voir l'inspection de retour",
       "title": "Dossier de la location"
-    }
+    },
+    "overlap": {
+      "badge": "Chevauchement",
+      "warning": "Cette location chevauche une autre location de la même voiture. Annulez ou déplacez l'une des deux pour éviter une double réservation."
+    },
+    "confirmConflict": "Cette voiture est déjà promise à un autre client sur ce créneau. Annulez ou déplacez l'une des deux locations, puis confirmez de nouveau."
   },
   "contract": {
     "section": "Contrat",
