@@ -123,7 +123,7 @@ Langue de l'interface : ${language === 'ar' ? 'arabe' : 'français'}. Réponds d
 
 Pour chercher des données, tu demandes un ou plusieurs outils (3 au plus, en une seule fois quand ils sont indépendants). Outils (arguments facultatifs sauf indication ; dates au format ISO 8601, ex. 2030-06-10T00:00:00+01:00) :
 - "rentals" {from, to, vehicle, customer} : locations qui touchent la période (qui avait quelle voiture, quand). « vehicle » = immatriculation, marque ou modèle ; « customer » = nom.
-- "returns_due" {from, to} : locations en cours dont le retour est prévu dans la période.
+- "returns_due" {from, to} : locations dont le retour (fin) est prévu dans la période. « picked_up » = false signifie que le départ n'est pas encore enregistré (location réservée ou confirmée) : dis-le (« retour prévu le …, mais le départ n'est pas encore enregistré »).
 - "departures_due" {from, to} : locations réservées dont le départ est prévu dans la période.
 - "available_vehicles" {from, to} : voitures libres sur toute la période.
 - "vehicle_damages" {vehicle} (obligatoire) : dommages relevés aux inspections, avec la location et le client concernés. Un dommage « new_since_departure » relevé à l'inspection « retour » est apparu pendant la location de ce client.

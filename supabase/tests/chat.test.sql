@@ -89,6 +89,20 @@ select pg_temp.ck('aucun CIN ni numéro de permis dans les résultats',
   and public.chat_tool_rentals(null, null, null, 'karim')::text not like '%AB123456%', '');
 select pg_temp.ck('l''outil ignore une recherche vide pour les dommages', jsonb_array_length(public.chat_tool_vehicle_damages('   ')) = 0, '');
 
+-- une location pas encore démarrée (confirmée) dont la fin tombe dans la période est listée, avec son statut
+reset role;
+set session_replication_role = replica;
+insert into rentals (id, agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue, branch_depart_id, branch_retour_id)
+values ('a6000000-0000-0000-0000-000000000006', 'aaaaaaaa-0000-0000-0000-000000000001', 'f3000000-0000-0000-0000-000000000003', 'c1000000-0000-0000-0000-000000000001', 'confirmee',
+        timestamptz '2030-06-17 09:00+01', timestamptz '2030-06-18 09:00+01', 'b1000000-0000-0000-0000-000000000001', 'b1000000-0000-0000-0000-000000000001');
+set session_replication_role = origin;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.ck('retours : une location confirmée mais pas démarrée est listée, avec son statut',
+  (select r ->> 'status' = 'confirmee' and (r ->> 'picked_up')::boolean = false from jsonb_array_elements(public.chat_tool_returns_due(timestamptz '2030-06-18 00:00+01', timestamptz '2030-06-18 23:59+01')) r), '');
+select pg_temp.ck('retours : une location en cours est marquée comme déjà partie',
+  (select (r ->> 'picked_up')::boolean from jsonb_array_elements(public.chat_tool_returns_due(timestamptz '2030-06-14 00:00+01', timestamptz '2030-06-14 23:59+01')) r), '');
+
 -- isolation entreprise
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000b1');
 select pg_temp.ck('une autre entreprise ne voit rien des locations de A', jsonb_array_length(public.chat_tool_rentals(null, null, null, 'karim')) = 0 and jsonb_array_length(public.chat_tool_vehicle_damages('1-A-1')) = 0 and jsonb_array_length(public.chat_tool_customer_history('karim')) = 0, '');
