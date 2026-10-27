@@ -47,11 +47,18 @@ export default function ChatConversationScreen() {
   const [text, setText] = useState('');
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Messages de cette séance : la réponse s'affiche tout de suite, sans attendre que l'historique soit relu en base.
+  const [liveMessages, setLiveMessages] = useState<ChatMessage[]>([]);
   const messagesQuery = useChatMessages(conversationId);
   const ask = useAskChat();
   const scrollRef = useRef<ScrollViewInstance>(null);
 
-  const messages = messagesQuery.data ?? [];
+  const serverMessages = messagesQuery.data ?? [];
+  const lastServer = serverMessages.slice(-6);
+  const messages = [
+    ...serverMessages,
+    ...liveMessages.filter((live) => !lastServer.some((saved) => saved.role === live.role && saved.content === live.content)),
+  ];
 
   useEffect(() => {
     const timer = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
@@ -67,7 +74,15 @@ export default function ChatConversationScreen() {
     ask.mutate(
       { message, conversationId, language: language === 'ar' ? 'ar' : 'fr' },
       {
-        onSuccess: (answer) => setConversationId(answer.conversationId),
+        onSuccess: (answer) => {
+          const stamp = new Date().toISOString();
+          setLiveMessages((previous) => [
+            ...previous,
+            { id: `live-user-${stamp}`, role: 'user', content: message, sources: [], createdAt: stamp },
+            { id: `live-answer-${stamp}`, role: 'assistant', content: answer.answer, sources: answer.sources, createdAt: stamp },
+          ]);
+          setConversationId(answer.conversationId);
+        },
         onError: (err) => {
           setError(t(chatErrorMessageKey(err)));
           setText(message);

@@ -222,13 +222,19 @@ Deno.serve(async (request: Request) => {
   console.log('chat: réponse prête', `${Date.now() - started} ms`);
   const sources = pickSources(sourceIds, seenRentals(results));
   try {
-    await withTimeout('save', supabase.from('chat_convo_messages').insert([
-      { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'user', content: question },
-      { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'assistant', content: answer, sources },
-    ]));
+    // Les deux lignes ont les mêmes colonnes (« sources » est obligatoire en base).
+    const saved = await withTimeout(
+      'save',
+      supabase.from('chat_convo_messages').insert([
+        { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'user', content: question, sources: [] },
+        { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'assistant', content: answer, sources },
+      ])
+    );
+    if (saved.error) console.error('chat: historique non enregistré', saved.error.code, saved.error.message);
     await withTimeout('save', supabase.from('chat_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId));
-  } catch {
+  } catch (error) {
     // La réponse est quand même donnée ; seul l'historique manquera.
+    console.error('chat: historique non enregistré', error instanceof Error ? error.message : 'erreur');
   }
   await recordUsage(admin, agencyId, true, undefined, model, totalUsage);
   return json({ ok: true, conversationId, answer, sources });
