@@ -121,8 +121,9 @@ async function discoverModels(apiKey: string): Promise<string[]> {
 const cooldown = new Map<string, number>();
 const COOLDOWN_MS: Record<number, number> = { 429: 60_000, 404: 3_600_000 };
 
-function coolDown(apiKey: string, model: string, status: number) {
-  const duration = COOLDOWN_MS[status];
+function coolDown(apiKey: string, model: string, status: number | 'timeout') {
+  // Un modèle qui n'a pas répondu à temps est mis de côté un moment : le réessayer ferait perdre le même temps.
+  const duration = status === 'timeout' ? 120_000 : COOLDOWN_MS[status];
   if (duration) cooldown.set(`${apiKey.slice(-8)}:${model}`, Date.now() + duration);
 }
 
@@ -158,7 +159,7 @@ async function candidateModels(apiKey: string, qualityFirst: boolean): Promise<s
  * pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux, dans une durée totale
  * bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
  */
-export async function callGeminiJson(apiKey: string, systemPrompt: string, parts: GeminiPart[], options: { qualityFirst?: boolean } = {}): Promise<ProviderResult> {
+export async function callGeminiJson(apiKey: string, systemPrompt: string, parts: GeminiPart[], options: { qualityFirst?: boolean; perCallTimeoutMs?: number } = {}): Promise<ProviderResult> {
   const started = Date.now();
   const models = await candidateModels(apiKey, options.qualityFirst === true);
   let lastError: unknown = null;
@@ -168,11 +169,12 @@ export async function callGeminiJson(apiKey: string, systemPrompt: string, parts
       const remaining = PROVIDER_DEADLINE_MS - (Date.now() - started);
       if (remaining < 4_000) throw busyError ?? lastError ?? new StageTimeoutError('provider');
       try {
-        const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(PER_CALL_TIMEOUT_MS, remaining));
+        const result = await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(options.perCallTimeoutMs ?? PER_CALL_TIMEOUT_MS, remaining));
         console.log('Gemini', model, 'OK', `${Date.now() - started} ms`);
         return result;
       } catch (error) {
         if (error instanceof ProviderHttpError) coolDown(apiKey, model, error.status);
+        else if (error instanceof StageTimeoutError) coolDown(apiKey, model, 'timeout');
         lastError = error;
         // Diagnostic : quel modèle a répondu quoi (jamais la clé ni le contenu envoyé).
         console.error('Gemini', model, error instanceof ProviderHttpError ? `HTTP ${error.status}` : error instanceof StageTimeoutError ? 'timeout' : 'erreur');
