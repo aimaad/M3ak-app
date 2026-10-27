@@ -3,7 +3,7 @@
 import { scanLicence } from '@/features/customers/licence-ocr';
 import { scanVehicleDocument } from '@/features/vehicles/ocr';
 
-import { inactiveMessageKey, insightsAvailability, ocrAvailability, scanErrorMessageKey } from '../availability';
+import { chatAvailability, inactiveMessageKey, insightsAvailability, ocrAvailability, scanErrorMessageKey } from '../availability';
 import { parseOcrSettings } from '../settings-api';
 
 const mockInvoke = jest.fn();
@@ -22,17 +22,17 @@ beforeEach(() => mockInvoke.mockReset());
 
 describe("réglage OCR de l'entreprise", () => {
   it('ne renvoie jamais de clé et ignore un accord sans clé', () => {
-    expect(parseOcrSettings({ cloud_available: false, cloud_enabled: true })).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false });
-    expect(parseOcrSettings({ cloud_available: true, cloud_enabled: true, insights_enabled: true, gemini_api_key: 'secret' })).toEqual({ cloudAvailable: true, cloudEnabled: true, insightsEnabled: true });
+    expect(parseOcrSettings({ cloud_available: false, cloud_enabled: true })).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false });
+    expect(parseOcrSettings({ cloud_available: true, cloud_enabled: true, insights_enabled: true, gemini_api_key: 'secret' })).toEqual({ cloudAvailable: true, cloudEnabled: true, insightsEnabled: true, chatEnabled: false });
     expect(parseOcrSettings({ cloud_available: false, insights_enabled: true }).insightsEnabled).toBe(false);
-    expect(parseOcrSettings(null)).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false });
+    expect(parseOcrSettings(null)).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false });
   });
 });
 
 describe('disponibilité de la lecture automatique', () => {
-  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false };
-  const keyOnly = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: false };
-  const on = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false };
+  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const keyOnly = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const on = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false, chatEnabled: false };
 
   it('active seulement avec une clé ET l\'accord du propriétaire', () => {
     expect(ocrAvailability(on, false, 'employee')).toBe('active');
@@ -60,9 +60,9 @@ describe('disponibilité de la lecture automatique', () => {
 });
 
 describe("disponibilité des recommandations IA", () => {
-  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false };
-  const keyOnly = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false };
-  const on = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: true };
+  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const keyOnly = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false, chatEnabled: false };
+  const on = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: true, chatEnabled: false };
 
   it('réservées au propriétaire et au responsable, avec clé ET accord du propriétaire', () => {
     expect(insightsAvailability(on, false, 'owner')).toBe('active');
@@ -146,5 +146,21 @@ describe('carte grise : lecture', () => {
   it('sans clé : « non active », rien n’est lu', async () => {
     mockInvoke.mockResolvedValue({ data: { ok: false, error: 'ocr_not_configured' }, error: null });
     expect(await scanVehicleDocument('file:///cg.jpg')).toEqual({ ok: false, error: 'ocr_not_configured' });
+  });
+});
+
+describe('disponibilité du chat', () => {
+  const base = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: false };
+  it('ouvert à tout le personnel dès que le propriétaire l\'a activé', () => {
+    const on = { ...base, chatEnabled: true };
+    expect(chatAvailability(on, false, 'employee')).toBe('active');
+    expect(chatAvailability(on, false, 'manager')).toBe('active');
+  });
+  it('sans accord : le propriétaire peut l\'activer, les autres doivent le lui demander', () => {
+    const off = { ...base, chatEnabled: false };
+    expect(chatAvailability(off, false, 'owner')).toBe('owner_can_enable');
+    expect(chatAvailability(off, false, 'employee')).toBe('ask_owner');
+    expect(chatAvailability({ ...off, cloudAvailable: false }, false, 'owner')).toBe('no_key');
+    expect(chatAvailability(off, true, 'owner')).toBe('loading');
   });
 });

@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useMyAgency } from '@/features/agency/hooks';
 
-import { insightsAvailability, ocrAvailability, type InsightsAvailability, type OcrAvailability } from './availability';
-import { NO_OCR_SETTINGS, getOcrSettings, setAiInsightsEnabled, setOcrCloudEnabled, type OcrSettings } from './settings-api';
+import { chatAvailability, insightsAvailability, ocrAvailability, type ChatAvailability, type InsightsAvailability, type OcrAvailability } from './availability';
+import { NO_OCR_SETTINGS, getOcrSettings, setAiChatEnabled, setAiInsightsEnabled, setOcrCloudEnabled, type OcrSettings } from './settings-api';
 
 const key = (agencyId: string | undefined) => ['ocr-settings', agencyId] as const;
 
@@ -14,6 +14,7 @@ export function useOcrSettings(): {
   agencyId: string | undefined;
   availability: OcrAvailability;
   insightsAvailability: InsightsAvailability;
+  chatAvailability: ChatAvailability;
 } {
   const agency = useMyAgency();
   const agencyId = agency.data?.agencyId;
@@ -26,6 +27,7 @@ export function useOcrSettings(): {
     agencyId,
     availability: ocrAvailability(settings, isLoading, agency.data?.role),
     insightsAvailability: insightsAvailability(settings, isLoading, agency.data?.role),
+    chatAvailability: chatAvailability(settings, isLoading, agency.data?.role),
   };
 }
 
@@ -41,6 +43,14 @@ export function useSetAiInsightsEnabled(agencyId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (enabled: boolean) => setAiInsightsEnabled(agencyId as string, enabled),
+    onSuccess: (data) => queryClient.setQueryData(key(agencyId), data),
+  });
+}
+
+export function useSetAiChatEnabled(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (enabled: boolean) => setAiChatEnabled(agencyId as string, enabled),
     onSuccess: (data) => queryClient.setQueryData(key(agencyId), data),
   });
 }

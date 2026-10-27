@@ -403,7 +403,7 @@ select pg_temp.try('clé OCR : le propriétaire ne peut pas écrire la table', $
 select pg_temp.try('clé OCR : le propriétaire ne peut pas insérer sa propre clé', $$insert into agency_ocr_settings (agency_id, gemini_api_key) values ('bbbbbbbb-0000-0000-0000-000000000002', 'AQ.fake-test-key-0123456789abcdef')$$, 'permission denied');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
 select pg_temp.ck('OCR cloud : un employé voit « clé disponible » mais pas activée, sans jamais voir la clé',
-  (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') = '{"cloud_available": true, "cloud_enabled": false, "insights_enabled": false}'::jsonb)
+  (public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001') = '{"cloud_available": true, "cloud_enabled": false, "insights_enabled": false, "chat_enabled": false}'::jsonb)
   and public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text not like '%AQ.fake%', public.get_ocr_settings('aaaaaaaa-0000-0000-0000-000000000001')::text);
 select pg_temp.try('OCR cloud : un employé ne peut pas donner l''accord', $$select public.set_ocr_cloud_enabled('aaaaaaaa-0000-0000-0000-000000000001', true)$$, 'not_allowed');
 select pg_temp.as_user('00000000-0000-0000-0000-0000000000a2');

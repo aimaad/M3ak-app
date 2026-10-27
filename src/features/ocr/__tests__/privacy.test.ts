@@ -68,7 +68,7 @@ describe("confidentialité de l'OCR", () => {
 
   it("les fonctions serveur n'utilisent que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'generate-insights', 'scan-document', 'send-invite', 'send-push']);
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'chat-m3ak', 'generate-insights', 'scan-document', 'send-invite', 'send-push']);
     const read = (file: string) => fs.readFileSync(path.join(functionsDir, file), 'utf8');
 
     const scan = read('scan-document/index.ts');
@@ -80,6 +80,12 @@ describe("confidentialité de l'OCR", () => {
     expect(inspection).toContain('settings.cloud_enabled');
     expect(inspection).toContain('RLS'); // l'inspection est d'abord lue avec le droit de l'appelant
     expect(inspection).toContain("supabase.from('inspections')");
+
+    const chat = read('chat-m3ak/index.ts');
+    expect(chat).toContain("from('agency_ocr_settings')");
+    expect(chat).toContain('settings.chat_enabled');
+    expect(chat).toContain('supabase.rpc(call.fn'); // les outils s'exécutent avec le JWT de l'utilisateur (RLS)
+    expect(chat).not.toMatch(/admin\.rpc|admin\.from\('(rentals|customers|vehicles|damages)'/);
 
     const insights = read('generate-insights/index.ts');
     expect(insights).toContain("from('agency_ocr_settings')");

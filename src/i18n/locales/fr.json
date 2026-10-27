@@ -1657,6 +1657,10 @@
         "unavailable": "Impossible de joindre le service d'analyse. Vérifiez votre connexion internet, puis réessayez.",
         "failed": "L'analyse n'a pas fonctionné. Réessayez dans un instant."
       }
+    },
+    "askM3ak": {
+      "title": "Demander à M3ak",
+      "hint": "Qui a pris la voiture ? Quelles voitures reviennent cette semaine ?"
     }
   },
   "maintenance": {
@@ -1964,6 +1968,16 @@
       "disable": "Désactiver les recommandations IA",
       "confirmTitle": "Activer les recommandations IA ?",
       "confirmBody": "Des statistiques de votre agence (nombres de locations, totaux, noms de modèles de véhicules) seront envoyées à Google Gemini avec la clé de votre entreprise pour générer des conseils. Aucun nom de client, téléphone ni photo n'est envoyé."
+    },
+    "chat": {
+      "title": "Chat M3ak",
+      "unavailable": "Indisponible : aucune clé IA n'est configurée pour votre entreprise (M3AK la configure).",
+      "on": "Activé. Les employés peuvent poser des questions sur les locations, voitures et clients. Pour répondre, les noms et téléphones des clients concernés sont transmis à l'IA ; jamais le CIN, le permis ni les photos.",
+      "off": "Désactivé. Activez-le pour que le personnel pose ses questions à M3ak.",
+      "enable": "Activer le Chat M3ak",
+      "disable": "Désactiver le Chat M3ak",
+      "confirmTitle": "Activer le Chat M3ak ?",
+      "confirmBody": "Pour répondre, M3ak transmet à l'IA (Google Gemini) les résultats de la recherche : noms et téléphones des clients concernés, voitures, dates. Jamais le CIN, le numéro de permis ni les photos. Chaque employé ne voit que ce que ses droits (filiale) lui permettent."
     }
   },
   "errors": {
@@ -2212,6 +2226,41 @@
     "fallback": {
       "title": "Notification",
       "body": "Vous avez une nouvelle notification."
+    }
+  },
+  "chat": {
+    "title": "Chat M3ak",
+    "subtitle": "Posez vos questions sur l'agence",
+    "newConversation": "Nouvelle conversation",
+    "untitled": "Conversation",
+    "noConversations": "Aucune conversation pour l'instant. Posez votre première question !",
+    "deleteTitle": "Supprimer cette conversation ?",
+    "deleteBody": "Elle disparaîtra de votre historique.",
+    "delete": "Supprimer",
+    "intro": "Posez-moi une question sur vos locations, vos voitures ou vos clients, en français, en arabe ou en darija. Je réponds à partir des données de votre agence.",
+    "placeholder": "Votre question…",
+    "send": "Envoyer",
+    "thinking": "M3ak cherche dans vos données…",
+    "suggestions": {
+      "returnsWeek": "Quelles voitures reviennent cette semaine ?",
+      "availableWeekend": "Quelles voitures sont disponibles ce week-end ?",
+      "whoHasCar": "Qui avait la Logan la semaine dernière ?",
+      "whoDamage": "Qui avait la voiture quand ce dommage est apparu ?",
+      "returnsTomorrow": "Qui doit rendre une voiture demain ?"
+    },
+    "inactive": {
+      "noKey": "Le Chat M3ak n'est pas encore disponible pour votre entreprise : aucune clé IA n'est configurée par M3AK.",
+      "ownerCanEnable": "Le Chat M3ak est prêt. Activez-le dans Mon entreprise → Chat M3ak.",
+      "askOwner": "Le Chat M3ak n'est pas activé. Demandez au propriétaire de l'agence de l'activer."
+    },
+    "errors": {
+      "inactive": "Le Chat M3ak n'est pas activé pour votre entreprise.",
+      "busy": "L'IA est très sollicitée en ce moment. Réessayez dans un instant.",
+      "timeout": "La réponse prend trop de temps. Réessayez avec une question plus simple.",
+      "limit": "La limite de questions du jour est atteinte pour votre agence. Réessayez demain.",
+      "noAnswer": "Je n'ai pas réussi à répondre. Reformulez votre question.",
+      "unavailable": "Le Chat M3ak n'est pas disponible pour le moment (vérifiez votre connexion).",
+      "failed": "Impossible de répondre pour le moment. Réessayez."
     }
   }
 }

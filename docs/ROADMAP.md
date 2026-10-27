@@ -32,7 +32,7 @@ Chaque étape doit se terminer par une version testable sur téléphone (Expo Go
 - [x] Échéances de maintenance (vidange, assurance, visite technique, freins) — les **notifications push** restent à faire (nécessitent pg_cron + Edge Function, regroupées avec le reste du travail serveur repoussé)
 
 ## Étape 5 — Chat M3ak ⭐
-- [ ] Écran de chat, Edge Function avec outils sur les données de l'agence
+- [x] Écran de chat, Edge Function avec outils sur les données de l'agence — voir `docs/CHAT.md` (migration 0054) ; à vérifier avec une vraie clé Gemini
 - [ ] Questions types : qui avait la voiture à une date, prochaine vidange, pourquoi une voiture rapporte moins
 
 ## Étape 6 — Intelligence et multi-agences

@@ -20,7 +20,7 @@ import {
   validateAgencyDetailsForm,
   type AgencyDetailsFormValues,
 } from '@/features/agency/validation';
-import { useOcrSettings, useSetAiInsightsEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
+import { useOcrSettings, useSetAiChatEnabled, useSetAiInsightsEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
 import { LogoField } from '@/features/agency/logo-field';
 import { AgencyStampSettings } from '@/features/agency/stamp-settings';
 import type { AgencyDetails } from '@/features/agency/types';
@@ -202,6 +202,53 @@ function AiInsightsSettings({ agencyId, isOwner }: { agencyId: string; isOwner: 
   );
 }
 
+/** Chat M3ak : mêmes règles (clé configurée par M3AK + accord du propriétaire), accord distinct (des noms de clients sont transmis à l'IA). */
+function AiChatSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
+  const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetAiChatEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.chatEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.chat.confirmTitle'), t('ocr.chat.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.chat.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
+  return (
+    <View className="gap-2 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+      <ThemedText type="smallBold">{t('ocr.chat.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable ? t('ocr.chat.unavailable') : settings.chatEnabled ? t('ocr.chat.on') : t('ocr.chat.off')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.chatEnabled ? t('ocr.chat.disable') : t('ocr.chat.enable')}
+            variant={settings.chatEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
+    </View>
+  );
+}
+
 function EntrepriseForm({
   agencyId,
   isOwner,
@@ -330,6 +377,7 @@ function EntrepriseForm({
       <AgencyStampSettings key={`${details.stampPath ?? ''}|${JSON.stringify(details.stampConfig)}`} agencyId={agencyId} isOwner={isOwner} details={details} />
       <DocumentReadingSettings agencyId={agencyId} isOwner={isOwner} />
       <AiInsightsSettings agencyId={agencyId} isOwner={isOwner} />
+      <AiChatSettings agencyId={agencyId} isOwner={isOwner} />
 
       {isOwner ? (
         <Button

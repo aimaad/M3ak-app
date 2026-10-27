@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
 import { useMemo } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
@@ -135,6 +136,22 @@ export default function AccueilScreen() {
               <RefreshControl refreshing={isRefreshing} onRefresh={refetchAll} tintColor={M3akPalette.mauve} />
             }
           >
+            <Pressable
+              onPress={() => router.push('/chat')}
+              className="flex-row items-center gap-3 rounded-2xl border border-[#EAE5F2] bg-white p-4"
+              accessibilityRole="button"
+            >
+              <View className="h-11 w-11 items-center justify-center rounded-full" style={{ backgroundColor: '#F3EEFF' }}>
+                <Ionicons name="chatbubbles" size={22} color={M3akPalette.mauve} />
+              </View>
+              <View className="flex-1 gap-0.5">
+                <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('accueil.askM3ak.hint')}
+                </ThemedText>
+              </View>
+            </Pressable>
+
             <ThemedText type="small" themeColor="textSecondary">
               {t(`accueil.roleView.${role ?? 'employee'}`)}
             </ThemedText>

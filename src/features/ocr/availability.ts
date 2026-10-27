@@ -58,3 +58,13 @@ export function insightsAvailability(
   if (!settings.cloudAvailable) return 'no_key';
   return role === 'owner' ? 'owner_can_enable' : 'ask_owner';
 }
+
+/** Disponibilité du Chat M3ak : clé de l'entreprise + accord du propriétaire ; ouvert à tout le personnel. */
+export type ChatAvailability = 'loading' | 'active' | 'no_key' | 'owner_can_enable' | 'ask_owner';
+
+export function chatAvailability(settings: OcrSettings, isLoading: boolean, role: AgencyRole | null | undefined): ChatAvailability {
+  if (isLoading) return 'loading';
+  if (settings.chatEnabled) return 'active';
+  if (!settings.cloudAvailable) return 'no_key';
+  return role === 'owner' ? 'owner_can_enable' : 'ask_owner';
+}
