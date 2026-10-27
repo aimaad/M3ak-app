@@ -1,41 +1,25 @@
-import { Text, View } from 'react-native';
+import { Image, View } from 'react-native';
 
-import { M3akPalette } from '@/constants/theme';
+// Logos fournis par le propriétaire : « m » en forme de voiture sur tuile violette, avec ou sans le nom « m3ak ».
+const FULL = require('../../assets/images/logo-m3ak.png');
+const MARK = require('../../assets/images/logo-m3ak-mark.png');
+
+const FULL_RATIO = 907 / 850;
+const MARK_RATIO = 649 / 630;
 
 type LogoProps = {
-  variant?: 'mauve' | 'white';
   size?: 'md' | 'lg';
+  /** Tuile seule, sans le nom (en-têtes, petits espaces). */
+  markOnly?: boolean;
 };
 
-export function Logo({ variant = 'mauve', size = 'md' }: LogoProps) {
-  const mainColor = variant === 'white' ? '#FFFFFF' : M3akPalette.mauve;
-  const labelColor = variant === 'white' ? 'rgba(255,255,255,0.72)' : '#5E5575';
-  const mainSize = size === 'lg' ? 40 : 24;
-  const labelSize = size === 'lg' ? 13 : 10;
+export function Logo({ size = 'md', markOnly = false }: LogoProps) {
+  const width = markOnly ? (size === 'lg' ? 96 : 44) : size === 'lg' ? 220 : 120;
+  const ratio = markOnly ? MARK_RATIO : FULL_RATIO;
 
   return (
-    <View className="flex-row items-baseline gap-1.5">
-      <Text
-        style={{ fontFamily: 'Cairo_700Bold', fontSize: mainSize, lineHeight: mainSize * 1.1, color: mainColor }}
-      >
-        M3
-      </Text>
-      <Text
-        style={{
-          fontFamily: 'Cairo_600SemiBold',
-          fontSize: labelSize,
-          letterSpacing: 1.5,
-          color: labelColor,
-          textTransform: 'uppercase',
-        }}
-      >
-        de
-      </Text>
-      <Text
-        style={{ fontFamily: 'Cairo_700Bold', fontSize: mainSize, lineHeight: mainSize * 1.1, color: mainColor }}
-      >
-        M3ak
-      </Text>
+    <View accessible accessibilityRole="image" accessibilityLabel="m3ak">
+      <Image source={markOnly ? MARK : FULL} style={{ width, height: width / ratio }} resizeMode="contain" />
     </View>
   );
 }

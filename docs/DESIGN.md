@@ -2,6 +2,9 @@
 
 Principes tirés du skill `mobile-app-ui-design` (règles 60/30/10, grille de 8, ombres douces, hiérarchie, contraste, états vides).
 
+## Logo
+Logos fournis par le propriétaire : `assets/images/logo-m3ak.png` (avec le nom) et `logo-m3ak-mark.png` (tuile seule). L'icône iOS (`icon.png`), les icônes Android, l'écran de lancement et le favicon en sont tirés ; violet de référence `#773DBA`. Le composant `Logo` les affiche dans l'app.
+
 ## Couleurs (`src/constants/theme.ts`)
 - **60 % neutre** : fond lavande très clair `#F7F4FF`, surfaces blanches.
 - **30 %** : texte `#1E1633` (titres), `#5E5575` (secondaire, 6,5:1 sur blanc), `#8A82A0` (icônes seulement).
