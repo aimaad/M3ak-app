@@ -18,6 +18,7 @@ import { usePaymentsForRental } from '@/features/payments/hooks';
 import { ExtendRentalForm } from '@/features/rentals/extend-rental-form';
 import { useCancelRental, useConfirmRental, useDepartureCheck, useDeparturePolicy, useRental } from '@/features/rentals/hooks';
 import { RentalDriversSection } from '@/features/rentals/rental-drivers-section';
+import { RentalDossier } from '@/features/rentals/rental-dossier';
 import { RentalJourney } from '@/features/rentals/rental-journey';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useVehicle } from '@/features/vehicles/hooks';
@@ -156,6 +157,19 @@ export default function LocationDetailScreen() {
             onConfirm={handleConfirm}
             confirming={confirmRental.isPending}
           />
+
+          <View className="gap-3">
+            <ThemedText type="smallBold">{t('locations.dossier.title')}</ThemedText>
+            <RentalDossier
+              rental={rental}
+              vehicle={vehicle}
+              contract={contract}
+              inspectionDepart={inspectionDepart}
+              inspectionRetour={inspectionRetour}
+              deposit={deposit}
+              payments={payments}
+            />
+          </View>
 
           <View className="gap-3">
             <ThemedText type="smallBold">{t('locations.detailsSection')}</ThemedText>

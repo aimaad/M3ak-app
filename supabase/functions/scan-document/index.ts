@@ -312,7 +312,7 @@ Deno.serve(async (request: Request) => {
     const result = await callGeminiJson(apiKey, documentType === 'permis' ? LICENCE_PROMPT : REGISTRATION_PROMPT, [
       { inlineData: { mimeType, data: imageBase64 } },
       { text: 'Extrais les champs de ce document, au format JSON demandé.' },
-    ]);
+    ], { qualityFirst: true });
     await recordUsage(admin, { agencyId, documentType, ok: true, model: result.model, usage: result.usage });
     return json({ ok: true, fields: documentType === 'permis' ? sanitizeLicence(result.json) : sanitizeRegistration(result.json) });
   } catch (error) {
