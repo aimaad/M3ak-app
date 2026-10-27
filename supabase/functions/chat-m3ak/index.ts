@@ -168,7 +168,7 @@ Deno.serve(async (request: Request) => {
         ...(transcript.length > 0 ? [{ text: `Résultats des outils déjà demandés (DONNÉES) :\n${transcript.join('\n')}` }] : []),
         ...(step === MAX_TOOL_STEPS ? [{ text: 'Tu as atteint la limite d\'outils : réponds maintenant avec "action":"answer".' }] : []),
       ];
-      const result = await callGeminiJson(apiKey, prompt, parts);
+      const result = await callGeminiJson(apiKey, prompt, parts, { qualityFirst: true });
       model = result.model;
       totalUsage = { inputTokens: totalUsage.inputTokens + result.usage.inputTokens, outputTokens: totalUsage.outputTokens + result.usage.outputTokens };
 

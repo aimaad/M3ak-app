@@ -130,18 +130,25 @@ function isCooling(apiKey: string, model: string): boolean {
   return (cooldown.get(`${apiKey.slice(-8)}:${model}`) ?? 0) > Date.now();
 }
 
-async function candidateModels(apiKey: string): Promise<string[]> {
+async function candidateModels(apiKey: string, qualityFirst: boolean): Promise<string[]> {
   const discovered = await discoverModels(apiKey);
-  // Un modèle « lite » a un quota gratuit bien plus large (ex. 500 demandes/jour contre 20) : on alterne les deux familles,
-  // du plus récent au plus ancien, pour qu'un quota épuisé sur un modèle n'empêche pas de répondre avec un autre.
   const full = discovered.filter((name) => !name.includes('lite'));
   const lite = discovered.filter((name) => name.includes('lite'));
-  const interleaved: string[] = [];
-  for (let index = 0; index < Math.max(full.length, lite.length); index++) {
-    if (full[index]) interleaved.push(full[index]);
-    if (lite[index]) interleaved.push(lite[index]);
+  let ordered: string[];
+  if (qualityFirst) {
+    // Qualité d'abord (chat) : les modèles complets, du plus récent au plus ancien ; les « lite » seulement en dernier recours.
+    ordered = [...new Set([LATEST_ALIAS, ...full, ...lite, ...FALLBACK_MODELS])];
+  } else {
+    // Un modèle « lite » a un quota gratuit bien plus large (ex. 500 demandes/jour contre 20) : on alterne les deux familles,
+    // du plus récent au plus ancien, pour qu'un quota épuisé sur un modèle n'empêche pas de répondre avec un autre.
+    const interleaved: string[] = [];
+    for (let index = 0; index < Math.max(full.length, lite.length); index++) {
+      if (full[index]) interleaved.push(full[index]);
+      if (lite[index]) interleaved.push(lite[index]);
+    }
+    ordered = [...new Set([LATEST_ALIAS, ...interleaved.slice(0, 4), ...FALLBACK_MODELS, ...interleaved.slice(4)])];
   }
-  const ordered = [...new Set([LATEST_ALIAS, ...interleaved.slice(0, 4), ...FALLBACK_MODELS, ...interleaved.slice(4)])].slice(0, MAX_MODELS_TRIED);
+  ordered = ordered.slice(0, MAX_MODELS_TRIED);
   const available = ordered.filter((model) => !isCooling(apiKey, model));
   return available.length > 0 ? available : ordered;
 }
@@ -151,9 +158,9 @@ async function candidateModels(apiKey: string): Promise<string[]> {
  * pas la lecture si un autre répond. Deux tours maximum, avec une courte pause entre les deux, dans une durée totale
  * bornée. Seuls les modèles de Gemini sont essayés : jamais un autre fournisseur.
  */
-export async function callGeminiJson(apiKey: string, systemPrompt: string, parts: GeminiPart[]): Promise<ProviderResult> {
+export async function callGeminiJson(apiKey: string, systemPrompt: string, parts: GeminiPart[], options: { qualityFirst?: boolean } = {}): Promise<ProviderResult> {
   const started = Date.now();
-  const models = await candidateModels(apiKey);
+  const models = await candidateModels(apiKey, options.qualityFirst === true);
   let lastError: unknown = null;
   let busyError: ProviderHttpError | null = null; // 503/429 vu au moins une fois : plus parlant qu'un 404 final
   for (let round = 0; round < 2; round++) {
