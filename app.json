@@ -8,7 +8,7 @@
     "scheme": "m3ak",
     "userInterfaceStyle": "light",
     "ios": {
-      "icon": "./assets/images/icon.png",
+      "icon": "./assets/expo.icon",
       "supportsTablet": false
     },
     "android": {
@@ -31,7 +31,7 @@
         {
           "backgroundColor": "#7C3AED",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200
+          "imageWidth": 76
         }
       ],
       [
