@@ -141,6 +141,8 @@ export async function callGeminiJson(apiKey: string, systemPrompt: string, parts
         return await callGeminiModel(apiKey, model, systemPrompt, parts, Math.min(PER_CALL_TIMEOUT_MS, remaining));
       } catch (error) {
         lastError = error;
+        // Diagnostic : quel modèle a répondu quoi (jamais la clé ni le contenu envoyé).
+        console.error('Gemini', model, error instanceof ProviderHttpError ? `HTTP ${error.status}` : error instanceof StageTimeoutError ? 'timeout' : 'erreur');
         if (error instanceof ProviderHttpError && (error.status === 503 || error.status === 429)) busyError = error;
         const retryable = error instanceof ProviderHttpError && RETRYABLE_STATUSES.has(error.status);
         const timedOut = error instanceof StageTimeoutError;
