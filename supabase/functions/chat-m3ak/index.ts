@@ -205,8 +205,9 @@ Deno.serve(async (request: Request) => {
     const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
     console.error('Échec du chat M3ak :', detail.slice(0, 160));
     await recordUsage(admin, agencyId, false, error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed');
-    const busy = error instanceof ProviderHttpError && (error.status === 503 || error.status === 429);
-    return json({ ok: false, error: busy ? 'ocr_busy' : 'ocr_failed', detail: detail.slice(0, 200) });
+    // 429 = quota de la clé de l'entreprise atteint (à régler chez Google) ; 503 = surcharge passagère.
+    const code = error instanceof ProviderHttpError && error.status === 429 ? 'ocr_quota' : error instanceof ProviderHttpError && error.status === 503 ? 'ocr_busy' : 'ocr_failed';
+    return json({ ok: false, error: code, detail: detail.slice(0, 200) });
   }
 
   if (!answer) {

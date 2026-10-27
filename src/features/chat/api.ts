@@ -4,7 +4,7 @@ import { getSupabase } from '@/lib/supabase';
 
 import type { ChatAnswer, ChatConversation, ChatMessage, ChatSource } from './types';
 
-export type ChatErrorCode = 'chat_disabled' | 'ocr_not_configured' | 'ocr_busy' | 'ocr_timeout' | 'chat_limit' | 'chat_no_answer' | 'ocr_failed' | 'unavailable';
+export type ChatErrorCode = 'chat_disabled' | 'ocr_not_configured' | 'ocr_busy' | 'ocr_quota' | 'ocr_timeout' | 'chat_limit' | 'chat_no_answer' | 'ocr_failed' | 'unavailable';
 
 export class ChatError extends Error {
   constructor(public code: ChatErrorCode) {
@@ -12,7 +12,7 @@ export class ChatError extends Error {
   }
 }
 
-const KNOWN: ChatErrorCode[] = ['chat_disabled', 'ocr_not_configured', 'ocr_busy', 'ocr_timeout', 'chat_limit', 'chat_no_answer'];
+const KNOWN: ChatErrorCode[] = ['chat_disabled', 'ocr_not_configured', 'ocr_busy', 'ocr_quota', 'ocr_timeout', 'chat_limit', 'chat_no_answer'];
 const asCode = (raw: unknown): ChatErrorCode => (KNOWN.includes(raw as ChatErrorCode) ? (raw as ChatErrorCode) : 'ocr_failed');
 const TIMEOUT_MS = 115_000;
 
@@ -65,6 +65,8 @@ export function chatErrorMessageKey(error: unknown): string {
       return 'chat.errors.inactive';
     case 'ocr_busy':
       return 'chat.errors.busy';
+    case 'ocr_quota':
+      return 'chat.errors.quota';
     case 'ocr_timeout':
       return 'chat.errors.timeout';
     case 'chat_limit':

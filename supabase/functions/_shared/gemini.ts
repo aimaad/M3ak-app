@@ -18,7 +18,7 @@ export class ProviderHttpError extends Error {
 // Ordre d'essai : l'alias « gemini-flash-latest » (toujours le plus récent), puis les modèles « flash » que Google
 // annonce disponibles pour CETTE clé (plus récents d'abord), puis deux noms de secours si la liste est inaccessible.
 const LATEST_ALIAS = 'gemini-flash-latest';
-const FALLBACK_MODELS = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+const FALLBACK_MODELS = ['gemini-flash-lite-latest'];
 const MAX_MODELS_TRIED = 5;
 const RETRYABLE_STATUSES = new Set([404, 429, 500, 502, 503, 504]);
 /** Durée totale maximale des essais : l'app abandonne à 70 s, donc on répond bien avant. */
