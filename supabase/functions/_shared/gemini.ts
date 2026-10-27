@@ -19,7 +19,7 @@ export class ProviderHttpError extends Error {
 // annonce disponibles pour CETTE clé (plus récents d'abord), puis deux noms de secours si la liste est inaccessible.
 const LATEST_ALIAS = 'gemini-flash-latest';
 const FALLBACK_MODELS = ['gemini-flash-lite-latest'];
-const MAX_MODELS_TRIED = 5;
+const MAX_MODELS_TRIED = 6;
 const RETRYABLE_STATUSES = new Set([404, 429, 500, 502, 503, 504]);
 /** Durée totale maximale des essais : l'app abandonne à 70 s, donc on répond bien avant. */
 const PROVIDER_DEADLINE_MS = 50_000;
@@ -119,8 +119,16 @@ async function discoverModels(apiKey: string): Promise<string[]> {
 
 async function candidateModels(apiKey: string): Promise<string[]> {
   const discovered = await discoverModels(apiKey);
-  // Les deux plus récents d'abord, puis TOUJOURS les modèles de secours : ils sont souvent moins sollicités quand les derniers sont saturés.
-  return [...new Set([LATEST_ALIAS, ...discovered.slice(0, 2), ...FALLBACK_MODELS, ...discovered.slice(2)])].slice(0, MAX_MODELS_TRIED);
+  // Un modèle « lite » a un quota gratuit bien plus large (ex. 500 demandes/jour contre 20) : on alterne les deux familles,
+  // du plus récent au plus ancien, pour qu'un quota épuisé sur un modèle n'empêche pas de répondre avec un autre.
+  const full = discovered.filter((name) => !name.includes('lite'));
+  const lite = discovered.filter((name) => name.includes('lite'));
+  const interleaved: string[] = [];
+  for (let index = 0; index < Math.max(full.length, lite.length); index++) {
+    if (full[index]) interleaved.push(full[index]);
+    if (lite[index]) interleaved.push(lite[index]);
+  }
+  return [...new Set([LATEST_ALIAS, ...interleaved.slice(0, 4), ...FALLBACK_MODELS, ...interleaved.slice(4)])].slice(0, MAX_MODELS_TRIED);
 }
 
 /**
