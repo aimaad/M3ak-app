@@ -119,7 +119,8 @@ async function discoverModels(apiKey: string): Promise<string[]> {
 
 async function candidateModels(apiKey: string): Promise<string[]> {
   const discovered = await discoverModels(apiKey);
-  return [...new Set([LATEST_ALIAS, ...discovered, ...FALLBACK_MODELS])].slice(0, MAX_MODELS_TRIED);
+  // Les deux plus récents d'abord, puis TOUJOURS les modèles de secours : ils sont souvent moins sollicités quand les derniers sont saturés.
+  return [...new Set([LATEST_ALIAS, ...discovered.slice(0, 2), ...FALLBACK_MODELS, ...discovered.slice(2)])].slice(0, MAX_MODELS_TRIED);
 }
 
 /**
