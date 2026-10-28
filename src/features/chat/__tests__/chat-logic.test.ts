@@ -20,6 +20,9 @@ describe('toRpcCall (outils autorisés)', () => {
     expect(toRpcCall('vehicle_damages', {})).toBeNull();
     expect(toRpcCall('vehicle_damages', { vehicle: '   ' })).toBeNull();
     expect(toRpcCall('customer_history', { customer: 'Karim' })?.params).toEqual({ p_customer: 'Karim' });
+    expect(toRpcCall('customers', { search: 'Karim' })).toEqual({ fn: 'chat_tool_customers', params: { p_search: 'Karim' } });
+    expect(toRpcCall('customers', {})?.params).toEqual({ p_search: null });
+    expect(toRpcCall('fleet', {})).toEqual({ fn: 'chat_tool_fleet', params: {} });
   });
   it('neutralise les caractères de recherche dangereux et limite la longueur', () => {
     expect(cleanText('100%_\\ test')).toBe('100 test');

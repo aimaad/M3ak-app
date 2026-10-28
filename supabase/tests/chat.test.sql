@@ -83,6 +83,10 @@ select pg_temp.ck('voitures disponibles : la voiture en maintenance n''apparaît
 select pg_temp.ck('voitures disponibles : la voiture louée redevient disponible après le retour', exists (select 1 from jsonb_array_elements(public.chat_tool_available_vehicles(timestamptz '2030-06-15+01', timestamptz '2030-06-16+01')) r where r ->> 'plate' = '1-A-1'), '');
 select pg_temp.ck('dommage : on retrouve qui avait la voiture quand il est apparu',
   (select r ->> 'customer' = 'Karim Alami' and r ->> 'inspection_type' = 'retour' and (r ->> 'new_since_departure')::boolean from jsonb_array_elements(public.chat_tool_vehicle_damages('1-A-1')) r), '');
+select pg_temp.ck('outil clients : compte les clients', (public.chat_tool_customers(null)->>'total_customers')::int >= 1, '');
+select pg_temp.ck('outil clients : jamais de CIN ni permis', public.chat_tool_customers(null)::text not like '%AB123456%' and public.chat_tool_customers(null)::text not like '%PERMIS-SECRET%', '');
+select pg_temp.ck('outil flotte : compte les voitures', (public.chat_tool_fleet()->>'total_vehicles')::int >= 1, '');
+
 select pg_temp.ck('historique client : fonctionne par nom', jsonb_array_length(public.chat_tool_customer_history('karim')) = 1, '');
 select pg_temp.ck('aucun CIN ni numéro de permis dans les résultats',
   public.chat_tool_customer_history('karim')::text not like '%AB123456%' and public.chat_tool_customer_history('karim')::text not like '%PERMIS-SECRET%'
