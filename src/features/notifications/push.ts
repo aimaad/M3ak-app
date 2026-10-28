@@ -21,7 +21,8 @@ export async function unregisterThisDevice(): Promise<void> {
 
 /** Expo Go ne reçoit plus les notifications push : il faut l'application installée (development build / store). */
 export function isPushSupported(): boolean {
-  return Constants.executionEnvironment !== ExecutionEnvironment.StoreClient && Device.isDevice;
+  // Pas de push dans le navigateur : les notifications restent consultables dans l'application.
+  return Platform.OS !== 'web' && Constants.executionEnvironment !== ExecutionEnvironment.StoreClient && Device.isDevice;
 }
 
 /** Affiche aussi la notification quand l'application est ouverte. */

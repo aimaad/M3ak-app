@@ -1,3 +1,4 @@
+import { printHtmlInBrowser } from '@/lib/print-html';
 import * as Print from 'expo-print';
 
 import { actorLabel, describeAuditEntry } from './describe';
@@ -77,6 +78,11 @@ export function buildAuditHtml(input: AuditPdfInput): string {
     <div class="footer">${escapeHtml(t('journal.pdf.confidential'))}</div>
   </body>
 </html>`;
+}
+
+/** Version web : ouvre la boîte d'impression du navigateur au lieu de créer un fichier. */
+export async function printAuditInBrowser(input: AuditPdfInput): Promise<void> {
+  await printHtmlInBrowser(buildAuditHtml(input));
 }
 
 export async function generateAuditPdf(input: AuditPdfInput): Promise<string> {

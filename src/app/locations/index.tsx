@@ -1,11 +1,14 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
+import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { Pager } from '@/components/pager';
+import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useCustomers } from '@/features/customers/hooks';
@@ -26,6 +29,7 @@ const EMPTY_RENTALS: Rental[] = [];
 
 export default function LocationsScreen() {
   const { t, language } = useLanguage();
+  const isDesktop = useDesktopLayout();
   const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
   const rentalsQuery = useRentals();
   const vehiclesQuery = useVehicles();
@@ -51,6 +55,45 @@ export default function LocationsScreen() {
   }, [customersQuery.data]);
 
   const isLoading = rentalsQuery.isLoading || vehiclesQuery.isLoading || customersQuery.isLoading;
+
+  const columns: DataTableColumn<Rental>[] = [
+    { key: 'number', label: t('desktop.number'), render: (r) => <ThemedText type="smallBold">{r.numero}</ThemedText> },
+    {
+      key: 'vehicle',
+      label: t('desktop.vehicle'),
+      flex: 1.5,
+      render: (r) => {
+        const v = vehiclesById.get(r.vehicleId);
+        return (
+          <ThemedText type="small" numberOfLines={1}>
+            {v ? `${v.marque} ${v.modele} · ${v.immatriculation}` : t('locations.unknownVehicle')}
+          </ThemedText>
+        );
+      },
+    },
+    {
+      key: 'customer',
+      label: t('desktop.customer'),
+      flex: 1.5,
+      render: (r) => (
+        <ThemedText type="small" numberOfLines={1}>
+          {customersById.get(r.customerId)?.nomComplet ?? t('locations.unknownCustomer')}
+        </ThemedText>
+      ),
+    },
+    {
+      key: 'period',
+      label: t('desktop.period'),
+      flex: 1.5,
+      render: (r) => (
+        <ThemedText type="small">
+          {new Date(r.dateDebutPrevue).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} →{' '}
+          {new Date(r.dateFinPrevue).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+        </ThemedText>
+      ),
+    },
+    { key: 'status', label: t('desktop.status'), render: (r) => <RentalStatusBadge status={r.statut} /> },
+  ];
 
   return (
     <ThemedView className="flex-1">
@@ -92,6 +135,19 @@ export default function LocationsScreen() {
             </ThemedText>
           </View>
         ) : (
+          isDesktop ? (
+            <ScrollView contentContainerClassName="px-6 pb-32">
+              <DataTable
+                columns={columns}
+                rows={pagination.items}
+                rowKey={(item) => item.id}
+                onRowPress={(item) => router.push(`/locations/${item.id}`)}
+                exportCsv={{ filename: 'locations', rows: filtered, cells: (r) => [r.numero, vehiclesById.get(r.vehicleId)?.immatriculation, customersById.get(r.customerId)?.nomComplet, r.dateDebutPrevue.slice(0, 10) + ' → ' + r.dateFinPrevue.slice(0, 10), t(`locations.status.${r.statut}`)] }}
+                emptyLabel={t('locations.empty')}
+              />
+              <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
+            </ScrollView>
+          ) : (
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
@@ -121,6 +177,7 @@ export default function LocationsScreen() {
               </View>
             }
           />
+          )
         )}
 
         <Pressable

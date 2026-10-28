@@ -14,7 +14,8 @@ import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useAgencyMembers, useMyAgency } from '@/features/agency/hooks';
 import { listAuditEntriesForExport } from '@/features/audit/api';
-import { generateAuditPdf } from '@/features/audit/audit-pdf';
+import { generateAuditPdf, printAuditInBrowser } from '@/features/audit/audit-pdf';
+import { canPrintInBrowser } from '@/lib/print-html';
 import { actorLabel, describeAuditEntry } from '@/features/audit/describe';
 import { toAuditQuery, useActivitySummary, useAuditEntries } from '@/features/audit/hooks';
 import { AUDIT_CATEGORIES, AUDIT_GRANULARITIES, auditRangeLabel, isAuditRangeValid, type AuditCategory, type AuditFilters, type AuditGranularity } from '@/features/audit/types';
@@ -62,16 +63,21 @@ export default function JournalScreen() {
     setExportError(null);
     try {
       const { entries: all, truncated } = await listAuditEntriesForExport(toAuditQuery(agencyId, filters));
-      const uri = await generateAuditPdf({
+      const auditInput = {
         agencyName: agencyQuery.data.agencyName,
         entries: all,
         truncated,
         filterLabels,
         generatedBy: agencyQuery.data.memberName ?? t('journal.unknownActor'),
         generatedAt: new Date(),
-        language: language === 'ar' ? 'ar' : 'fr',
+        language: (language === 'ar' ? 'ar' : 'fr') as 'ar' | 'fr',
         t,
-      });
+      };
+      if (canPrintInBrowser) {
+        await printAuditInBrowser(auditInput);
+        return;
+      }
+      const uri = await generateAuditPdf(auditInput);
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: t('journal.pdf.share') });
       }

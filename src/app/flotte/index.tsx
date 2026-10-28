@@ -6,6 +6,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
 import { Pager } from '@/components/pager';
+import { DataTable, type DataTableColumn } from '@/components/data-table';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
+import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextField } from '@/components/text-field';
@@ -53,6 +56,7 @@ function KpiTile({ label, value, onPress }: { label: string; value: number; onPr
 
 export default function FlotteScreen() {
   const { t, language } = useLanguage();
+  const isDesktop = useDesktopLayout();
   const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
   const agencyQuery = useMyAgency();
   const vehiclesQuery = useVehicles();
@@ -92,6 +96,32 @@ export default function FlotteScreen() {
   if (!agencyQuery.data) {
     return <Redirect href="/onboarding" />;
   }
+
+  const columns: DataTableColumn<Vehicle>[] = [
+    {
+      key: 'vehicle',
+      label: t('desktop.vehicle'),
+      flex: 2,
+      render: (v) => (
+        <ThemedText type="smallBold" numberOfLines={1}>
+          {v.marque} {v.modele}
+        </ThemedText>
+      ),
+    },
+    { key: 'plate', label: t('desktop.plate'), render: (v) => <ThemedText type="small">{v.immatriculation}</ThemedText> },
+    { key: 'year', label: t('desktop.year'), render: (v) => <ThemedText type="small">{v.annee ?? '—'}</ThemedText> },
+    { key: 'status', label: t('desktop.status'), render: (v) => <VehicleStatusBadge status={v.statut} /> },
+    {
+      key: 'km',
+      label: t('desktop.mileage'),
+      render: (v) => (
+        <ThemedText type="small">
+          {v.kilometrage.toLocaleString('fr-FR')} {t('flotte.km')}
+        </ThemedText>
+      ),
+    },
+    { key: 'price', label: t('desktop.dailyPrice'), align: 'end', render: (v) => <ThemedText type="smallBold">{v.prixJour} MAD</ThemedText> },
+  ];
 
   return (
     <ThemedView className="flex-1">
@@ -211,6 +241,19 @@ export default function FlotteScreen() {
             </ThemedText>
           </View>
         ) : (
+          isDesktop ? (
+            <ScrollView contentContainerClassName="px-6 pb-32">
+              <DataTable
+                columns={columns}
+                rows={pagination.items}
+                rowKey={(item) => item.id}
+                onRowPress={(item) => router.push(`/flotte/${item.id}`)}
+                exportCsv={{ filename: 'flotte', rows: filtered, cells: (v) => [`${v.marque} ${v.modele}`, v.immatriculation, v.annee, t(`flotte.status.${v.statut}`), v.kilometrage, v.prixJour] }}
+                emptyLabel={t('flotte.empty')}
+              />
+              <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
+            </ScrollView>
+          ) : (
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
@@ -234,6 +277,7 @@ export default function FlotteScreen() {
               </View>
             }
           />
+          )
         )}
 
         <Pressable

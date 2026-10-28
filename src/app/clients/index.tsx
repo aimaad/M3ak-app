@@ -21,6 +21,8 @@ import {
 import { useCustomers } from '@/features/customers/hooks';
 import { CUSTOMER_TYPES } from '@/features/customers/types';
 import type { Customer, CustomerType } from '@/features/customers/types';
+import { DataTable, type DataTableColumn } from '@/components/data-table';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
@@ -42,6 +44,7 @@ function KpiTile({ label, value }: { label: string; value: number }) {
 
 export default function ClientsScreen() {
   const { t, language } = useLanguage();
+  const isDesktop = useDesktopLayout();
   const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
   const customersQuery = useCustomers();
   const [filters, setFilters] = useState<CustomerFilters>(DEFAULT_CUSTOMER_FILTERS);
@@ -53,6 +56,42 @@ export default function ClientsScreen() {
   const expiringDocs = useMemo(() => countExpiringSoonDocuments(customers), [customers]);
   const filtered = useMemo(() => filterCustomers(customers, filters), [customers, filters]);
   const pagination = usePagination(filtered, filters);
+
+  const columns: DataTableColumn<Customer>[] = [
+    {
+      key: 'name',
+      label: t('customer.fields.nomComplet'),
+      flex: 2,
+      render: (c) => (
+        <ThemedText type="smallBold" numberOfLines={1}>
+          {c.nomComplet}
+        </ThemedText>
+      ),
+    },
+    { key: 'type', label: t('customer.sections.type'), render: (c) => <ThemedText type="small">{t(`customer.type.${c.typeClient}`)}</ThemedText> },
+    { key: 'phone', label: t('customer.fields.telephone'), render: (c) => <ThemedText type="small">{c.telephone ?? '—'}</ThemedText> },
+    {
+      key: 'email',
+      label: t('customer.fields.email'),
+      flex: 1.5,
+      render: (c) => (
+        <ThemedText type="small" numberOfLines={1}>
+          {c.email ?? '—'}
+        </ThemedText>
+      ),
+    },
+    { key: 'cin', label: t('customer.fields.cin'), render: (c) => <ThemedText type="small">{c.cinOuPasseport ?? '—'}</ThemedText> },
+    { key: 'city', label: t('customer.fields.ville'), render: (c) => <ThemedText type="small">{c.ville ?? '—'}</ThemedText> },
+    {
+      key: 'status',
+      label: t('desktop.status'),
+      render: (c) => (
+        <ThemedText type="small" themeColor={c.archivedAt ? 'textSecondary' : 'primary'}>
+          {c.archivedAt ? t('customer.archivedBadge') : t('desktop.active')}
+        </ThemedText>
+      ),
+    },
+  ];
 
   return (
     <ThemedView className="flex-1">
@@ -133,6 +172,19 @@ export default function ClientsScreen() {
             </ThemedText>
           </View>
         ) : (
+          isDesktop ? (
+            <ScrollView contentContainerClassName="px-6 pb-32">
+              <DataTable
+                columns={columns}
+                rows={pagination.items}
+                rowKey={(item) => item.id}
+                onRowPress={(item) => router.push(`/clients/${item.id}`)}
+                exportCsv={{ filename: 'clients', rows: filtered, cells: (c) => [c.nomComplet, t(`customer.type.${c.typeClient}`), c.telephone, c.email, c.cinOuPasseport, c.ville, c.archivedAt ? t('customer.archivedBadge') : t('desktop.active')] }}
+                emptyLabel={t('clients.empty')}
+              />
+              <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
+            </ScrollView>
+          ) : (
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
@@ -156,6 +208,7 @@ export default function ClientsScreen() {
               </View>
             }
           />
+          )
         )}
 
         <Pressable

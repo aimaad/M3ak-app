@@ -1,4 +1,5 @@
 import * as Print from 'expo-print';
+import { canPrintInBrowser, printHtmlInBrowser } from '@/lib/print-html';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Linking, View } from 'react-native';
@@ -125,6 +126,10 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
     setError(null);
     try {
       const html = buildReportHtml(reportData(await collectEvidence()));
+      if (canPrintInBrowser) {
+        await printHtmlInBrowser(html);
+        return;
+      }
       const { uri } = await Print.printToFileAsync({ html, width: 595, height: 842 });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });

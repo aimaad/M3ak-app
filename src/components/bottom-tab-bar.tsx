@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -42,6 +43,10 @@ export function BottomTabBar({ current }: { current: SectionKey }) {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const isDesktop = useDesktopLayout();
+
+  // Sur grand écran web, le menu latéral remplace la barre du bas.
+  if (isDesktop) return null;
 
   return (
     <View

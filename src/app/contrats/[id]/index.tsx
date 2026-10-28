@@ -12,7 +12,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useAgencyDetails, useAgencyMembers, useMyAgency } from '@/features/agency/hooks';
 import { useContractTemplate } from '@/features/contracts/template-hooks';
-import { generateContractPdf } from '@/features/contracts/contract-pdf';
+import { assertContractIsComplete, buildContractHtml, generateContractPdf } from '@/features/contracts/contract-pdf';
+import { canPrintInBrowser, printHtmlInBrowser } from '@/lib/print-html';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPdf } from '@/features/contracts/hooks';
 import { usePaymentsForRental } from '@/features/payments/hooks';
@@ -69,25 +70,29 @@ export default function ContratDetailScreen() {
         setPdfError(t('contract.logoLoadError'));
         return;
       }
-      const localUri = await generateContractPdf(
-        contract,
-        {
-          nom: details?.nom ?? agencyQuery.data.agencyName,
-          raisonSociale: details?.raisonSociale,
-          adresse: details?.adresse,
-          ville: details?.ville ?? agencyQuery.data.agencyCity,
-          telephone: details?.telephone,
-          email: details?.email,
-        },
-        { client, agency, stampDataUri, stampConfig: details?.stampConfig ?? null, logoDataUri, agencySignerName: signer?.nomComplet ?? null },
-        templateQuery.data?.template,
-        {
-          payments: paymentsQuery.data,
-          kmDepart: rental?.kmDepart,
-          kmRetour: rental?.kmRetour,
-          carburantDepart: rental?.carburantDepart,
-        }
-      );
+      const agencyInfo = {
+        nom: details?.nom ?? agencyQuery.data.agencyName,
+        raisonSociale: details?.raisonSociale,
+        adresse: details?.adresse,
+        ville: details?.ville ?? agencyQuery.data.agencyCity,
+        telephone: details?.telephone,
+        email: details?.email,
+      };
+      const signatures = { client, agency, stampDataUri, stampConfig: details?.stampConfig ?? null, logoDataUri, agencySignerName: signer?.nomComplet ?? null };
+      const extras = {
+        payments: paymentsQuery.data,
+        kmDepart: rental?.kmDepart,
+        kmRetour: rental?.kmRetour,
+        carburantDepart: rental?.carburantDepart,
+      };
+      // Sur le web (PC de l'agence) : boîte d'impression du navigateur, sans créer de fichier ni l'envoyer.
+      if (canPrintInBrowser) {
+        const missing = assertContractIsComplete(contract, agencyInfo.nom);
+        if (missing.length > 0) throw new Error(`Informations manquantes pour générer le contrat : ${missing.join(', ')}`);
+        await printHtmlInBrowser(buildContractHtml(contract, agencyInfo, signatures, templateQuery.data?.template, extras));
+        return;
+      }
+      const localUri = await generateContractPdf(contract, agencyInfo, signatures, templateQuery.data?.template, extras);
       await uploadPdf.mutateAsync({ agencyId: contract.agencyId, contractId: contract.id, localUri });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(localUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
@@ -234,7 +239,7 @@ export default function ContratDetailScreen() {
             ) : null}
 
             <Button
-              label={contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
+              label={canPrintInBrowser ? t('contract.print') : contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
               variant="secondary"
               onPress={handleGeneratePdf}
               disabled={isGeneratingPdf}

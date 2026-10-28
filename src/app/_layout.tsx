@@ -13,6 +13,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
+import { DesktopShell } from '@/components/desktop-shell';
 import { useAgencyAccess } from '@/features/agency/hooks';
 import { SessionProvider, useSession } from '@/features/auth/session-context';
 import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
@@ -86,7 +87,9 @@ export default function RootLayout() {
         <ThemeProvider value={DefaultTheme}>
           <AuthGate>
             <AccessGate>
-              <Stack screenOptions={{ headerShown: false }} />
+              <DesktopShell>
+                <Stack screenOptions={{ headerShown: false }} />
+              </DesktopShell>
               <NotificationsBootstrap />
             </AccessGate>
           </AuthGate>

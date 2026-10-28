@@ -1295,7 +1295,8 @@
     "continueRental": "Continuer la location",
     "nextStepHint": "Contrat signé. Il ne reste que le départ : remise des clés depuis la fiche de la location.",
     "startHint": "Contrat signé : tout est prêt côté contrat. Vous pouvez démarrer la location (remise des clés).",
-    "editAction": "Modifier le contrat"
+    "editAction": "Modifier le contrat",
+    "print": "Imprimer le contrat"
   },
   "inspection": {
     "section": "Inspection",
@@ -2311,5 +2312,20 @@
     "trialBannerTitle": "Période d'essai",
     "trialLastDay": "Dernier jour d'essai aujourd'hui.",
     "trialDays": "Il vous reste {{days}} jour(s) d'essai."
+  },
+  "desktop": {
+    "status": "Statut",
+    "active": "Actif",
+    "vehicle": "Voiture",
+    "customer": "Client",
+    "number": "N°",
+    "period": "Période",
+    "plate": "Immatriculation",
+    "model": "Modèle",
+    "mileage": "Kilométrage",
+    "dailyPrice": "Prix / jour",
+    "year": "Année",
+    "total": "Montant",
+    "exportCsv": "Exporter en CSV ({{count}})"
   }
 }

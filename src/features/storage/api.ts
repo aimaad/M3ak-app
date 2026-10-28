@@ -1,4 +1,5 @@
 import * as LegacyFileSystem from 'expo-file-system/legacy';
+import { Platform } from 'react-native';
 import * as ImageManipulator from 'expo-image-manipulator';
 
 import { getSupabase } from '@/lib/supabase';
@@ -80,6 +81,13 @@ export async function uploadFileWithProgress(
   onProgress: (progress: UploadProgress) => void,
   signal?: AbortSignal
 ): Promise<void> {
+  if (Platform.OS === 'web') {
+    // Navigateur : pas d'envoi par tâche native ; envoi direct (sans progression octet par octet).
+    onProgress({ stage: 'uploading', fraction: 0 });
+    await uploadFile(bucket, path, localUri, contentType);
+    onProgress({ stage: 'done', fraction: 1 });
+    return;
+  }
   onProgress({ stage: 'checking', fraction: 0 });
   if (!ALLOWED_CONTENT_TYPES.includes(contentType)) throw new UploadValidationError(`unsupported_content_type: ${contentType}`);
 
@@ -156,9 +164,36 @@ const PDF_IMAGE_MAX_SIDE = 700;
  * téléphone de plusieurs Mo devient une image de quelques dizaines de Ko, et tient dans le PDF. Null si l'image est
  * absente ou illisible (l'appelant doit alors le signaler, pas l'ignorer).
  */
+async function reducedDataUri(uri: string, isPng: boolean): Promise<string | null> {
+  const info = await ImageManipulator.manipulateAsync(uri, [], {});
+  const longest = Math.max(info.width, info.height);
+  const actions = longest > PDF_IMAGE_MAX_SIDE ? [{ resize: info.width >= info.height ? { width: PDF_IMAGE_MAX_SIDE } : { height: PDF_IMAGE_MAX_SIDE } }] : [];
+  const out = await ImageManipulator.manipulateAsync(uri, actions, {
+    compress: 0.85,
+    format: isPng ? ImageManipulator.SaveFormat.PNG : ImageManipulator.SaveFormat.JPEG,
+    base64: true,
+  });
+  return out.base64 ? `data:image/${isPng ? 'png' : 'jpeg'};base64,${out.base64}` : null;
+}
+
+/** Version navigateur : pas de système de fichiers, on passe par un lien d'objet en mémoire. */
+async function loadImageForPdfWeb(signedUrl: string, path: string): Promise<string | null> {
+  const response = await fetch(signedUrl);
+  if (!response.ok) return null;
+  const objectUrl = URL.createObjectURL(await response.blob());
+  try {
+    return await reducedDataUri(objectUrl, /\.png$/i.test(path));
+  } catch {
+    return null;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 export async function loadImageForPdf(bucket: string, path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
   const signedUrl = await getSignedUrl(bucket, path);
+  if (Platform.OS === 'web') return loadImageForPdfWeb(signedUrl, path);
   const target = `${LegacyFileSystem.cacheDirectory}pdf-image-${Date.now()}.${/\.png$/i.test(path) ? 'png' : 'jpg'}`;
   try {
     const download = await LegacyFileSystem.downloadAsync(signedUrl, target);

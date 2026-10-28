@@ -1,12 +1,14 @@
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, View } from 'react-native';
+import { ActivityIndicator, FlatList, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
+import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { Pager } from '@/components/pager';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
@@ -22,6 +24,7 @@ function formatDate(iso: string): string {
 
 export default function ContratsScreen() {
   const { t } = useLanguage();
+  const isDesktop = useDesktopLayout();
   const contractsQuery = useContracts();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ContractStatus | 'tous'>('tous');
@@ -39,6 +42,41 @@ export default function ContratsScreen() {
     });
   }, [contractsQuery.data, query, statusFilter]);
   const pagination = usePagination(filtered, `${query}|${statusFilter}`);
+
+  const columns: DataTableColumn<Contract>[] = [
+    { key: 'number', label: t('desktop.number'), render: (c) => <ThemedText type="smallBold">{c.numero}</ThemedText> },
+    {
+      key: 'customer',
+      label: t('desktop.customer'),
+      flex: 1.5,
+      render: (c) => (
+        <ThemedText type="small" numberOfLines={1}>
+          {c.customerNom}
+        </ThemedText>
+      ),
+    },
+    {
+      key: 'vehicle',
+      label: t('desktop.vehicle'),
+      flex: 1.5,
+      render: (c) => (
+        <ThemedText type="small" numberOfLines={1}>
+          {c.vehicleMarque} {c.vehicleModele} · {c.vehicleImmatriculation}
+        </ThemedText>
+      ),
+    },
+    {
+      key: 'period',
+      label: t('desktop.period'),
+      flex: 1.5,
+      render: (c) => (
+        <ThemedText type="small">
+          {formatDate(c.dateDebutPrevue)} → {formatDate(c.dateFinPrevue)}
+        </ThemedText>
+      ),
+    },
+    { key: 'status', label: t('desktop.status'), render: (c) => <ContractStatusBadge status={c.statut} /> },
+  ];
 
   return (
     <ThemedView className="flex-1">
@@ -82,6 +120,19 @@ export default function ContratsScreen() {
             </ThemedText>
           </View>
         ) : (
+          isDesktop ? (
+            <ScrollView contentContainerClassName="px-6 pb-10">
+              <DataTable
+                columns={columns}
+                rows={pagination.items}
+                rowKey={(item) => item.id}
+                onRowPress={(item) => router.push(`/contrats/${item.id}`)}
+                exportCsv={{ filename: 'contrats', rows: filtered, cells: (c) => [c.numero, c.customerNom, `${c.vehicleMarque} ${c.vehicleModele} ${c.vehicleImmatriculation}`, c.dateDebutPrevue.slice(0, 10) + ' → ' + c.dateFinPrevue.slice(0, 10), t(`contract.status.${c.statut}`)] }}
+                emptyLabel={t('contract.empty')}
+              />
+              <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
+            </ScrollView>
+          ) : (
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
@@ -111,6 +162,7 @@ export default function ContratsScreen() {
               </View>
             }
           />
+          )
         )}
       </SafeAreaView>
     </ThemedView>
