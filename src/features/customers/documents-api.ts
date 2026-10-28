@@ -1,4 +1,4 @@
-import { uploadFile } from '@/features/storage/api';
+import { shrinkPhotoForUpload, uploadFile } from '@/features/storage/api';
 import { getSupabase } from '@/lib/supabase';
 
 import type { CustomerDocument, DocumentInput, DocumentType } from './types';
@@ -99,22 +99,25 @@ export async function addDocument(
   localUri: string | null,
   localUriVerso: string | null = null
 ): Promise<CustomerDocument> {
-  let path: string | null = null;
-  let pathVerso: string | null = null;
-  if (localUri) {
-    const { extension, contentType } = contentTypeFor(localUri);
-    path = `${agencyId}/${owner.id}/${input.type}-${Date.now()}.${extension}`;
-    await uploadFile(CUSTOMER_DOCUMENTS_BUCKET, path, localUri, contentType);
+  // Recto et verso partent en même temps, après réduction de la photo : bien plus rapide qu'un envoi l'un après l'autre.
+  const stamp = Date.now();
+  async function send(uri: string | null, name: string): Promise<string | null> {
+    if (!uri) return null;
+    const { contentType } = contentTypeFor(uri);
+    const shrinkable = contentType === 'image/jpeg';
+    const fileUri = shrinkable ? await shrinkPhotoForUpload(uri) : uri;
+    const { extension } = contentTypeFor(fileUri);
+    const target = `${agencyId}/${owner.id}/${name}-${stamp}.${extension}`;
+    await uploadFile(CUSTOMER_DOCUMENTS_BUCKET, target, fileUri, contentType);
+    return target;
   }
-  if (localUriVerso) {
-    const { extension, contentType } = contentTypeFor(localUriVerso);
-    pathVerso = `${agencyId}/${owner.id}/${input.type}-verso-${Date.now()}.${extension}`;
-    try {
-      await uploadFile(CUSTOMER_DOCUMENTS_BUCKET, pathVerso, localUriVerso, contentType);
-    } catch (error) {
-      await removeFileQuietly(path);
-      throw error;
-    }
+  const [rectoResult, versoResult] = await Promise.allSettled([send(localUri, input.type), send(localUriVerso, `${input.type}-verso`)]);
+  const path = rectoResult.status === 'fulfilled' ? rectoResult.value : null;
+  const pathVerso = versoResult.status === 'fulfilled' ? versoResult.value : null;
+  if (rectoResult.status === 'rejected' || versoResult.status === 'rejected') {
+    await removeFileQuietly(path);
+    await removeFileQuietly(pathVerso);
+    throw rectoResult.status === 'rejected' ? rectoResult.reason : (versoResult as PromiseRejectedResult).reason;
   }
 
   const { data, error } = await getSupabase()
@@ -198,15 +201,11 @@ export async function addPendingDocuments(
   owner: DocumentOwner,
   pending: { input: DocumentInput; localUri: string | null; localUriVerso?: string | null }[]
 ): Promise<{ saved: number; failed: number }> {
-  let saved = 0;
-  let failed = 0;
-  for (const item of pending) {
-    try {
-      await addDocument(agencyId, owner, item.input, item.localUri, item.localUriVerso ?? null);
-      saved += 1;
-    } catch {
-      failed += 1;
-    }
-  }
+  // Les documents d'un nouveau client sont envoyés en parallèle ; un échec isolé n'arrête pas les autres.
+  const results = await Promise.allSettled(
+    pending.map((item) => addDocument(agencyId, owner, item.input, item.localUri, item.localUriVerso ?? null))
+  );
+  const saved = results.filter((result) => result.status === 'fulfilled').length;
+  const failed = results.length - saved;
   return { saved, failed };
 }

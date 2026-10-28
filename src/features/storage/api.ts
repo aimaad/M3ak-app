@@ -180,6 +180,24 @@ export async function loadImageForPdf(bucket: string, path: string | null | unde
   }
 }
 
+const PHOTO_MAX_SIDE = 1800;
+
+/**
+ * Photo de document (permis, CIN…) réduite avant l'envoi : une photo de téléphone de 3 à 6 Mo devient ~300-600 Ko,
+ * toujours très lisible, donc l'enregistrement est bien plus rapide. Au mieux : en cas d'échec, l'original est envoyé.
+ */
+export async function shrinkPhotoForUpload(uri: string, maxSide = PHOTO_MAX_SIDE): Promise<string> {
+  try {
+    const info = await ImageManipulator.manipulateAsync(uri, [], {});
+    if (Math.max(info.width, info.height) <= maxSide) return uri;
+    const resize = info.width >= info.height ? { width: maxSide } : { height: maxSide };
+    const out = await ImageManipulator.manipulateAsync(uri, [{ resize }], { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG });
+    return out.uri;
+  } catch {
+    return uri;
+  }
+}
+
 /** Réduit une image choisie par l'utilisateur avant l'envoi (logo) : plus rapide à envoyer, même rendu dans le contrat. */
 export async function shrinkImageForUpload(
   uri: string,
