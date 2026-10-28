@@ -3,6 +3,7 @@ import { ActivityIndicator, Modal, Platform, Pressable, StatusBar, View } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 
+import { HtmlFrame } from '@/components/html-frame';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
@@ -53,7 +54,9 @@ export function ContractViewer({ visible, html, reachedEnd, onReachEnd, onClose 
             </ThemedText>
           </Pressable>
         </View>
-        {source ? (
+        {source && Platform.OS === 'web' ? (
+          <HtmlFrame html={source.html} onReachEnd={onReachEnd} style={{ flex: 1 } as never} />
+        ) : source ? (
           <WebView
             originWhitelist={['*']}
             source={source}

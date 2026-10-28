@@ -1,10 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useMemo, useState } from 'react';
-import { Alert, Image, View } from 'react-native';
+import { Alert, Image, Platform, View } from 'react-native';
 import { WebView } from 'react-native-webview';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
+import { HtmlFrame } from '@/components/html-frame';
 import { ChipGroup } from '@/components/chip-group';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -87,14 +88,18 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
         ) : (
           <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: '#E4DCF5' }}>
             {/* Aperçu dessiné par le même moteur que le PDF du contrat : ce qu'on voit ici est exactement ce qui s'imprime. */}
-            <WebView
-              originWhitelist={['*']}
-              source={{ html: previewHtml }}
-              scrollEnabled={false}
-              pointerEvents="none"
-              opaque={false}
-              style={{ width: 170, height: previewHeight, backgroundColor: 'transparent' }}
-            />
+            {Platform.OS === 'web' ? (
+              <HtmlFrame html={previewHtml} style={{ width: 170, height: previewHeight, pointerEvents: 'none' }} />
+            ) : (
+              <WebView
+                originWhitelist={['*']}
+                source={{ html: previewHtml }}
+                scrollEnabled={false}
+                pointerEvents="none"
+                opaque={false}
+                style={{ width: 170, height: previewHeight, backgroundColor: 'transparent' }}
+              />
+            )}
             <ThemedText type="small" themeColor="textSecondary">
               {saved ? t('entreprise.stamp.saved') : t('entreprise.stamp.notSaved')}
             </ThemedText>
