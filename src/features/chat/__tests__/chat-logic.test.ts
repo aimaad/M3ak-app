@@ -23,6 +23,12 @@ describe('toRpcCall (outils autorisés)', () => {
     expect(toRpcCall('customers', { search: 'Karim' })).toEqual({ fn: 'chat_tool_customers', params: { p_search: 'Karim' } });
     expect(toRpcCall('customers', {})?.params).toEqual({ p_search: null });
     expect(toRpcCall('fleet', {})).toEqual({ fn: 'chat_tool_fleet', params: {} });
+    expect(toRpcCall('finance', { from: '2030-06-01T00:00:00Z' })?.fn).toBe('chat_tool_finance');
+    expect(toRpcCall('fleet_alerts', { days: 9999 })?.params).toEqual({ p_days: '365' });
+    expect(toRpcCall('fleet_alerts', { days: 'x' })?.params).toEqual({ p_days: '30' });
+    expect(toRpcCall('fleet_stats', {})?.fn).toBe('chat_tool_fleet_stats');
+    expect(toRpcCall('activity', { actor: 'Sara%' })?.params).toMatchObject({ p_actor: 'Sara' });
+    expect(toRpcCall('contracts', { status: 'signe', search: 'Karim' })?.params).toMatchObject({ p_status: 'signe', p_search: 'Karim' });
   });
   it('neutralise les caractères de recherche dangereux et limite la longueur', () => {
     expect(cleanText('100%_\\ test')).toBe('100 test');

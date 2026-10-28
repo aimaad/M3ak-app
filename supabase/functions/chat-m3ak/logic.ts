@@ -2,7 +2,7 @@
 // Testée avec Jest. L'IA ne peut demander QUE les outils ci-dessous, avec des arguments validés ; chaque outil est une
 // fonction SQL en lecture seule exécutée avec les droits de l'utilisateur (voir migration 0054).
 
-export type ToolName = 'rentals' | 'returns_due' | 'departures_due' | 'available_vehicles' | 'vehicle_damages' | 'vehicle_maintenance' | 'customer_history' | 'customers' | 'fleet';
+export type ToolName = 'rentals' | 'returns_due' | 'departures_due' | 'available_vehicles' | 'vehicle_damages' | 'vehicle_maintenance' | 'customer_history' | 'customers' | 'fleet' | 'finance' | 'fleet_alerts' | 'fleet_stats' | 'activity' | 'contracts';
 
 export type RpcCall = { fn: string; params: Record<string, string | null> };
 
@@ -13,7 +13,7 @@ export type ModelStep =
 
 export type Source = { type: 'rental'; id: string; label: string };
 
-const TOOL_NAMES: ToolName[] = ['rentals', 'returns_due', 'departures_due', 'available_vehicles', 'vehicle_damages', 'vehicle_maintenance', 'customer_history', 'customers', 'fleet'];
+const TOOL_NAMES: ToolName[] = ['rentals', 'returns_due', 'departures_due', 'available_vehicles', 'vehicle_damages', 'vehicle_maintenance', 'customer_history', 'customers', 'fleet', 'finance', 'fleet_alerts', 'fleet_stats', 'activity', 'contracts'];
 const MAX_ANSWER = 1500;
 const MAX_SOURCES = 6;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -64,6 +64,18 @@ export function toRpcCall(tool: string, rawArgs: unknown): RpcCall | null {
       return { fn: 'chat_tool_customers', params: { p_search: cleanText(args.search) } };
     case 'fleet':
       return { fn: 'chat_tool_fleet', params: {} };
+    case 'finance':
+      return { fn: 'chat_tool_finance', params: { p_from: cleanDate(args.from), p_to: cleanDate(args.to) } };
+    case 'fleet_alerts': {
+      const days = typeof args.days === 'number' && Number.isFinite(args.days) ? Math.min(Math.max(Math.round(args.days), 1), 365) : 30;
+      return { fn: 'chat_tool_fleet_alerts', params: { p_days: String(days) } };
+    }
+    case 'fleet_stats':
+      return { fn: 'chat_tool_fleet_stats', params: { p_from: cleanDate(args.from), p_to: cleanDate(args.to) } };
+    case 'activity':
+      return { fn: 'chat_tool_activity', params: { p_actor: cleanText(args.actor), p_from: cleanDate(args.from), p_to: cleanDate(args.to), p_category: cleanText(args.category) } };
+    case 'contracts':
+      return { fn: 'chat_tool_contracts', params: { p_status: cleanText(args.status), p_from: cleanDate(args.from), p_to: cleanDate(args.to), p_search: cleanText(args.search) } };
     default:
       return null;
   }
@@ -143,6 +155,11 @@ Pour chercher des données, tu demandes un ou plusieurs outils (3 au plus, en un
 - "vehicle_maintenance" {vehicle} (obligatoire) : entretiens (vidange, assurance, visite technique…).
 - "customer_history" {customer} (obligatoire) : locations d'un client et montants payés.
 - "customers" {search} : NOMBRE TOTAL de clients de l'agence (« total_customers ») et liste des plus récents (nom, téléphone, nombre de locations) ; « search » filtre par nom ou téléphone. Utilise-le pour « combien de clients ? », « liste des clients ».
+- "finance" {from, to} : (propriétaire seulement) encaissé sur la période (par défaut : ce mois-ci), paiements en attente, remboursements, chiffre d'affaires réservé, IMPAYÉS (total et locations concernées) et cautions (bloquées, retenues). Si le résultat est {"error":"owner_only"}, explique que seul le propriétaire peut consulter les finances.
+- "fleet_alerts" {days} : assurances et visites techniques expirées ou qui expirent dans les « days » prochains jours (30 par défaut), et entretiens à faire, pour TOUTE la flotte.
+- "fleet_stats" {from, to} : voitures les plus louées, les moins utilisées (taux d'utilisation), nombre de locations de la période comparé à la période précédente (tendance de la demande). Période par défaut : 30 derniers jours. Le chiffre d'affaires par voiture n'apparaît que pour le propriétaire.
+- "activity" {actor, from, to, category} : équipe et journal d'activité (qui a fait quoi, quand) ; réservé au propriétaire (liste vide sinon : dis-le). « actor » = nom de l'employé ; « category » parmi rental, payment, customer, vehicle, contract, deposit, maintenance, inspection, team.
+- "contracts" {status, from, to, search} : contrats (statuts preparation, pret_a_signer, signe, en_cours, cloture, annule) avec indication signé / non signé par le client et l'agence ; « search » = client, voiture ou numéro.
 - "fleet" {} : NOMBRE de voitures de l'agence, répartition par statut et liste (modèle, immatriculation, statut). Utilise-le pour « combien de voitures ? », « quelles voitures j'ai ? ».
 
 Tu réponds UNIQUEMENT par un objet JSON valide, sans balises markdown, de l'une de ces deux formes :
