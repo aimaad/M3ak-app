@@ -43,8 +43,8 @@ type Props = {
 const STATUS_COLOR = {
   expired: M3akPalette.danger,
   expiring_soon: M3akPalette.warning,
-  ok: '#5E5575',
-  no_date: '#5E5575',
+  ok: M3akPalette.muted,
+  no_date: M3akPalette.muted,
 } as const;
 
 function formatDate(iso: string): string {
@@ -68,7 +68,7 @@ function DocumentThumbnail({ path, label }: { path: string; label?: string }) {
   const { data: url, isLoading } = useSignedUrl(CUSTOMER_DOCUMENTS_BUCKET, path);
   if (isLoading || !url) {
     return (
-      <View className="h-28 flex-1 items-center justify-center rounded-2xl bg-[#FAF9FF]">
+      <View className="h-28 flex-1 items-center justify-center rounded-2xl bg-canvas">
         <ActivityIndicator color={M3akPalette.mauve} />
       </View>
     );
@@ -197,7 +197,7 @@ function DocumentCard({
       </ThemedText>
 
       {editing ? (
-        <View className="gap-3 border-t border-[#E4DCF5] pt-3">
+        <View className="gap-3 border-t border-line pt-3">
           <DocumentForm
             values={values}
             onChange={setValues}
@@ -304,7 +304,7 @@ export function CustomerDocumentsSection({ agencyId, owner, canDelete, title }: 
           {t('customer.documentsManager.loadError')}
         </ThemedText>
       ) : documents.length === 0 ? (
-        <View className="items-center rounded-2xl border border-dashed border-[#E4DCF5] bg-white px-4 py-5">
+        <View className="items-center rounded-2xl border border-dashed border-line bg-white px-4 py-5">
           <ThemedText type="small" themeColor="textSecondary" className="text-center">
             {t('customer.documentsManager.empty')}
           </ThemedText>

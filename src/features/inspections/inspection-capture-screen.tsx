@@ -24,6 +24,7 @@ import {
 import { persistCapturedPhoto } from './local-photo-storage';
 import { CAPTURE_ANGLES, CAPTURE_PLAN, isSkippableAngle, type InspectionType, type PhotoAngle } from './types';
 import { usePhotoSync } from './use-photo-sync';
+import { M3akPalette } from '@/constants/theme';
 
 type InspectionCaptureScreenProps = {
   rentalId: string;
@@ -145,7 +146,7 @@ export function InspectionCaptureScreen({
   if (!permission) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color="#7C3AED" />
+        <ActivityIndicator color={M3akPalette.mauve} />
       </ThemedView>
     );
   }
@@ -157,7 +158,7 @@ export function InspectionCaptureScreen({
           <ThemedText type="default" themeColor="textSecondary" className="text-center">
             {t('inspection.permissionRequired')}
           </ThemedText>
-          <Pressable onPress={requestPermission} className="rounded-2xl bg-[#7C3AED] px-5 py-3">
+          <Pressable onPress={requestPermission} className="rounded-2xl bg-brand px-5 py-3">
             <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
               {t('inspection.grantPermission')}
             </ThemedText>
@@ -236,11 +237,11 @@ export function InspectionCaptureScreen({
             {CAPTURE_PLAN.map((entry) => {
               const done = entry.angles.filter((angle) => coveredAngles.includes(angle)).length;
               return (
-                <View key={entry.group} className="flex-1 rounded-xl bg-[#FAF9FF] px-2 py-1.5">
+                <View key={entry.group} className="flex-1 rounded-xl bg-canvas px-2 py-1.5">
                   <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
                     {t(`inspection.groups.${entry.group}`)}
                   </ThemedText>
-                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#15803D' : '#211A2E' }}>
+                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#15803D' : M3akPalette.ink }}>
                     {done}/{entry.angles.length}
                   </ThemedText>
                 </View>
@@ -257,15 +258,15 @@ export function InspectionCaptureScreen({
                   onPress={() => setManualAngle(angle)}
                   className={`rounded-full border px-3 py-1.5 ${
                     selected
-                      ? 'border-[#7C3AED] bg-[#7C3AED]'
+                      ? 'border-brand bg-brand'
                       : done
                         ? 'border-[#15803D] bg-[#DCFCE7]'
-                        : 'border-[#E4DCF5] bg-white'
+                        : 'border-line bg-white'
                   }`}
                 >
                   <ThemedText
                     type="small"
-                    style={{ color: selected ? '#ffffff' : done ? '#15803D' : '#211A2E' }}
+                    style={{ color: selected ? '#ffffff' : done ? '#15803D' : M3akPalette.ink }}
                   >
                     {`${done ? '✓ ' : skipped.includes(angle) ? '– ' : ''}${t(`inspection.angles.${angle}`)}`}
                   </ThemedText>
@@ -278,7 +279,7 @@ export function InspectionCaptureScreen({
             <Pressable
               onPress={handleFinish}
               disabled={completeInspection.isPending}
-              className="items-center rounded-2xl bg-[#7C3AED] px-4 py-4"
+              className="items-center rounded-2xl bg-brand px-4 py-4"
             >
               <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
                 {t('inspection.finish')}
@@ -298,9 +299,9 @@ export function InspectionCaptureScreen({
               <Pressable
                 onPress={handleCapture}
                 disabled={!inspection || isCapturing}
-                className="h-16 w-16 items-center justify-center rounded-full border-4 border-[#7C3AED] bg-white"
+                className="h-16 w-16 items-center justify-center rounded-full border-4 border-brand bg-white"
               >
-                {isCapturing ? <ActivityIndicator color="#7C3AED" /> : <View className="h-11 w-11 rounded-full bg-[#7C3AED]" />}
+                {isCapturing ? <ActivityIndicator color={M3akPalette.mauve} /> : <View className="h-11 w-11 rounded-full bg-brand" />}
               </Pressable>
               <View className="w-24" />
             </View>

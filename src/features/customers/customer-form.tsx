@@ -185,8 +185,8 @@ export function CustomerForm({
       ) : null}
 
       {(draft.warnings ?? []).map((code) => (
-        <View key={code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: code === 'licence_expiring' ? '#EDE9FE' : M3akPalette.warningLight }}>
-          <ThemedText type="small" style={{ color: code === 'licence_expiring' ? '#5B21B6' : M3akPalette.warning }}>
+        <View key={code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: code === 'licence_expiring' ? M3akPalette.mauveLight : M3akPalette.warningLight }}>
+          <ThemedText type="small" style={{ color: code === 'licence_expiring' ? M3akPalette.mauveDeep : M3akPalette.warning }}>
             {t(`customer.ocr.checks.${code}`)}
           </ThemedText>
         </View>
@@ -369,7 +369,7 @@ export function CustomerForm({
       </CollapsibleSection>
 
       {mode === 'create' ? (
-        <View className="rounded-2xl border border-dashed border-[#E4DCF5] bg-white p-4">
+        <View className="rounded-2xl border border-dashed border-line bg-white p-4">
           <ThemedText type="small" themeColor="textSecondary">
             {t('customer.afterCreateHint')}
           </ThemedText>

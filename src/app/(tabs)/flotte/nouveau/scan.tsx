@@ -264,7 +264,7 @@ export default function ScannerCarteGriseScreen() {
               <Button label={t('vehicle.quickCreate.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
               <View className="w-full gap-3">
                 <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
-                <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
+                <View className="rounded-2xl bg-canvas px-4 py-3">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('ocr.privacyCloud')}
                   </ThemedText>
@@ -334,7 +334,7 @@ export default function ScannerCarteGriseScreen() {
                 </ThemedText>
               ) : null}
 
-              <View className="gap-2 rounded-2xl bg-[#FAF9FF] px-4 py-3">
+              <View className="gap-2 rounded-2xl bg-canvas px-4 py-3">
                 <View className="flex-row flex-wrap gap-2">
                   {(['recto', 'verso'] as const).map((face) => (
                     <View key={face} className="flex-row items-center gap-1 rounded-full px-3 py-1" style={{ backgroundColor: faces[face] ? M3akPalette.successLight : M3akPalette.warningLight }}>
@@ -365,8 +365,8 @@ export default function ScannerCarteGriseScreen() {
               </View>
 
               {checks.map((check) => (
-                <View key={check.code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: check.severity === 'warning' ? M3akPalette.warningLight : '#EDE9FE' }}>
-                  <ThemedText type="small" style={{ color: check.severity === 'warning' ? M3akPalette.warning : '#5B21B6' }}>
+                <View key={check.code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: check.severity === 'warning' ? M3akPalette.warningLight : M3akPalette.mauveLight }}>
+                  <ThemedText type="small" style={{ color: check.severity === 'warning' ? M3akPalette.warning : M3akPalette.mauveDeep }}>
                     {t(`vehicle.quickCreate.checks.${check.code}`)}
                   </ThemedText>
                 </View>
@@ -471,7 +471,7 @@ export default function ScannerCarteGriseScreen() {
               <RegistrationInfo fields={merged} t={t} />
 
               <View className="flex-row gap-2">
-                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3">
+                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3">
                   <ThemedText type="small">{t('vehicle.quickCreate.retake')}</ThemedText>
                 </Pressable>
               </View>

@@ -3,6 +3,7 @@ import { TextInput, View, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 type TextFieldProps = TextInputProps & {
   label?: string;
@@ -27,11 +28,11 @@ export function TextField({ label, optional, error, warning, className, containe
         </ThemedText>
       ) : null}
       <TextInput
-        placeholderTextColor="#8A82A0"
+        placeholderTextColor={M3akPalette.subtle}
         accessibilityLabel={rest.accessibilityLabel ?? shownLabel}
         aria-invalid={error ? true : undefined}
-        className={`rounded-2xl border px-4 py-3 text-base text-[#1E1633] ${
-          error ? 'border-[#DC2626]' : warning ? 'border-[#F59E0B]' : focused ? 'border-[#7C3AED]' : 'border-[#E4DCF5]'
+        className={`rounded-2xl border px-4 py-3 text-base text-ink ${
+          error ? 'border-[#DC2626]' : warning ? 'border-[#F59E0B]' : focused ? 'border-brand' : 'border-line'
         } bg-white ${className ?? ''}`}
         onFocus={(event) => {
           setFocused(true);

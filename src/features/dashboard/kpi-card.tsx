@@ -31,7 +31,7 @@ export function KpiCard({
 }) {
   const content = (
     <View className="gap-1 ps-3" style={{ borderStartWidth: 4, borderStartColor: TONE_COLOR[tone], borderRadius: 2 }}>
-      <ThemedText type="subtitle" className="font-cairo-semibold" style={{ color: TONE_COLOR[tone] }}>
+      <ThemedText type="subtitle"  style={{ color: TONE_COLOR[tone] }}>
         {value}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary">

@@ -18,7 +18,7 @@ export default function Index() {
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1 items-center justify-center gap-3 px-8">
           <Logo size="lg" />
-          <ThemedText type="subtitle" className="text-center font-cairo-semibold">
+          <ThemedText type="subtitle" className="text-center">
             {t('auth.configMissingTitle')}
           </ThemedText>
           <ThemedText type="default" themeColor="textSecondary" className="text-center">

@@ -41,7 +41,7 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
           <Image source={{ uri: photoUrl }} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="cover" />
         </View>
       ) : (
-        <View className="h-28 items-center justify-center rounded-2xl bg-[#EDE9FE]">
+        <View className="h-28 items-center justify-center rounded-2xl bg-brand-light">
           <ThemedText type="small" themeColor="textSecondary">
             {vehicle.marque} {vehicle.modele}
           </ThemedText>

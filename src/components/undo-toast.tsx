@@ -33,7 +33,7 @@ export function UndoProvider({ children }: { children: ReactNode }) {
           <View
             accessibilityLiveRegion="polite"
             className="w-full flex-row items-center justify-between gap-3 rounded-2xl px-4 py-3"
-            style={{ maxWidth: 480, backgroundColor: '#211A2E', shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}
+            style={{ maxWidth: 480, backgroundColor: M3akPalette.ink, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}
           >
             <ThemedText type="small" style={{ color: '#FFFFFF', flex: 1 }}>
               {active.message}

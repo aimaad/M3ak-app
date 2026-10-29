@@ -27,7 +27,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
   const { done, total } = progressOf(steps);
 
   return (
-    <View className="gap-3 rounded-3xl border border-[#E4DCF5] bg-white p-4">
+    <View className="gap-3 rounded-3xl border border-line bg-white p-4">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1 gap-0.5">
           <ThemedText type="smallBold">{t('onboarding.start.title')}</ThemedText>
@@ -62,7 +62,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
             <View className="flex-1">
               <ThemedText
                 type="smallBold"
-                style={{ color: step.done ? '#8A82A0' : '#211A2E', textDecorationLine: step.done ? 'line-through' : 'none' }}
+                style={{ color: step.done ? M3akPalette.subtle : M3akPalette.ink, textDecorationLine: step.done ? 'line-through' : 'none' }}
               >
                 {t(`onboarding.start.steps.${step.key}.title`)}
               </ThemedText>
@@ -72,7 +72,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
                 </ThemedText>
               ) : null}
             </View>
-            {!step.done ? <Ionicons name="chevron-forward" size={18} color="#8A82A0" /> : null}
+            {!step.done ? <Ionicons name="chevron-forward" size={18} color={M3akPalette.subtle} /> : null}
           </Pressable>
         ))}
       </View>

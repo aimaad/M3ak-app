@@ -25,12 +25,13 @@ import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 const EMPTY_CUSTOMERS: Customer[] = [];
 
 function KpiTile({ label, value }: { label: string; value: number }) {
   return (
-    <View className="min-w-[130px] gap-1 rounded-3xl border border-[#E4DCF5] bg-white px-4 py-3">
+    <View className="min-w-[130px] gap-1 rounded-3xl border border-line bg-white px-4 py-3">
       <ThemedText type="title" themeColor="primary">
         {value}
       </ThemedText>
@@ -133,10 +134,10 @@ export default function ClientsScreen() {
               <Pressable
                 onPress={() => setFilters((prev) => ({ ...prev, typeClient: 'tous' }))}
                 className={`rounded-full border px-4 py-2 ${
-                  filters.typeClient === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'
+                  filters.typeClient === 'tous' ? 'border-ink bg-ink' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : '#211A2E' }}>
+                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : M3akPalette.ink }}>
                   {t('flotte.status.tous')}
                 </ThemedText>
               </Pressable>
@@ -145,10 +146,10 @@ export default function ClientsScreen() {
                   key={type}
                   onPress={() => setFilters((prev) => ({ ...prev, typeClient: type }))}
                   className={`rounded-full border px-4 py-2 ${
-                    filters.typeClient === type ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'
+                    filters.typeClient === type ? 'border-ink bg-ink' : 'border-line bg-white'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : '#211A2E' }}>
+                  <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : M3akPalette.ink }}>
                     {t(`customer.type.${type}`)}
                   </ThemedText>
                 </Pressable>
@@ -159,7 +160,7 @@ export default function ClientsScreen() {
 
         {customersQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('clients.loading')}
             </ThemedText>
@@ -192,7 +193,7 @@ export default function ClientsScreen() {
               <RefreshControl
                 refreshing={customersQuery.isFetching}
                 onRefresh={() => void customersQuery.refetch()}
-                tintColor="#7C3AED"
+                tintColor={M3akPalette.mauve}
               />
             }
             renderItem={({ item }) => (
@@ -212,7 +213,7 @@ export default function ClientsScreen() {
 
         <Pressable
           onPress={() => router.push('/clients/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-brand px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('clients.addClient')}`}

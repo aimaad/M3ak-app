@@ -25,6 +25,7 @@ import { useSignature } from '@/features/signatures/hooks';
 import { SignatureView } from '@/features/signatures/signature-pad';
 import { useLanguage } from '@/i18n/use-language';
 import { friendlyErrorKey } from '@/lib/user-errors';
+import { M3akPalette } from '@/constants/theme';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -123,7 +124,7 @@ export default function ContratDetailScreen() {
           <ScreenHeader title={t('contract.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color="#7C3AED" />
+              <ActivityIndicator color={M3akPalette.mauve} />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('contract.loadError') : t('contract.notFound')}
@@ -185,14 +186,14 @@ export default function ContratDetailScreen() {
               <ThemedText type="smallBold">{t('contract.sign.signatures')}</ThemedText>
               <Card className="flex-row items-center justify-around gap-3">
                 <View className="items-center gap-1">
-                  {clientSignature.data ? <SignatureView signature={clientSignature.data} height={70} /> : <ActivityIndicator color="#7C3AED" />}
+                  {clientSignature.data ? <SignatureView signature={clientSignature.data} height={70} /> : <ActivityIndicator color={M3akPalette.mauve} />}
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('contract.sign.clientLabel')}
                   </ThemedText>
                 </View>
                 {contract.agencySignaturePath ? (
                   <View className="items-center gap-1">
-                    {agencySignature.data ? <SignatureView signature={agencySignature.data} height={70} /> : <ActivityIndicator color="#7C3AED" />}
+                    {agencySignature.data ? <SignatureView signature={agencySignature.data} height={70} /> : <ActivityIndicator color={M3akPalette.mauve} />}
                     <ThemedText type="small" themeColor="textSecondary">
                       {t('contract.sign.agencyLabel')}
                     </ThemedText>

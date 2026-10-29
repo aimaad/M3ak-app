@@ -3,6 +3,7 @@ import { ActivityIndicator, Image, View } from 'react-native';
 import { useSignedUrl } from '@/features/storage/hooks';
 
 import { ThemedText } from './themed-text';
+import { M3akPalette } from '@/constants/theme';
 
 type DocumentPreviewProps = {
   label: string;
@@ -20,14 +21,14 @@ export function DocumentPreview({ label, bucket, path, emptyLabel }: DocumentPre
         {label}
       </ThemedText>
       {!path ? (
-        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#E4DCF5] bg-white">
+        <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-line bg-white">
           <ThemedText type="small" themeColor="textSecondary">
             {emptyLabel}
           </ThemedText>
         </View>
       ) : isLoading || !signedUrl ? (
-        <View className="h-36 items-center justify-center rounded-2xl bg-[#FAF9FF]">
-          <ActivityIndicator color="#7C3AED" />
+        <View className="h-36 items-center justify-center rounded-2xl bg-canvas">
+          <ActivityIndicator color={M3akPalette.mauve} />
         </View>
       ) : (
         <View className="h-36 w-full overflow-hidden rounded-2xl">

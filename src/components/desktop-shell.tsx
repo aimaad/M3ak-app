@@ -64,7 +64,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
 
   return (
     <View className="flex-1 flex-row" style={{ backgroundColor: M3akPalette.background }}>
-      <View className="w-64 border-e bg-white" style={{ borderColor: '#E4DCF5' }}>
+      <View className="w-64 border-e bg-white" style={{ borderColor: M3akPalette.border }}>
         <View className="px-6 pb-4 pt-6">
           <Logo markOnly />
           {agencyQuery.data ? (
@@ -85,17 +85,17 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 className="min-h-11 flex-row items-center gap-3 rounded-xl px-3"
                 style={{ backgroundColor: selected ? M3akPalette.mauve : 'transparent' }}
               >
-                <Ionicons name={item.icon} size={20} color={selected ? '#FFFFFF' : '#8A82A0'} />
-                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : '#211A2E' }}>
+                <Ionicons name={item.icon} size={20} color={selected ? '#FFFFFF' : M3akPalette.subtle} />
+                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : M3akPalette.ink }}>
                   {t(item.labelKey)}
                 </ThemedText>
               </Pressable>
             );
           })}
         </ScrollView>
-        <View className="gap-1 border-t px-3 py-3" style={{ borderColor: '#E4DCF5' }}>
+        <View className="gap-1 border-t px-3 py-3" style={{ borderColor: M3akPalette.border }}>
           <Pressable onPress={() => signOut()} className="min-h-11 flex-row items-center gap-3 rounded-xl px-3">
-            <Ionicons name="log-out-outline" size={20} color="#8A82A0" />
+            <Ionicons name="log-out-outline" size={20} color={M3akPalette.subtle} />
             <ThemedText type="smallBold">{t('auth.signOut')}</ThemedText>
           </Pressable>
         </View>

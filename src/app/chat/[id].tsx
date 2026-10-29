@@ -82,12 +82,12 @@ export default function ChatConversationScreen() {
     <ThemedView className="flex-1">
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
         {/* En-tête : pastille M3ak, nom et état */}
-        <View className="flex-row items-center gap-3 border-b border-[#E4DCF5] bg-white px-4 pb-3 pt-2" style={Shadows.card}>
+        <View className="flex-row items-center gap-3 border-b border-line bg-white px-4 pb-3 pt-2" style={Shadows.card}>
           <Pressable
             onPress={() => router.back()}
             hitSlop={12}
             accessibilityLabel={t('common.back')}
-            className="h-11 w-11 items-center justify-center rounded-full bg-[#F5F0FF]"
+            className="h-11 w-11 items-center justify-center rounded-full bg-brand-soft"
           >
             <Ionicons name={rtl ? 'chevron-forward' : 'chevron-back'} size={22} color={M3akPalette.mauveDeep} />
           </Pressable>
@@ -127,10 +127,10 @@ export default function ChatConversationScreen() {
                       key={suggestion.key}
                       onPress={() => send(t(`chat.suggestions.${suggestion.key}`))}
                       accessibilityRole="button"
-                      className="min-h-14 flex-row items-center gap-3 rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3 active:bg-[#F5F0FF]"
+                      className="min-h-14 flex-row items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3 active:bg-brand-soft"
                       style={Shadows.card}
                     >
-                      <View className="h-9 w-9 items-center justify-center rounded-full bg-[#F5F0FF]">
+                      <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-soft">
                         <Ionicons name={suggestion.icon} size={18} color={M3akPalette.mauve} />
                       </View>
                       <ThemedText type="small" style={{ flex: 1, color: M3akPalette.ink, fontWeight: '600' }}>
@@ -164,8 +164,8 @@ export default function ChatConversationScreen() {
           </ScrollView>
 
           {/* Zone de saisie : tout en bas (zone du pouce), bouton d'envoi rond */}
-          <View className="border-t border-[#E4DCF5] bg-white px-4 py-3">
-            <View className="flex-row items-end gap-2 rounded-3xl border border-[#E4DCF5] bg-[#F7F4FF] py-1.5 pe-1.5 ps-4">
+          <View className="border-t border-line bg-white px-4 py-3">
+            <View className="flex-row items-end gap-2 rounded-3xl border border-line bg-canvas py-1.5 pe-1.5 ps-4">
               <TextInput
                 value={text}
                 onChangeText={setText}

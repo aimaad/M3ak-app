@@ -4,9 +4,10 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { ContractStatus } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 const STYLES: Record<ContractStatus, { background: string; text: string; dot: string }> = {
-  preparation: { background: '#F1EEF7', text: '#5E5575', dot: '#5E5575' },
+  preparation: { background: '#F1EEF7', text: M3akPalette.muted, dot: M3akPalette.muted },
   pret_a_signer: { background: '#FEF3C7', text: '#B45309', dot: '#B45309' },
   signe: { background: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
   en_cours: { background: '#E0F2FE', text: '#0369A1', dot: '#0369A1' },

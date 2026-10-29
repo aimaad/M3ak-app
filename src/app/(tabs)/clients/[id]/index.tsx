@@ -97,7 +97,7 @@ export default function ClientDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -114,7 +114,7 @@ export default function ClientDetailScreen() {
         ) : (
           <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
             <View className="flex-row items-center gap-2">
-              <View className="rounded-full bg-[#EDE9FE] px-2.5 py-1">
+              <View className="rounded-full bg-brand-light px-2.5 py-1">
                 <ThemedText type="small" themeColor="primary">
                   {t(`customer.type.${customer.typeClient}`)}
                 </ThemedText>
@@ -184,7 +184,7 @@ export default function ClientDetailScreen() {
             <View className="gap-2">
               <ThemedText type="smallBold">{t('customer.historySection')}</ThemedText>
               {rentals.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-[#E4DCF5] bg-white p-4">
+                <View className="gap-1 rounded-3xl border border-dashed border-line bg-white p-4">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('customer.historyPlaceholder')}
                   </ThemedText>

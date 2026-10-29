@@ -17,7 +17,7 @@ export function KeepPhotoChoice({ value, onChange }: { value: boolean; onChange:
       accessibilityRole="checkbox"
       accessibilityState={{ checked: value }}
       onPress={() => onChange(!value)}
-      className="flex-row items-start gap-3 rounded-2xl bg-[#FAF9FF] px-4 py-3">
+      className="flex-row items-start gap-3 rounded-2xl bg-canvas px-4 py-3">
       <Ionicons name={value ? 'checkbox' : 'square-outline'} size={22} color={M3akPalette.mauve} />
       <View className="flex-1 gap-1">
         <ThemedText type="smallBold">{t('ocr.keepPhoto.label')}</ThemedText>

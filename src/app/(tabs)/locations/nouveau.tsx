@@ -29,6 +29,7 @@ import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/fil
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 function toISO(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString();
@@ -336,11 +337,11 @@ export default function NouvelleLocationScreen() {
                           key={v.id}
                           onPress={() => setPickedVehicle(v)}
                           className="gap-1"
-                          style={{ borderWidth: 2, borderColor: selected ? '#7C3AED' : 'transparent' }}
+                          style={{ borderWidth: 2, borderColor: selected ? M3akPalette.mauve : 'transparent' }}
                         >
                           <View className="flex-row items-center justify-between">
                             <ThemedText type="smallBold">{`${v.marque} ${v.modele}`}</ThemedText>
-                            {selected ? <ThemedText type="smallBold" style={{ color: '#7C3AED' }}>✓</ThemedText> : null}
+                            {selected ? <ThemedText type="smallBold" style={{ color: M3akPalette.mauve }}>✓</ThemedText> : null}
                           </View>
                           <ThemedText type="small" themeColor="textSecondary">{v.immatriculation}</ThemedText>
                           <View className="flex-row items-center justify-between">
@@ -399,7 +400,7 @@ export default function NouvelleLocationScreen() {
           {stepKey === 'prix' ? (
             <>
               {priceBreakdown ? (
-                <View className="gap-1 rounded-2xl border border-[#E4DCF5] bg-white p-4">
+                <View className="gap-1 rounded-2xl border border-line bg-white p-4">
                   <View className="flex-row items-center justify-between">
                     <ThemedText type="small" themeColor="textSecondary">
                       {t('locations.priceBreakdown.duree', { count: priceBreakdown.dureeJours })}
@@ -412,7 +413,7 @@ export default function NouvelleLocationScreen() {
                     </ThemedText>
                     <ThemedText type="small">{`${priceBreakdown.sousTotal.toLocaleString('fr-FR')} MAD`}</ThemedText>
                   </View>
-                  <View className="mt-1 flex-row items-center justify-between border-t border-[#E4DCF5] pt-2">
+                  <View className="mt-1 flex-row items-center justify-between border-t border-line pt-2">
                     <ThemedText type="smallBold">{t('locations.priceBreakdown.total')}</ThemedText>
                     <ThemedText type="smallBold" themeColor="primary">{`${priceBreakdown.total.toLocaleString('fr-FR')} MAD`}</ThemedText>
                   </View>
@@ -428,7 +429,7 @@ export default function NouvelleLocationScreen() {
 
           {stepKey === 'recap' ? (
             <>
-              <View className="rounded-2xl border border-[#E4DCF5] bg-white px-4">
+              <View className="rounded-2xl border border-line bg-white px-4">
                 {(
                   [
                     [t('locations.customer'), customer?.nomComplet ?? '—', 'client'],
@@ -442,7 +443,7 @@ export default function NouvelleLocationScreen() {
                     ...(notes.trim() ? [[t('locations.notes'), notes.trim(), 'prix']] : []),
                   ] as [string, string, (typeof WIZARD_STEPS)[number]][]
                 ).map(([label, value, target]) => (
-                  <View key={label} className="flex-row items-center justify-between gap-3 border-b border-[#E4DCF5] py-3 last:border-b-0">
+                  <View key={label} className="flex-row items-center justify-between gap-3 border-b border-line py-3 last:border-b-0">
                     <View className="flex-1">
                       <ThemedText type="small" themeColor="textSecondary">
                         {label}
@@ -475,7 +476,7 @@ export default function NouvelleLocationScreen() {
           ) : null}
         </ScrollView>
 
-        <View className="gap-2 border-t border-[#E4DCF5] bg-white px-6 py-3">
+        <View className="gap-2 border-t border-line bg-white px-6 py-3">
           {isLast ? (
             <>
               <Button label={t('locations.form.saveAsConfirmed')} onPress={() => submitFromRecap('confirmee')} disabled={busy} loading={submittingAs === 'confirmee'} />

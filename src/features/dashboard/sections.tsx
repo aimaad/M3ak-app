@@ -80,7 +80,7 @@ export function FleetSection({ metrics, vehicles }: { metrics: DashboardMetrics;
         <ThemedText type="small" themeColor="textSecondary">
           {t('accueil.fleetTotal')}
         </ThemedText>
-        <ThemedText type="title" className="font-cairo-bold">
+        <ThemedText type="title" >
           {t('accueil.fleetTotalCount', { count: metrics.fleetTotal })}
         </ThemedText>
       </View>

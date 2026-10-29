@@ -35,7 +35,7 @@ function NoteHistory({ noteId }: { noteId: string }) {
     );
   }
   return (
-    <View className="gap-2 rounded-2xl bg-[#FAF9FF] p-3">
+    <View className="gap-2 rounded-2xl bg-canvas p-3">
       {data.map((revision) => (
         <View key={revision.id} className="gap-0.5">
           <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>

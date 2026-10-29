@@ -36,12 +36,12 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
   const { t } = useLanguage();
 
   return (
-    <View className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white p-3">
+    <View className="gap-2 rounded-2xl border border-line bg-white p-3">
       <View className="flex-row items-center justify-between gap-2">
         <ThemedText type="smallBold" style={{ flex: 1 }}>
           {party.name}
         </ThemedText>
-        <View className="rounded-full bg-[#EDE9FE] px-2 py-0.5">
+        <View className="rounded-full bg-brand-light px-2 py-0.5">
           <ThemedText type="small" themeColor="primary" style={{ fontSize: 11 }}>
             {t(`locations.departureCheck.party.${party.kind}`)}
           </ThemedText>
@@ -56,7 +56,7 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
         party.documents.map((doc) => {
           const status = documentExpiryStatus({ expiresAt: doc.expiresAt });
           const color =
-            status === 'expired' ? M3akPalette.danger : status === 'expiring_soon' ? M3akPalette.warning : '#5E5575';
+            status === 'expired' ? M3akPalette.danger : status === 'expiring_soon' ? M3akPalette.warning : M3akPalette.muted;
           return (
             <ThemedText key={doc.id} type="small" style={{ color }}>
               {`${t(`customer.documentTypes.${doc.type}`)} · ${

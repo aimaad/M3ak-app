@@ -16,6 +16,7 @@ import { AGENCY_ASSETS_BUCKET } from './api';
 import { useRemoveAgencyStamp, useSaveAgencyStampConfig, useUploadAgencyStamp } from './hooks';
 import { defaultStampConfig, parseStampConfig, stampSvg, STAMP_COLORS, STAMP_LIMITS, STAMP_SHAPES, type StampColor, type StampConfig, type StampShape } from './stamp';
 import type { AgencyDetails } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 const sameConfig = (a: StampConfig | null, b: StampConfig | null) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -86,7 +87,7 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
             </ThemedText>
           </View>
         ) : (
-          <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: '#E4DCF5' }}>
+          <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: M3akPalette.border }}>
             {/* Aperçu dessiné par le même moteur que le PDF du contrat : ce qu'on voit ici est exactement ce qui s'imprime. */}
             {Platform.OS === 'web' ? (
               <HtmlFrame html={previewHtml} style={{ width: 170, height: previewHeight, pointerEvents: 'none' }} />
@@ -130,7 +131,7 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
               disabled={!draft || (!dirty && !hasPhoto) || saveConfig.isPending}
             />
 
-            <View className="gap-2 border-t border-[#E4DCF5] pt-3">
+            <View className="gap-2 border-t border-line pt-3">
               <ThemedText type="small" themeColor="textSecondary">{t('entreprise.stamp.photoHelp')}</ThemedText>
               <View className="flex-row flex-wrap gap-2">
                 <Button label={t('common.camera')} variant="secondary" size="sm" disabled={uploadStamp.isPending} onPress={() => pickPhoto('camera')} />

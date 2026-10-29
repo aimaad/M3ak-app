@@ -26,7 +26,7 @@ export function WizardProgress({ current, total, title, stepLabel }: Props) {
           <View
             key={index}
             className="h-1.5 flex-1 rounded-full"
-            style={{ backgroundColor: index <= current ? M3akPalette.mauve : '#E4DCF5' }}
+            style={{ backgroundColor: index <= current ? M3akPalette.mauve : M3akPalette.border }}
           />
         ))}
       </View>

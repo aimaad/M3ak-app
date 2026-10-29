@@ -4,15 +4,16 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { RentalStatus } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 /** Couleurs des statuts, partagées avec le calendrier : même statut, même couleur partout. */
 export const RENTAL_STATUS_STYLES: Record<RentalStatus, { background: string; text: string; dot: string }> = {
   en_attente_confirmation: { background: '#FEF3C7', text: '#92400E', dot: '#F59E0B' },
   confirmee: { background: '#DBEAFE', text: '#1D4ED8', dot: '#2563EB' },
   reservee: { background: '#DBEAFE', text: '#1D4ED8', dot: '#2563EB' },
-  en_cours: { background: '#EDE9FE', text: '#5B21B6', dot: '#7C3AED' },
+  en_cours: { background: M3akPalette.mauveDeep, text: '#FFFFFF', dot: M3akPalette.emerald },
   terminee: { background: '#DCFCE7', text: '#166534', dot: '#16A34A' },
-  annulee: { background: '#F1EEF7', text: '#5E5575', dot: '#5E5575' },
+  annulee: { background: '#F1EEF7', text: M3akPalette.muted, dot: M3akPalette.muted },
 };
 
 export function RentalStatusBadge({ status }: { status: RentalStatus }) {

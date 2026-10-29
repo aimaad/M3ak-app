@@ -6,9 +6,10 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { computeMaintenanceUrgency, type MaintenanceUrgency } from './urgency';
 import type { MaintenanceItem } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 const URGENCY_STYLE: Record<MaintenanceUrgency, { background: string; text: string }> = {
-  a_venir: { background: '#F1EEF7', text: '#5E5575' },
+  a_venir: { background: '#F1EEF7', text: M3akPalette.muted },
   due: { background: '#FEF3C7', text: '#B45309' },
   en_retard: { background: '#FEE2E2', text: '#DC2626' },
 };

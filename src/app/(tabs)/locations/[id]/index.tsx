@@ -27,6 +27,7 @@ import { RentalJourney } from '@/features/rentals/rental-journey';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -92,7 +93,7 @@ export default function LocationDetailScreen() {
           <ScreenHeader title={t('locations.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color="#7C3AED" />
+              <ActivityIndicator color={M3akPalette.mauve} />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('locations.loadError') : t('locations.notFound')}

@@ -10,7 +10,7 @@ type CardProps = ViewProps & {
 export function Card({ padded = true, className, style, ...rest }: CardProps) {
   return (
     <View
-      className={`rounded-3xl border border-[#E4DCF5] bg-white ${padded ? 'p-4' : ''} ${className ?? ''}`}
+      className={`rounded-3xl border border-line bg-white ${padded ? 'p-4' : ''} ${className ?? ''}`}
       style={[Shadows.card, style]}
       {...rest}
     />
@@ -24,7 +24,7 @@ type PressableCardProps = PressableProps & {
 export function PressableCard({ padded = true, className, ...rest }: PressableCardProps) {
   return (
     <Pressable
-      className={`rounded-3xl border border-[#E4DCF5] bg-white active:bg-[#F5F0FF] ${padded ? 'p-4' : ''} ${className ?? ''}`}
+      className={`rounded-3xl border border-line bg-white active:bg-brand-soft ${padded ? 'p-4' : ''} ${className ?? ''}`}
       style={Shadows.card}
       {...rest}
     />

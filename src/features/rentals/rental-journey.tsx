@@ -42,7 +42,7 @@ const COLORS: Record<JourneyStepStatus, { bg: string; fg: string }> = {
   done: { bg: M3akPalette.successLight, fg: M3akPalette.success },
   current: { bg: M3akPalette.mauve, fg: '#FFFFFF' },
   attention: { bg: M3akPalette.warningLight, fg: M3akPalette.warning },
-  locked: { bg: '#F3F0FA', fg: '#8A82A0' },
+  locked: { bg: '#F3F0FA', fg: M3akPalette.subtle },
 };
 
 function Bullet({ status, number }: { status: JourneyStepStatus; number: number }) {
@@ -278,7 +278,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
             {allDone ? t('locations.journey.allDone') : t('locations.journey.progress', { done: doneCount, total })}
           </ThemedText>
         </View>
-        <View className="h-2 overflow-hidden rounded-full bg-[#E4DCF5]">
+        <View className="h-2 overflow-hidden rounded-full bg-line">
           <View className="h-2 rounded-full" style={{ width: `${(doneCount / total) * 100}%`, backgroundColor: M3akPalette.mauve }} />
         </View>
       </View>
@@ -304,7 +304,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
               </View>
               {!locked ? <ThemedText type="small" themeColor="textSecondary">{isOpen ? '▲' : '▼'}</ThemedText> : null}
             </Pressable>
-            {content ? <View className="gap-3 border-t border-[#E4DCF5] px-4 py-4">{content}</View> : null}
+            {content ? <View className="gap-3 border-t border-line px-4 py-4">{content}</View> : null}
           </Card>
         );
       })}

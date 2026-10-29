@@ -12,6 +12,7 @@ import {
   type TemplateValues,
   type TextStyle,
 } from './template';
+import { M3akPalette } from '@/constants/theme';
 
 export function escapeHtml(value: string | null | undefined): string {
   if (!value) return '';
@@ -43,7 +44,7 @@ function hasOnlyEmptyFields(line: string, values: TemplateValues): boolean {
 }
 
 const SIZE_PX = { xs: 9, sm: 11, md: 12, lg: 15, xl: 20 } as const;
-const COLOR = { default: '#211A2E', muted: '#5E5575', accent: '#5B21B6' } as const;
+const COLOR = { default: M3akPalette.ink, muted: M3akPalette.muted, accent: M3akPalette.mauveDeep } as const;
 
 function html(text: string, values: TemplateValues): string {
   return escapeHtml(fillPlaceholders(text, values)).replace(/\n/g, '<br />');
@@ -158,9 +159,9 @@ function renderBlock(block: Block, input: RenderInput, rtlDefault: boolean): str
   }
 }
 
-const CAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 150" width="70" height="116"><rect x="12" y="8" width="66" height="134" rx="26" fill="none" stroke="#211A2E" stroke-width="2.5"/><rect x="22" y="34" width="46" height="26" rx="6" fill="none" stroke="#211A2E" stroke-width="2"/><rect x="22" y="92" width="46" height="24" rx="6" fill="none" stroke="#211A2E" stroke-width="2"/><rect x="4" y="30" width="9" height="20" rx="3" fill="#211A2E"/><rect x="77" y="30" width="9" height="20" rx="3" fill="#211A2E"/><rect x="4" y="100" width="9" height="20" rx="3" fill="#211A2E"/><rect x="77" y="100" width="9" height="20" rx="3" fill="#211A2E"/><line x1="45" y1="62" x2="45" y2="90" stroke="#211A2E" stroke-width="1.5"/></svg>`;
+const CAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 150" width="70" height="116"><rect x="12" y="8" width="66" height="134" rx="26" fill="none" stroke={M3akPalette.ink} stroke-width="2.5"/><rect x="22" y="34" width="46" height="26" rx="6" fill="none" stroke={M3akPalette.ink} stroke-width="2"/><rect x="22" y="92" width="46" height="24" rx="6" fill="none" stroke={M3akPalette.ink} stroke-width="2"/><rect x="4" y="30" width="9" height="20" rx="3" fill={M3akPalette.ink}/><rect x="77" y="30" width="9" height="20" rx="3" fill={M3akPalette.ink}/><rect x="4" y="100" width="9" height="20" rx="3" fill={M3akPalette.ink}/><rect x="77" y="100" width="9" height="20" rx="3" fill={M3akPalette.ink}/><line x1="45" y1="62" x2="45" y2="90" stroke={M3akPalette.ink} stroke-width="1.5"/></svg>`;
 
-const GAUGE_BASE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke="#211A2E" stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke="#211A2E" stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke="#211A2E" stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke="#211A2E" stroke-width="1.5"/><text x="8" y="82" font-size="10" fill="#211A2E">0</text><text x="12" y="34" font-size="10" fill="#211A2E">1/4</text><text x="68" y="10" font-size="10" fill="#211A2E">2/4</text><text x="122" y="34" font-size="10" fill="#211A2E">3/4</text><text x="142" y="82" font-size="10" fill="#211A2E">4/4</text>`;
+const GAUGE_BASE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke={M3akPalette.ink} stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke={M3akPalette.ink} stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke={M3akPalette.ink} stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke={M3akPalette.ink} stroke-width="1.5"/><text x="8" y="82" font-size="10" fill={M3akPalette.ink}>0</text><text x="12" y="34" font-size="10" fill={M3akPalette.ink}>1/4</text><text x="68" y="10" font-size="10" fill={M3akPalette.ink}>2/4</text><text x="122" y="34" font-size="10" fill={M3akPalette.ink}>3/4</text><text x="142" y="82" font-size="10" fill={M3akPalette.ink}>4/4</text>`;
 /** Lit « 50 % » (ou 50) et renvoie un pourcentage entre 0 et 100, ou null si le niveau n'est pas connu. */
 export function fuelPercent(raw: string | undefined | null): number | null {
   const match = /(\d+(?:[.,]\d+)?)/.exec(raw ?? '');
@@ -177,7 +178,7 @@ export function gaugeSvg(percent: number | null): string {
   const y = (70 - 58 * Math.sin(angle)).toFixed(1);
   const needle = `<line x1="80" y1="70" x2="${x}" y2="${y}" stroke="#B91C1C" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#B91C1C"/>`;
   const arc = percent > 0 ? `<path d="M16 70 A64 64 0 0 1 ${(80 + 64 * Math.cos(angle)).toFixed(1)} ${(70 - 64 * Math.sin(angle)).toFixed(1)}" fill="none" stroke="#B91C1C" stroke-width="5" opacity="0.35"/>` : '';
-  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke="#211A2E" stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill="#B91C1C">${Math.round(percent)} %</text></svg>`;
+  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke={M3akPalette.ink} stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill="#B91C1C">${Math.round(percent)} %</text></svg>`;
 }
 
 

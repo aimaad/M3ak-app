@@ -17,7 +17,7 @@ type InfoRowProps = {
  */
 export function InfoRow({ label, value, last }: InfoRowProps) {
   return (
-    <View className={`flex-row items-start gap-4 py-3 ${last ? '' : 'border-b border-[#E4DCF5]'}`}>
+    <View className={`flex-row items-start gap-4 py-3 ${last ? '' : 'border-b border-line'}`}>
       <ThemedText type="default" themeColor="textSecondary" style={{ flexShrink: 1, maxWidth: '45%' }}>
         {label}
       </ThemedText>

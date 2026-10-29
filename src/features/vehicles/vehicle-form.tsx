@@ -31,6 +31,7 @@ import type {
   VehicleStatus,
   VehicleTransmission,
 } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 type VehicleFormProps = {
   initialValues?: VehicleFormValues;
@@ -231,10 +232,10 @@ export function VehicleForm({
             <Pressable
               onPress={() => setBranchId(null)}
               className={`rounded-full border px-4 py-2 ${
-                branchId === null ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
+                branchId === null ? 'border-brand bg-brand' : 'border-line bg-white'
               }`}
             >
-              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : '#211A2E' }}>
+              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : M3akPalette.ink }}>
                 {t('vehicle.fields.allBranches')}
               </ThemedText>
             </Pressable>
@@ -245,10 +246,10 @@ export function VehicleForm({
                   key={branch.id}
                   onPress={() => setBranchId(branch.id)}
                   className={`rounded-full border px-4 py-2 ${
-                    isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
+                    isSelected ? 'border-brand bg-brand' : 'border-line bg-white'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>
+                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : M3akPalette.ink }}>
                     {branch.nom}
                   </ThemedText>
                 </Pressable>
@@ -356,7 +357,7 @@ export function VehicleForm({
           {t('vehicle.fields.statut')}
         </ThemedText>
         {statusLocked ? (
-          <View className="rounded-2xl border border-dashed border-[#E4DCF5] bg-white px-4 py-3">
+          <View className="rounded-2xl border border-dashed border-line bg-white px-4 py-3">
             <ThemedText type="small" themeColor="textSecondary">
               {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
             </ThemedText>

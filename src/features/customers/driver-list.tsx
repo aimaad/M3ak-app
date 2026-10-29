@@ -10,6 +10,7 @@ import { CustomerDocumentsSection } from './customer-documents-section';
 
 import { useCreateDriver, useDrivers, useRemoveDriver } from './hooks';
 import { isDriverFormValid, toDriverInput, validateDriverForm, type DriverFormValues } from './driver-validation';
+import { M3akPalette } from '@/constants/theme';
 
 const EMPTY_VALUES: DriverFormValues = {
   prenom: '',
@@ -76,16 +77,16 @@ export function DriverList({
   return (
     <View className="gap-3">
       {driversQuery.isLoading ? (
-        <ActivityIndicator color="#7C3AED" />
+        <ActivityIndicator color={M3akPalette.mauve} />
       ) : (driversQuery.data ?? []).length === 0 ? (
-        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-[#E4DCF5] bg-white">
+        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-line bg-white">
           <ThemedText type="small" themeColor="textSecondary">
             {t('customer.noDrivers')}
           </ThemedText>
         </View>
       ) : (
         (driversQuery.data ?? []).map((driver) => (
-          <View key={driver.id} className="gap-3 rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3">
+          <View key={driver.id} className="gap-3 rounded-2xl border border-line bg-white px-4 py-3">
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <ThemedText type="smallBold">{driver.nomComplet}</ThemedText>
@@ -124,7 +125,7 @@ export function DriverList({
       )}
 
       {showForm ? (
-        <View className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white p-4">
+        <View className="gap-2 rounded-2xl border border-line bg-white p-4">
           <TextField
             label={t('customer.fields.prenom')}
             value={values.prenom}
@@ -168,7 +169,7 @@ export function DriverList({
       ) : (
         <Pressable
           onPress={() => setShowForm(true)}
-          className="items-center rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3"
+          className="items-center rounded-2xl border border-line bg-white px-4 py-3"
         >
           <ThemedText type="small" themeColor="primary">
             {`+ ${t('customer.addDriver')}`}

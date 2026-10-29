@@ -26,7 +26,7 @@ export function RevenueChart({ points }: { points: DailyRevenuePoint[] }) {
                 className="w-full rounded-t-md"
                 style={{
                   height: barHeight,
-                  backgroundColor: point.total > 0 ? M3akPalette.mauve : '#E4DCF5',
+                  backgroundColor: point.total > 0 ? M3akPalette.mauve : M3akPalette.border,
                 }}
               />
             </View>

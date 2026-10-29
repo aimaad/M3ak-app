@@ -122,7 +122,7 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       {shownUri ? (
         <Image source={{ uri: shownUri }} style={{ width: 110, height: 110, borderRadius: 16, opacity: busy ? 0.6 : 1 }} resizeMode="contain" />
       ) : (
-        <View className="h-28 w-28 items-center justify-center rounded-2xl bg-[#FAF9FF]" style={missing ? { borderWidth: 1.5, borderColor: M3akPalette.danger } : undefined}>
+        <View className="h-28 w-28 items-center justify-center rounded-2xl bg-canvas" style={missing ? { borderWidth: 1.5, borderColor: M3akPalette.danger } : undefined}>
           <ThemedText type="title" themeColor="primary">
             {initial}
           </ThemedText>

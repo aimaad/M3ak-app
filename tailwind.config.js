@@ -5,12 +5,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        m3ak: {
-          mauve: '#7C3AED',
-          mauveDeep: '#5B21B6',
-          mauveLight: '#EDE9FE',
-          background: '#FAF9FF',
-        },
+        // Jetons Kriha : mêmes valeurs que src/constants/theme.ts (M3akPalette).
+        brand: { DEFAULT: '#007A59', deep: '#064E3B', light: '#E3F5EE', soft: '#EEF7F3' },
+        emerald: { DEFAULT: '#00B884', pressed: '#008F69' },
+        'on-emerald': '#04271E',
+        line: { DEFAULT: '#E5EDE9', soft: '#EEF4F1' },
+        canvas: '#F5FAF8',
+        ink: '#172B26',
+        subtle: '#778894',
       },
       fontFamily: {
         cairo: ['Cairo_400Regular'],

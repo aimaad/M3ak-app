@@ -62,7 +62,7 @@ export function ChatBubble({ message, onOpenSource }: { message: ChatMessage; on
                 key={source.id}
                 onPress={() => onOpenSource(source.id)}
                 accessibilityRole="button"
-                className="min-h-8 flex-row items-center gap-1.5 rounded-full border border-[#E4DCF5] bg-[#F5F0FF] px-3 py-1.5"
+                className="min-h-8 flex-row items-center gap-1.5 rounded-full border border-line bg-brand-soft px-3 py-1.5"
               >
                 <Ionicons name="document-text-outline" size={14} color={M3akPalette.mauveDeep} />
                 <ThemedText type="small" style={{ color: M3akPalette.mauveDeep, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>
@@ -118,7 +118,7 @@ export function TypingBubble({ label }: { label: string }) {
     <View className="max-w-[92%] flex-row items-end gap-2 self-start">
       <ChatAvatar size={30} />
       <View
-        className="flex-row items-center gap-3 border border-[#E4DCF5] bg-white px-4 py-3"
+        className="flex-row items-center gap-3 border border-line bg-white px-4 py-3"
         style={{ borderRadius: 20, borderBottomStartRadius: 6, ...Shadows.card }}
       >
         <View className="flex-row items-center gap-1.5">

@@ -18,6 +18,7 @@ import { validateOdometerForm } from '@/features/rentals/validation';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 export default function RetourScreen() {
   const { id, vehicleId } = useLocalSearchParams<{ id: string; vehicleId: string }>();
@@ -96,7 +97,7 @@ export default function RetourScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.retour.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -151,9 +152,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatRetour(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -178,9 +179,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#DC2626] bg-[#FEE2E2]' : 'border-[#E4DCF5] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#DC2626] bg-[#FEE2E2]' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#DC2626' : '#211A2E' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#DC2626' : M3akPalette.ink }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -219,7 +220,7 @@ export default function RetourScreen() {
                 onChangeText={setJustification}
               />
               <Pressable onPress={() => setAppliquerFrais((prev) => !prev)} className="flex-row items-center gap-2">
-                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#8A82A0] bg-white'}`}>
+                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-brand bg-brand' : 'border-subtle bg-white'}`}>
                   {appliquerFrais ? <ThemedText type="small" style={{ color: '#ffffff' }}>✓</ThemedText> : null}
                 </View>
                 <ThemedText type="small">{t('contract.applyFeesLabel', { amount: totalFrais })}</ThemedText>

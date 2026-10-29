@@ -167,7 +167,7 @@ export default function ScannerPermisScreen() {
                 {photos.recto && photos.verso ? '' : t('customer.ocr.bothRequired')}
               </ThemedText>
               <Button label={t('customer.ocr.analyzeBoth')} disabled={!photos.recto || !photos.verso} onPress={analyze} />
-              <View className="rounded-2xl bg-[#FAF9FF] px-4 py-3">
+              <View className="rounded-2xl bg-canvas px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('ocr.privacyCloud')}
                 </ThemedText>

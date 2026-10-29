@@ -90,7 +90,7 @@ export default function NotificationsScreen() {
               return (
                 <Pressable
                   onPress={() => open(item)}
-                  className="flex-row gap-3 overflow-hidden rounded-2xl border border-[#E4DCF5] bg-white p-3"
+                  className="flex-row gap-3 overflow-hidden rounded-2xl border border-line bg-white p-3"
                   accessibilityRole="button"
                 >
                   <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.background }}>

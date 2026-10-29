@@ -30,7 +30,7 @@ export function ScreenHeader({ title, subtitle, showBack, right }: ScreenHeaderP
               <ThemedText type="smallBold">{backArrow}</ThemedText>
             </Pressable>
           ) : null}
-          <ThemedText type="subtitle" className="flex-1 font-cairo-semibold" numberOfLines={2}>
+          <ThemedText type="subtitle" className="flex-1" numberOfLines={2}>
             {title}
           </ThemedText>
         </View>

@@ -38,7 +38,7 @@ const SECTIONS: {
   },
 ];
 
-const INACTIVE_COLOR = '#8A82A0';
+const INACTIVE_COLOR = M3akPalette.subtle;
 
 /** Barre d'onglets du bas (mobile). Chaque onglet garde sa propre pile d'écrans et sa position de défilement. */
 export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
@@ -62,7 +62,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
   return (
     <View
       className="flex-row border-t bg-white"
-      style={[{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }, { shadowColor: '#5B21B6', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 12 }]}
+      style={[{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }, { shadowColor: M3akPalette.mauveDeep, shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 12 }]}
     >
       {SECTIONS.map((section) => {
         const route = state.routes.find((candidate) => candidate.name === section.key);

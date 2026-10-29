@@ -16,7 +16,7 @@ export function CustomerCard({ customer, onPress }: { customer: Customer; onPres
           {customer.nomComplet}
         </ThemedText>
         <View className="items-end gap-1">
-          <View className="rounded-full bg-[#EDE9FE] px-2.5 py-1">
+          <View className="rounded-full bg-brand-light px-2.5 py-1">
             <ThemedText type="small" themeColor="primary">
               {t(`customer.type.${customer.typeClient}`)}
             </ThemedText>

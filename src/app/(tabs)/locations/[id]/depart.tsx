@@ -21,6 +21,7 @@ import { useInspectionForRental } from '@/features/inspections/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 export default function DepartScreen() {
   const { id, vehicleId } = useLocalSearchParams<{ id: string; vehicleId: string }>();
@@ -107,7 +108,7 @@ export default function DepartScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.depart.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -186,9 +187,9 @@ export default function DepartScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatDepart(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -213,9 +214,9 @@ export default function DepartScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>

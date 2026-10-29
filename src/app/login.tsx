@@ -57,10 +57,10 @@ export default function LoginScreen() {
                 key={code}
                 onPress={() => changeLanguage(code)}
                 className={`rounded-full border px-3 py-1 ${
-                  selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
+                  selected ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                   {t(`common.${LANGUAGE_LABEL_KEY[code]}`)}
                 </ThemedText>
               </Pressable>

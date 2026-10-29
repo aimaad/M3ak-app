@@ -41,7 +41,7 @@ export function InviteResultCard({ result, onDone }: { result: InviteResult; onD
       : t('equipe.invite.emailNotConfigured');
 
   return (
-    <View className="gap-3 rounded-3xl border border-[#E4DCF5] bg-white p-4">
+    <View className="gap-3 rounded-3xl border border-line bg-white p-4">
       <ThemedText type="smallBold">
         {t('equipe.invite.createdFor', { name: `${result.prenom} ${result.nom}`.trim() })}
       </ThemedText>
@@ -50,11 +50,11 @@ export function InviteResultCard({ result, onDone }: { result: InviteResult; onD
         {emailLine}
       </ThemedText>
 
-      <View className="items-center rounded-2xl bg-[#F1E9FE] px-4 py-4">
+      <View className="items-center rounded-2xl bg-brand-light px-4 py-4">
         <ThemedText type="small" themeColor="textSecondary">
           {t('equipe.invite.codeLabel')}
         </ThemedText>
-        <ThemedText type="subtitle" style={{ letterSpacing: 2, color: '#5B21B6' }} selectable>
+        <ThemedText type="subtitle" style={{ letterSpacing: 2, color: M3akPalette.mauveDeep }} selectable>
           {code}
         </ThemedText>
       </View>

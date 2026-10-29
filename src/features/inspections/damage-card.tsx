@@ -88,8 +88,8 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
         <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? '#FEE2E2' : '#FEF3C7'} />
         <Badge
           text={t(`inspection.analysis.damages.status.${damage.statut}`)}
-          color={damage.statut === 'confirme' ? '#15803D' : damage.statut === 'rejete' ? '#6B7280' : '#5B21B6'}
-          bg={damage.statut === 'confirme' ? '#DCFCE7' : damage.statut === 'rejete' ? '#F3F4F6' : '#EDE9FE'}
+          color={damage.statut === 'confirme' ? '#15803D' : damage.statut === 'rejete' ? '#6B7280' : M3akPalette.mauveDeep}
+          bg={damage.statut === 'confirme' ? '#DCFCE7' : damage.statut === 'rejete' ? '#F3F4F6' : M3akPalette.mauveLight}
         />
         {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color="#1D4ED8" bg="#DBEAFE" /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
         {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color="#B45309" bg="#FEF3C7" /> : null}
@@ -121,7 +121,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       {canChooseContract && damage.statut === 'confirme' ? (
         <Pressable
           onPress={() => run({ dansContrat: !damage.dansContrat })}
-          className="flex-row items-center gap-3 rounded-2xl bg-[#FAF9FF] px-3 py-2.5"
+          className="flex-row items-center gap-3 rounded-2xl bg-canvas px-3 py-2.5"
           accessibilityRole="switch"
           accessibilityState={{ checked: damage.dansContrat }}
         >

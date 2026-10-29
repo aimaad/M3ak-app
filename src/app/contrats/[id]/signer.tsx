@@ -169,7 +169,7 @@ export default function SignerContratScreen() {
             <ScrollView className="flex-1" contentContainerClassName="gap-4 px-6 pb-6">
               <Card padded={false} className="px-4">
                 {summaryRows.map(([label, value]) => (
-                  <View key={label} className="border-b border-[#E4DCF5] py-3 last:border-b-0">
+                  <View key={label} className="border-b border-line py-3 last:border-b-0">
                     <ThemedText type="small" themeColor="textSecondary">
                       {label}
                     </ThemedText>
@@ -198,7 +198,7 @@ export default function SignerContratScreen() {
               </Card>
             </ScrollView>
 
-            <View className="gap-3 border-t border-[#E4DCF5] bg-white px-6 py-4">
+            <View className="gap-3 border-t border-line bg-white px-6 py-4">
               <Pressable
                 onPress={() => reachedEnd && setAccepted((value) => !value)}
                 disabled={!reachedEnd}
@@ -206,7 +206,7 @@ export default function SignerContratScreen() {
                 style={{ opacity: reachedEnd ? 1 : 0.4 }}
               >
                 <View
-                  className={`h-6 w-6 items-center justify-center rounded-md border-2 ${accepted ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#8A82A0] bg-white'}`}
+                  className={`h-6 w-6 items-center justify-center rounded-md border-2 ${accepted ? 'border-brand bg-brand' : 'border-subtle bg-white'}`}
                 >
                   {accepted ? <ThemedText style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
                 </View>

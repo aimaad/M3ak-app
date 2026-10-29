@@ -17,6 +17,7 @@ import { CONTRACT_STATUSES } from '@/features/contracts/types';
 import type { Contract, ContractStatus } from '@/features/contracts/types';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -90,9 +91,9 @@ export default function ContratsScreen() {
         <View className="flex-row flex-wrap gap-2 px-6 pb-4">
           <Pressable
             onPress={() => setStatusFilter('tous')}
-            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'}`}
+            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-ink bg-ink' : 'border-line bg-white'}`}
           >
-            <ThemedText type="small" style={{ color: statusFilter === 'tous' ? '#ffffff' : '#211A2E' }}>
+            <ThemedText type="small" style={{ color: statusFilter === 'tous' ? '#ffffff' : M3akPalette.ink }}>
               {t('flotte.status.tous')}
             </ThemedText>
           </Pressable>
@@ -100,9 +101,9 @@ export default function ContratsScreen() {
             <Pressable
               key={status}
               onPress={() => setStatusFilter(status)}
-              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-[#211A2E] bg-[#211A2E]' : 'border-[#E4DCF5] bg-white'}`}
+              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-ink bg-ink' : 'border-line bg-white'}`}
             >
-              <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : '#211A2E' }}>
+              <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : M3akPalette.ink }}>
                 {t(`contract.status.${status}`)}
               </ThemedText>
             </Pressable>
@@ -111,7 +112,7 @@ export default function ContratsScreen() {
 
         {contractsQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : contractsQuery.isError ? (
           <View className="flex-1 items-center justify-center px-8">

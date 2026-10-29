@@ -1,4 +1,5 @@
 import type { AppNotification, NotificationLinkType, NotificationSeverity } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 type Translate = (key: string, options?: Record<string, unknown>) => string;
 
@@ -75,7 +76,7 @@ export function timeAgo(iso: string, now: Date, t: Translate): string {
 }
 
 export const SEVERITY_COLORS: Record<NotificationSeverity, { bar: string; background: string }> = {
-  info: { bar: '#7C3AED', background: '#F3EEFF' },
+  info: { bar: M3akPalette.mauve, background: '#F3EEFF' },
   warning: { bar: '#F59E0B', background: '#FEF3C7' },
   urgent: { bar: '#DC2626', background: '#FEE2E2' },
 };

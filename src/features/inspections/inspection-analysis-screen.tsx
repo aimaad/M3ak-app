@@ -46,7 +46,7 @@ function PairPhoto({ path, label }: { path?: string; label: string }) {
         {url ? (
           <ZoomableImage uri={url} label={label} style={{ borderRadius: 12 }} />
         ) : (
-          <View className="flex-1 items-center justify-center rounded-xl bg-[#FAF9FF]">
+          <View className="flex-1 items-center justify-center rounded-xl bg-canvas">
             {path ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11, textAlign: 'center' }}>{t('inspection.analysis.compare.noDepart')}</ThemedText>}
           </View>
         )}
@@ -57,7 +57,7 @@ function PairPhoto({ path, label }: { path?: string; label: string }) {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <View className="min-w-[30%] flex-1 gap-0.5 rounded-2xl bg-[#FAF9FF] px-3 py-2">
+    <View className="min-w-[30%] flex-1 gap-0.5 rounded-2xl bg-canvas px-3 py-2">
       <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
         {label}
       </ThemedText>

@@ -148,7 +148,7 @@ export default function NouveauContratScreen() {
         <ScreenHeader title={t(old ? 'contract.form.editTitle' : 'contract.form.newTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -176,7 +176,7 @@ export default function NouveauContratScreen() {
             </Card>
 
             {old ? (
-              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: '#EDE9FE' }}>
+              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.mauveLight }}>
                 <ThemedText type="small">{t('contract.form.editHelp', { numero: old.numero })}</ThemedText>
               </View>
             ) : null}
@@ -213,9 +213,9 @@ export default function NouveauContratScreen() {
                       <Pressable
                         key={condition}
                         onPress={() => setEtatDepart(condition)}
-                        className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
+                        className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                       >
-                        <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>{t(`contract.condition.${condition}`)}</ThemedText>
+                        <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>{t(`contract.condition.${condition}`)}</ThemedText>
                       </Pressable>
                     );
                   })}
@@ -231,9 +231,9 @@ export default function NouveauContratScreen() {
                       <Pressable
                         key={key}
                         onPress={() => setAccessoires((prev) => (prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key]))}
-                        className={`rounded-full border px-4 py-2 ${selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'}`}
+                        className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                       >
-                        <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>{t(`contract.accessory.${key}`)}</ThemedText>
+                        <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>{t(`contract.accessory.${key}`)}</ThemedText>
                       </Pressable>
                     );
                   })}
@@ -251,7 +251,7 @@ export default function NouveauContratScreen() {
                     <Pressable
                       key={damage.id}
                       onPress={() => setFlipped((prev) => (prev.includes(damage.id) ? prev.filter((id) => id !== damage.id) : [...prev, damage.id]))}
-                      className="flex-row items-center gap-3 rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3"
+                      className="flex-row items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3"
                       accessibilityRole="switch"
                       accessibilityState={{ checked: included }}
                     >

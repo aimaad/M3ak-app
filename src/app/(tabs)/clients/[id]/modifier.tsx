@@ -11,6 +11,7 @@ import { useCustomer, useCustomers, useUpdateCustomer } from '@/features/custome
 import type { CustomerInput } from '@/features/customers/types';
 import { splitFullName, type CustomerFormValues } from '@/features/customers/validation';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 export default function ModifierClientScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -62,7 +63,7 @@ export default function ModifierClientScreen() {
         <ScreenHeader title={t('customer.form.editTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">

@@ -110,7 +110,7 @@ function QuickAccess({ role }: { role: string | null | undefined }) {
             key={item.href}
             onPress={() => router.push(item.href)}
             accessibilityRole="link"
-            className="min-h-11 flex-row items-center gap-2 rounded-full border border-[#E4DCF5] bg-white px-4"
+            className="min-h-11 flex-row items-center gap-2 rounded-full border border-line bg-white px-4"
           >
             <Ionicons name={item.icon} size={18} color={M3akPalette.mauve} />
             <ThemedText type="smallBold">{t(item.labelKey)}</ThemedText>
@@ -266,7 +266,7 @@ export default function AccueilScreen() {
           >
             <Pressable
               onPress={() => router.push('/chat')}
-              className="flex-row items-center gap-3 rounded-3xl border border-[#E4DCF5] bg-white p-4"
+              className="flex-row items-center gap-3 rounded-3xl border border-line bg-white p-4"
               style={Shadows.card}
               accessibilityRole="button"
             >

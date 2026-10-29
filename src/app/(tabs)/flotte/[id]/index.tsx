@@ -30,7 +30,7 @@ import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { useLanguage } from '@/i18n/use-language';
 
 const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
-  ok: '#5E5575',
+  ok: M3akPalette.muted,
   bientot: M3akPalette.warning,
   expire: M3akPalette.danger,
 };
@@ -113,7 +113,7 @@ export default function VehicleDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -262,7 +262,7 @@ export default function VehicleDetailScreen() {
                 ) : null}
               </View>
               {maintenanceItems.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-[#E4DCF5] bg-white p-4">
+                <View className="gap-1 rounded-3xl border border-dashed border-line bg-white p-4">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('maintenance.empty')}
                   </ThemedText>
@@ -285,7 +285,7 @@ export default function VehicleDetailScreen() {
                       </View>
                       <ThemedText
                         type="small"
-                        style={{ color: item.statut === 'effectuee' ? '#15803D' : item.statut === 'en_cours' ? '#0369A1' : '#5E5575' }}
+                        style={{ color: item.statut === 'effectuee' ? '#15803D' : item.statut === 'en_cours' ? '#0369A1' : M3akPalette.muted }}
                       >
                         {item.statut === 'effectuee'
                           ? t('maintenance.done')

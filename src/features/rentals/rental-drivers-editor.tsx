@@ -152,7 +152,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
             {t('locations.drivers.separationHint')}
           </ThemedText>
 
-          <View className="gap-1 rounded-2xl bg-[#EDE9FE] px-4 py-3">
+          <View className="gap-1 rounded-2xl bg-brand-light px-4 py-3">
             <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
               {t('locations.drivers.principal')}
             </ThemedText>
@@ -175,7 +175,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                 {t('locations.drivers.additional', { count: value.additional.length, max })}
               </ThemedText>
               {value.additional.map((candidate) => (
-                <View key={candidate.key} className="gap-1 rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3">
+                <View key={candidate.key} className="gap-1 rounded-2xl border border-line bg-white px-4 py-3">
                   <ThemedText type="smallBold">{candidate.nomComplet}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {subLabel(candidate, t) || '—'}
@@ -222,7 +222,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                   onPress={() => {
                     if (addCandidate(candidate)) setQuery('');
                   }}
-                  className="rounded-2xl border border-[#E4DCF5] bg-white px-4 py-3 active:bg-[#FAF9FF]"
+                  className="rounded-2xl border border-line bg-white px-4 py-3 active:bg-canvas"
                 >
                   <ThemedText type="smallBold">{candidate.nomComplet}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
@@ -239,7 +239,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
           ) : null}
 
           {adding && !disabled ? (
-            <View className="gap-2 rounded-2xl border border-[#E4DCF5] bg-white p-4">
+            <View className="gap-2 rounded-2xl border border-line bg-white p-4">
               <ThemedText type="smallBold">{t('locations.drivers.newTitle')}</ThemedText>
               <TextField
                 label={t('customer.fields.prenom')}

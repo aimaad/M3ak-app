@@ -5,6 +5,7 @@ import { Pressable, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { buildCsv, downloadTextFile } from '@/lib/csv';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 export type DataTableColumn<T> = {
   key: string;
@@ -56,7 +57,7 @@ export function DataTable<T>({
           <Pressable
             onPress={handleExport}
             accessibilityRole="button"
-            className="min-h-10 flex-row items-center rounded-full border border-[#E4DCF5] bg-white px-4"
+            className="min-h-10 flex-row items-center rounded-full border border-line bg-white px-4"
           >
             <ThemedText type="smallBold" themeColor="primary">
               {t('desktop.exportCsv', { count: exportCsv.rows.length })}
@@ -64,8 +65,8 @@ export function DataTable<T>({
           </Pressable>
         </View>
       ) : null}
-      <View className="overflow-hidden rounded-3xl border border-[#E4DCF5] bg-white">
-        <View className="flex-row border-b border-[#E4DCF5] bg-[#F7F4FF] px-5 py-3">
+      <View className="overflow-hidden rounded-3xl border border-line bg-white">
+        <View className="flex-row border-b border-line bg-canvas px-5 py-3">
           {columns.map((column) => (
             <View
               key={column.key}
@@ -94,8 +95,8 @@ export function DataTable<T>({
                 onHoverIn={() => setHovered(key)}
                 onHoverOut={() => setHovered((current) => (current === key ? null : current))}
                 accessibilityRole={onRowPress ? 'link' : undefined}
-                className="min-h-14 flex-row items-center border-b border-[#F0EBFA] px-5 py-3"
-                style={{ backgroundColor: hovered === key ? '#FAF8FF' : '#FFFFFF' }}
+                className="min-h-14 flex-row items-center border-b border-line-soft px-5 py-3"
+                style={{ backgroundColor: hovered === key ? M3akPalette.background : '#FFFFFF' }}
               >
                 {columns.map((column) => (
                   <View

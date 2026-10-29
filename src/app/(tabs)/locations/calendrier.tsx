@@ -138,7 +138,7 @@ export default function CalendrierScreen() {
                 key={status}
                 onPress={() => setStatusFilter(status)}
                 className={`rounded-full border px-4 py-2 ${
-                  statusFilter === status ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
+                  statusFilter === status ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
                 <ThemedText type="small" style={{ color: statusFilter === status ? '#FFFFFF' : M3akPalette.ink }}>
@@ -151,7 +151,7 @@ export default function CalendrierScreen() {
             <Pressable
               onPress={() => setVehicleFilter('tous')}
               className={`rounded-full border px-4 py-2 ${
-                vehicleFilter === 'tous' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
+                vehicleFilter === 'tous' ? 'border-brand bg-brand' : 'border-line bg-white'
               }`}
             >
               <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#FFFFFF' : M3akPalette.ink }}>
@@ -163,7 +163,7 @@ export default function CalendrierScreen() {
                 key={v.id}
                 onPress={() => setVehicleFilter(v.id)}
                 className={`rounded-full border px-4 py-2 ${
-                  vehicleFilter === v.id ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#E4DCF5] bg-white'
+                  vehicleFilter === v.id ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
                 <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#FFFFFF' : M3akPalette.ink }}>
@@ -176,7 +176,7 @@ export default function CalendrierScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : (
           <View className="flex-1">
@@ -223,7 +223,7 @@ export default function CalendrierScreen() {
                 return (
                   <Pressable
                     onPress={() => router.push(`/locations/${item.id}`)}
-                    className="flex-row overflow-hidden rounded-2xl border border-[#E4DCF5] bg-white"
+                    className="flex-row overflow-hidden rounded-2xl border border-line bg-white"
                     style={Shadows.card}
                   >
                     <View style={{ width: 5, backgroundColor: RENTAL_STATUS_STYLES[item.statut].dot }} />

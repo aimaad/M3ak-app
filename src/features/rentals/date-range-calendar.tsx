@@ -4,6 +4,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { setCalendarLocale } from './calendar-locale';
 import { BOOKED_DAY_MARK, CALENDAR_THEME } from './calendar-theme';
+import { M3akPalette } from '@/constants/theme';
 
 export type DateRangeValue = { start: string | null; end: string | null };
 
@@ -14,7 +15,7 @@ type DateRangeCalendarProps = {
   minDate?: string;
 };
 
-const COLOR_PRIMARY = '#7C3AED';
+const COLOR_PRIMARY = M3akPalette.mauve;
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);

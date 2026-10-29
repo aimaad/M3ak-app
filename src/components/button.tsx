@@ -18,7 +18,7 @@ type ButtonProps = Omit<PressableProps, 'children' | 'style' | 'className'> & {
 
 const VARIANT_STYLES: Record<ButtonVariant, { bg: string; bgDisabled: string; text: string; border?: string }> = {
   primary: { bg: M3akPalette.mauve, bgDisabled: '#BFA9F5', text: '#FFFFFF' },
-  secondary: { bg: M3akPalette.mauveSoft, bgDisabled: M3akPalette.mauveSoft, text: M3akPalette.mauveDeep, border: '#E4DCF5' },
+  secondary: { bg: M3akPalette.mauveSoft, bgDisabled: M3akPalette.mauveSoft, text: M3akPalette.mauveDeep, border: M3akPalette.border },
   ghost: { bg: 'transparent', bgDisabled: 'transparent', text: M3akPalette.mauve },
   danger: { bg: M3akPalette.dangerLight, bgDisabled: M3akPalette.dangerLight, text: '#B91C1C', border: '#FECACA' },
 };
