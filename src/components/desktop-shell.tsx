@@ -53,7 +53,8 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const { session } = useSession();
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
-  const current = (segments[0] as string | undefined) ?? '';
+  // Les groupes d'adresses « (tabs) » ne sont pas des écrans : on prend le premier vrai segment.
+  const current = ((segments as string[]).find((segment) => !segment.startsWith('(')) as string | undefined) ?? '';
 
   if (!isDesktop || !session || BARE_SEGMENTS.has(current)) return <>{children}</>;
 

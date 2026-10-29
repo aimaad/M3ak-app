@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useSegments } from 'expo-router';
+import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -39,29 +40,45 @@ const SECTIONS: {
 
 const INACTIVE_COLOR = '#8A82A0';
 
-export function BottomTabBar({ current }: { current: SectionKey }) {
+/** Barre d'onglets du bas (mobile). Chaque onglet garde sa propre pile d'écrans et sa position de défilement. */
+export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const isDesktop = useDesktopLayout();
 
+  const segments = useSegments();
+
+  // Écran « de détail » d'un onglet (fiche, formulaire, assistant…) : adresse du type /(tabs)/clients/<id>. La barre est
+  // alors masquée pour laisser la place aux boutons du bas ; seuls les écrans racines des onglets l'affichent.
+  const isDetailScreen = (segments[0] as string) === '(tabs)' && segments.length > 2;
+
   // Sur grand écran web, le menu latéral remplace la barre du bas.
-  if (isDesktop) return null;
+  if (isDesktop || isDetailScreen) return null;
+  // L'onglet actif se lit dans l'adresse : plus fiable que l'index du navigateur au tout premier affichage.
+  const pathParts = segments as string[];
+  const currentName = pathParts[0] === '(tabs)' ? pathParts[1] : state.routes[state.index]?.name;
 
   return (
     <View
-      className="absolute inset-x-0 bottom-0 flex-row border-t bg-white"
+      className="flex-row border-t bg-white"
       style={[{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }, { shadowColor: '#5B21B6', shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 12 }]}
     >
       {SECTIONS.map((section) => {
-        const selected = section.key === current;
+        const route = state.routes.find((candidate) => candidate.name === section.key);
+        const selected = section.key === currentName;
         return (
           <Pressable
             key={section.key}
-            onPress={() => !selected && router.replace(section.href)}
+            onPress={() => {
+              if (!route) return;
+              const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+              if (!selected && !event.defaultPrevented) navigateToTab(route.key);
+            }}
             className="min-h-14 flex-1 items-center gap-1 pt-2"
             accessibilityRole="tab"
             accessibilityState={{ selected }}
+            accessibilityLabel={t(section.labelKey)}
           >
             <View
               className="h-8 w-14 items-center justify-center rounded-full"

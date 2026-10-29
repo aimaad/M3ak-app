@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { Pager } from '@/components/pager';
@@ -173,7 +172,7 @@ export default function ClientsScreen() {
           </View>
         ) : (
           isDesktop ? (
-            <ScrollView contentContainerClassName="px-6 pb-32">
+            <ScrollView contentContainerClassName="px-6 pb-24">
               <DataTable
                 columns={columns}
                 rows={pagination.items}
@@ -188,7 +187,7 @@ export default function ClientsScreen() {
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-3 px-6 pb-32"
+            contentContainerClassName="gap-3 px-6 pb-24"
             refreshControl={
               <RefreshControl
                 refreshing={customersQuery.isFetching}
@@ -213,14 +212,12 @@ export default function ClientsScreen() {
 
         <Pressable
           onPress={() => router.push('/clients/nouveau')}
-          className={`absolute bottom-24 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
         >
           <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
             {`+ ${t('clients.addClient')}`}
           </ThemedText>
         </Pressable>
-
-        <BottomTabBar current="clients" />
       </SafeAreaView>
     </ThemedView>
   );

@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { Button } from '@/components/button';
 import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
@@ -144,7 +143,7 @@ export default function EquipeScreen() {
         />
 
         <ScrollView
-          contentContainerClassName="gap-6 px-6 pb-28"
+          contentContainerClassName="gap-6 px-6 pb-10"
           refreshControl={
             <RefreshControl
               refreshing={membersQuery.isFetching || invitesQuery.isFetching}
@@ -256,8 +255,6 @@ export default function EquipeScreen() {
             </View>
           ) : null}
         </ScrollView>
-
-        <BottomTabBar current="equipe" />
       </SafeAreaView>
     </ThemedView>
   );

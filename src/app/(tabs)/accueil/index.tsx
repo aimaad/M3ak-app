@@ -5,7 +5,6 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
-import { BottomTabBar } from '@/components/bottom-tab-bar';
 import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -239,7 +238,7 @@ export default function AccueilScreen() {
           </View>
         ) : (
           <ScrollView
-            contentContainerClassName="gap-6 px-6 pb-28"
+            contentContainerClassName="gap-6 px-6 pb-10"
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}
@@ -405,8 +404,6 @@ export default function AccueilScreen() {
             })}
           </ScrollView>
         )}
-
-        <BottomTabBar current="accueil" />
       </SafeAreaView>
     </ThemedView>
   );
