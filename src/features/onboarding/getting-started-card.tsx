@@ -27,7 +27,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
   const { done, total } = progressOf(steps);
 
   return (
-    <View className="gap-3 rounded-3xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1 gap-0.5">
           <ThemedText type="smallBold">{t('onboarding.start.title')}</ThemedText>

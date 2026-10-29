@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
 import { Card, PressableCard } from '@/components/card';
@@ -6,6 +7,7 @@ import { M3akPalette } from '@/constants/theme';
 
 type Tone = 'default' | 'good' | 'warning' | 'danger';
 
+/** Couleur de l'icône (et de la valeur quand le ton signale quelque chose) ; l'état n'est jamais porté par la couleur seule : icône + intitulé. */
 const TONE_COLOR: Record<Tone, string> = {
   default: M3akPalette.mauve,
   good: M3akPalette.success,
@@ -13,7 +15,17 @@ const TONE_COLOR: Record<Tone, string> = {
   danger: M3akPalette.danger,
 };
 
-/** Une tuile d'indicateur : valeur en grand, intitulé, précision facultative. Appuyable si `onPress` est fourni. */
+const TONE_TINT: Record<Tone, string> = {
+  default: M3akPalette.mauveLight,
+  good: M3akPalette.successLight,
+  warning: M3akPalette.warningLight,
+  danger: M3akPalette.dangerLight,
+};
+
+/**
+ * Carte de statistique : icône dans une pastille teintée, valeur en grand, intitulé, précision facultative.
+ * Appuyable si `onPress` est fourni.
+ */
 export function KpiCard({
   label,
   value,
@@ -21,6 +33,7 @@ export function KpiCard({
   tone = 'default',
   onPress,
   wide,
+  icon,
 }: {
   label: string;
   value: string;
@@ -28,25 +41,33 @@ export function KpiCard({
   tone?: Tone;
   onPress?: () => void;
   wide?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
 }) {
   const content = (
-    <View className="gap-1 ps-3" style={{ borderStartWidth: 4, borderStartColor: TONE_COLOR[tone], borderRadius: 2 }}>
-      <ThemedText type="subtitle"  style={{ color: TONE_COLOR[tone] }}>
-        {value}
-      </ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      {hint ? (
-        <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12 }}>
-          {hint}
-        </ThemedText>
+    <View className="gap-3">
+      {icon ? (
+        <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: TONE_TINT[tone] }}>
+          <Ionicons name={icon} size={20} color={TONE_COLOR[tone]} />
+        </View>
       ) : null}
+      <View className="gap-0.5">
+        <ThemedText type="subtitle" style={{ fontSize: 26, lineHeight: 32, color: tone === 'default' ? M3akPalette.ink : TONE_COLOR[tone] }}>
+          {value}
+        </ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {label}
+        </ThemedText>
+        {hint ? (
+          <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12, lineHeight: 16 }}>
+            {hint}
+          </ThemedText>
+        ) : null}
+      </View>
     </View>
   );
   const width = wide ? 'w-full' : 'w-[47%]';
   return onPress ? (
-    <PressableCard onPress={onPress} className={width}>
+    <PressableCard onPress={onPress} className={width} accessibilityRole="button" accessibilityLabel={`${label} : ${value}`}>
       {content}
     </PressableCard>
   ) : (
@@ -59,5 +80,9 @@ export function KpiGrid({ children }: { children: React.ReactNode }) {
 }
 
 export function SectionTitle({ children }: { children: string }) {
-  return <ThemedText type="smallBold">{children}</ThemedText>;
+  return (
+    <ThemedText type="smallBold" style={{ fontSize: 18, lineHeight: 26 }} accessibilityRole="header">
+      {children}
+    </ThemedText>
+  );
 }

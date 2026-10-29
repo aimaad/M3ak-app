@@ -82,7 +82,7 @@ export function adminErrorMessage(error) {
   if (message.includes('invalid_name')) return "Nom de l'agence invalide (2 à 120 caractères).";
   if (message.includes('invalid_days')) return 'Nombre de jours invalide (entre 1 et 3650).';
   if (message.includes('owner_exists')) return 'Cette agence a déjà un propriétaire.';
-  if (message.includes('not_allowed')) return 'Accès réservé aux administrateurs M3AK.';
+  if (message.includes('not_allowed')) return 'Accès réservé aux administrateurs KRIHA.';
   if (message.includes('Invalid login')) return 'E-mail ou mot de passe incorrect.';
   if (/network|fetch|internet/i.test(message)) return 'Connexion impossible. Vérifiez votre connexion internet, puis réessayez.';
   return "L'opération n'a pas fonctionné. Réessayez ; si le problème continue, vérifiez que la base de données est à jour.";

@@ -3,7 +3,7 @@ import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 import { fontFamilyFor, Fonts, M3akPalette, ThemeColor, type FontWeightName } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 import { useTheme } from '@/hooks/use-theme';
-import { fixPlateDirection } from '@/lib/plate';
+import { normalizeText } from '@/lib/normalize-text';
 
 export type ThemedTextProps = TextProps & {
   type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
@@ -33,7 +33,7 @@ export function ThemedText({ style, type = 'default', themeColor, children, ...r
       ]}
       {...rest}
     >
-      {typeof children === 'string' ? fixPlateDirection(children) : children}
+      {normalizeText(children)}
     </Text>
   );
 }

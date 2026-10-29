@@ -70,9 +70,9 @@ export default function MaintenanceScreen() {
 
         <Pressable
           onPress={() => router.push('/maintenance/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-brand px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-emerald px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.onEmerald }}>
             {`+ ${t('maintenance.addAction')}`}
           </ThemedText>
         </Pressable>

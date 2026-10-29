@@ -165,7 +165,7 @@ export default function ChatConversationScreen() {
 
           {/* Zone de saisie : tout en bas (zone du pouce), bouton d'envoi rond */}
           <View className="border-t border-line bg-white px-4 py-3">
-            <View className="flex-row items-end gap-2 rounded-3xl border border-line bg-canvas py-1.5 pe-1.5 ps-4">
+            <View className="flex-row items-end gap-2 rounded-2xl border border-line bg-canvas py-1.5 pe-1.5 ps-4">
               <TextInput
                 value={text}
                 onChangeText={setText}

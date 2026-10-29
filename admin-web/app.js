@@ -58,7 +58,7 @@ function showLogin(message) {
         await start();
       },
     },
-    h('h1', {}, 'Console M3AK'),
+    h('h1', {}, 'Console KRIHA'),
     h('p', { class: 'muted' }, 'Réservée aux administrateurs de la plateforme.'),
     h('label', {}, 'E-mail', email),
     h('label', {}, 'Mot de passe', password),

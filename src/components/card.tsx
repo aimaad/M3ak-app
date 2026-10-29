@@ -4,14 +4,17 @@ import { Shadows } from '@/constants/theme';
 
 type CardProps = ViewProps & {
   padded?: boolean;
+  /** `forest` : carte vedette vert profond (revenus, bandeaux de marque). */
+  variant?: 'default' | 'forest';
 };
 
-/** Surface blanche, bords arrondis et ombre douce teintée de violet. */
-export function Card({ padded = true, className, style, ...rest }: CardProps) {
+/** Surface blanche (ou vert forêt en variante vedette), bords arrondis, ombre très légère. */
+export function Card({ padded = true, variant = 'default', className, style, ...rest }: CardProps) {
+  const surface = variant === 'forest' ? 'rounded-3xl bg-brand-deep' : 'rounded-2xl border border-line bg-white';
   return (
     <View
-      className={`rounded-3xl border border-line bg-white ${padded ? 'p-4' : ''} ${className ?? ''}`}
-      style={[Shadows.card, style]}
+      className={`${surface} ${padded ? 'p-4' : ''} ${className ?? ''}`}
+      style={[variant === 'forest' ? Shadows.raised : Shadows.card, style]}
       {...rest}
     />
   );
@@ -24,7 +27,7 @@ type PressableCardProps = PressableProps & {
 export function PressableCard({ padded = true, className, ...rest }: PressableCardProps) {
   return (
     <Pressable
-      className={`rounded-3xl border border-line bg-white active:bg-brand-soft ${padded ? 'p-4' : ''} ${className ?? ''}`}
+      className={`rounded-2xl border border-line bg-white active:bg-brand-soft ${padded ? 'p-4' : ''} ${className ?? ''}`}
       style={Shadows.card}
       {...rest}
     />

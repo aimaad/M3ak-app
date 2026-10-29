@@ -41,7 +41,7 @@ export function InviteResultCard({ result, onDone }: { result: InviteResult; onD
       : t('equipe.invite.emailNotConfigured');
 
   return (
-    <View className="gap-3 rounded-3xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
       <ThemedText type="smallBold">
         {t('equipe.invite.createdFor', { name: `${result.prenom} ${result.nom}`.trim() })}
       </ThemedText>

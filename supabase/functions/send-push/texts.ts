@@ -109,8 +109,8 @@ const TEMPLATES: Record<string, Record<Locale, Template>> = {
 
 const BRANCH_LABEL: Record<Locale, string> = { fr: 'Filiale', ar: 'الفرع' };
 const FALLBACK: Record<Locale, Template> = {
-  fr: { title: 'M3ak', body: 'Vous avez une nouvelle notification.' },
-  ar: { title: 'M3ak', body: 'لديك إشعار جديد.' },
+  fr: { title: 'Kriha', body: 'Vous avez une nouvelle notification.' },
+  ar: { title: 'Kriha', body: 'لديك إشعار جديد.' },
 };
 
 function formatDay(value: unknown, locale: Locale): string {

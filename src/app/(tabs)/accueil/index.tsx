@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from '
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Avatar } from '@/components/avatar';
+import { Button } from '@/components/button';
 import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
@@ -19,6 +20,7 @@ import {
 } from '@/features/agency/hooks';
 import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
+import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
 import { dashboardSections, canSeeMoney } from '@/features/dashboard/role-layout';
@@ -264,21 +266,27 @@ export default function AccueilScreen() {
               />
             }
           >
+            <Button
+              label={t('locations.addRental')}
+              icon="add"
+              onPress={() => router.push('/locations/nouveau')}
+            />
+
             <Pressable
               onPress={() => router.push('/chat')}
-              className="flex-row items-center gap-3 rounded-3xl border border-line bg-white p-4"
+              className="flex-row items-center gap-3 rounded-2xl border border-line bg-white p-4"
               style={Shadows.card}
               accessibilityRole="button"
             >
               <View
                 className="h-12 w-12 items-center justify-center rounded-full"
                 style={{
-                  backgroundColor: M3akPalette.mauve,
+                  backgroundColor: M3akPalette.emerald,
                   ...Shadows.button,
                   shadowOpacity: 0.25,
                 }}
               >
-                <Ionicons name="sparkles" size={22} color="#FFFFFF" />
+                <Ionicons name="sparkles" size={22} color={M3akPalette.onEmerald} />
               </View>
               <View className="flex-1 gap-0.5">
                 <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>
@@ -334,6 +342,15 @@ export default function AccueilScreen() {
                   return <FinancialSection key={section} metrics={metrics} />;
                 case 'fleet':
                   return <FleetSection key={section} metrics={metrics} vehicles={vehicles} />;
+                case 'upcoming':
+                  return (
+                    <UpcomingRentalsSection
+                      key={section}
+                      rentals={rentalsQuery.data ?? []}
+                      customers={customers}
+                      vehicles={vehicles}
+                    />
+                  );
                 case 'operations':
                   return <OperationsSection key={section} metrics={metrics} />;
                 case 'counter':

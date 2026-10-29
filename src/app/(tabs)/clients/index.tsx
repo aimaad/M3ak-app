@@ -31,7 +31,7 @@ const EMPTY_CUSTOMERS: Customer[] = [];
 
 function KpiTile({ label, value }: { label: string; value: number }) {
   return (
-    <View className="min-w-[130px] gap-1 rounded-3xl border border-line bg-white px-4 py-3">
+    <View className="min-w-[130px] gap-1 rounded-2xl border border-line bg-white px-4 py-3">
       <ThemedText type="title" themeColor="primary">
         {value}
       </ThemedText>
@@ -213,9 +213,9 @@ export default function ClientsScreen() {
 
         <Pressable
           onPress={() => router.push('/clients/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-brand px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-emerald px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.onEmerald }}>
             {`+ ${t('clients.addClient')}`}
           </ThemedText>
         </Pressable>

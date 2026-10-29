@@ -17,8 +17,9 @@ type ButtonProps = Omit<PressableProps, 'children' | 'style' | 'className'> & {
 };
 
 const VARIANT_STYLES: Record<ButtonVariant, { bg: string; bgDisabled: string; text: string; border?: string }> = {
-  primary: { bg: M3akPalette.mauve, bgDisabled: '#BFA9F5', text: '#FFFFFF' },
-  secondary: { bg: M3akPalette.mauveSoft, bgDisabled: M3akPalette.mauveSoft, text: M3akPalette.mauveDeep, border: M3akPalette.border },
+  // Émeraude Kriha + texte très foncé : 6,2:1 (le blanc sur #00B884 n'atteint que 2,56:1).
+  primary: { bg: M3akPalette.emerald, bgDisabled: '#A8E8D3', text: M3akPalette.onEmerald },
+  secondary: { bg: '#FFFFFF', bgDisabled: '#FFFFFF', text: M3akPalette.mauveDeep, border: M3akPalette.border },
   ghost: { bg: 'transparent', bgDisabled: 'transparent', text: M3akPalette.mauve },
   danger: { bg: M3akPalette.dangerLight, bgDisabled: M3akPalette.dangerLight, text: '#B91C1C', border: '#FECACA' },
 };

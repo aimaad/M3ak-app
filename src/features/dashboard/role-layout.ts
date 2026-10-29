@@ -7,12 +7,12 @@ import type { AgencyRole } from '@/features/agency/types';
  *  - responsable : exploitation et performance de la flotte, sans chiffres d'argent de l'entreprise ;
  *  - employé de comptoir : le travail du jour (départs, retours, retards, encaissements à faire).
  */
-export type DashboardSection = 'financial' | 'fleet' | 'performance' | 'operations' | 'counter' | 'maintenance' | 'alerts' | 'ai';
+export type DashboardSection = 'financial' | 'upcoming' | 'fleet' | 'performance' | 'operations' | 'counter' | 'maintenance' | 'alerts' | 'ai';
 
 const LAYOUT: Record<AgencyRole, DashboardSection[]> = {
-  owner: ['financial', 'fleet', 'operations', 'performance', 'maintenance', 'alerts', 'ai'],
-  manager: ['fleet', 'operations', 'performance', 'maintenance', 'alerts', 'ai'],
-  employee: ['counter', 'fleet', 'alerts'],
+  owner: ['financial', 'fleet', 'upcoming', 'operations', 'performance', 'maintenance', 'alerts', 'ai'],
+  manager: ['fleet', 'upcoming', 'operations', 'performance', 'maintenance', 'alerts', 'ai'],
+  employee: ['counter', 'upcoming', 'fleet', 'alerts'],
 };
 
 export function dashboardSections(role: AgencyRole | null | undefined): DashboardSection[] {

@@ -1,28 +1,28 @@
-# Design M3ak
+# Design Kriha (anciennement M3ak)
 
 Principes tirés du skill `mobile-app-ui-design` (règles 60/30/10, grille de 8, ombres douces, hiérarchie, contraste, états vides).
 
-## Logo
+## Logo (ancien, M3ak)
 Logos fournis par le propriétaire : `assets/images/logo-m3ak.png` (avec le nom) et `logo-m3ak-mark.png` (tuile seule). L'icône iOS (`icon.png`), les icônes Android, l'écran de lancement et le favicon en sont tirés ; violet de référence `#773DBA`. Le composant `Logo` les affiche dans l'app.
 
-## Couleurs (`src/constants/theme.ts`)
-- **60 % neutre** : fond lavande très clair `#F7F4FF`, surfaces blanches.
-- **30 %** : texte `#1E1633` (titres), `#5E5575` (secondaire, 6,5:1 sur blanc), `#8A82A0` (icônes seulement).
-- **10 % accent** : violet vif `#7C3AED` (boutons principaux, sélection, point d'attention), `#5B21B6` pour le texte sur fond violet clair.
-- Statuts : en attente = ambre, confirmée = bleu, en cours = violet, terminée = vert, annulée = gris. **Même statut, même couleur** partout (liste, badge, calendrier : `RENTAL_STATUS_STYLES`).
-- **Un seul thème (clair)** : toutes les surfaces sont blanches ; suivre le mode sombre du téléphone donnait du texte clair sur fond blanc. `useColorScheme()` renvoie donc toujours « light » et `app.json` fixe `userInterfaceStyle: light`.
-- Règle : **jamais de texte pâle sur fond pâle** ni de texte foncé sur fond foncé. Texte sur violet = blanc ; texte sur blanc = `ink` ou `muted`. Les champs de saisie imposent leur couleur de texte.
+## Design system Kriha (vert premium)
+Source : skill `.claude/skills/kriha-ui-designer` (planche de référence = inspiration, pas une spécification). Jetons dans `src/constants/theme.ts` (`M3akPalette`, `Shadows`, `Typefaces`) et `tailwind.config.js` (classes `bg-brand`, `border-line`, `bg-canvas`, `bg-emerald`…). **Aucune couleur de marque écrite en dur** : toujours un jeton. Les noms historiques `mauve*` sont des RÔLES (voir le commentaire de `theme.ts`).
 
-## Formes et profondeur
-- Cartes `rounded-3xl`, bord `#E4DCF5`, **ombre douce teintée de violet** (`Shadows.card`) ; bouton principal avec ombre violette (`Shadows.button`). Pas d'ombre grise ou noire.
-- Zones tactiles d'au moins **44 × 44**. Actions principales en bas de l'écran (zone du pouce).
-- Espacements multiples de 4 / 8.
+| Rôle | Valeur | Usage |
+|---|---|---|
+| action (`mauve`, `brand`) | `#007A59` | texte et icônes sur clair, fonds portant du texte blanc (5,35:1) |
+| forêt (`mauveDeep`, `brand-deep`) | `#064E3B` | carte vedette (revenus), menu latéral PC, titres |
+| émeraude (`emerald`) | `#00B884` | **bouton principal**, boutons flottants, pastille d'onglet actif. Texte dessus : `#04271E` (6,2:1) ; jamais du blanc (2,56:1) |
+| fond / surface | `#F5FAF8` / `#FFFFFF` | canevas / cartes |
+| texte | `#172B26`, secondaire `#566774` | lisibles sur toutes les surfaces (test `theme-contrast.test.ts`) |
+| bordure | `#E5EDE9` | cartes et champs |
+| statuts | succès `#15803D`, alerte `#B45309`, danger `#DC2626`, info `#2563EB` | le vert est la marque, pas le seul statut ; « en cours » = pastille forêt, « terminée » = vert clair |
 
-## Composants
-- `Button` : principal (violet plein), secondaire (lavande), danger (rouge pâle).
-- `TextField` : bord violet au focus, erreur rouge, avertissement ambre.
-- `BottomTabBar` : pastille violette pleine sur l'onglet actif, étiquette contrastée.
-- `KpiCard` : valeur en grand (la valeur prime sur l'intitulé), liseré de couleur selon le ton.
+- **Typographie** : Plus Jakarta Sans (latin) et Cairo (arabe), une police par graisse (`fontFamilyFor`). Échelle : corps 14–16, titre de section 18, titre de page 28, grand chiffre 34.
+- **Formes** : cartes 16 px (`rounded-2xl`), cartes vedettes 24 px, ombres très légères teintées forêt, zones tactiles ≥ 44.
+- **Documents imprimés** (contrat, rapports, journal) : leurs couleurs propres, inchangées.
+- **Tableau de bord** : carte des revenus forêt (propriétaire), cartes de statistiques blanches avec icône, « Locations à venir », bouton « Nouvelle location » émeraude.
+- Logo provisoire : pastille émeraude « K » + nom (composant `Logo`) ; l'icône et l'écran de lancement de l'app restent les anciens fichiers jusqu'à réception du logo officiel.
 
 ## Calendriers (`calendar-theme.ts`, `calendar-locale.ts`)
 - Un thème commun : fond blanc, chiffres foncés, jour sélectionné violet plein, aujourd'hui en pastille lavande.

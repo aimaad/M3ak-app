@@ -64,11 +64,11 @@ export function DesktopShell({ children }: { children: ReactNode }) {
 
   return (
     <View className="flex-1 flex-row" style={{ backgroundColor: M3akPalette.background }}>
-      <View className="w-64 border-e bg-white" style={{ borderColor: M3akPalette.border }}>
+      <View className="w-64 bg-brand-deep">
         <View className="px-6 pb-4 pt-6">
-          <Logo markOnly />
+          <Logo tone="light" />
           {agencyQuery.data ? (
-            <ThemedText type="smallBold" className="mt-3" numberOfLines={1}>
+            <ThemedText type="smallBold" className="mt-3" numberOfLines={1} style={{ color: '#FFFFFF' }}>
               {agencyQuery.data.agencyName}
             </ThemedText>
           ) : null}
@@ -83,20 +83,20 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 accessibilityRole="link"
                 accessibilityState={{ selected }}
                 className="min-h-11 flex-row items-center gap-3 rounded-xl px-3"
-                style={{ backgroundColor: selected ? M3akPalette.mauve : 'transparent' }}
+                style={{ backgroundColor: selected ? M3akPalette.emerald : 'transparent' }}
               >
-                <Ionicons name={item.icon} size={20} color={selected ? '#FFFFFF' : M3akPalette.subtle} />
-                <ThemedText type="smallBold" style={{ color: selected ? '#FFFFFF' : M3akPalette.ink }}>
+                <Ionicons name={item.icon} size={20} color={selected ? M3akPalette.onEmerald : '#9ADBC3'} />
+                <ThemedText type="smallBold" style={{ color: selected ? M3akPalette.onEmerald : '#D6F2E8' }}>
                   {t(item.labelKey)}
                 </ThemedText>
               </Pressable>
             );
           })}
         </ScrollView>
-        <View className="gap-1 border-t px-3 py-3" style={{ borderColor: M3akPalette.border }}>
+        <View className="gap-1 border-t px-3 py-3" style={{ borderColor: 'rgba(255,255,255,0.14)' }}>
           <Pressable onPress={() => signOut()} className="min-h-11 flex-row items-center gap-3 rounded-xl px-3">
-            <Ionicons name="log-out-outline" size={20} color={M3akPalette.subtle} />
-            <ThemedText type="smallBold">{t('auth.signOut')}</ThemedText>
+            <Ionicons name="log-out-outline" size={20} color="#9ADBC3" />
+            <ThemedText type="smallBold" style={{ color: '#D6F2E8' }}>{t('auth.signOut')}</ThemedText>
           </Pressable>
         </View>
       </View>

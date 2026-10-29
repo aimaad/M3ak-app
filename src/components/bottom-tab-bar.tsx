@@ -82,12 +82,12 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
           >
             <View
               className="h-8 w-14 items-center justify-center rounded-full"
-              style={{ backgroundColor: selected ? M3akPalette.mauve : 'transparent' }}
+              style={{ backgroundColor: selected ? M3akPalette.emerald : 'transparent' }}
             >
               <Ionicons
                 name={selected ? section.iconActive : section.icon}
                 size={21}
-                color={selected ? '#FFFFFF' : INACTIVE_COLOR}
+                color={selected ? M3akPalette.onEmerald : INACTIVE_COLOR}
               />
             </View>
             <ThemedText

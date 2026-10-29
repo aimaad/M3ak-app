@@ -65,7 +65,7 @@ export function DataTable<T>({
           </Pressable>
         </View>
       ) : null}
-      <View className="overflow-hidden rounded-3xl border border-line bg-white">
+      <View className="overflow-hidden rounded-2xl border border-line bg-white">
         <View className="flex-row border-b border-line bg-canvas px-5 py-3">
           {columns.map((column) => (
             <View

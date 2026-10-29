@@ -2,7 +2,7 @@
   "common": {
     "close": "Fermer",
     "zoomHint": "Touchez pour agrandir",
-    "appName": "M3ak",
+    "appName": "Kriha",
     "tagline": "L'application intelligente pour votre agence de location",
     "language": "Langue",
     "french": "Français",
@@ -86,7 +86,7 @@
       "required": "Remplissez les champs obligatoires."
     },
     "joinHint": "Vous êtes connecté avec {{email}}. Ce doit être l'adresse e-mail qui a reçu l'invitation.",
-    "noAgencyNote": "Les agences sont créées par M3ak. Contactez-nous pour ouvrir votre accès.",
+    "noAgencyNote": "Les agences sont créées par Kriha. Contactez-nous pour ouvrir votre accès.",
     "start": {
       "title": "Premiers pas",
       "progress": "{{done}} sur {{total}} terminées",
@@ -102,7 +102,7 @@
         },
         "vehicle": {
           "title": "Ajouter votre première voiture",
-          "hint": "Photographiez la carte grise : M3ak remplit la fiche."
+          "hint": "Photographiez la carte grise : Kriha remplit la fiche."
         },
         "customer": {
           "title": "Ajouter votre premier client",
@@ -118,7 +118,7 @@
       "title": "Accès rapide"
     },
     "welcome": {
-      "introTitle": "Bienvenue chez M3ak",
+      "introTitle": "Bienvenue chez Kriha",
       "introBody": "{{agency}} est créée. Configurons-la ensemble en {{count}} étapes rapides.",
       "start": "Commencer",
       "later": "Plus tard",
@@ -136,12 +136,12 @@
         },
         "vehicle": {
           "title": "Ajoutez votre première voiture",
-          "hint": "Photographiez la carte grise : M3ak remplit la fiche pour vous.",
+          "hint": "Photographiez la carte grise : Kriha remplit la fiche pour vous.",
           "action": "Ajouter une voiture"
         },
         "customer": {
           "title": "Ajoutez votre premier client",
-          "hint": "Photographiez la CIN et le permis : M3ak lit les documents.",
+          "hint": "Photographiez la CIN et le permis : Kriha lit les documents.",
           "action": "Ajouter un client"
         },
         "rental": {
@@ -196,7 +196,7 @@
       "copied": "Copié ✓",
       "whatsapp": "WhatsApp",
       "done": "Terminé",
-      "whatsappMessage": "Bonjour {{prenom}}, l'agence {{agency}} vous invite sur M3ak en tant que {{role}}.\n1) Installez l'app M3ak et créez un compte avec CETTE adresse e-mail : {{email}}\n2) Choisissez « Rejoindre » et entrez ce code : {{code}}\nCode personnel, à usage unique, valable jusqu'au {{date}}. Ne le partagez pas.",
+      "whatsappMessage": "Bonjour {{prenom}}, l'agence {{agency}} vous invite sur Kriha en tant que {{role}}.\n1) Installez l'app Kriha et créez un compte avec CETTE adresse e-mail : {{email}}\n2) Choisissez « Rejoindre » et entrez ce code : {{code}}\nCode personnel, à usage unique, valable jusqu'au {{date}}. Ne le partagez pas.",
       "status": {
         "pending": "En attente",
         "accepted": "Acceptée",
@@ -300,8 +300,8 @@
         "hint": "Si c'est désactivé, l'inspection de départ et de retour (photos) devient obligatoire pour les employés. Le gérant et le propriétaire peuvent toujours l'ignorer."
       },
       "allowDeclineAi": {
-        "label": "Les employés peuvent refuser l'analyse M3ak",
-        "hint": "Si c'est désactivé, après les photos, l'analyse des dommages par M3ak est obligatoire pour les employés."
+        "label": "Les employés peuvent refuser l'analyse Kriha",
+        "hint": "Si c'est désactivé, après les photos, l'analyse des dommages par Kriha est obligatoire pour les employés."
       }
     },
     "stamp": {
@@ -312,10 +312,10 @@
       "remove": "Retirer le cachet",
       "error": "Impossible d'enregistrer le cachet. Réessayez.",
       "add": "Ajouter le cachet",
-      "photoActive": "Vous utilisez la photo de votre cachet physique. Vous pouvez la remplacer par un cachet dessiné par M3ak ci-dessous.",
+      "photoActive": "Vous utilisez la photo de votre cachet physique. Vous pouvez la remplacer par un cachet dessiné par Kriha ci-dessous.",
       "saved": "Cachet enregistré — c'est celui qui apparaît sur vos contrats.",
       "notSaved": "Aperçu : pas encore enregistré. Touchez « Enregistrer le cachet ».",
-      "generatedHelp": "M3ak dessine un vrai tampon dans cet ordre : nom de l'agence, adresse (2 lignes si elle est longue), téléphone, puis GSM. Il s'imprime net sur le contrat, à côté de la signature.",
+      "generatedHelp": "Kriha dessine un vrai tampon dans cet ordre : nom de l'agence, adresse (2 lignes si elle est longue), téléphone, puis GSM. Il s'imprime net sur le contrat, à côté de la signature.",
       "shape": "Forme",
       "shapes": {
         "round": "Rond",
@@ -1169,7 +1169,7 @@
         },
         "dates": {
           "title": "Dates et lieux",
-          "help": "Quand le client veut-il la voiture ? Choisissez le départ et le retour : M3ak vous montrera ensuite seulement les voitures libres à ces dates."
+          "help": "Quand le client veut-il la voiture ? Choisissez le départ et le retour : Kriha vous montrera ensuite seulement les voitures libres à ces dates."
         },
         "conducteurs": {
           "title": "Conducteurs",
@@ -1380,7 +1380,7 @@
     "angleRequired": "Angle requis : {{angle}}",
     "pendingUpload": "{{count}} photo(s) en attente d'envoi — appuyez pour réessayer",
     "finish": "Terminer l'inspection",
-    "permissionRequired": "M3ak a besoin d'accéder à la caméra pour l'inspection du véhicule.",
+    "permissionRequired": "Kriha a besoin d'accéder à la caméra pour l'inspection du véhicule.",
     "grantPermission": "Autoriser la caméra",
     "angles": {
       "avant": "Face avant",
@@ -1613,7 +1613,7 @@
       "customer": "Client",
       "km": "Kilométrage",
       "fuel": "Carburant",
-      "footer": "Rapport généré par M3ak. L'IA propose, l'employé de l'agence a validé chaque dommage retenu.",
+      "footer": "Rapport généré par Kriha. L'IA propose, l'employé de l'agence a validé chaque dommage retenu.",
       "noDeposit": "Aucune caution enregistrée pour cette location. Montant des dommages imputables : {{amount}}.",
       "validated": "Retenue validée.",
       "deductionField": "Montant à retenir en MAD (proposé : {{proposed}})",
@@ -1640,8 +1640,8 @@
     "openReport": "Voir le rapport et les dommages",
     "analyzeNow": "Analyser avec l'IA",
     "decision": {
-      "title": "Analyser les photos avec M3ak ?",
-      "body": "{{count}} photos ont été prises et enregistrées. M3ak peut les analyser pour repérer les dommages (extérieur, roues, intérieur). Vous relirez ensuite chaque dommage un par un.",
+      "title": "Analyser les photos avec Kriha ?",
+      "body": "{{count}} photos ont été prises et enregistrées. Kriha peut les analyser pour repérer les dommages (extérieur, roues, intérieur). Vous relirez ensuite chaque dommage un par un.",
       "yes": "Oui, analyser les photos",
       "no": "Non, pas d'analyse",
       "noHint": "Si vous déclinez, les photos restent stockées pour l'inspection et pour la comparaison au retour. Vous pourrez écrire à la main les dommages que vous voyez, s'il y en a.",
@@ -1652,7 +1652,7 @@
       "inContract": "Sera inscrit dans le contrat",
       "notInContract": "Ne sera pas inscrit dans le contrat",
       "analyzeAnyway": "Analyser quand même",
-      "mandatory": "L'analyse par M3ak est obligatoire dans cette agence."
+      "mandatory": "L'analyse par Kriha est obligatoire dans cette agence."
     }
   },
   "accueil": {
@@ -1749,7 +1749,7 @@
         "customers": "Clients"
       },
       "unavailable": {
-        "noKey": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore configurée pour votre entreprise. Contactez M3AK pour la mettre en place.",
+        "noKey": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore configurée pour votre entreprise. Contactez KRIHA pour la mettre en place.",
         "ownerCanEnable": "Cet indicateur ne peut pas être affiché : l'IA est configurée mais pas encore activée. Vous pouvez l'activer dans « Mon entreprise ».",
         "askOwner": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore activée pour votre entreprise. Demandez au propriétaire de l'activer."
       },
@@ -1763,8 +1763,12 @@
       }
     },
     "askM3ak": {
-      "title": "Demander à M3ak",
+      "title": "Demander à Kriha",
       "hint": "Qui a pris la voiture ? Quelles voitures reviennent cette semaine ?"
+    },
+    "upcoming": {
+      "title": "Locations à venir",
+      "empty": "Aucune location à venir pour le moment."
     }
   },
   "maintenance": {
@@ -2034,12 +2038,12 @@
   "ocr": {
     "keepPhoto": {
       "label": "Enregistrer la photo dans le dossier",
-      "on": "La photo sera transmise de manière sécurisée à M3AK avec le dossier, et consultable par les personnes autorisées de votre agence.",
+      "on": "La photo sera transmise de manière sécurisée à KRIHA avec le dossier, et consultable par les personnes autorisées de votre agence.",
       "off": "La photo reste sur cet appareil et n'est pas enregistrée. Seules les informations que vous validez sont conservées."
     },
-    "privacyCloud": "Votre entreprise a activé l'analyse par Google Gemini : la photo est envoyée à Google, avec la clé d'API de votre entreprise, pour être lue. Si vous choisissez d'enregistrer le document, son image est aussi transmise de manière sécurisée au backend M3AK.",
+    "privacyCloud": "Votre entreprise a activé l'analyse par Google Gemini : la photo est envoyée à Google, avec la clé d'API de votre entreprise, pour être lue. Si vous choisissez d'enregistrer le document, son image est aussi transmise de manière sécurisée au backend KRIHA.",
     "settingsTitle": "Lecture automatique des documents (OCR)",
-    "settingsCloudUnavailable": "La lecture automatique n'est pas active pour votre entreprise : aucune clé d'API n'est configurée. Contactez M3AK pour la mettre en place. En attendant, les informations se saisissent à la main.",
+    "settingsCloudUnavailable": "La lecture automatique n'est pas active pour votre entreprise : aucune clé d'API n'est configurée. Contactez KRIHA pour la mettre en place. En attendant, les informations se saisissent à la main.",
     "settingsCloudOff": "Une clé d'API Gemini est configurée pour votre entreprise, mais la lecture automatique est désactivée.",
     "settingsCloudOn": "Lecture automatique activée : les photos scannées sont envoyées à Google Gemini avec la clé de votre entreprise. Si la clé est sur l'offre gratuite de Google, Google peut utiliser ces images ; pour des données confidentielles, utilisez une clé avec facturation activée.",
     "enable": "Activer l'analyse Gemini",
@@ -2065,7 +2069,7 @@
     "fromCache": "Cette photo a déjà été lue : résultat repris sans nouvel envoi.",
     "insights": {
       "title": "Recommandations IA (accueil)",
-      "unavailable": "Les recommandations IA ne sont pas disponibles pour votre entreprise : aucune clé d'API n'est configurée. Contactez M3AK pour la mettre en place.",
+      "unavailable": "Les recommandations IA ne sont pas disponibles pour votre entreprise : aucune clé d'API n'est configurée. Contactez KRIHA pour la mettre en place.",
       "off": "Une clé d'API est configurée, mais les recommandations IA sont désactivées.",
       "on": "Recommandations IA activées pour le propriétaire et les responsables. Seules des statistiques sans aucun nom de client ni photo sont envoyées à Google Gemini avec la clé de votre entreprise. Avec une clé gratuite, Google peut utiliser ces données ; préférez une clé avec facturation activée.",
       "enable": "Activer les recommandations IA",
@@ -2074,14 +2078,14 @@
       "confirmBody": "Des statistiques de votre agence (nombres de locations, totaux, noms de modèles de véhicules) seront envoyées à Google Gemini avec la clé de votre entreprise pour générer des conseils. Aucun nom de client, téléphone ni photo n'est envoyé."
     },
     "chat": {
-      "title": "Chat M3ak",
-      "unavailable": "Indisponible : aucune clé IA n'est configurée pour votre entreprise (M3AK la configure).",
+      "title": "Chat Kriha",
+      "unavailable": "Indisponible : aucune clé IA n'est configurée pour votre entreprise (KRIHA la configure).",
       "on": "Activé. Les employés peuvent poser des questions sur les locations, voitures et clients. Pour répondre, les noms et téléphones des clients concernés sont transmis à l'IA ; jamais le CIN, le permis ni les photos.",
-      "off": "Désactivé. Activez-le pour que le personnel pose ses questions à M3ak.",
-      "enable": "Activer le Chat M3ak",
-      "disable": "Désactiver le Chat M3ak",
-      "confirmTitle": "Activer le Chat M3ak ?",
-      "confirmBody": "Pour répondre, M3ak transmet à l'IA (Google Gemini) les résultats de la recherche : noms et téléphones des clients concernés, voitures, dates. Jamais le CIN, le numéro de permis ni les photos. Chaque employé ne voit que ce que ses droits (filiale) lui permettent."
+      "off": "Désactivé. Activez-le pour que le personnel pose ses questions à Kriha.",
+      "enable": "Activer le Chat Kriha",
+      "disable": "Désactiver le Chat Kriha",
+      "confirmTitle": "Activer le Chat Kriha ?",
+      "confirmBody": "Pour répondre, Kriha transmet à l'IA (Google Gemini) les résultats de la recherche : noms et téléphones des clients concernés, voitures, dates. Jamais le CIN, le numéro de permis ni les photos. Chaque employé ne voit que ce que ses droits (filiale) lui permettent."
     }
   },
   "errors": {
@@ -2092,7 +2096,7 @@
     "emailNotConfirmed": "Votre adresse e-mail n'est pas encore confirmée. Ouvrez le message reçu par e-mail pour la confirmer.",
     "alreadyRegistered": "Un compte existe déjà avec cette adresse e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».",
     "weakPassword": "Ce mot de passe est trop simple. Choisissez-en un plus long, avec des lettres et des chiffres.",
-    "emailSend": "Impossible d'envoyer le code par e-mail pour le moment. Patientez quelques minutes puis réessayez, ou contactez M3ak.",
+    "emailSend": "Impossible d'envoyer le code par e-mail pour le moment. Patientez quelques minutes puis réessayez, ou contactez Kriha.",
     "server": "Nos serveurs ont un souci, ce n'est pas de votre faute. Réessayez dans quelques minutes.",
     "reference": "Réf. : {{reference}}"
   },
@@ -2158,9 +2162,9 @@
       "removeConditionTitle": "Supprimer cette condition ?",
       "removeConditionBody": "Elle disparaîtra du contrat.",
       "remove": "Supprimer",
-      "reset": "Revenir aux réglages M3ak",
-      "resetTitle": "Revenir aux réglages M3ak ?",
-      "resetBody": "Tous vos réglages seront effacés et le contrat M3ak standard sera utilisé.",
+      "reset": "Revenir aux réglages Kriha",
+      "resetTitle": "Revenir aux réglages Kriha ?",
+      "resetBody": "Tous vos réglages seront effacés et le contrat Kriha standard sera utilisé.",
       "unsaved": "Modifications non enregistrées",
       "numberTitle": "Ajouter un autre numéro (ex. ICE)",
       "numberName": "Nom du numéro",
@@ -2179,7 +2183,7 @@
       "agencyEdit": "Compléter dans Mon entreprise",
       "resetConditions": "Remettre les conditions par défaut",
       "resetConditionsTitle": "Remettre les conditions par défaut ?",
-      "resetConditionsBody": "Toutes vos conditions générales seront remplacées par le texte par défaut M3ak (conditions du carnet de location). Vos mentions légales et vos autres réglages ne changent pas. N'oubliez pas d'enregistrer."
+      "resetConditionsBody": "Toutes vos conditions générales seront remplacées par le texte par défaut Kriha (conditions du carnet de location). Vos mentions légales et vos autres réglages ne changent pas. N'oubliez pas d'enregistrer."
     }
   },
   "unsaved": {
@@ -2336,7 +2340,7 @@
     }
   },
   "chat": {
-    "title": "Chat M3ak",
+    "title": "Chat Kriha",
     "subtitle": "Posez vos questions sur l'agence",
     "newConversation": "Nouvelle conversation",
     "untitled": "Conversation",
@@ -2347,7 +2351,7 @@
     "intro": "Posez-moi une question sur vos locations, vos voitures ou vos clients, en français, en arabe ou en darija. Je réponds à partir des données de votre agence.",
     "placeholder": "Votre question…",
     "send": "Envoyer",
-    "thinking": "M3ak cherche dans vos données…",
+    "thinking": "Kriha cherche dans vos données…",
     "suggestions": {
       "returnsWeek": "Quelles voitures reviennent cette semaine ?",
       "availableWeekend": "Quelles voitures sont disponibles ce week-end ?",
@@ -2356,28 +2360,28 @@
       "returnsTomorrow": "Qui doit rendre une voiture demain ?"
     },
     "inactive": {
-      "noKey": "Le Chat M3ak n'est pas encore disponible pour votre entreprise : aucune clé IA n'est configurée par M3AK.",
-      "ownerCanEnable": "Le Chat M3ak est prêt. Activez-le dans Mon entreprise → Chat M3ak.",
-      "askOwner": "Le Chat M3ak n'est pas activé. Demandez au propriétaire de l'agence de l'activer."
+      "noKey": "Le Chat Kriha n'est pas encore disponible pour votre entreprise : aucune clé IA n'est configurée par KRIHA.",
+      "ownerCanEnable": "Le Chat Kriha est prêt. Activez-le dans Mon entreprise → Chat Kriha.",
+      "askOwner": "Le Chat Kriha n'est pas activé. Demandez au propriétaire de l'agence de l'activer."
     },
     "errors": {
-      "inactive": "Le Chat M3ak n'est pas activé pour votre entreprise.",
+      "inactive": "Le Chat Kriha n'est pas activé pour votre entreprise.",
       "busy": "L'IA est très sollicitée en ce moment. Réessayez dans un instant.",
       "timeout": "La réponse prend trop de temps. Réessayez avec une question plus simple.",
       "limit": "La limite de questions du jour est atteinte pour votre agence. Réessayez demain.",
       "noAnswer": "Je n'ai pas réussi à répondre. Reformulez votre question.",
-      "unavailable": "Le Chat M3ak n'est pas disponible pour le moment (vérifiez votre connexion).",
+      "unavailable": "Le Chat Kriha n'est pas disponible pour le moment (vérifiez votre connexion).",
       "failed": "Impossible de répondre pour le moment. Réessayez.",
-      "quota": "Le quota de la clé IA de votre entreprise est atteint. Contactez M3AK : la clé doit passer sur une offre avec facturation, ou attendre la réinitialisation du quota."
+      "quota": "Le quota de la clé IA de votre entreprise est atteint. Contactez KRIHA : la clé doit passer sur une offre avec facturation, ou attendre la réinitialisation du quota."
     },
     "online": "Répond à partir de vos données",
-    "welcomeTitle": "Bonjour, je suis M3ak",
+    "welcomeTitle": "Bonjour, je suis Kriha",
     "tryAsking": "Essayez par exemple"
   },
   "access": {
     "blockedTitle": "Accès terminé",
-    "blockedExpired": "Votre période d'essai est terminée. Contactez M3ak pour continuer à utiliser l'application.",
-    "blockedSuspended": "L'accès de votre agence est suspendu. Contactez M3ak pour le réactiver.",
+    "blockedExpired": "Votre période d'essai est terminée. Contactez Kriha pour continuer à utiliser l'application.",
+    "blockedSuspended": "L'accès de votre agence est suspendu. Contactez Kriha pour le réactiver.",
     "blockedHint": "Vos données sont conservées en sécurité : elles seront de nouveau disponibles dès la réactivation.",
     "recheck": "Vérifier à nouveau",
     "stillBlocked": "L'accès est toujours fermé.",

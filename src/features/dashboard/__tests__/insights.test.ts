@@ -19,16 +19,16 @@ const metrics = computeDashboardMetrics({
 
 describe('qui voit quoi', () => {
   it('le propriétaire voit tout, y compris les finances et l\'IA', () => {
-    expect(dashboardSections('owner')).toEqual(['financial', 'fleet', 'operations', 'performance', 'maintenance', 'alerts', 'ai']);
+    expect(dashboardSections('owner')).toEqual(['financial', 'fleet', 'upcoming', 'operations', 'performance', 'maintenance', 'alerts', 'ai']);
     expect(canSeeMoney('owner')).toBe(true);
   });
   it("le responsable voit l'exploitation et la flotte, sans les finances", () => {
-    expect(dashboardSections('manager')).toEqual(['fleet', 'operations', 'performance', 'maintenance', 'alerts', 'ai']);
+    expect(dashboardSections('manager')).toEqual(['fleet', 'upcoming', 'operations', 'performance', 'maintenance', 'alerts', 'ai']);
     expect(dashboardSections('manager')).not.toContain('financial');
     expect(canSeeMoney('manager')).toBe(false);
   });
   it("l'employé voit son travail du jour : ni finances, ni performance, ni IA", () => {
-    expect(dashboardSections('employee')).toEqual(['counter', 'fleet', 'alerts']);
+    expect(dashboardSections('employee')).toEqual(['counter', 'upcoming', 'fleet', 'alerts']);
     expect(canSeeMoney('employee')).toBe(false);
     expect(canUseAiInsights('employee')).toBe(false);
   });

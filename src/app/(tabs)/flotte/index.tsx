@@ -42,7 +42,7 @@ function KpiTile({ label, value, onPress }: { label: string; value: number; onPr
     <Pressable
       onPress={onPress}
       disabled={!onPress}
-      className="min-w-[130px] gap-1 rounded-3xl border border-line bg-white px-4 py-3"
+      className="min-w-[130px] gap-1 rounded-2xl border border-line bg-white px-4 py-3"
     >
       <ThemedText type="title" themeColor="primary">
         {value}
@@ -283,9 +283,9 @@ export default function FlotteScreen() {
 
         <Pressable
           onPress={() => router.push('/flotte/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-brand px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-emerald px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.onEmerald }}>
             {`+ ${t('flotte.addVehicle')}`}
           </ThemedText>
         </Pressable>

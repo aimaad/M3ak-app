@@ -85,17 +85,17 @@ export function buildInviteEmail(invite: InvitePayload): { subject: string; text
 
   // Titre en ASCII pur : l'encodage des accents dans l'en-tête Subject s'affiche
   // brut (=?utf-8?Q?...?=) chez certains clients. Le corps reste en UTF-8.
-  const subject = `Invitation a rejoindre M3ak - ${toAscii(invite.agency_name) || 'votre agence'}`;
+  const subject = `Invitation a rejoindre Kriha - ${toAscii(invite.agency_name) || 'votre agence'}`;
 
   const text = [
     `Bonjour ${invite.prenom},`,
     '',
-    `${inviter ?? "L'agence"} vous invite à rejoindre l'agence « ${invite.agency_name} » sur M3ak, en tant que ${role.fr}${branchLine}.`,
+    `${inviter ?? "L'agence"} vous invite à rejoindre l'agence « ${invite.agency_name} » sur Kriha, en tant que ${role.fr}${branchLine}.`,
     '',
     `Votre code d'invitation : ${code}`,
     '',
     'Comment faire :',
-    '1. Installez et ouvrez l\'application M3ak.',
+    '1. Installez et ouvrez l\'application Kriha.',
     `2. Créez un compte avec CETTE adresse e-mail : ${invite.email}`,
     '3. Confirmez votre e-mail avec le code reçu, puis choisissez « Rejoindre » et entrez le code ci-dessus.',
     '',
@@ -103,21 +103,21 @@ export function buildInviteEmail(invite: InvitePayload): { subject: string; text
     "Si vous n'attendiez pas cette invitation, ignorez simplement cet e-mail.",
     '',
     '—',
-    'معاك — M3ak',
+    'Kriha',
     `دعوة للانضمام إلى وكالة « ${invite.agency_name} ». رمز الدعوة: ${code}. أنشئ حساباً بنفس هذا البريد الإلكتروني (${invite.email}) ثم اختر «انضم» وأدخل الرمز.`,
   ].join('\n');
 
   const html = `<!doctype html>
 <html lang="fr"><body style="margin:0;padding:24px;background:#F6F3FB;font-family:Arial,Helvetica,sans-serif;color:#211A2E;">
   <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:20px;padding:28px;">
-    <h2 style="margin:0 0 4px;color:#7C3AED;">M3ak · معاك</h2>
+    <h2 style="margin:0 0 4px;color:#007A59;">Kriha</h2>
     <p style="margin:16px 0 0;">Bonjour ${escapeHtml(invite.prenom)},</p>
     <p>${escapeHtml(inviter ?? "L'agence")} vous invite à rejoindre l'agence <strong>${escapeHtml(invite.agency_name)}</strong>
-       sur M3ak, en tant que <strong>${escapeHtml(role.fr)}</strong>${escapeHtml(branchLine)}.</p>
+       sur Kriha, en tant que <strong>${escapeHtml(role.fr)}</strong>${escapeHtml(branchLine)}.</p>
     <p style="margin:24px 0 8px;">Votre code d'invitation :</p>
     <div style="font-size:26px;letter-spacing:3px;font-weight:bold;background:#F1E9FE;color:#5B21B6;border-radius:14px;padding:16px;text-align:center;">${escapeHtml(code)}</div>
     <ol style="padding-left:20px;line-height:1.6;">
-      <li>Installez et ouvrez l'application M3ak.</li>
+      <li>Installez et ouvrez l'application Kriha.</li>
       <li>Créez un compte avec <strong>cette adresse e-mail : ${escapeHtml(invite.email)}</strong></li>
       <li>Confirmez votre e-mail avec le code reçu, puis choisissez « Rejoindre » et entrez le code ci-dessus.</li>
     </ol>
@@ -141,7 +141,7 @@ async function sendEmail(invite: InvitePayload): Promise<{ sent: boolean; error?
     return { sent: false, error: 'smtp_not_configured' };
   }
 
-  const fromName = Deno.env.get('SMTP_FROM_NAME') ?? 'M3ak';
+  const fromName = Deno.env.get('SMTP_FROM_NAME') ?? 'Kriha';
   const { subject, text, html } = buildInviteEmail(invite);
 
   const client = new SMTPClient({

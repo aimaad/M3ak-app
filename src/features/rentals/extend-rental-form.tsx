@@ -77,7 +77,7 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
   }
 
   return (
-    <View className="gap-3 rounded-3xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
       <ThemedText type="smallBold">{t('locations.extend.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {t('locations.extend.currentEnd', { date: new Date(rental.dateFinPrevue).toLocaleDateString('fr-FR') })}
