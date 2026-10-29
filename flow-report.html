@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M3ak — Rapport d'audit des parcours utilisateur</title>
+<style>
+  :root{--ink:#111;--muted:#666;--line:#ddd;--accent:#7c3aed;--ok:#0a7d33;--warn:#b45309;--bad:#b91c1c;--bg:#fafafa;--card:#fff}
+  *{box-sizing:border-box;margin:0}
+  body{font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);padding:48px 24px;max-width:880px;margin:0 auto}
+  h1{font-size:28px;letter-spacing:-.02em}
+  h2{font-size:20px;margin:48px 0 8px;padding-top:24px;border-top:1px solid var(--line)}
+  h3{font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:28px 0 12px}
+  .meta{color:var(--muted);font-size:14px;margin:6px 0 4px}
+  .skills{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+  .chip{font-size:13px;padding:3px 10px;border:1px solid var(--line);border-radius:999px;background:var(--card)}
+  .flow{list-style:none;padding:0;margin:16px 0}
+  .flow>li{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;position:relative}
+  .flow>li+li{margin-top:34px}
+  .flow>li+li::before{content:"";position:absolute;top:-27px;left:32px;width:2px;height:20px;background:var(--accent)}
+  .flow>li+li::after{content:"";position:absolute;top:-12px;left:28px;border:5px solid transparent;border-top-color:var(--accent)}
+  .step-n{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);border:1.5px solid var(--accent);border-radius:999px;padding:1px 9px;margin-right:8px;vertical-align:1px}
+  .step-t{font-weight:650}
+  .step-d{color:var(--muted);font-size:14px;margin-top:6px}
+  .cta{font-size:13px;margin-top:8px}
+  .cta b{color:var(--ok)}
+  .branch{font-size:13px;margin-top:8px;padding:8px 12px;background:#f6f3ff;border-left:3px solid var(--accent);border-radius:0 6px 6px 0}
+  table{border-collapse:collapse;width:100%;font-size:14px;background:var(--card)}
+  th,td{text-align:left;padding:9px 12px;border:1px solid var(--line);vertical-align:top}
+  th{background:var(--bg);font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .pass{color:var(--ok);font-weight:650}.warn{color:var(--warn);font-weight:650}.fail{color:var(--bad);font-weight:650}
+  .overflow{overflow-x:auto}
+  ol.prio{padding-left:22px}ol.prio li{margin:8px 0}
+  footer{margin-top:56px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  @media print{body{background:#fff;padding:0}.flow>li{break-inside:avoid}}
+</style>
+</head>
+<body>
+
+<h1>M3ak — Rapport d'audit des parcours utilisateur</h1>
+<p class="meta">29 octobre 2026 · Audit de l'application mobile et de la version web PC (lecture du code et captures d'écran avec données de démonstration ; pas de test sur de vrais utilisateurs)</p>
+<div class="skills">
+  <span class="chip">flow-onboarding</span>
+  <span class="chip">flow-forms</span>
+  <span class="chip">flow-navigation</span>
+  <span class="chip">flow-errors</span>
+</div>
+
+<h2>Résumé</h2>
+<p>M3ak a de bonnes bases : navigation à 5 onglets avec libellés, assistant de réservation en étapes avec récapitulatif avant validation, écran d'accès expiré qui rassure sur les données, messages d'erreur traduits sans jargon technique. Les trois points faibles les plus importants sont (1) <strong>aucune aide au démarrage</strong> : un nouveau client arrive sur un tableau de bord vide, sans liste d'étapes ni action guidée ; (2) <strong>le message d'erreur générique</strong> « Un problème est survenu » masque la vraie cause (c'est lui qui nous a fait perdre du temps avec l'envoi d'e-mails et le code d'invitation) ; (3) <strong>des fonctions clés difficiles à trouver</strong> sur mobile (Chat M3ak, Contrats). Cet audit ne mesure aucun chiffre d'usage : les verdicts viennent du code et des guides appliqués.</p>
+
+<h2>Parcours : Premier lancement d'un nouveau client</h2>
+<p class="meta">Source des critères : flow-onboarding · Point d'entrée : le client reçoit un lien Expo / Netlify, un e-mail et un code d'invitation de la part de M3ak</p>
+
+<h3>Étapes</h3>
+<ol class="flow">
+  <li>
+    <span class="step-n">1</span><span class="step-t">Création du compte (inscription)</span>
+    <p class="step-d">E-mail, mot de passe, prénom et nom, puis code de confirmation reçu par e-mail.</p>
+    <p class="cta">Action principale : <b>Créer mon compte</b> → saisie du code de confirmation</p>
+    <div class="branch">Si l'envoi de l'e-mail échoue → message générique « Un problème est survenu » (cause invisible pour le client).</div>
+  </li>
+  <li>
+    <span class="step-n">2</span><span class="step-t">Choix de l'agence : code d'invitation</span>
+    <p class="step-d">Un seul champ, le code donné par M3ak. Prénom et nom redemandés seulement s'ils manquent. Plus de création d'agence côté client.</p>
+    <p class="cta">Action principale : <b>Rejoindre l'agence</b> → Accueil</p>
+    <div class="branch">Si le code est refusé ou expiré → message d'erreur (seuls les cas connus sont expliqués).</div>
+  </li>
+  <li>
+    <span class="step-n">3</span><span class="step-t">Accueil (tableau de bord)</span>
+    <p class="step-d">Bandeau de période d'essai (si applicable), carte « Demander à M3ak », indicateurs financiers. Pour une agence neuve : tout à zéro, aucune étape guidée.</p>
+    <p class="cta">Action principale : <b>aucune action de démarrage proposée</b> → le client doit deviner par où commencer</p>
+  </li>
+</ol>
+
+<h3>Inventaire des écrans</h3>
+<div class="overflow"><table>
+  <tr><th>Écran</th><th>Objectif</th><th>Action principale</th><th>États (vide / chargement / erreur)</th></tr>
+  <tr><td>Inscription</td><td>Créer le compte</td><td>Créer mon compte</td><td>Erreur : générique si cause inconnue</td></tr>
+  <tr><td>Rejoindre l'agence</td><td>Rattacher le compte à l'agence</td><td>Rejoindre l'agence</td><td>Erreurs connues expliquées ; inconnues génériques</td></tr>
+  <tr><td>Accueil</td><td>Vue d'ensemble</td><td>Demander à M3ak</td><td>Vide : chiffres à zéro, sans consigne</td></tr>
+  <tr><td>Clients / Flotte (liste vide)</td><td>Gérer les fiches</td><td>+ Ajouter</td><td>Vide : « Aucun client ne correspond à votre recherche » même quand il n'y a encore aucun client</td></tr>
+</table></div>
+
+<h3>Audit des anti-patterns (flow-onboarding)</h3>
+<div class="overflow"><table>
+  <tr><th>Contrôle</th><th>Verdict</th><th>Remarque</th></tr>
+  <tr><td>Atterrir sur un espace vide</td><td class="fail">FAIL</td><td>Accueil à zéro, listes vides sans exemple ni consigne. Le seul bouton « + Ajouter » est un bouton flottant.</td></tr>
+  <tr><td>Moment d'activation défini et guidé</td><td class="fail">FAIL</td><td>Aucune liste d'étapes (« Premiers pas ») : le code ne contient qu'une liste de contrôle pour le départ d'une location. Moment d'activation probable : première location créée.</td></tr>
+  <tr><td>Diaporama de présentation avant usage</td><td class="pass">PASS</td><td>Aucun diaporama ni visite guidée.</td></tr>
+  <tr><td>Inscription longue (nom, entreprise, téléphone…)</td><td class="warn">WARN</td><td>4 champs plus confirmation par code : acceptable, mais le code d'invitation arrive en plus. À mesurer.</td></tr>
+  <tr><td>Message vide trompeur</td><td class="warn">WARN</td><td>« Aucun client ne correspond à votre recherche » s'affiche aussi quand la liste est simplement vide.</td></tr>
+  <tr><td>État de l'onboarding conservé côté serveur</td><td class="pass">PASS</td><td>Le rattachement à l'agence est en base : réinstallation ou autre appareil sans repasser par le code.</td></tr>
+  <tr><td>Permissions demandées trop tôt</td><td class="warn">WARN</td><td>Non vérifié sur téléphone : le jeton de notification est demandé quand les notifications sont activées par défaut ; à contrôler à la première ouverture.</td></tr>
+  <tr><td>Invitation du propriétaire avant usage</td><td class="pass">PASS</td><td>Le propriétaire est créé par M3ak, sans demander au client de « parrainer » l'app.</td></tr>
+</table></div>
+
+<h2>Parcours : Saisie d'un client et création d'une location</h2>
+<p class="meta">Source des critères : flow-forms · Point d'entrée : onglets Clients puis Locations</p>
+
+<h3>Étapes</h3>
+<ol class="flow">
+  <li>
+    <span class="step-n">1</span><span class="step-t">Nouveau client (formulaire)</span>
+    <p class="step-d">Scan optionnel du permis et de la CIN, champs identité, documents, enregistrement. Les photos sont réduites et envoyées en parallèle.</p>
+    <p class="cta">Action principale : <b>Enregistrer</b> → fiche client</p>
+    <div class="branch">Si l'envoi d'un document échoue → fenêtre d'alerte, la fiche reste créée.</div>
+  </li>
+  <li>
+    <span class="step-n">2</span><span class="step-t">Assistant de réservation (Client, Dates, Voiture, Conducteurs, Prix, Récapitulatif)</span>
+    <p class="step-d">Une étape par sujet, indicateur « Étape x sur y », bouton Précédent, calendrier, voitures libres seulement, ventilation du prix.</p>
+    <p class="cta">Action principale : <b>Suivant</b> → récapitulatif</p>
+  </li>
+  <li>
+    <span class="step-n">3</span><span class="step-t">Récapitulatif avant validation</span>
+    <p class="step-d">Toutes les réponses en lecture seule + total, puis deux boutons : enregistrer comme confirmée ou comme en attente.</p>
+    <p class="cta">Action principale : <b>Enregistrer comme confirmée</b> → fiche de la location</p>
+  </li>
+</ol>
+
+<h3>Inventaire des écrans</h3>
+<div class="overflow"><table>
+  <tr><th>Écran</th><th>Objectif</th><th>Action principale</th><th>États (vide / chargement / erreur)</th></tr>
+  <tr><td>Nouveau client</td><td>Créer la fiche</td><td>Enregistrer</td><td>Erreur : « createError » ; valeurs conservées ; chargement long amélioré</td></tr>
+  <tr><td>Assistant de location</td><td>Créer la location</td><td>Suivant / Enregistrer</td><td>Étapes validées une à une ; erreur en bas du récapitulatif</td></tr>
+  <tr><td>Récapitulatif</td><td>Vérifier avant d'enregistrer</td><td>Enregistrer comme confirmée</td><td>Erreur affichée sous le récapitulatif</td></tr>
+</table></div>
+
+<h3>Audit des anti-patterns (flow-forms)</h3>
+<div class="overflow"><table>
+  <tr><th>Contrôle</th><th>Verdict</th><th>Remarque</th></tr>
+  <tr><td>Libellé visible au-dessus du champ</td><td class="pass">PASS</td><td>Le composant de champ affiche toujours un libellé au-dessus, jamais le texte indicatif seul.</td></tr>
+  <tr><td>Une seule colonne, un sujet par étape</td><td class="pass">PASS</td><td>Assistant en 6 étapes ; champs en colonne.</td></tr>
+  <tr><td>Retour possible dans l'assistant</td><td class="pass">PASS</td><td>Bouton Précédent à chaque étape (conservation des réponses à vérifier sur appareil).</td></tr>
+  <tr><td>Récapitulatif avant validation, avec liens « Modifier »</td><td class="warn">WARN</td><td>Récapitulatif présent, mais sans lien « Modifier » par ligne : on revient pas à pas avec Précédent.</td></tr>
+  <tr><td>Champs facultatifs marqués dans le libellé</td><td class="warn">WARN</td><td>« Facultatif » est un texte indicatif qui disparaît dès qu'on tape ; mieux : « (facultatif) » dans le libellé.</td></tr>
+  <tr><td>Erreurs : validation à la sortie du champ + résumé + focus</td><td class="warn">WARN</td><td>Les erreurs s'affichent toutes après le premier envoi (comportement correct), mais pas de validation à la sortie de champ ni de résumé avec focus sur la première erreur.</td></tr>
+  <tr><td>Accessibilité des champs</td><td class="warn">WARN</td><td>Champ de saisie sans étiquette d'accessibilité liée ni message d'erreur relié ; seulement 12 étiquettes d'accessibilité dans toute l'app.</td></tr>
+  <tr><td>Données conservées après une erreur</td><td class="pass">PASS</td><td>Le formulaire reste affiché ; les valeurs ne sont pas effacées.</td></tr>
+  <tr><td>Calendrier pour les dates de location</td><td class="pass">PASS</td><td>Bon usage : date « de planification », avec disponibilité des voitures.</td></tr>
+</table></div>
+
+<h2>Parcours : Navigation dans l'app</h2>
+<p class="meta">Source des critères : flow-navigation · Point d'entrée : barre du bas (mobile) ou menu latéral (web PC)</p>
+
+<h3>Étapes</h3>
+<ol class="flow">
+  <li>
+    <span class="step-n">1</span><span class="step-t">Barre du bas (mobile) : Accueil, Flotte, Clients, Locations, Équipe</span>
+    <p class="step-d">5 onglets avec icône et libellé, onglet actif marqué.</p>
+    <p class="cta">Action principale : <b>changer d'onglet</b> → écran racine de l'onglet</p>
+  </li>
+  <li>
+    <span class="step-n">2</span><span class="step-t">Fonctions « cachées » : Contrats, Chat M3ak, Maintenance, Notifications, Traçabilité, Mon entreprise, Profil</span>
+    <p class="step-d">Accessibles par des liens dans d'autres écrans (carte « Demander à M3ak » sur l'accueil, lien « Contrats » sur Locations, etc.).</p>
+    <p class="cta">Action principale : <b>lien contextuel</b> → écran concerné</p>
+  </li>
+  <li>
+    <span class="step-n">3</span><span class="step-t">Web PC : menu latéral à gauche, tableaux et impression</span>
+    <p class="step-d">Menu avec toutes les sections, filtré selon le rôle ; tableaux avec export CSV.</p>
+    <p class="cta">Action principale : <b>choisir une section</b> → page de la section</p>
+  </li>
+</ol>
+
+<h3>Inventaire des écrans</h3>
+<div class="overflow"><table>
+  <tr><th>Écran</th><th>Objectif</th><th>Action principale</th><th>États (vide / chargement / erreur)</th></tr>
+  <tr><td>Accueil</td><td>Synthèse + raccourcis</td><td>Demander à M3ak</td><td>Chargement et erreurs présents</td></tr>
+  <tr><td>Chat M3ak</td><td>Questions à l'IA</td><td>Envoyer</td><td>Indisponible si aucune clé : message expliquant</td></tr>
+  <tr><td>Contrats</td><td>Suivre les contrats</td><td>Ouvrir un contrat</td><td>Vide, chargement, erreur présents</td></tr>
+</table></div>
+
+<h3>Audit des anti-patterns (flow-navigation)</h3>
+<div class="overflow"><table>
+  <tr><th>Contrôle</th><th>Verdict</th><th>Remarque</th></tr>
+  <tr><td>Plus de 5 onglets ou onglet « Plus »</td><td class="pass">PASS</td><td>5 onglets exactement.</td></tr>
+  <tr><td>Icônes seules sans libellé</td><td class="pass">PASS</td><td>Icône + libellé partout.</td></tr>
+  <tr><td>Fonctions importantes enterrées</td><td class="warn">WARN</td><td>Le Chat M3ak (fonction phare) n'est qu'une carte sur l'accueil ; les Contrats ne se trouvent que via un lien sur Locations. Idée : Chat en bouton flottant ou onglet, Équipe déplacé dans Profil.</td></tr>
+  <tr><td>Chaque onglet garde sa position / pile</td><td class="warn">WARN</td><td>Les onglets utilisent un remplacement d'écran : on perd la position de défilement et la pile en changeant d'onglet.</td></tr>
+  <tr><td>Libellé de navigation = titre de la page</td><td class="pass">PASS</td><td>« Ma Flotte », « Clients », « Équipe » concordent.</td></tr>
+  <tr><td>Adresses web propres (retour navigateur, liens partagés)</td><td class="pass">PASS</td><td>Routes par adresse + redirections Netlify prévues pour les pages à identifiant.</td></tr>
+  <tr><td>Menu latéral du web groupé et filtré par rôle</td><td class="pass">PASS</td><td>13 entrées max, Journal réservé au propriétaire, etc.</td></tr>
+  <tr><td>Fil d'Ariane sur les pages profondes (web)</td><td class="warn">WARN</td><td>Seulement un bouton retour « &lt; » ; acceptable à ce stade.</td></tr>
+</table></div>
+
+<h2>Parcours : Erreurs et récupération</h2>
+<p class="meta">Source des critères : flow-errors · Point d'entrée : toute action qui échoue (réseau, e-mail, droits, accès expiré)</p>
+
+<h3>Étapes</h3>
+<ol class="flow">
+  <li>
+    <span class="step-n">1</span><span class="step-t">Une action échoue</span>
+    <p class="step-d">Le texte de l'erreur est traduit en message lisible (réseau, trop de tentatives, droits, déjà inscrit, mot de passe faible). Tout le reste devient « Un problème est survenu. Réessayez dans un instant. »</p>
+    <p class="cta">Action principale : <b>réessayer</b> → même action</p>
+    <div class="branch">Si la cause est inconnue → aucune piste ni référence de support pour le client, ni pour nous.</div>
+  </li>
+  <li>
+    <span class="step-n">2</span><span class="step-t">Actions destructrices</span>
+    <p class="step-d">12 fenêtres de confirmation (supprimer, archiver, retirer un membre, tout effacer…). Pas d'annulation après coup.</p>
+    <p class="cta">Action principale : <b>Confirmer</b> → action exécutée</p>
+  </li>
+  <li>
+    <span class="step-n">3</span><span class="step-t">Accès fermé (fin d'essai)</span>
+    <p class="step-d">Écran dédié : cause, « vos données sont conservées », actions Vérifier à nouveau / Se déconnecter.</p>
+    <p class="cta">Action principale : <b>Vérifier à nouveau</b> → retour à l'app si l'accès est rouvert</p>
+  </li>
+</ol>
+
+<h3>Inventaire des écrans</h3>
+<div class="overflow"><table>
+  <tr><th>Écran</th><th>Objectif</th><th>Action principale</th><th>États (vide / chargement / erreur)</th></tr>
+  <tr><td>Messages d'erreur d'un formulaire</td><td>Expliquer l'échec</td><td>Réessayer</td><td>Traduits ; cause inconnue = générique</td></tr>
+  <tr><td>Accès bloqué</td><td>Expliquer la fin d'essai</td><td>Vérifier à nouveau</td><td>Message d'échec si toujours fermé</td></tr>
+  <tr><td>Listes (flotte, clients, locations…)</td><td>Afficher les données</td><td>Tirer pour actualiser</td><td>Chargement + erreur + vide</td></tr>
+</table></div>
+
+<h3>Audit des anti-patterns (flow-errors)</h3>
+<div class="overflow"><table>
+  <tr><th>Contrôle</th><th>Verdict</th><th>Remarque</th></tr>
+  <tr><td>« Quelque chose s'est mal passé » sans piste</td><td class="fail">FAIL</td><td>Le message générique de l'app cache la vraie cause. Cas réels de cette semaine : échec d'inscription (e-mail) et code d'invitation refusé. Prévoir une référence discrète (code court) à communiquer au support.</td></tr>
+  <tr><td>Confirmation partout au lieu d'annulation</td><td class="warn">WARN</td><td>12 fenêtres de confirmation ; aucune annulation (« Annuler ») ; l'archivage (clients, voitures) est déjà réversible.</td></tr>
+  <tr><td>Erreur dans une fenêtre bloquante</td><td class="warn">WARN</td><td>Plusieurs erreurs passent par une alerte système (par exemple l'échec d'envoi d'un document) au lieu d'un message intégré à l'écran.</td></tr>
+  <tr><td>Travail conservé pendant l'erreur</td><td class="pass">PASS</td><td>Valeurs de formulaire conservées ; inspection hors ligne ; envoi des documents indépendant (un échec n'arrête pas les autres).</td></tr>
+  <tr><td>Messages sans jargon technique</td><td class="pass">PASS</td><td>Pas de codes HTTP ni de traces affichés ; textes en français et en arabe.</td></tr>
+  <tr><td>Page « accès fermé » rassurante</td><td class="pass">PASS</td><td>Explique la cause, rassure sur les données, propose une action.</td></tr>
+  <tr><td>Indicateur hors ligne global</td><td class="warn">WARN</td><td>Non vérifié : je n'ai pas trouvé d'indicateur « hors ligne » commun à toute l'app (l'inspection a le sien).</td></tr>
+</table></div>
+
+<h2>Priorités recommandées</h2>
+<ol class="prio">
+  <li><strong>Liste « Premiers pas » pour le propriétaire</strong> sur l'accueil : ajouter le logo, une voiture, un client, créer une première location. Chaque ligne ouvre directement le bon écran ; elle disparaît quand tout est fait. (flow-onboarding)</li>
+  <li><strong>Messages d'erreur utiles</strong> : reconnaître l'échec d'envoi d'e-mail et les autres erreurs de connexion, et ajouter une petite référence « Code : XXXX » pour le support. (flow-errors)</li>
+  <li><strong>Rendre le Chat M3ak et les Contrats faciles à trouver</strong> sur mobile. (flow-navigation)</li>
+  <li><strong>Récapitulatif avec liens « Modifier »</strong> et « (facultatif) » dans les libellés. (flow-forms)</li>
+  <li><strong>Accessibilité des champs</strong> (étiquettes, erreurs reliées) et <strong>conservation de la position</strong> en changeant d'onglet. (flow-forms, flow-navigation)</li>
+</ol>
+
+<h2>Questions ouvertes et points à vérifier</h2>
+<ul>
+  <li>Moment d'activation : confirmez-vous « première location créée » comme objectif du démarrage ?</li>
+  <li>Permission des notifications au premier lancement : à vérifier sur un vrai téléphone.</li>
+  <li>Aucun chiffre d'usage n'existe encore : ni taux d'abandon par écran, ni temps jusqu'à la première location. À mesurer avec le premier client.</li>
+  <li>Écrans non audités ici : maintenance, équipe, filiales, traçabilité, inspection photo, signature du contrat, paramètres de l'entreprise.</li>
+</ul>
+
+<footer>Généré avec <a href="https://github.com/jpoindexter/ux-flow-skills">ux-flow-skills</a> (licence MIT) · critères tirés des listes d'anti-patterns de flow-onboarding, flow-forms, flow-navigation et flow-errors.</footer>
+
+</body>
+</html>
