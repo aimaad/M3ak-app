@@ -38,7 +38,7 @@ const NAV: NavItem[] = [
 ];
 
 /** Écrans sans menu (connexion, choix d'agence, accès bloqué). */
-const BARE_SEGMENTS = new Set(['', 'index', 'login', 'signup', 'mot-de-passe-oublie', 'onboarding', 'acces-bloque']);
+const BARE_SEGMENTS = new Set(['', 'index', 'login', 'signup', 'mot-de-passe-oublie', 'onboarding', 'acces-bloque', 'bienvenue']);
 
 /** Largeur maximale du contenu : les écrans mobiles restent lisibles, même sur un grand écran. */
 const CONTENT_MAX_WIDTH = 1280;

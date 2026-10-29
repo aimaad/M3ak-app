@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,6 +30,8 @@ import {
   OperationsSection,
   PerformanceSection,
 } from '@/features/dashboard/sections';
+import { useStoredFlag } from '@/features/onboarding/use-stored-flag';
+import { shouldAutoOpenWelcome, welcomeSeenKey } from '@/features/onboarding/welcome-flow';
 import { GettingStartedCard } from '@/features/onboarding/getting-started-card';
 import {
   buildGettingStarted,
@@ -164,6 +166,21 @@ export default function AccueilScreen() {
   const startReady =
     isComplete && rentalsQuery.isSuccess && (role !== 'owner' || agencyDetails.isSuccess);
   const startVisible = startReady && shouldShowGettingStarted(gettingStarted, false);
+
+  // Toute première arrivée dans une agence encore vide : parcours de bienvenue plein écran (une seule fois).
+  const [welcomeSeen] = useStoredFlag(welcomeSeenKey(session?.user.id, agencyQuery.data?.agencyId));
+  const openWelcome =
+    startReady &&
+    shouldAutoOpenWelcome({
+      steps: gettingStarted,
+      seen: welcomeSeen,
+      vehicleCount: vehicles.length,
+      customerCount: customers.length,
+      rentalCount: rentalsQuery.data?.length ?? 0,
+    });
+  useEffect(() => {
+    if (openWelcome) router.replace('/bienvenue');
+  }, [openWelcome]);
 
   const urgentMaintenance = maintenanceItems
     .filter((item) => item.statut !== 'effectuee')

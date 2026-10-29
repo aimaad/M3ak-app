@@ -1,7 +1,5 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
@@ -9,32 +7,8 @@ import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
+import { useStoredFlag } from './use-stored-flag';
 import { dismissKey, progressOf, shouldShowGettingStarted, type StartStep } from './getting-started';
-
-/** Mémorise (sur l'appareil) que la personne a masqué la liste ; au pire elle réapparaît, sans conséquence. */
-function useDismissed(key: string | null): [boolean | null, () => void] {
-  const [stored, setStored] = useState<{ key: string; value: boolean } | null>(null);
-
-  useEffect(() => {
-    if (!key) return;
-    let cancelled = false;
-    AsyncStorage.getItem(key)
-      .then((value) => !cancelled && setStored({ key, value: value === '1' }))
-      .catch(() => !cancelled && setStored({ key, value: false }));
-    return () => {
-      cancelled = true;
-    };
-  }, [key]);
-
-  const dismiss = useCallback(() => {
-    if (!key) return;
-    setStored({ key, value: true });
-    AsyncStorage.setItem(key, '1').catch(() => undefined);
-  }, [key]);
-
-  // Tant que la valeur de CETTE clé n'est pas lue, on ne sait pas encore (null) : rien n'est affiché.
-  return [key && stored?.key === key ? stored.value : null, dismiss];
-}
 
 type Props = {
   steps: StartStep[] | null;
@@ -47,7 +21,7 @@ type Props = {
 /** Carte « Premiers pas » de l'accueil : étapes cliquables vers le bon écran, barre de progression, masquable. */
 export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
   const { t } = useLanguage();
-  const [dismissed, dismiss] = useDismissed(dismissKey(userId, agencyId));
+  const [dismissed, dismiss] = useStoredFlag(dismissKey(userId, agencyId));
 
   if (!ready || dismissed === null || !shouldShowGettingStarted(steps, dismissed) || !steps) return null;
   const { done, total } = progressOf(steps);

@@ -116,6 +116,40 @@
     },
     "quick": {
       "title": "Accès rapide"
+    },
+    "welcome": {
+      "introTitle": "Bienvenue chez M3ak",
+      "introBody": "{{agency}} est créée. Configurons-la ensemble en {{count}} étapes rapides.",
+      "start": "Commencer",
+      "later": "Plus tard",
+      "skipStep": "Passer cette étape",
+      "stepOf": "Étape {{current}} sur {{total}}",
+      "doneTitle": "Votre agence est prête",
+      "doneBody": "Vous pouvez maintenant gérer vos voitures, vos clients et vos locations.",
+      "doneBodySkipped": "Les étapes passées restent dans « Premiers pas » sur l'accueil, quand vous voulez.",
+      "goHome": "Aller à l'accueil",
+      "steps": {
+        "logo": {
+          "title": "Ajoutez le logo de votre agence",
+          "hint": "Il apparaît en haut de chaque contrat.",
+          "action": "Ajouter le logo"
+        },
+        "vehicle": {
+          "title": "Ajoutez votre première voiture",
+          "hint": "Photographiez la carte grise : M3ak remplit la fiche pour vous.",
+          "action": "Ajouter une voiture"
+        },
+        "customer": {
+          "title": "Ajoutez votre premier client",
+          "hint": "Photographiez la CIN et le permis : M3ak lit les documents.",
+          "action": "Ajouter un client"
+        },
+        "rental": {
+          "title": "Créez votre première location",
+          "hint": "Choisissez le client, les dates et une voiture libre.",
+          "action": "Créer une location"
+        }
+      }
     }
   },
   "equipe": {
