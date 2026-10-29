@@ -249,7 +249,7 @@ export default function FlotteScreen() {
                 rowKey={(item) => item.id}
                 onRowPress={(item) => router.push(`/flotte/${item.id}`)}
                 exportCsv={{ filename: 'flotte', rows: filtered, cells: (v) => [`${v.marque} ${v.modele}`, v.immatriculation, v.annee, t(`flotte.status.${v.statut}`), v.kilometrage, v.prixJour] }}
-                emptyLabel={t('flotte.empty')}
+                emptyLabel={vehicles.length === 0 ? t('flotte.emptyNone') : t('flotte.empty')}
               />
               <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
             </ScrollView>
@@ -272,7 +272,7 @@ export default function FlotteScreen() {
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">
-                  {t('flotte.empty')}
+                  {vehicles.length === 0 ? t('flotte.emptyNone') : t('flotte.empty')}
                 </ThemedText>
               </View>
             }

@@ -180,7 +180,7 @@ export default function ClientsScreen() {
                 rowKey={(item) => item.id}
                 onRowPress={(item) => router.push(`/clients/${item.id}`)}
                 exportCsv={{ filename: 'clients', rows: filtered, cells: (c) => [c.nomComplet, t(`customer.type.${c.typeClient}`), c.telephone, c.email, c.cinOuPasseport, c.ville, c.archivedAt ? t('customer.archivedBadge') : t('desktop.active')] }}
-                emptyLabel={t('clients.empty')}
+                emptyLabel={customers.length === 0 ? t('clients.emptyNone') : t('clients.empty')}
               />
               <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
             </ScrollView>
@@ -203,7 +203,7 @@ export default function ClientsScreen() {
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">
-                  {t('clients.empty')}
+                  {customers.length === 0 ? t('clients.emptyNone') : t('clients.empty')}
                 </ThemedText>
               </View>
             }

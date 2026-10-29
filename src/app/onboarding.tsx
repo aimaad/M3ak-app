@@ -19,6 +19,7 @@ import {
   normalizeInviteCode,
 } from '@/features/agency/invite-code';
 import { inviteErrorKey } from '@/features/agency/invite-errors';
+import { errorReference, friendlyErrorKey, userErrorMessage } from '@/lib/user-errors';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function OnboardingScreen() {
@@ -55,7 +56,14 @@ export default function OnboardingScreen() {
       router.replace('/accueil');
     } catch (err) {
       console.error('Échec pour rejoindre une agence :', err);
-      setError(t(inviteErrorKey(err)));
+      const general = friendlyErrorKey(err, 'errors.none');
+      if (['errors.network', 'errors.rateLimit', 'errors.emailNotConfirmed', 'errors.server', 'errors.emailSend'].includes(general)) {
+        setError(userErrorMessage(err, t));
+      } else {
+        const key = inviteErrorKey(err);
+        const reference = key.endsWith('.generic') ? errorReference(err) : null;
+        setError(reference ? `${t(key)} ${t('errors.reference', { reference })}` : t(key));
+      }
     }
   }
 

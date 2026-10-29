@@ -19,7 +19,7 @@ import {
   type SignupFormValues,
 } from '@/features/auth/validation';
 import { useLanguage } from '@/i18n/use-language';
-import { friendlyErrorKey } from '@/lib/user-errors';
+import { userErrorMessage } from '@/lib/user-errors';
 
 const EMPTY_VALUES: SignupFormValues = { prenom: '', nom: '', email: '', password: '', confirmPassword: '' };
 
@@ -60,7 +60,7 @@ export default function SignupScreen() {
         setAwaitingCode(true);
       }
     } catch (err) {
-      setError(t(friendlyErrorKey(err)));
+      setError(userErrorMessage(err, t));
     } finally {
       setIsSubmitting(false);
     }

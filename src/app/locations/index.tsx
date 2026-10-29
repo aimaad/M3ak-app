@@ -143,7 +143,7 @@ export default function LocationsScreen() {
                 rowKey={(item) => item.id}
                 onRowPress={(item) => router.push(`/locations/${item.id}`)}
                 exportCsv={{ filename: 'locations', rows: filtered, cells: (r) => [r.numero, vehiclesById.get(r.vehicleId)?.immatriculation, customersById.get(r.customerId)?.nomComplet, r.dateDebutPrevue.slice(0, 10) + ' → ' + r.dateFinPrevue.slice(0, 10), t(`locations.status.${r.statut}`)] }}
-                emptyLabel={t('locations.empty')}
+                emptyLabel={rentals.length === 0 ? t('locations.emptyNone') : t('locations.empty')}
               />
               <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
             </ScrollView>
@@ -172,7 +172,7 @@ export default function LocationsScreen() {
             ListEmptyComponent={
               <View className="items-center pt-12">
                 <ThemedText type="default" themeColor="textSecondary">
-                  {t('locations.empty')}
+                  {rentals.length === 0 ? t('locations.emptyNone') : t('locations.empty')}
                 </ThemedText>
               </View>
             }

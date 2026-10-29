@@ -12,7 +12,12 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette, Shadows } from '@/constants/theme';
 import { daysLeft, shouldShowTrialBanner } from '@/features/agency/access';
-import { useAgencyAccess, useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import {
+  useAgencyAccess,
+  useAgencyDetails,
+  useMyAgency,
+  useMyProfile,
+} from '@/features/agency/hooks';
 import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
@@ -26,6 +31,10 @@ import {
   OperationsSection,
   PerformanceSection,
 } from '@/features/dashboard/sections';
+import { GettingStartedCard } from '@/features/onboarding/getting-started-card';
+import { buildGettingStarted, shouldShowGettingStarted } from '@/features/onboarding/getting-started';
+import { useSession } from '@/features/auth/session-context';
+import { useRentals } from '@/features/rentals/hooks';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
@@ -47,7 +56,11 @@ const URGENCY_COLOR: Record<Exclude<ExpiryUrgency, 'ok'>, string> = {
 };
 
 function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
 }
 
 export default function AccueilScreen() {
@@ -58,10 +71,21 @@ export default function AccueilScreen() {
   const agencyDetails = useAgencyDetails(role === 'owner' ? agencyQuery.data?.agencyId : undefined);
   const logoMissing = role === 'owner' && !!agencyDetails.data && !agencyDetails.data.logoUrl;
   const accessQuery = useAgencyAccess();
-  const trialDays = shouldShowTrialBanner(accessQuery.data ?? null) ? daysLeft(accessQuery.data?.accessUntil ?? null) : null;
+  const trialDays = shouldShowTrialBanner(accessQuery.data ?? null)
+    ? daysLeft(accessQuery.data?.accessUntil ?? null)
+    : null;
   const sections = dashboardSections(role);
 
-  const { metrics, vehicles, maintenanceItems, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics();
+  const {
+    metrics,
+    vehicles,
+    maintenanceItems,
+    customers,
+    isLoading,
+    isComplete,
+    isRefreshing,
+    refetchAll,
+  } = useDashboardMetrics();
   const { agencyId, insightsAvailability } = useOcrSettings();
   const insights = useAiInsights({
     enabled: insightsAvailability === 'active' && isComplete,
@@ -71,7 +95,23 @@ export default function AccueilScreen() {
     metrics,
   });
 
-  const urgentMaintenance = maintenanceItems.filter((item) => item.statut !== 'effectuee').slice(0, 4);
+  const { session } = useSession();
+  const rentalsQuery = useRentals();
+  const gettingStarted = buildGettingStarted({
+    role,
+    hasLogo: !!agencyDetails.data?.logoUrl,
+    vehicleCount: vehicles.length,
+    customerCount: customers.length,
+    rentalCount: rentalsQuery.data?.length ?? 0,
+  });
+  // On attend les données (et le logo pour le propriétaire) avant de proposer des étapes « à faire ».
+  const startReady =
+    isComplete && rentalsQuery.isSuccess && (role !== 'owner' || agencyDetails.isSuccess);
+  const startVisible = startReady && shouldShowGettingStarted(gettingStarted, false);
+
+  const urgentMaintenance = maintenanceItems
+    .filter((item) => item.statut !== 'effectuee')
+    .slice(0, 4);
 
   const documentAlerts: DocumentAlertItem[] = useMemo(() => {
     const fromCustomers: DocumentAlertItem[] = customerDocumentAlerts(customers).map((a) => ({
@@ -88,10 +128,16 @@ export default function AccueilScreen() {
       urgency: a.urgency,
       href: `/flotte/${a.vehicleId}`,
     }));
-    return [...fromCustomers, ...fromVehicles].sort((a, b) => a.expiresAt.localeCompare(b.expiresAt)).slice(0, 4);
+    return [...fromCustomers, ...fromVehicles]
+      .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt))
+      .slice(0, 4);
   }, [customers, vehicles]);
 
-  const today = new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+  const today = new Date().toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
 
   if (agencyQuery.isLoading) {
     return (
@@ -121,7 +167,9 @@ export default function AccueilScreen() {
                 <Avatar
                   path={profileQuery.data?.photoPath}
                   size={40}
-                  initials={getInitials(profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName)}
+                  initials={getInitials(
+                    profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName
+                  )}
                 />
               </Pressable>
             </View>
@@ -136,7 +184,11 @@ export default function AccueilScreen() {
           <ScrollView
             contentContainerClassName="gap-6 px-6 pb-28"
             refreshControl={
-              <RefreshControl refreshing={isRefreshing} onRefresh={refetchAll} tintColor={M3akPalette.mauve} />
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refetchAll}
+                tintColor={M3akPalette.mauve}
+              />
             }
           >
             <Pressable
@@ -145,7 +197,14 @@ export default function AccueilScreen() {
               style={Shadows.card}
               accessibilityRole="button"
             >
-              <View className="h-12 w-12 items-center justify-center rounded-full" style={{ backgroundColor: M3akPalette.mauve, ...Shadows.button, shadowOpacity: 0.25 }}>
+              <View
+                className="h-12 w-12 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: M3akPalette.mauve,
+                  ...Shadows.button,
+                  shadowOpacity: 0.25,
+                }}
+              >
                 <Ionicons name="sparkles" size={22} color="#FFFFFF" />
               </View>
               <View className="flex-1 gap-0.5">
@@ -166,13 +225,25 @@ export default function AccueilScreen() {
                   {t('access.trialBannerTitle')}
                 </ThemedText>
                 <ThemedText type="small" style={{ color: '#92400E' }}>
-                  {trialDays <= 1 ? t('access.trialLastDay') : t('access.trialDays', { days: trialDays })}
+                  {trialDays <= 1
+                    ? t('access.trialLastDay')
+                    : t('access.trialDays', { days: trialDays })}
                 </ThemedText>
               </View>
             ) : null}
 
-            {logoMissing ? (
-              <Pressable onPress={() => router.push('/entreprise')} className="gap-1 rounded-2xl bg-[#FEE2E2] px-4 py-3">
+            <GettingStartedCard
+              steps={gettingStarted}
+              userId={session?.user.id}
+              agencyId={agencyQuery.data?.agencyId}
+              ready={startReady}
+            />
+
+            {logoMissing && !startVisible ? (
+              <Pressable
+                onPress={() => router.push('/entreprise')}
+                className="gap-1 rounded-2xl bg-[#FEE2E2] px-4 py-3"
+              >
                 <ThemedText type="smallBold" style={{ color: M3akPalette.danger }}>
                   {t('entreprise.logo.homeNoticeTitle')}
                 </ThemedText>
@@ -193,7 +264,13 @@ export default function AccueilScreen() {
                 case 'counter':
                   return <CounterSection key={section} metrics={metrics} />;
                 case 'performance':
-                  return <PerformanceSection key={section} metrics={metrics} showMoney={canSeeMoney(role)} />;
+                  return (
+                    <PerformanceSection
+                      key={section}
+                      metrics={metrics}
+                      showMoney={canSeeMoney(role)}
+                    />
+                  );
                 case 'ai':
                   return (
                     <AiInsightsSection
@@ -211,9 +288,16 @@ export default function AccueilScreen() {
                       <ThemedText type="smallBold">{t('accueil.documentAlertsSection')}</ThemedText>
                       <View className="gap-2">
                         {documentAlerts.map((alert) => (
-                          <PressableCard key={alert.key} onPress={() => router.push(alert.href)} className="flex-row items-center justify-between">
+                          <PressableCard
+                            key={alert.key}
+                            onPress={() => router.push(alert.href)}
+                            className="flex-row items-center justify-between"
+                          >
                             <ThemedText type="small">{alert.name}</ThemedText>
-                            <ThemedText type="small" style={{ color: URGENCY_COLOR[alert.urgency] }}>
+                            <ThemedText
+                              type="small"
+                              style={{ color: URGENCY_COLOR[alert.urgency] }}
+                            >
                               {formatShortDate(alert.expiresAt)}
                             </ThemedText>
                           </PressableCard>
@@ -245,7 +329,9 @@ export default function AccueilScreen() {
                               <MaintenanceRow
                                 key={item.id}
                                 item={item}
-                                vehicleLabel={vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined}
+                                vehicleLabel={
+                                  vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined
+                                }
                                 currentKm={vehicle?.kilometrage ?? null}
                               />
                             );

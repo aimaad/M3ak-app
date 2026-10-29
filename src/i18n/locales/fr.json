@@ -84,7 +84,34 @@
       "required": "Remplissez les champs obligatoires."
     },
     "joinHint": "Vous êtes connecté avec {{email}}. Ce doit être l'adresse e-mail qui a reçu l'invitation.",
-    "noAgencyNote": "Les agences sont créées par M3ak. Contactez-nous pour ouvrir votre accès."
+    "noAgencyNote": "Les agences sont créées par M3ak. Contactez-nous pour ouvrir votre accès.",
+    "start": {
+      "title": "Premiers pas",
+      "progress": "{{done}} sur {{total}} terminées",
+      "hide": "Masquer",
+      "steps": {
+        "joined": {
+          "title": "Rejoindre votre agence",
+          "hint": ""
+        },
+        "logo": {
+          "title": "Ajouter le logo de l'agence",
+          "hint": "Il apparaît en haut de chaque contrat."
+        },
+        "vehicle": {
+          "title": "Ajouter votre première voiture",
+          "hint": "Photographiez la carte grise : M3ak remplit la fiche."
+        },
+        "customer": {
+          "title": "Ajouter votre premier client",
+          "hint": "Photographiez la CIN et le permis."
+        },
+        "rental": {
+          "title": "Créer votre première location",
+          "hint": "Choisissez le client, les dates et la voiture libre."
+        }
+      }
+    }
   },
   "equipe": {
     "title": "Équipe",
@@ -306,7 +333,7 @@
   },
   "flotte": {
     "title": "Ma Flotte",
-    "subtitle_one": "Gérez votre véhicule",
+    "subtitle_one": "Gérez {{count}} véhicule",
     "subtitle_other": "Gérez vos {{count}} véhicules",
     "searchPlaceholder": "Immatriculation, marque, modèle…",
     "addVehicle": "Ajouter véhicule",
@@ -344,7 +371,8 @@
       "immatriculation": "Immatriculation",
       "prixJour": "Prix / jour",
       "kilometrage": "Kilométrage"
-    }
+    },
+    "emptyNone": "Aucune voiture pour l'instant. Touchez « + Ajouter véhicule » pour créer la première."
   },
   "vehicle": {
     "detailsTitle": "Fiche véhicule",
@@ -525,7 +553,7 @@
   },
   "clients": {
     "title": "Clients",
-    "subtitle_one": "Vous avez 1 client",
+    "subtitle_one": "Vous avez {{count}} client",
     "subtitle_other": "Vous avez {{count}} clients",
     "searchPlaceholder": "Nom, téléphone, e-mail, CIN…",
     "addClient": "Ajouter client",
@@ -536,7 +564,8 @@
       "active": "Clients actifs",
       "archived": "Archivés",
       "docsExpirant": "Docs bientôt expirés"
-    }
+    },
+    "emptyNone": "Aucun client pour l'instant. Touchez « + Ajouter client » pour créer le premier."
   },
   "customer": {
     "detailsTitle": "Fiche client",
@@ -771,7 +800,7 @@
   },
   "locations": {
     "title": "Locations",
-    "subtitle_one": "1 location",
+    "subtitle_one": "{{count}} location",
     "subtitle_other": "{{count}} locations",
     "addRental": "Nouvelle location",
     "empty": "Aucune location pour ce statut.",
@@ -1174,7 +1203,8 @@
       "badge": "Chevauchement",
       "warning": "Cette location chevauche une autre location de la même voiture. Annulez ou déplacez l'une des deux pour éviter une double réservation."
     },
-    "confirmConflict": "Cette voiture est déjà promise à un autre client sur ce créneau. Annulez ou déplacez l'une des deux locations, puis confirmez de nouveau."
+    "confirmConflict": "Cette voiture est déjà promise à un autre client sur ce créneau. Annulez ou déplacez l'une des deux locations, puis confirmez de nouveau.",
+    "emptyNone": "Aucune location pour l'instant. Touchez « + Nouvelle location » pour créer la première."
   },
   "contract": {
     "section": "Contrat",
@@ -1183,7 +1213,7 @@
     "detailsTitle": "Contrat",
     "notFound": "Contrat introuvable.",
     "listTitle": "Contrats",
-    "listSubtitle_one": "1 contrat",
+    "listSubtitle_one": "{{count}} contrat",
     "listSubtitle_other": "{{count}} contrats",
     "searchPlaceholder": "Référence, client, immatriculation…",
     "loadError": "Impossible de charger les contrats.",
@@ -2022,7 +2052,10 @@
     "generic": "Un problème est survenu. Réessayez dans un instant.",
     "emailNotConfirmed": "Votre adresse e-mail n'est pas encore confirmée. Ouvrez le message reçu par e-mail pour la confirmer.",
     "alreadyRegistered": "Un compte existe déjà avec cette adresse e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».",
-    "weakPassword": "Ce mot de passe est trop simple. Choisissez-en un plus long, avec des lettres et des chiffres."
+    "weakPassword": "Ce mot de passe est trop simple. Choisissez-en un plus long, avec des lettres et des chiffres.",
+    "emailSend": "Impossible d'envoyer le code par e-mail pour le moment. Patientez quelques minutes puis réessayez, ou contactez M3ak.",
+    "server": "Nos serveurs ont un souci, ce n'est pas de votre faute. Réessayez dans quelques minutes.",
+    "reference": "Réf. : {{reference}}"
   },
   "contractTemplate": {
     "open": "Mon contrat",
