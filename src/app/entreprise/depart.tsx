@@ -88,7 +88,7 @@ export default function PolitiqueDepartScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('entreprise.departurePolicy.title')} subtitle={t('entreprise.departurePolicy.subtitle')} showBack />
 
         {policyQuery.isLoading ? (

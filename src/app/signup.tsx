@@ -101,7 +101,7 @@ export default function SignupScreen() {
   if (awaitingCode) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('auth.confirmEmailTitle')} subtitle={t('auth.confirmEmailBody')} />
 
           <View className="gap-4 px-6">
@@ -140,7 +140,7 @@ export default function SignupScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('auth.signUpTitle')} subtitle={t('auth.signUpSubtitle')} showBack />
 
         <View className="gap-4 px-6">

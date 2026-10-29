@@ -90,7 +90,7 @@ export default function InviterScreen() {
   if (agencyQuery.data && !canInvite) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('equipe.invite.title')} showBack />
           <ThemedText className="px-6" themeColor="textSecondary">
             {t('equipe.invite.notAllowed')}
@@ -102,7 +102,7 @@ export default function InviterScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('equipe.invite.title')} subtitle={t('equipe.invite.subtitle')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
           {result ? (

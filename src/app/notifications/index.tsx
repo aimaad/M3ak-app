@@ -52,7 +52,7 @@ export default function NotificationsScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader
           title={t('notifications.title')}
           subtitle={items.length > 0 ? t('notifications.total', { count: items.length }) : undefined}

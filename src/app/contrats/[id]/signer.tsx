@@ -73,7 +73,7 @@ export default function SignerContratScreen() {
   if (isLoading || !contract || storedTemplate.isLoading) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.sign.title')} showBack />
           <View className="flex-1 items-center justify-center">
             {isLoading || storedTemplate.isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
@@ -86,7 +86,7 @@ export default function SignerContratScreen() {
   if (contract.statut !== 'pret_a_signer') {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.sign.title')} showBack />
           <View className="flex-1 items-center justify-center px-8 gap-4">
             <ThemedText themeColor="textSecondary" className="text-center">
@@ -161,7 +161,7 @@ export default function SignerContratScreen() {
     <ThemedView className="flex-1">
       {/* Pendant la signature, le glissement « retour » (iOS) est désactivé : il se déclenchait en signant près du bord. */}
       <Stack.Screen options={{ gestureEnabled: step === 'read' }} />
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title={step === 'read' ? t('contract.sign.readTitle') : t('contract.sign.signTitle')} subtitle={contract.numero} showBack />
 
         {step === 'read' ? (

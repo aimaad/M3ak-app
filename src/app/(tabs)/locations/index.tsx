@@ -96,7 +96,7 @@ export default function LocationsScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader
           title={t('locations.title')}
           subtitle={t('locations.subtitle', { count: rentals.length })}
@@ -116,7 +116,8 @@ export default function LocationsScreen() {
           }
         />
 
-        <View className="pb-4">
+        {/* width 0 + minWidth 100 % : la rangée de pastilles défile sans jamais élargir l'écran (web). */}
+        <View className="pb-4" style={{ width: 0, minWidth: '100%' }}>
           <RentalStatusFilterChips value={statusFilter} onChange={setStatusFilter} counts={counts} />
         </View>
 

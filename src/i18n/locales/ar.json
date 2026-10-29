@@ -411,7 +411,11 @@
       "prixJour": "الثمن / اليوم",
       "kilometrage": "الكيلومتراج"
     },
-    "emptyNone": "ما كاينة حتى سيارة دابا. دوز على « + زيد سيارة » باش تصاوب الأولى."
+    "emptyNone": "ما كاينة حتى سيارة دابا. دوز على « + زيد سيارة » باش تصاوب الأولى.",
+    "subtitle_zero": "دبر {{count}} ديال السيارات",
+    "subtitle_two": "دبر {{count}} ديال السيارات",
+    "subtitle_few": "دبر {{count}} ديال السيارات",
+    "subtitle_many": "دبر {{count}} ديال السيارات"
   },
   "vehicle": {
     "detailsTitle": "بطاقة السيارة",
@@ -604,7 +608,11 @@
       "archived": "مؤرشفين",
       "docsExpirant": "وثائق قريب تسالا"
     },
-    "emptyNone": "ما كاين حتى زبون دابا. دوز على « + زيد زبون » باش تصاوب الأول."
+    "emptyNone": "ما كاين حتى زبون دابا. دوز على « + زيد زبون » باش تصاوب الأول.",
+    "subtitle_zero": "عندك {{count}} ديال الزبناء",
+    "subtitle_two": "عندك {{count}} ديال الزبناء",
+    "subtitle_few": "عندك {{count}} ديال الزبناء",
+    "subtitle_many": "عندك {{count}} ديال الزبناء"
   },
   "customer": {
     "detailsTitle": "بطاقة الزبون",
@@ -873,7 +881,11 @@
       "duree_one": "نهار واحد",
       "duree_other": "{{count}} ديال النهار",
       "sousTotal": "المجموع الفرعي",
-      "total": "المجموع"
+      "total": "المجموع",
+      "duree_zero": "{{count}} ديال النهار",
+      "duree_two": "{{count}} ديال النهار",
+      "duree_few": "{{count}} ديال النهار",
+      "duree_many": "{{count}} ديال النهار"
     },
     "paymentStatus": {
       "non_paye": "ماخاصوش يتخلص",
@@ -1203,7 +1215,15 @@
       "identityRequiredTitle": "البطاقة الوطنية ولا جواز السفر إجباري",
       "identityRequiredBody": "{{name}} ما عندو لا بطاقة وطنية لا جواز سفر مسجل. مالك الوكالة كيفرض واحد منهم باش تنشأ كراء. كمل بطاقة الزبون، من بعد رجع هنا.",
       "completeCustomer": "كمل بطاقة الزبون",
-      "checking": "جارٍ التحقق من التوفر…"
+      "checking": "جارٍ التحقق من التوفر…",
+      "driversCount_zero": "{{count}} سائقين مضافين",
+      "driversCount_two": "{{count}} سائقين مضافين",
+      "driversCount_few": "{{count}} سائقين مضافين",
+      "driversCount_many": "{{count}} سائقين مضافين",
+      "availableCount_zero": "{{count}} سيارات فارغة فهاد التواريخ",
+      "availableCount_two": "{{count}} سيارات فارغة فهاد التواريخ",
+      "availableCount_few": "{{count}} سيارات فارغة فهاد التواريخ",
+      "availableCount_many": "{{count}} سيارات فارغة فهاد التواريخ"
     },
     "dossier": {
       "vehicleSection": "السيارة",
@@ -1243,7 +1263,11 @@
       "warning": "هذا الكراء يتداخل مع كراء آخر لنفس السيارة. ألغِ أحدهما أو غيّر موعده لتفادي الحجز المزدوج."
     },
     "confirmConflict": "هذه السيارة محجوزة لزبون آخر في هذه الفترة. ألغِ أحد الكراءين أو غيّر موعده ثم أكّد من جديد.",
-    "emptyNone": "ما كاين حتى كراء دابا. دوز على « + كراء جديد » باش تصاوب الأول."
+    "emptyNone": "ما كاين حتى كراء دابا. دوز على « + كراء جديد » باش تصاوب الأول.",
+    "subtitle_zero": "{{count}} ديال الكراءات",
+    "subtitle_two": "{{count}} ديال الكراءات",
+    "subtitle_few": "{{count}} ديال الكراءات",
+    "subtitle_many": "{{count}} ديال الكراءات"
   },
   "contract": {
     "section": "العقد",
@@ -1365,7 +1389,11 @@
     "nextStepHint": "العقد توقع. بقا غير الانطلاق: تسليم المفاتيح من بطاقة الكراء.",
     "startHint": "تم توقيع العقد وكل شيء جاهز. يمكنك الآن بدء الكراء (تسليم المفاتيح).",
     "editAction": "تعديل العقد",
-    "print": "طبع العقد"
+    "print": "طبع العقد",
+    "listSubtitle_zero": "{{count}} ديال العقود",
+    "listSubtitle_two": "{{count}} ديال العقود",
+    "listSubtitle_few": "{{count}} ديال العقود",
+    "listSubtitle_many": "{{count}} ديال العقود"
   },
   "inspection": {
     "section": "الفحص",
@@ -1483,7 +1511,15 @@
         "existing": "{{count}} كان موجود فالانطلاق",
         "toCheck": "{{count}} خصو مراقبة",
         "notCompared": "ما كاينش صور د الانطلاق للمقارنة: ما نقدروش نقولو شنو جديد. راقب كل ضرر.",
-        "pendingDecision": "{{count}} ضرر جديد خصو تأكيد قبل الاقتطاع."
+        "pendingDecision": "{{count}} ضرر جديد خصو تأكيد قبل الاقتطاع.",
+        "new_zero": "{{count}} أضرار جديدة تكتشفات",
+        "new_two": "{{count}} أضرار جديدة تكتشفات",
+        "new_few": "{{count}} أضرار جديدة تكتشفات",
+        "new_many": "{{count}} أضرار جديدة تكتشفات",
+        "departCount_zero": "{{count}} أضرار موجودة تسجلات",
+        "departCount_two": "{{count}} أضرار موجودة تسجلات",
+        "departCount_few": "{{count}} أضرار موجودة تسجلات",
+        "departCount_many": "{{count}} أضرار موجودة تسجلات"
       },
       "readings": {
         "km": "الكيلومترات المقروءة",
@@ -1704,7 +1740,11 @@
       "averageDuration": "المدة المتوسطة",
       "days_one": "{{count}} يوم",
       "days_other": "{{count}} أيام",
-      "newCustomers": "زبناء جداد هاد الشهر"
+      "newCustomers": "زبناء جداد هاد الشهر",
+      "days_zero": "{{count}} أيام",
+      "days_two": "{{count}} أيام",
+      "days_few": "{{count}} أيام",
+      "days_many": "{{count}} أيام"
     },
     "counter": {
       "title": "اليوم فالكونطوار",
@@ -1765,7 +1805,11 @@
     "askM3ak": {
       "title": "اسأل M3ak",
       "hint": "من أخذ السيارة؟ أي سيارات سترجع هذا الأسبوع؟"
-    }
+    },
+    "fleetTotalCount_zero": "{{count}} ديال السيارات مسجلة",
+    "fleetTotalCount_two": "{{count}} ديال السيارات مسجلة",
+    "fleetTotalCount_few": "{{count}} ديال السيارات مسجلة",
+    "fleetTotalCount_many": "{{count}} ديال السيارات مسجلة"
   },
   "maintenance": {
     "title": "الصيانة",

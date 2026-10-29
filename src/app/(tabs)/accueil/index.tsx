@@ -212,7 +212,7 @@ export default function AccueilScreen() {
     year: 'numeric',
   });
 
-  if (agencyQuery.isLoading) {
+  if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
         <ActivityIndicator color={M3akPalette.mauve} />
@@ -229,7 +229,7 @@ export default function AccueilScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader
           title={t('accueil.greeting', { name: agencyQuery.data?.memberName ?? '' })}
           subtitle={today}

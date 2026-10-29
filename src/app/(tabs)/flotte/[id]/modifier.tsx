@@ -106,7 +106,7 @@ export default function ModifierVehiculeScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('vehicle.form.editTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">

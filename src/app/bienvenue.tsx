@@ -65,7 +65,7 @@ export default function BienvenueScreen() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: M3akPalette.mauveDeep }}>
-      <SafeAreaView className="flex-1">
+      <SafeAreaView className="w-full flex-1">
         <View className="flex-1 px-6">
         <View className="min-h-11 flex-row items-center justify-between">
           {screen?.kind === 'step' ? (

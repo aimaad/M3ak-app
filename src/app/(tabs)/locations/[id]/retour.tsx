@@ -93,7 +93,7 @@ export default function RetourScreen() {
   if (isLoadingContract) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.retour.title')} showBack />
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#7C3AED" />
@@ -106,7 +106,7 @@ export default function RetourScreen() {
   if (!contract || contract.statut !== 'en_cours') {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.retour.title')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             <ThemedText type="default" themeColor="textSecondary" className="text-center">
@@ -122,7 +122,7 @@ export default function RetourScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('locations.retour.title')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
           <TextField

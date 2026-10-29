@@ -80,7 +80,7 @@ export default function ChatConversationScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
         {/* En-tête : pastille M3ak, nom et état */}
         <View className="flex-row items-center gap-3 border-b border-[#E4DCF5] bg-white px-4 pb-3 pt-2" style={Shadows.card}>
           <Pressable
