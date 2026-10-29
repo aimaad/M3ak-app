@@ -93,5 +93,10 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
 select pg_temp.ck('illimité : accès actif', (select (my_agency_access()->>'has_access')::boolean));
 select pg_temp.ck('l''admin liste les agences', (select jsonb_array_length(admin_list_agencies()) = 1) is not distinct from null or true);
 
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000ad');
+select pg_temp.ck('console : compteurs d''activité par agence', (admin_list_agencies()->0->>'vehicles')::int = 1 and (admin_list_agencies()->0->>'customers')::int = 0 and (admin_list_agencies()->0) ? 'last_activity', admin_list_agencies()::text);
+select pg_temp.as_user('00000000-0000-0000-0000-0000000000a1');
+select pg_temp.try('un client ne peut pas lire les compteurs de la console', $$select admin_list_agencies()$$, 'not_allowed');
+
 reset role;
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

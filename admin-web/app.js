@@ -358,6 +358,10 @@ function accessSection() {
       h('td', {}, a.owner_email ?? h('span', { class: 'pill warn' }, 'Code non utilisé')),
       h('td', {}, h('span', { class: `pill ${status.kind}` }, status.label)),
       h('td', {}, a.access_until ? formatDate(a.access_until) : '—'),
+      h('td', { class: 'num' }, formatInt(a.vehicles)),
+      h('td', { class: 'num' }, formatInt(a.customers)),
+      h('td', { class: 'num' }, formatInt(a.rentals)),
+      h('td', {}, a.last_activity ? formatDate(a.last_activity) : '—'),
       h('td', { class: 'actions' },
         a.owner_email ? null : h('button', { class: 'btn small', type: 'button', onclick: () => reissueCode(a) }, 'Nouveau code'),
         h('button', { class: 'btn small', type: 'button', onclick: () => extend(5) }, '+5 jours'),
@@ -389,8 +393,8 @@ function accessSection() {
     h('div', { class: 'card table-wrap' },
       h('h2', {}, 'Accès des agences'),
       h('table', {},
-        h('thead', {}, h('tr', {}, ...['Agence', 'Propriétaire', 'Accès', 'Fin de l’accès', ''].map((label) => h('th', {}, label)))),
-        h('tbody', {}, rows.length ? rows : h('tr', {}, h('td', { colspan: 5 }, 'Aucune agence.')))
+        h('thead', {}, h('tr', {}, ...['Agence', 'Propriétaire', 'Accès', 'Fin de l’accès', 'Voitures', 'Clients', 'Locations', 'Dernière activité', ''].map((label, i) => h('th', { class: i >= 4 && i <= 6 ? 'num' : '' }, label)))),
+        h('tbody', {}, rows.length ? rows : h('tr', {}, h('td', { colspan: 9 }, 'Aucune agence.')))
       )
     )
   );
