@@ -81,7 +81,7 @@ export default function FlotteScreen() {
   );
   const pagination = usePagination(filtered, `${JSON.stringify(filters)}${sort}`);
 
-  if (agencyQuery.isLoading) {
+  if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
         <ActivityIndicator color="#7C3AED" />

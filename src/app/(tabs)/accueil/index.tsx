@@ -212,7 +212,7 @@ export default function AccueilScreen() {
     year: 'numeric',
   });
 
-  if (agencyQuery.isLoading) {
+  if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
         <ActivityIndicator color={M3akPalette.mauve} />
