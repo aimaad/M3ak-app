@@ -2365,5 +2365,12 @@
     "year": "Année",
     "total": "Montant",
     "exportCsv": "Exporter en CSV ({{count}})"
+  },
+  "undoToast": {
+    "undo": "Annuler",
+    "customerArchived": "Client archivé.",
+    "vehicleArchived": "Voiture archivée.",
+    "notificationsCleared": "Notifications supprimées.",
+    "failed": "Impossible d'annuler. Retrouvez l'élément dans les archives."
   }
 }

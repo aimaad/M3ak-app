@@ -2365,5 +2365,12 @@
     "year": "السنة",
     "total": "المبلغ",
     "exportCsv": "تصدير CSV ({{count}})"
+  },
+  "undoToast": {
+    "undo": "تراجع",
+    "customerArchived": "تم أرشفة الزبون.",
+    "vehicleArchived": "تم أرشفة السيارة.",
+    "notificationsCleared": "تم مسح الإشعارات.",
+    "failed": "ما قدرناش نرجعو. لقاه فالأرشيف."
   }
 }

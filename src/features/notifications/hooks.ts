@@ -5,7 +5,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import {
   dismissAllNotifications,
-  dismissNotification,
+  restoreNotifications, dismissNotification,
   getNotificationPreferences,
   listNotifications,
   saveNotificationPreferences,
@@ -39,6 +39,14 @@ export function useDismissNotification(agencyId: string | undefined) {
       return { previous };
     },
     onError: (_error, _id, context) => queryClient.setQueryData(notificationsKey(agencyId), context?.previous),
+    onSettled: () => queryClient.invalidateQueries({ queryKey: notificationsKey(agencyId) }),
+  });
+}
+
+export function useRestoreNotifications(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (ids: string[]) => restoreNotifications(ids),
     onSettled: () => queryClient.invalidateQueries({ queryKey: notificationsKey(agencyId) }),
   });
 }

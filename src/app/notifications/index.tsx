@@ -10,7 +10,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
-import { useDismissAllNotifications, useDismissNotification, useNotifications } from '@/features/notifications/hooks';
+import { useDismissAllNotifications, useDismissNotification, useNotifications, useRestoreNotifications } from '@/features/notifications/hooks';
+import { useUndo } from '@/components/undo-toast';
 import { CATEGORY_ICONS, notificationRoute, notificationView, SEVERITY_COLORS, timeAgo } from '@/features/notifications/render';
 import type { AppNotification } from '@/features/notifications/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -22,6 +23,8 @@ export default function NotificationsScreen() {
   const query = useNotifications(agencyId);
   const dismiss = useDismissNotification(agencyId);
   const dismissAll = useDismissAllNotifications(agencyId);
+  const restore = useRestoreNotifications(agencyId);
+  const { showUndo } = useUndo();
   const items = useMemo(() => query.data ?? [], [query.data]);
   const pagination = usePagination(items, items.length === 0);
   const now = new Date();
@@ -32,11 +35,19 @@ export default function NotificationsScreen() {
     if (route) router.push(route as never);
   }
 
-  function confirmClearAll() {
-    Alert.alert(t('notifications.clearConfirmTitle'), t('notifications.clearConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      { text: t('notifications.clearAll'), style: 'destructive', onPress: () => dismissAll.mutate() },
-    ]);
+  /** Efface tout de suite, puis laisse quelques secondes pour annuler (plus rapide qu'une confirmation). */
+  function clearAll() {
+    const ids = (query.data ?? []).map((item) => item.id);
+    if (ids.length === 0) return;
+    dismissAll.mutate(undefined, {
+      onSuccess: () =>
+        showUndo({
+          message: t('undoToast.notificationsCleared'),
+          actionLabel: t('undoToast.undo'),
+          onUndo: () => restore.mutateAsync(ids),
+          onUndoError: () => Alert.alert(t('common.appName'), t('undoToast.failed')),
+        }),
+    });
   }
 
   return (
@@ -48,7 +59,7 @@ export default function NotificationsScreen() {
           showBack
           right={
             items.length > 0 ? (
-              <Pressable onPress={confirmClearAll} hitSlop={8}>
+              <Pressable onPress={clearAll} hitSlop={8}>
                 <ThemedText type="small" style={{ color: '#DC2626' }}>
                   {t('notifications.clearAll')}
                 </ThemedText>

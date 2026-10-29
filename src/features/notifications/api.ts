@@ -65,6 +65,13 @@ export async function dismissAllNotifications(agencyId: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Annulation de « tout effacer » : remet à l'écran les notifications masquées (les miennes seulement, RLS). */
+export async function restoreNotifications(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await getSupabase().from('notifications').update({ dismissed_at: null }).in('id', ids);
+  if (error) throw error;
+}
+
 type PrefsRow = { enabled: boolean; push_enabled: boolean; muted_categories: NotificationCategory[] | null; locale: 'fr' | 'ar' };
 
 export async function getNotificationPreferences(agencyId: string, userId: string): Promise<NotificationPreferences> {

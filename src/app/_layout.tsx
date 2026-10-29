@@ -14,6 +14,7 @@ import { useEffect } from 'react';
 import type { ReactNode } from 'react';
 
 import { DesktopShell } from '@/components/desktop-shell';
+import { UndoProvider } from '@/components/undo-toast';
 import { useAgencyAccess } from '@/features/agency/hooks';
 import { SessionProvider, useSession } from '@/features/auth/session-context';
 import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
@@ -87,10 +88,12 @@ export default function RootLayout() {
         <ThemeProvider value={DefaultTheme}>
           <AuthGate>
             <AccessGate>
-              <DesktopShell>
-                <Stack screenOptions={{ headerShown: false }} />
-              </DesktopShell>
-              <NotificationsBootstrap />
+              <UndoProvider>
+                <DesktopShell>
+                  <Stack screenOptions={{ headerShown: false }} />
+                </DesktopShell>
+                <NotificationsBootstrap />
+              </UndoProvider>
             </AccessGate>
           </AuthGate>
         </ThemeProvider>

@@ -1,3 +1,4 @@
+import { useUndo } from '@/components/undo-toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,6 +43,7 @@ export default function VehicleDetailScreen() {
   const updatePhotos = useUpdateVehiclePhotos();
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
+  const { showUndo } = useUndo();
   const { data: maintenanceItems = [] } = useVehicleMaintenanceItems(id);
   const rentalsQuery = useVehicleRentals(id);
   const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentalsQuery.data ?? []);
@@ -70,22 +72,19 @@ export default function VehicleDetailScreen() {
       Alert.alert(t('common.appName'), t('vehicle.archiveBlockedActiveRentals'));
       return;
     }
-    Alert.alert(t('vehicle.archiveConfirmTitle'), t('vehicle.archiveConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('vehicle.archive'),
-        style: 'destructive',
-        onPress: () => {
-          archiveVehicle.mutate(vehicle.id, {
-            onError: (error) =>
-              Alert.alert(
-                t('common.appName'),
-                t(isArchiveBlockedError(error) ? 'vehicle.archiveBlockedActiveRentals' : 'vehicle.archiveError')
-              ),
-          });
-        },
-      },
-    ]);
+    const id = vehicle.id;
+    // Archive tout de suite (réversible) puis laisse quelques secondes pour annuler.
+    archiveVehicle.mutate(id, {
+      onSuccess: () =>
+        showUndo({
+          message: t('undoToast.vehicleArchived'),
+          actionLabel: t('undoToast.undo'),
+          onUndo: () => reactivateVehicle.mutateAsync(id),
+          onUndoError: () => Alert.alert(t('common.appName'), t('undoToast.failed')),
+        }),
+      onError: (error) =>
+        Alert.alert(t('common.appName'), t(isArchiveBlockedError(error) ? 'vehicle.archiveBlockedActiveRentals' : 'vehicle.archiveError')),
+    });
   }
 
   function handleReactivate() {

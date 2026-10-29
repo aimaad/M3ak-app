@@ -1,3 +1,4 @@
+import { useUndo } from '@/components/undo-toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -38,6 +39,7 @@ export default function ClientDetailScreen() {
   const { data: customer, isLoading, isError } = useCustomer(id);
   const archiveCustomer = useArchiveCustomer();
   const reactivateCustomer = useReactivateCustomer();
+  const { showUndo } = useUndo();
   const setConsent = useSetCustomerConsent();
   const { data: rentals = [] } = useCustomerRentals(customer?.id);
   const { data: allPayments = [] } = useAllPayments();
@@ -53,20 +55,20 @@ export default function ClientDetailScreen() {
     setConsent.mutate({ id: customer.id, consent: !customer.consentementDonnees });
   }
 
+  /** Archive tout de suite (réversible) puis laisse quelques secondes pour annuler. */
   function handleArchive() {
     if (!customer) return;
-    Alert.alert(t('customer.archiveConfirmTitle'), t('customer.archiveConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('customer.archive'),
-        style: 'destructive',
-        onPress: () => {
-          archiveCustomer.mutate(customer.id, {
-            onError: () => Alert.alert(t('common.appName'), t('customer.archiveError')),
-          });
-        },
-      },
-    ]);
+    const id = customer.id;
+    archiveCustomer.mutate(id, {
+      onSuccess: () =>
+        showUndo({
+          message: t('undoToast.customerArchived'),
+          actionLabel: t('undoToast.undo'),
+          onUndo: () => reactivateCustomer.mutateAsync(id),
+          onUndoError: () => Alert.alert(t('common.appName'), t('undoToast.failed')),
+        }),
+      onError: () => Alert.alert(t('common.appName'), t('customer.archiveError')),
+    });
   }
 
   function handleReactivate() {
