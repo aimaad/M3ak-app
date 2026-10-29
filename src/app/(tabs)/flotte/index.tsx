@@ -124,7 +124,7 @@ export default function FlotteScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('flotte.title')} subtitle={t('flotte.subtitle', { count: counts.tous })} />
 
         <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
@@ -147,7 +147,8 @@ export default function FlotteScreen() {
           />
         </View>
 
-        <View className="pb-3">
+        {/* width 0 + minWidth 100 % : la rangée de pastilles défile sans jamais élargir l'écran (web). */}
+        <View className="pb-3" style={{ width: 0, minWidth: '100%' }}>
           <StatusFilterChips
             value={filters.statusFilter}
             onChange={(statusFilter) => setFilters((prev) => ({ ...prev, statusFilter }))}

@@ -48,7 +48,9 @@ export function DocumentPhotoField({ label, bucket, localUri, existingPath, onPi
         {label}
       </ThemedText>
       {previewUri ? (
-        <Image source={{ uri: previewUri }} className="h-36 w-full rounded-2xl" resizeMode="cover" />
+        <View className="h-36 w-full overflow-hidden rounded-2xl">
+          <Image source={{ uri: previewUri }} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="cover" />
+        </View>
       ) : null}
       <View className="flex-row gap-2">
         <Pressable

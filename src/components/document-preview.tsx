@@ -30,7 +30,9 @@ export function DocumentPreview({ label, bucket, path, emptyLabel }: DocumentPre
           <ActivityIndicator color="#7C3AED" />
         </View>
       ) : (
-        <Image source={{ uri: signedUrl }} className="h-36 w-full rounded-2xl" resizeMode="cover" />
+        <View className="h-36 w-full overflow-hidden rounded-2xl">
+          <Image source={{ uri: signedUrl }} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="cover" />
+        </View>
       )}
     </View>
   );
