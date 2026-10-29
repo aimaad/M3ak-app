@@ -82,7 +82,7 @@ export default function ReglagesContratScreen() {
   if (agencyQuery.isLoading || stored.isLoading || !agencyQuery.data) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contractTemplate.simple.title')} showBack />
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color={M3akPalette.mauve} />
@@ -252,7 +252,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title={t('contractTemplate.simple.title')} subtitle={t('contractTemplate.simple.subtitle')} showBack />
 
         <ScrollView contentContainerClassName="gap-4 px-6 pb-8" keyboardShouldPersistTaps="handled">

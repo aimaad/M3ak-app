@@ -80,7 +80,7 @@ export default function ContratsScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('contract.listTitle')} subtitle={t('contract.listSubtitle', { count: contractsQuery.data?.length ?? 0 })} showBack />
 
         <View className="px-6 pb-3">

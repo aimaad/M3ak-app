@@ -58,7 +58,7 @@ export default function MaSignatureScreen() {
     <ThemedView className="flex-1">
       {/* Le glissement « retour » (iOS) est désactivé : il se déclenchait en signant près du bord. */}
       <Stack.Screen options={{ gestureEnabled: false }} />
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title={t('profil.signature.title')} showBack />
         {profileQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">

@@ -88,7 +88,7 @@ export default function LocationDetailScreen() {
   if (isLoading || isError || !rental) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
@@ -106,7 +106,7 @@ export default function LocationDetailScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader
           title={vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')}
           showBack

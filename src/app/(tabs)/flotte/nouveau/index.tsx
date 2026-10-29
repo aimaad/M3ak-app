@@ -105,7 +105,7 @@ export default function NouveauVehiculeScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('vehicle.form.newTitle')} subtitle={t('vehicle.quickCreate.subtitle')} showBack />
 
         <ScrollView contentContainerClassName="gap-3 px-6 pb-10" keyboardShouldPersistTaps="handled">

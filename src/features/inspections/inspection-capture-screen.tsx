@@ -169,7 +169,7 @@ export function InspectionCaptureScreen({
 
   return (
     <ThemedView className="flex-1 bg-black">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <View className="bg-white">
           <ScreenHeader
             title={t(`inspection.title.${type}`)}

@@ -229,7 +229,7 @@ export default function NouvelleLocationScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right', 'bottom']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
         <ScreenHeader title={t('locations.form.newTitle')} showBack />
         <WizardProgress
           current={step}
