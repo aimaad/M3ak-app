@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -18,11 +18,8 @@ export function useUndo(): UndoContextValue {
 
 export function UndoProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<ActiveUndo | null>(null);
-  const controllerRef = useRef<UndoController | null>(null);
+  const [controller] = useState(() => new UndoController(setActive));
   const isDesktop = useDesktopLayout();
-
-  if (!controllerRef.current) controllerRef.current = new UndoController(setActive);
-  const controller = controllerRef.current;
 
   useEffect(() => () => controller.dismiss(), [controller]);
 
