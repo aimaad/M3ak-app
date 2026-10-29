@@ -442,14 +442,14 @@ export default function FinaliserVehiculeScreen() {
                 label={t('vehicle.fields.finition')}
                 value={values.finition}
                 onChangeText={(v) => update('finition', v)}
-                placeholder={t('vehicle.fields.optionalPlaceholder')}
+                optional
               />
               <TextField
                 label={t('vehicle.fields.vin')}
                 value={values.vin}
                 onChangeText={(v) => update('vin', v)}
                 autoCapitalize="characters"
-                placeholder={t('vehicle.fields.optionalPlaceholder')}
+                optional
               />
               <View className="gap-1.5">
                 <ThemedText type="small" themeColor="textSecondary">

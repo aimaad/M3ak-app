@@ -32,7 +32,10 @@ import {
   PerformanceSection,
 } from '@/features/dashboard/sections';
 import { GettingStartedCard } from '@/features/onboarding/getting-started-card';
-import { buildGettingStarted, shouldShowGettingStarted } from '@/features/onboarding/getting-started';
+import {
+  buildGettingStarted,
+  shouldShowGettingStarted,
+} from '@/features/onboarding/getting-started';
 import { useSession } from '@/features/auth/session-context';
 import { useRentals } from '@/features/rentals/hooks';
 import { NotificationBell } from '@/features/notifications/notification-bell';
@@ -61,6 +64,60 @@ function formatShortDate(iso: string): string {
     month: 'short',
     year: 'numeric',
   });
+}
+
+type QuickItem = {
+  href: '/contrats' | '/maintenance' | '/chat' | '/journal' | '/entreprise';
+  labelKey: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  managersOnly?: boolean;
+  ownerOnly?: boolean;
+};
+
+const QUICK_ITEMS: QuickItem[] = [
+  { href: '/contrats', labelKey: 'contract.listTitle', icon: 'document-text-outline' },
+  { href: '/maintenance', labelKey: 'maintenance.title', icon: 'construct-outline' },
+  { href: '/chat', labelKey: 'chat.title', icon: 'chatbubbles-outline' },
+  {
+    href: '/entreprise',
+    labelKey: 'entreprise.title',
+    icon: 'business-outline',
+    managersOnly: true,
+  },
+  {
+    href: '/journal',
+    labelKey: 'journal.title',
+    icon: 'shield-checkmark-outline',
+    ownerOnly: true,
+  },
+];
+
+/** Raccourcis vers les écrans qui n'ont pas d'onglet : sans eux, Contrats et Maintenance étaient presque introuvables. */
+function QuickAccess({ role }: { role: string | null | undefined }) {
+  const { t } = useLanguage();
+  const items = QUICK_ITEMS.filter(
+    (item) =>
+      (!item.ownerOnly || role === 'owner') &&
+      (!item.managersOnly || role === 'owner' || role === 'manager')
+  );
+  return (
+    <View className="gap-2">
+      <ThemedText type="smallBold">{t('onboarding.quick.title')}</ThemedText>
+      <View className="flex-row flex-wrap gap-2">
+        {items.map((item) => (
+          <Pressable
+            key={item.href}
+            onPress={() => router.push(item.href)}
+            accessibilityRole="link"
+            className="min-h-11 flex-row items-center gap-2 rounded-full border border-[#E4DCF5] bg-white px-4"
+          >
+            <Ionicons name={item.icon} size={18} color={M3akPalette.mauve} />
+            <ThemedText type="smallBold">{t(item.labelKey)}</ThemedText>
+          </Pressable>
+        ))}
+      </View>
+    </View>
+  );
 }
 
 export default function AccueilScreen() {
@@ -231,6 +288,8 @@ export default function AccueilScreen() {
                 </ThemedText>
               </View>
             ) : null}
+
+            <QuickAccess role={role} />
 
             <GettingStartedCard
               steps={gettingStarted}

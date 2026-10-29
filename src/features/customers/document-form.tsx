@@ -129,7 +129,7 @@ export function DocumentForm({
           value={values.dateDelivrance}
           onChangeText={(v) => update('dateDelivrance', v)}
           placeholder={t('customer.fields.datePlaceholder')}
-          className="flex-1"
+          containerClassName="flex-1"
           error={errorText(errors.dateDelivrance)}
           warning={verify('dateDelivrance')}
         />
@@ -138,7 +138,7 @@ export function DocumentForm({
           value={values.expiresAt}
           onChangeText={(v) => update('expiresAt', v)}
           placeholder={t('customer.fields.datePlaceholder')}
-          className="flex-1"
+          containerClassName="flex-1"
           error={errorText(errors.expiresAt)}
           warning={verify('expiresAt')}
         />

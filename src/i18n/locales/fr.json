@@ -17,7 +17,9 @@
     "no": "Non",
     "previous": "Précédent",
     "next": "Suivant",
-    "pageOf": "Page {{page}} / {{count}}"
+    "pageOf": "Page {{page}} / {{count}}",
+    "optional": "facultatif",
+    "edit": "Modifier"
   },
   "auth": {
     "title": "Connexion",
@@ -111,6 +113,9 @@
           "hint": "Choisissez le client, les dates et la voiture libre."
         }
       }
+    },
+    "quick": {
+      "title": "Accès rapide"
     }
   },
   "equipe": {

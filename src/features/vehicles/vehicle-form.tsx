@@ -184,14 +184,14 @@ export function VehicleForm({
         label={t('vehicle.fields.finition')}
         value={values.finition}
         onChangeText={(v) => update('finition', v)}
-        placeholder={t('vehicle.fields.optionalPlaceholder')}
+        optional
       />
       <TextField
         label={t('vehicle.fields.vin')}
         value={values.vin}
         onChangeText={(v) => update('vin', v)}
         autoCapitalize="characters"
-        placeholder={t('vehicle.fields.optionalPlaceholder')}
+        optional
       />
       <TextField
         label={t('vehicle.fields.couleur')}
@@ -294,7 +294,7 @@ export function VehicleForm({
         value={values.prixSemaine}
         onChangeText={(v) => update('prixSemaine', v)}
         keyboardType="number-pad"
-        placeholder={t('vehicle.fields.optionalPlaceholder')}
+        optional
         error={showErrors && errors.prixSemaine ? t(`vehicle.form.errors.${errors.prixSemaine}`) : undefined}
       />
       <TextField
@@ -302,7 +302,7 @@ export function VehicleForm({
         value={values.prixMois}
         onChangeText={(v) => update('prixMois', v)}
         keyboardType="number-pad"
-        placeholder={t('vehicle.fields.optionalPlaceholder')}
+        optional
         error={showErrors && errors.prixMois ? t(`vehicle.form.errors.${errors.prixMois}`) : undefined}
       />
 

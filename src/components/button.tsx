@@ -29,6 +29,9 @@ export function Button({ label, variant = 'primary', size = 'md', loading, icon,
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!isDisabled, busy: !!loading }}
       disabled={isDisabled}
       className={`flex-row items-center justify-center gap-2 rounded-2xl active:opacity-90 ${size === 'sm' ? 'px-4 py-2.5' : 'px-4 py-4'}`}
       style={[

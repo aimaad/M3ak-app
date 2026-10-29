@@ -314,7 +314,7 @@ export function CustomerForm({
           value={values.telephoneSecondaire}
           onChangeText={(v) => update('telephoneSecondaire', v)}
           keyboardType="phone-pad"
-          placeholder={t('customer.fields.optionalPlaceholder')}
+          optional
         />
         <TextField
           label={t('customer.fields.email')}

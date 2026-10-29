@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { Alert, ScrollView, View, type ScrollViewInstance } from 'react-native';
+import { Alert, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -58,6 +58,8 @@ export default function NouvelleLocationScreen() {
   const [notes, setNotes] = useState('');
   const [touched, setTouched] = useState(false);
   const [step, setStep] = useState(0);
+  // Vrai quand on est venu corriger une réponse depuis le récapitulatif : « Suivant » y ramène directement.
+  const [returnToRecap, setReturnToRecap] = useState(false);
   const scrollRef = useRef<ScrollViewInstance>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submittingAs, setSubmittingAs] = useState<'en_attente_confirmation' | 'confirmee' | null>(null);
@@ -195,7 +197,17 @@ export default function NouvelleLocationScreen() {
       setTouched(true);
       return;
     }
+    if (returnToRecap) {
+      setReturnToRecap(false);
+      goTo(WIZARD_STEPS.length - 1);
+      return;
+    }
     goTo(step + 1);
+  }
+
+  function editFromRecap(target: (typeof WIZARD_STEPS)[number]) {
+    setReturnToRecap(true);
+    goTo(WIZARD_STEPS.indexOf(target));
   }
 
   /** Au récapitulatif, une erreur renvoie vers l'étape à corriger. */
@@ -285,8 +297,8 @@ export default function NouvelleLocationScreen() {
                   </ThemedText>
                 ) : null}
               </View>
-              <TextField label={t('locations.lieuDepart')} value={lieuDepart} onChangeText={setLieuDepart} placeholder={t('vehicle.fields.optionalPlaceholder')} />
-              <TextField label={t('locations.lieuRetour')} value={lieuRetour} onChangeText={setLieuRetour} placeholder={t('vehicle.fields.optionalPlaceholder')} />
+              <TextField label={t('locations.lieuDepart')} value={lieuDepart} onChangeText={setLieuDepart} optional />
+              <TextField label={t('locations.lieuRetour')} value={lieuRetour} onChangeText={setLieuRetour} optional />
             </>
           ) : null}
 
@@ -419,22 +431,29 @@ export default function NouvelleLocationScreen() {
               <View className="rounded-2xl border border-[#E4DCF5] bg-white px-4">
                 {(
                   [
-                    [t('locations.customer'), customer?.nomComplet ?? '—'],
-                    [t('locations.drivers.sectionTitle'), driversCount > 0 ? t('locations.wizard.driversCount', { count: driversCount }) : t('locations.wizard.driversNone')],
-                    [t('locations.vehicle'), vehicle ? `${vehicle.marque} ${vehicle.modele} · ${vehicle.immatriculation}` : '—'],
-                    [t('locations.period'), `${formatDate(startISO)} → ${formatDate(endISO)}`],
-                    ...(lieuDepart.trim() ? [[t('locations.lieuDepart'), lieuDepart.trim()]] : []),
-                    ...(lieuRetour.trim() ? [[t('locations.lieuRetour'), lieuRetour.trim()]] : []),
-                    [t('locations.acomptePrevu'), money(Number(acomptePrevu || '0'))],
-                    [t('locations.cautionBlocked'), money(Number(cautionMontant || '0'))],
-                    ...(notes.trim() ? [[t('locations.notes'), notes.trim()]] : []),
-                  ] as [string, string][]
-                ).map(([label, value]) => (
-                  <View key={label} className="border-b border-[#E4DCF5] py-3 last:border-b-0">
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {label}
-                    </ThemedText>
-                    <ThemedText type="smallBold">{value}</ThemedText>
+                    [t('locations.customer'), customer?.nomComplet ?? '—', 'client'],
+                    [t('locations.drivers.sectionTitle'), driversCount > 0 ? t('locations.wizard.driversCount', { count: driversCount }) : t('locations.wizard.driversNone'), 'conducteurs'],
+                    [t('locations.vehicle'), vehicle ? `${vehicle.marque} ${vehicle.modele} · ${vehicle.immatriculation}` : '—', 'vehicule'],
+                    [t('locations.period'), `${formatDate(startISO)} → ${formatDate(endISO)}`, 'dates'],
+                    ...(lieuDepart.trim() ? [[t('locations.lieuDepart'), lieuDepart.trim(), 'dates']] : []),
+                    ...(lieuRetour.trim() ? [[t('locations.lieuRetour'), lieuRetour.trim(), 'dates']] : []),
+                    [t('locations.acomptePrevu'), money(Number(acomptePrevu || '0')), 'prix'],
+                    [t('locations.cautionBlocked'), money(Number(cautionMontant || '0')), 'prix'],
+                    ...(notes.trim() ? [[t('locations.notes'), notes.trim(), 'prix']] : []),
+                  ] as [string, string, (typeof WIZARD_STEPS)[number]][]
+                ).map(([label, value, target]) => (
+                  <View key={label} className="flex-row items-center justify-between gap-3 border-b border-[#E4DCF5] py-3 last:border-b-0">
+                    <View className="flex-1">
+                      <ThemedText type="small" themeColor="textSecondary">
+                        {label}
+                      </ThemedText>
+                      <ThemedText type="smallBold">{value}</ThemedText>
+                    </View>
+                    <Pressable onPress={() => editFromRecap(target)} hitSlop={10} accessibilityRole="button" accessibilityLabel={`${t('common.edit')} : ${label}`} className="min-h-11 justify-center px-2">
+                      <ThemedText type="smallBold" themeColor="primary">
+                        {t('common.edit')}
+                      </ThemedText>
+                    </Pressable>
                   </View>
                 ))}
                 <View className="flex-row items-center justify-between py-3">

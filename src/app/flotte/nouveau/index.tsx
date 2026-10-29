@@ -144,7 +144,7 @@ export default function NouveauVehiculeScreen() {
                   setDuplicate(null);
                 }}
                 autoCapitalize="characters"
-                placeholder={t('vehicle.fields.optionalPlaceholder')}
+                optional
               />
 
               {duplicate ? (
