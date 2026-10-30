@@ -73,7 +73,10 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
             onPress={() => {
               if (!route) return;
               const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!selected && !event.defaultPrevented) navigateToTab(route.key);
+              // On compare à l'onglet réellement affiché par le navigateur (et non à l'adresse) : sinon un clic est
+              // ignoré quand les deux ne concordent plus.
+              const focused = state.routes[state.index]?.key === route.key;
+              if (!focused && !event.defaultPrevented) navigateToTab(route.key);
             }}
             className="min-h-14 flex-1 items-center gap-1 pt-2"
             accessibilityRole="tab"
