@@ -29,13 +29,14 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
       accessibilityLabel={
         count > 0 ? `${t('notifications.title')}, ${t('accueil.header.unread', { count })}` : t('notifications.title')
       }
-      className={onForest ? 'h-11 w-11 items-center justify-center rounded-full' : 'h-10 w-10 items-center justify-center rounded-full bg-white'}
-      style={({ pressed }) => [
-        onForest ? { backgroundColor: pressed ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)' } : null,
-      ]}
+      className={
+        onForest
+          ? 'h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 active:bg-white/20'
+          : 'h-10 w-10 items-center justify-center rounded-full bg-white'
+      }
     >
       <Ionicons
-        name={count > 0 ? 'notifications' : 'notifications-outline'}
+        name={count > 0 && !onForest ? 'notifications' : 'notifications-outline'}
         size={onForest ? 21 : 22}
         color={onForest ? '#FFFFFF' : M3akPalette.mauve}
       />
@@ -44,8 +45,8 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
           className="absolute min-w-5 items-center justify-center rounded-full px-1"
           style={{
             backgroundColor: hasUrgent ? '#DC2626' : '#F59E0B',
-            top: onForest ? 2 : -4,
-            end: onForest ? 0 : -4,
+            top: onForest ? -2 : -4,
+            end: onForest ? -2 : -4,
             height: 20,
             borderWidth: onForest ? 2 : 0,
             borderColor: M3akPalette.mauveDeep,
