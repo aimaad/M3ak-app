@@ -1692,6 +1692,14 @@
     }
   },
   "accueil": {
+    "header": {
+      "greeting": "مرحباً، {{name}} 👋",
+      "greetingNoName": "مرحباً 👋",
+      "search": "اسأل Kriha",
+      "profile": "ملفي الشخصي",
+      "notifications": "الإشعارات",
+      "unread": "{{count}} غير مقروءة"
+    },
     "title": "الرئيسية",
     "greeting": "مرحباً {{name}}",
     "defaultName": "👋",

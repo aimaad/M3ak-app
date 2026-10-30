@@ -7,14 +7,18 @@ import { M3akPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
+import { badgeLabel } from '@/features/dashboard/header-format';
+
 import { useNotifications } from './hooks';
 
 /** Cloche avec le nombre de notifications ; ouvre la page des notifications. */
-export function NotificationBell() {
+export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onForest' }) {
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
   const { data } = useNotifications(agencyQuery.data?.agencyId);
   const count = data?.length ?? 0;
+  const onForest = tone === 'onForest';
+  const label = badgeLabel(count);
   const hasUrgent = (data ?? []).some((item) => item.severity === 'urgent');
 
   return (
@@ -22,17 +26,33 @@ export function NotificationBell() {
       onPress={() => router.push('/notifications')}
       hitSlop={8}
       accessibilityRole="button"
-      accessibilityLabel={t('notifications.title')}
-      className="h-10 w-10 items-center justify-center rounded-full bg-white"
+      accessibilityLabel={
+        count > 0 ? `${t('notifications.title')}, ${t('accueil.header.unread', { count })}` : t('notifications.title')
+      }
+      className={onForest ? 'h-11 w-11 items-center justify-center rounded-full' : 'h-10 w-10 items-center justify-center rounded-full bg-white'}
+      style={({ pressed }) => [
+        onForest ? { backgroundColor: pressed ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.12)' } : null,
+      ]}
     >
-      <Ionicons name={count > 0 ? 'notifications' : 'notifications-outline'} size={22} color={M3akPalette.mauve} />
-      {count > 0 ? (
+      <Ionicons
+        name={count > 0 ? 'notifications' : 'notifications-outline'}
+        size={onForest ? 21 : 22}
+        color={onForest ? '#FFFFFF' : M3akPalette.mauve}
+      />
+      {label ? (
         <View
-          className="absolute -top-1 min-w-5 items-center justify-center rounded-full px-1"
-          style={{ backgroundColor: hasUrgent ? '#DC2626' : '#F59E0B', end: -4, height: 20 }}
+          className="absolute min-w-5 items-center justify-center rounded-full px-1"
+          style={{
+            backgroundColor: hasUrgent ? '#DC2626' : '#F59E0B',
+            top: onForest ? 2 : -4,
+            end: onForest ? 0 : -4,
+            height: 20,
+            borderWidth: onForest ? 2 : 0,
+            borderColor: M3akPalette.mauveDeep,
+          }}
         >
           <ThemedText type="small" style={{ color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '700' }}>
-            {count > 99 ? '99+' : String(count)}
+            {label}
           </ThemedText>
         </View>
       ) : null}

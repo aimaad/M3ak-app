@@ -4,10 +4,8 @@ import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Avatar } from '@/components/avatar';
 import { Button } from '@/components/button';
 import { PressableCard } from '@/components/card';
-import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette, Shadows } from '@/constants/theme';
@@ -18,8 +16,8 @@ import {
   useMyAgency,
   useMyProfile,
 } from '@/features/agency/hooks';
-import { getInitials } from '@/lib/initials';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
+import { DashboardHeader } from '@/features/dashboard/dashboard-header';
 import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
@@ -41,7 +39,6 @@ import {
 } from '@/features/onboarding/getting-started';
 import { useSession } from '@/features/auth/session-context';
 import { useRentals } from '@/features/rentals/hooks';
-import { NotificationBell } from '@/features/notifications/notification-bell';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
@@ -208,12 +205,6 @@ export default function AccueilScreen() {
       .slice(0, 4);
   }, [customers, vehicles]);
 
-  const today = new Date().toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-
   if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
@@ -231,24 +222,13 @@ export default function AccueilScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader
-          title={t('accueil.greeting', { name: agencyQuery.data?.memberName ?? '' })}
-          subtitle={today}
-          right={
-            <View className="flex-row items-center gap-3">
-              <NotificationBell />
-              <Pressable onPress={() => router.push('/profil')} hitSlop={8}>
-                <Avatar
-                  path={profileQuery.data?.photoPath}
-                  size={40}
-                  initials={getInitials(
-                    profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName
-                  )}
-                />
-              </Pressable>
-            </View>
-          }
+      <SafeAreaView className="w-full flex-1" edges={['left', 'right']}>
+        <DashboardHeader
+          prenom={profileQuery.data?.prenom}
+          fullName={profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName}
+          agencyName={agencyQuery.data?.agencyName}
+          agencyCity={agencyQuery.data?.agencyCity}
+          avatarPath={profileQuery.data?.photoPath}
         />
 
         {isLoading ? (
@@ -257,7 +237,7 @@ export default function AccueilScreen() {
           </View>
         ) : (
           <ScrollView
-            contentContainerClassName="gap-6 px-6 pb-10"
+            contentContainerClassName="gap-6 px-6 pb-10 pt-6"
             refreshControl={
               <RefreshControl
                 refreshing={isRefreshing}

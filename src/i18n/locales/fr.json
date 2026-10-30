@@ -1656,6 +1656,14 @@
     }
   },
   "accueil": {
+    "header": {
+      "greeting": "Bonjour, {{name}} 👋",
+      "greetingNoName": "Bonjour 👋",
+      "search": "Poser une question à Kriha",
+      "profile": "Mon profil",
+      "notifications": "Notifications",
+      "unread": "{{count}} non lues"
+    },
     "title": "Accueil",
     "greeting": "Bonjour {{name}}",
     "defaultName": "👋",
