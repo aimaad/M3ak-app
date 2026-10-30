@@ -1,25 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useSession } from '@/features/auth/session-context';
+import type { UploadProgress } from '@/features/storage/api';
 
 import {
-  createAgency,
   createAgencyInvite,
   getAgencyDetails,
+  getMyAgencyAccess,
   getMyAgencyMembership,
   getMyMemberProfile,
   listAgencyInvites,
   listAgencyMembers,
-  listAuditLog,
   redeemInvite,
   removeMember,
+  resendAgencyInvite,
+  revokeAgencyInvite,
   updateAgencyDetails,
   updateMemberRole,
   updateMyProfile,
   uploadAgencyLogo,
+  uploadAgencyStamp,
+  removeAgencyStamp,
+  saveAgencyStampConfig,
   uploadMemberAvatar,
 } from './api';
-import type { AgencyDetailsInput, AgencyRole, MemberProfileInput } from './types';
+import type { StampConfig } from './stamp';
+import type { AgencyDetailsInput, AgencyRole, CreateInviteInput, MemberProfileInput } from './types';
 
 export function useMyAgency() {
   const { session } = useSession();
@@ -31,15 +37,16 @@ export function useMyAgency() {
   });
 }
 
-export function useCreateAgency() {
-  const queryClient = useQueryClient();
+export function useAgencyAccess() {
+  const { session } = useSession();
 
-  return useMutation({
-    mutationFn: ({ nom, ville, ownerName }: { nom: string; ville: string | null; ownerName: string }) =>
-      createAgency(nom, ville, ownerName),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-agency'] });
-    },
+  return useQuery({
+    queryKey: ['agency-access', session?.user.id],
+    queryFn: getMyAgencyAccess,
+    enabled: !!session,
+    // Revérifie régulièrement : l'essai peut se terminer pendant que l'app est ouverte.
+    refetchInterval: 5 * 60 * 1000,
+    refetchOnMount: 'always',
   });
 }
 
@@ -50,6 +57,7 @@ export function useRedeemInvite() {
     mutationFn: (code: string) => redeemInvite(code),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-agency'] });
+      queryClient.invalidateQueries({ queryKey: ['agency-access'] });
     },
   });
 }
@@ -74,17 +82,31 @@ export function useCreateAgencyInvite() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      agencyId,
-      role,
-      branchId,
-    }: {
-      agencyId: string;
-      role: AgencyRole;
-      branchId: string | null;
-    }) => createAgencyInvite(agencyId, role, branchId),
-    onSuccess: (invite) => {
-      queryClient.invalidateQueries({ queryKey: ['agency-invites', invite.agencyId] });
+    mutationFn: (input: CreateInviteInput) => createAgencyInvite(input),
+    onSuccess: (_result, input) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-invites', input.agencyId] });
+    },
+  });
+}
+
+export function useResendAgencyInvite(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (inviteId: string) => resendAgencyInvite(inviteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-invites', agencyId] });
+    },
+  });
+}
+
+export function useRevokeAgencyInvite(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (inviteId: string) => revokeAgencyInvite(inviteId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agency-invites', agencyId] });
     },
   });
 }
@@ -114,8 +136,45 @@ export function useUploadAgencyLogo() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ agencyId, localUri }: { agencyId: string; localUri: string }) =>
-      uploadAgencyLogo(agencyId, localUri),
+    mutationFn: ({ agencyId, localUri, onProgress, signal }: { agencyId: string; localUri: string; onProgress?: (progress: UploadProgress) => void; signal?: AbortSignal }) =>
+      uploadAgencyLogo(agencyId, localUri, onProgress, signal),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['signed-url'] });
+      queryClient.invalidateQueries({ queryKey: ['my-agency'] });
+    },
+  });
+}
+
+export function useUploadAgencyStamp() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ agencyId, localUri }: { agencyId: string; localUri: string }) => uploadAgencyStamp(agencyId, localUri),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['signed-url'] });
+    },
+  });
+}
+
+export function useSaveAgencyStampConfig() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ agencyId, config }: { agencyId: string; config: StampConfig }) => saveAgencyStampConfig(agencyId, config),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
+      queryClient.invalidateQueries({ queryKey: ['signed-url'] });
+    },
+  });
+}
+
+export function useRemoveAgencyStamp() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (agencyId: string) => removeAgencyStamp(agencyId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['agency-details', data.id] });
     },
@@ -179,13 +238,5 @@ export function useUploadMemberAvatar(agencyId: string | undefined) {
       queryClient.invalidateQueries({ queryKey: ['my-profile', agencyId] });
       queryClient.invalidateQueries({ queryKey: ['agency-members', agencyId] });
     },
-  });
-}
-
-export function useAuditLog(agencyId: string | undefined) {
-  return useQuery({
-    queryKey: ['audit-log', agencyId],
-    queryFn: () => listAuditLog(agencyId as string),
-    enabled: !!agencyId,
   });
 }

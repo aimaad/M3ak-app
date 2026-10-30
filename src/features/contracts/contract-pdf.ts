@@ -1,11 +1,13 @@
 import * as Print from 'expo-print';
 
-import type { Contract } from './types';
+import type { StampConfig } from '@/features/agency/stamp';
+import type { HandwrittenSignature } from '@/features/signatures/signature';
 
-function escapeHtml(value: string | null | undefined): string {
-  if (!value) return '';
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+import { defaultContractTemplate } from './default-template';
+import { sampleContract } from './sample-contract';
+import { ensureSignatures, parseTemplate, PLACEHOLDERS, type ContractTemplate, type TemplateContext, type TemplateValues } from './template';
+import { PRINT_SIZE, renderTemplateHtml } from './template-render';
+import type { Contract } from './types';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -27,78 +29,192 @@ export function assertContractIsComplete(contract: Contract, agencyName: string)
   return missing;
 }
 
-export function buildContractHtml(contract: Contract, agencyName: string): string {
-  return `
-    <html>
-      <head>
-        <meta charset="utf-8" />
-        <style>
-          body { font-family: Helvetica, Arial, sans-serif; color: #211A2E; padding: 24px; }
-          h1 { font-size: 20px; margin-bottom: 4px; }
-          h2 { font-size: 14px; margin-top: 24px; border-bottom: 1px solid #EAE5F2; padding-bottom: 4px; }
-          .ref { color: #81778F; font-size: 12px; margin-bottom: 16px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-          td { padding: 4px 0; font-size: 13px; vertical-align: top; }
-          td.label { color: #81778F; width: 45%; }
-          .notice { margin-top: 32px; font-size: 10px; color: #B3A6C2; border-top: 1px solid #EAE5F2; padding-top: 12px; }
-          .signatures { margin-top: 48px; display: flex; justify-content: space-between; }
-          .sign-box { width: 45%; border-top: 1px solid #211A2E; padding-top: 4px; font-size: 12px; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <h1>${escapeHtml(agencyName)}</h1>
-        <div class="ref">Contrat de location N° ${escapeHtml(contract.numero)}</div>
+export type ContractAgencyInfo = {
+  nom: string;
+  raisonSociale?: string | null;
+  adresse?: string | null;
+  ville?: string | null;
+  telephone?: string | null;
+  email?: string | null;
+};
 
-        <h2>Véhicule</h2>
-        <table>
-          <tr><td class="label">Marque / modèle</td><td>${escapeHtml(contract.vehicleMarque)} ${escapeHtml(contract.vehicleModele)}</td></tr>
-          <tr><td class="label">Immatriculation</td><td>${escapeHtml(contract.vehicleImmatriculation)}</td></tr>
-        </table>
+export type ContractSignatures = {
+  client?: HandwrittenSignature | null;
+  agency?: HandwrittenSignature | null;
+  /** Cachet de l'agence en data URI (png/jpeg uniquement ; toute autre valeur est ignorée). */
+  stampDataUri?: string | null;
+  /** Cachet généré par M3ak (vrai tampon dessiné) ; prioritaire sur la photo. */
+  stampConfig?: StampConfig | null;
+  /** Logo de l'agence en data URI (png/jpeg uniquement). */
+  logoDataUri?: string | null;
+  /** Nom de la personne de l'agence qui signe. */
+  agencySignerName?: string | null;
+};
 
-        <h2>Client${contract.driverNom ? ' et conducteur' : ''}</h2>
-        <table>
-          <tr><td class="label">Client</td><td>${escapeHtml(contract.customerNom)}</td></tr>
-          ${contract.customerTelephone ? `<tr><td class="label">Téléphone</td><td>${escapeHtml(contract.customerTelephone)}</td></tr>` : ''}
-          ${contract.customerCin ? `<tr><td class="label">CIN / Passeport</td><td>${escapeHtml(contract.customerCin)}</td></tr>` : ''}
-          ${contract.driverNom ? `<tr><td class="label">Conducteur principal</td><td>${escapeHtml(contract.driverNom)}</td></tr>` : ''}
-        </table>
+const CONDITION_LABEL: Record<string, string> = { bon: 'Bon état', moyen: 'État moyen', mauvais: 'Mauvais état' };
+const ACCESSORY_LABEL: Record<string, string> = {
+  roue_secours: 'Roue de secours',
+  triangle_gilet: 'Triangle + gilet',
+  cric: 'Cric',
+  extincteur: 'Extincteur',
+  autoradio_gps: 'Autoradio / GPS',
+  chargeur: 'Chargeur',
+  carte_grise_vehicule: 'Carte grise',
+  assurance_vehicule: "Attestation d'assurance",
+};
 
-        <h2>Période et tarif</h2>
-        <table>
-          <tr><td class="label">Départ prévu</td><td>${formatDateTime(contract.dateDebutPrevue)}</td></tr>
-          <tr><td class="label">Retour prévu</td><td>${formatDateTime(contract.dateFinPrevue)}</td></tr>
-          <tr><td class="label">Prix total</td><td>${contract.prixTotal != null ? `${contract.prixTotal.toLocaleString('fr-FR')} MAD` : '—'}</td></tr>
-          <tr><td class="label">Caution</td><td>${contract.cautionMontant.toLocaleString('fr-FR')} MAD</td></tr>
-        </table>
+const money = (value: number) => `${value.toLocaleString('fr-FR')} MAD`;
 
-        ${
-          contract.conditionsParticulieres
-            ? `<h2>Conditions particulières</h2><table><tr><td>${escapeHtml(contract.conditionsParticulieres)}</td></tr></table>`
-            : ''
-        }
+/** Informations qui évoluent (paiements, relevés de départ et de retour) : lues au moment de générer le PDF. */
+export type LiveExtras = {
+  payments?: { montant: number; methode: string; statut: string }[];
+  kmDepart?: number | null;
+  kmRetour?: number | null;
+  carburantDepart?: number | null;
+};
 
-        <p class="notice">
-          Document généré automatiquement par M3ak à titre d'information contractuelle. Ce modèle
-          n'a pas été validé juridiquement : vérifiez sa conformité aux exigences réglementaires
-          applicables avant toute utilisation commerciale.
-        </p>
+const PAYMENT_LABEL: Record<string, string> = { especes: 'Espèces', carte: 'Carte bancaire', virement: 'Virement', cheque: 'Chèque' };
 
-        <div class="signatures">
-          <div class="sign-box">Signature du client</div>
-          <div class="sign-box">Signature de l'agence</div>
-        </div>
-      </body>
-    </html>
-  `;
+function rentalDays(contract: Contract): number {
+  const ms = new Date(contract.dateFinPrevue).getTime() - new Date(contract.dateDebutPrevue).getTime();
+  return Number.isFinite(ms) && ms > 0 ? Math.max(1, Math.ceil(ms / 86_400_000)) : 0;
 }
 
-export async function generateContractPdf(contract: Contract, agencyName: string): Promise<string> {
-  const missing = assertContractIsComplete(contract, agencyName);
+/** Valeurs des champs automatiques ({{client_nom}}…) à partir du contrat figé, de la fiche agence et des informations en direct. */
+export function contractTemplateValues(contract: Contract, info: ContractAgencyInfo, extras: LiveExtras = {}): TemplateValues {
+  const days = rentalDays(contract);
+  const paid = (extras.payments ?? []).filter((payment) => payment.statut === 'paye');
+  const advance = paid.reduce((sum, payment) => sum + payment.montant, 0);
+  const methods = [...new Set(paid.map((payment) => PAYMENT_LABEL[payment.methode] ?? payment.methode))].join(', ');
+  const values: TemplateValues = {
+    ...(contract.snapshotValues as TemplateValues | null),
+    prix_jour: contract.prixTotal != null && days > 0 ? money(Math.round(contract.prixTotal / days)) : '',
+    nombre_jours: days > 0 ? String(days) : '',
+    avance: paid.length > 0 ? money(advance) : '',
+    reste: contract.prixTotal != null && paid.length > 0 ? money(Math.max(0, contract.prixTotal - advance)) : '',
+    mode_paiement: methods,
+    // Avant le départ réel, le contrat reprend les relevés de l'inspection de départ (figés à sa création).
+    km_depart: extras.kmDepart != null ? String(extras.kmDepart) : ((contract.snapshotValues as TemplateValues | null)?.km_depart ?? ''),
+    km_retour: extras.kmRetour != null ? String(extras.kmRetour) : '',
+    carburant_depart: extras.carburantDepart != null ? `${extras.carburantDepart} %` : ((contract.snapshotValues as TemplateValues | null)?.carburant_depart ?? ''),
+    numero: contract.numero,
+    date_contrat: formatDateTime(contract.createdAt),
+    ville_contrat: info.ville ?? '',
+    agence_nom: info.nom,
+    agence_raison_sociale: info.raisonSociale ?? '',
+    agence_adresse: info.adresse ?? '',
+    agence_adresse_complete: [info.adresse, info.ville].filter(Boolean).join(', '),
+    agence_ville: info.ville ?? '',
+    agence_telephone: info.telephone ?? '',
+    agence_email: info.email ?? '',
+    client_nom: contract.customerNom,
+    client_cin: contract.customerCin || (contract.snapshotValues as TemplateValues | null)?.client_cin || '',
+    client_telephone: contract.customerTelephone ?? '',
+    conducteur_principal: contract.driverNom ?? '',
+    autres_conducteurs: contract.autresConducteurs.join('\n'),
+    vehicule: `${contract.vehicleMarque} ${contract.vehicleModele} (${contract.vehicleImmatriculation})`,
+    marque: contract.vehicleMarque,
+    modele: contract.vehicleModele,
+    immatriculation: contract.vehicleImmatriculation,
+    date_debut: formatDateTime(contract.dateDebutPrevue),
+    date_fin: formatDateTime(contract.dateFinPrevue),
+    prix_total: contract.prixTotal != null ? money(contract.prixTotal) : '',
+    caution: money(contract.cautionMontant),
+    etat_depart: contract.etatDepart ? (CONDITION_LABEL[contract.etatDepart] ?? '') : '',
+    accessoires_depart: contract.accessoiresDepart.map((key) => ACCESSORY_LABEL[key] ?? key).join(', '),
+    observations_depart: contract.observationsDepart ?? '',
+    conditions_particulieres: contract.conditionsParticulieres ?? '',
+  };
+  for (const key of PLACEHOLDERS) values[key] = values[key] ?? '';
+  return values;
+}
+
+export function contractTemplateContext(contract: Contract): TemplateContext {
+  return {
+    hasDrivers: !!contract.driverNom || contract.autresConducteurs.length > 0,
+    hasConditions: !!contract.conditionsParticulieres,
+    hasDeparture: !!contract.etatDepart || !!(contract.snapshotValues as TemplateValues | null)?.dommages_depart,
+  };
+}
+
+/**
+ * Modèle à utiliser : celui figé sur le contrat s'il est signé, sinon celui de l'agence, sinon le modèle M3ak standard.
+ * Un modèle illisible ou invalide retombe sur le standard (jamais d'erreur au moment de générer un contrat).
+ */
+export function resolveTemplate(contract: Contract, info: ContractAgencyInfo, agencyTemplate?: unknown): ContractTemplate {
+  const custom = parseTemplate(contract.termsSnapshot ?? agencyTemplate ?? null);
+  if (custom) return ensureSignatures(custom);
+  const agencyLines = [
+    info.nom + (info.raisonSociale && info.raisonSociale !== info.nom ? ` — ${info.raisonSociale}` : ''),
+    [info.adresse, info.ville].filter(Boolean).join(', '),
+  ].filter(Boolean);
+  return defaultContractTemplate({ caution: money(contract.cautionMontant), city: info.ville ?? '', agencyLines });
+}
+
+/** Remplit le modèle (instantané : aucun appel réseau ni IA). */
+export function buildContractHtml(
+  contract: Contract,
+  agency: string | ContractAgencyInfo,
+  signatures: ContractSignatures = {},
+  agencyTemplate?: unknown,
+  extras: LiveExtras = {}
+): string {
+  const info: ContractAgencyInfo = typeof agency === 'string' ? { nom: agency } : agency;
+  return renderTemplateHtml(resolveTemplate(contract, info, agencyTemplate), {
+    values: contractTemplateValues(contract, info, extras),
+    context: contractTemplateContext(contract),
+    clientName: contract.customerNom,
+    agencyName: info.nom,
+    agencySignerName: signatures.agencySignerName,
+    clientSignedAtLabel: contract.clientSignedAt ? formatDateTime(contract.clientSignedAt) : null,
+    agencySignedAtLabel: contract.signedAt ? formatDateTime(contract.signedAt) : null,
+    signatures: { client: signatures.client, agency: signatures.agency },
+    stampDataUri: signatures.stampDataUri,
+    stampConfig: signatures.stampConfig,
+    logoDataUri: signatures.logoDataUri,
+  });
+}
+
+export async function generateContractPdf(
+  contract: Contract,
+  agency: string | ContractAgencyInfo,
+  signatures: ContractSignatures = {},
+  agencyTemplate?: unknown,
+  extras: LiveExtras = {}
+): Promise<string> {
+  const missing = assertContractIsComplete(contract, typeof agency === 'string' ? agency : agency.nom);
   if (missing.length > 0) {
     throw new Error(`Informations manquantes pour générer le contrat : ${missing.join(', ')}`);
   }
 
-  const html = buildContractHtml(contract, agencyName);
-  const { uri } = await Print.printToFileAsync({ html, base64: false });
+  const html = buildContractHtml(contract, agency, signatures, agencyTemplate, extras);
+  const { uri } = await Print.printToFileAsync({ html, base64: false, width: PRINT_SIZE.width, height: PRINT_SIZE.height });
+  return uri;
+}
+
+/**
+ * Contrat VIERGE : seules les informations de l'agence sont remplies ; tout le reste est une ligne à remplir au stylo.
+ * Sert à l'aperçu « vierge » de l'éditeur et à imprimer des exemplaires papier.
+ */
+export async function generateBlankContractPdf(agency: ContractAgencyInfo, agencyTemplate?: unknown, logoDataUri?: string | null): Promise<string> {
+  const blank = { ...sampleContract(), snapshotValues: null, numero: '', customerNom: '' };
+  const template = resolveTemplate(blank, agency, agencyTemplate);
+  const values: TemplateValues = {
+    agence_nom: agency.nom,
+    agence_raison_sociale: agency.raisonSociale ?? '',
+    agence_adresse: agency.adresse ?? '',
+    agence_adresse_complete: [agency.adresse, agency.ville].filter(Boolean).join(', '),
+    agence_ville: agency.ville ?? '',
+    agence_telephone: agency.telephone ?? '',
+    agence_email: agency.email ?? '',
+  };
+  const html = renderTemplateHtml(template, {
+    values,
+    context: { hasDrivers: true, hasConditions: true, hasDeparture: true },
+    clientName: '',
+    agencyName: agency.nom,
+    logoDataUri,
+  });
+  const { uri } = await Print.printToFileAsync({ html, base64: false, width: PRINT_SIZE.width, height: PRINT_SIZE.height });
   return uri;
 }

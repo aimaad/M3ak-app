@@ -11,6 +11,7 @@ import { TextField } from '@/components/text-field';
 import { M3akPalette } from '@/constants/theme';
 import { signInWithEmail } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
+import { friendlyErrorKey } from '@/lib/user-errors';
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -34,8 +35,7 @@ export default function LoginScreen() {
       await signInWithEmail(email.trim(), password);
     } catch (err) {
       console.error('Échec de connexion Supabase :', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`${t('auth.invalidCredentials')} (${message})`);
+      setError(t(friendlyErrorKey(err)));
     } finally {
       setIsSubmitting(false);
     }
@@ -47,7 +47,8 @@ export default function LoginScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1 px-6">
+      <SafeAreaView className="w-full flex-1">
+        <View className="flex-1 px-6">
         <View className="flex-row justify-end gap-2 pt-2">
           {SUPPORTED_LANGUAGES.map((code) => {
             const selected = code === language;
@@ -56,10 +57,10 @@ export default function LoginScreen() {
                 key={code}
                 onPress={() => changeLanguage(code)}
                 className={`rounded-full border px-3 py-1 ${
-                  selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                  selected ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                   {t(`common.${LANGUAGE_LABEL_KEY[code]}`)}
                 </ThemedText>
               </Pressable>
@@ -109,12 +110,19 @@ export default function LoginScreen() {
               loading={isSubmitting}
             />
 
+            <Pressable onPress={() => router.push('/mot-de-passe-oublie')} className="items-center py-1">
+              <ThemedText type="small" themeColor="primary">
+                {t('auth.forgot.link')}
+              </ThemedText>
+            </Pressable>
+
             <Pressable onPress={() => router.push('/signup')} className="items-center py-2">
               <ThemedText type="small" themeColor="primary">
                 {t('auth.noAccountHint')}
               </ThemedText>
             </Pressable>
           </View>
+        </View>
         </View>
       </SafeAreaView>
     </ThemedView>

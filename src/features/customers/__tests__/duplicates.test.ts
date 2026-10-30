@@ -1,4 +1,4 @@
-import { findPotentialDuplicates } from '../duplicates';
+import { findDuplicateMatches, findPotentialDuplicates, normalizeLicenceNumber } from '../duplicates';
 import type { Customer } from '../types';
 
 function makeCustomer(overrides: Partial<Customer>): Customer {
@@ -59,5 +59,44 @@ describe('findPotentialDuplicates', () => {
   it('exclut le client en cours de modification', () => {
     const result = findPotentialDuplicates(customers, { telephone: '0600000001' }, '1');
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('findDuplicateMatches (avec la raison)', () => {
+  const doc = (reference: string | null) => ({
+    id: 'd1', type: 'permis' as const, customLabel: null, reference, issuingAuthority: null, categories: ['B'],
+    dateDelivrance: null, expiresAt: null, path: null, notes: null, uploadedAt: '2026-01-01T00:00:00Z', uploadedBy: null, uploadedByName: null,
+  });
+  const customers: Customer[] = [
+    makeCustomer({ id: 'a', nomComplet: 'Fouad Bouchnef', dateNaissance: '1990-03-12', numeroPermis: '12/345678', telephone: '0661000001' }),
+    makeCustomer({ id: 'b', nomComplet: 'Sara Alaoui', documents: [doc('98 123456')], telephone: '0661000002' }),
+  ];
+
+  it('reconnaît le même numéro de permis, quelle que soit la présentation', () => {
+    expect(normalizeLicenceNumber('12 / 345-678')).toBe('12345678');
+    const matches = findDuplicateMatches(customers, { numeroPermis: '12345678' });
+    expect(matches.map((m) => [m.customer.id, m.reasons])).toEqual([['a', ['licence_number']]]);
+  });
+
+  it("reconnaît le numéro d'un document de permis déjà enregistré", () => {
+    const matches = findDuplicateMatches(customers, { numeroPermis: '98/123456' });
+    expect(matches[0]).toMatchObject({ customer: { id: 'b' }, reasons: ['licence_number'] });
+  });
+
+  it('reconnaît même nom et même date de naissance (accents et casse ignorés)', () => {
+    const matches = findDuplicateMatches(customers, { nomComplet: 'FOUAD  BOUCHNEF', dateNaissance: '1990-03-12' });
+    expect(matches[0]).toMatchObject({ customer: { id: 'a' }, reasons: ['name_and_birth'] });
+    expect(findDuplicateMatches(customers, { nomComplet: 'Fouad Bouchnef', dateNaissance: '1991-01-01' })).toEqual([]);
+  });
+
+  it('cumule les raisons et ne signale rien sans correspondance', () => {
+    const matches = findDuplicateMatches(customers, { telephone: '+212661000001', numeroPermis: '12/345678' });
+    expect(matches[0].reasons).toEqual(['phone', 'licence_number']);
+    expect(findDuplicateMatches(customers, { numeroPermis: '99/999999', telephone: '0600000000' })).toEqual([]);
+    expect(findDuplicateMatches(customers, { numeroPermis: '12' })).toEqual([]); // trop court pour comparer
+  });
+
+  it('ignore la fiche en cours de modification', () => {
+    expect(findDuplicateMatches(customers, { numeroPermis: '12/345678' }, 'a')).toEqual([]);
   });
 });

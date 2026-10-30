@@ -36,10 +36,6 @@ async function createUser() {
   return { id: data.user.id, email, client };
 }
 
-function randomCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
 async function createAgencyWithOwner(owner, nom) {
   const { data: agency, error } = await owner.client.from('agencies').insert({ nom, created_by: owner.id }).select().single();
   if (error) throw error;
@@ -48,16 +44,18 @@ async function createAgencyWithOwner(owner, nom) {
 }
 
 async function inviteMember(owner, agencyId, member, role) {
-  const code = randomCode();
-  await owner.client.from('agency_invites').insert({
-    agency_id: agencyId,
-    code,
-    role,
-    created_by: owner.id,
-    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  const { data: invite, error } = await owner.client.rpc('create_agency_invite', {
+    p_agency_id: agencyId,
+    p_email: member.email,
+    p_prenom: 'Test',
+    p_nom: 'Audit',
+    p_role: role,
+    p_branch_id: null,
   });
-  const { error } = await member.client.rpc('redeem_invite', { invite_code: code });
   if (error) throw error;
+  const { error: redeemErr } = await member.client.rpc('redeem_invite', { invite_code: invite.code });
+  if (redeemErr) throw redeemErr;
+  return invite;
 }
 
 const baseVehicle = {

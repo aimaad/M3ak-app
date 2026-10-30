@@ -44,6 +44,8 @@ export type Contract = {
   customerTelephone: string | null;
   customerCin: string | null;
   driverNom: string | null;
+  /** Conducteurs supplémentaires au moment de la création du contrat (instantané). */
+  autresConducteurs: string[];
   vehicleImmatriculation: string;
   vehicleMarque: string;
   vehicleModele: string;
@@ -57,6 +59,14 @@ export type Contract = {
 
   signedAt: string | null;
   signedBy: string | null;
+  /** Signatures manuscrites (copies figées dans le bucket privé « signatures »). */
+  clientSignaturePath: string | null;
+  agencySignaturePath: string | null;
+  clientSignedAt: string | null;
+  /** Modèle de contrat figé à la signature (null = modèle M3ak standard ou contrat non encore signé). */
+  termsSnapshot: unknown | null;
+  /** Informations complémentaires figées à la création (adresse, naissance, permis, conducteur 2…) pour remplir le modèle. */
+  snapshotValues: Record<string, string> | null;
 
   etatDepart: VehicleCondition | null;
   accessoiresDepart: AccessoryKey[];

@@ -10,6 +10,7 @@ import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { useVehicles } from '@/features/vehicles/hooks';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 export default function MaintenanceScreen() {
   const { t, language } = useLanguage();
@@ -21,12 +22,12 @@ export default function MaintenanceScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('maintenance.title')} showBack />
 
         {maintenanceQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : maintenanceQuery.isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -42,8 +43,8 @@ export default function MaintenanceScreen() {
             refreshControl={
               <RefreshControl
                 refreshing={maintenanceQuery.isFetching}
-                onRefresh={() => maintenanceQuery.refetch()}
-                tintColor="#7C3AED"
+                onRefresh={() => void maintenanceQuery.refetch()}
+                tintColor={M3akPalette.mauve}
               />
             }
             renderItem={({ item }) => {
@@ -69,9 +70,9 @@ export default function MaintenanceScreen() {
 
         <Pressable
           onPress={() => router.push('/maintenance/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-[#7C3AED] px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-emerald px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.onEmerald }}>
             {`+ ${t('maintenance.addAction')}`}
           </ThemedText>
         </Pressable>

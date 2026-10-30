@@ -48,18 +48,20 @@ export function DocumentPhotoField({ label, bucket, localUri, existingPath, onPi
         {label}
       </ThemedText>
       {previewUri ? (
-        <Image source={{ uri: previewUri }} className="h-36 w-full rounded-2xl" resizeMode="cover" />
+        <View className="h-36 w-full overflow-hidden rounded-2xl">
+          <Image source={{ uri: previewUri }} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="cover" />
+        </View>
       ) : null}
       <View className="flex-row gap-2">
         <Pressable
           onPress={() => handlePick('camera')}
-          className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+          className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3"
         >
           <ThemedText type="small">{t('common.camera')}</ThemedText>
         </Pressable>
         <Pressable
           onPress={() => handlePick('library')}
-          className="flex-1 items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+          className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3"
         >
           <ThemedText type="small">{t('common.gallery')}</ThemedText>
         </Pressable>

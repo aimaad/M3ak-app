@@ -1,8 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
+import { saveContractSignatures } from '@/features/signatures/api';
+import type { HandwrittenSignature } from '@/features/signatures/signature';
+
 import {
   cancelContract,
   createContract,
+  replaceContract,
   getContract,
   getContractForRental,
   listContracts,
@@ -64,6 +68,25 @@ export function useCreateContract() {
   });
 }
 
+export function useReplaceContract() {
+  const invalidate = useInvalidateContracts();
+
+  return useMutation({
+    mutationFn: ({
+      oldContractId,
+      agencyId,
+      input,
+      snapshot,
+    }: {
+      oldContractId: string;
+      agencyId: string;
+      input: ContractCreateInput;
+      snapshot: Parameters<typeof createContract>[2];
+    }) => replaceContract(oldContractId, agencyId, input, snapshot),
+    onSuccess: (contract) => invalidate(contract),
+  });
+}
+
 export function useMarkReadyToSign() {
   const invalidate = useInvalidateContracts();
   return useMutation({
@@ -75,7 +98,21 @@ export function useMarkReadyToSign() {
 export function useSignContract() {
   const invalidate = useInvalidateContracts();
   return useMutation({
-    mutationFn: (id: string) => signContract(id),
+    mutationFn: async ({
+      contract,
+      clientSignature,
+      agencySignature,
+      terms,
+    }: {
+      contract: { id: string; agencyId: string };
+      clientSignature: HandwrittenSignature;
+      agencySignature: HandwrittenSignature | null;
+      /** Modèle de contrat de l'agence au moment de la signature (figé sur le contrat). */
+      terms: unknown | null;
+    }) => {
+      const paths = await saveContractSignatures(contract.agencyId, contract.id, clientSignature, agencySignature);
+      return signContract(contract.id, paths, terms);
+    },
     onSuccess: (contract) => invalidate(contract),
   });
 }

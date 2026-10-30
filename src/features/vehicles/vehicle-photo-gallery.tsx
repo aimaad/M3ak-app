@@ -22,12 +22,12 @@ function GalleryThumbnail({
       {signedUrl ? (
         <Image source={{ uri: signedUrl }} className="h-28 w-28 rounded-2xl" resizeMode="cover" />
       ) : (
-        <View className="h-28 w-28 rounded-2xl bg-[#FAF9FF]" />
+        <View className="h-28 w-28 rounded-2xl bg-canvas" />
       )}
       {canDelete ? (
         <Pressable
           onPress={onDelete}
-          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-[#211A2E]"
+          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-ink"
         >
           <ThemedText type="small" style={{ color: '#ffffff' }}>
             ×
@@ -51,7 +51,7 @@ export function VehiclePhotoGallery({
 }) {
   if (photos.length === 0) {
     return (
-      <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-[#EAE5F2] bg-white">
+      <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-line bg-white">
         <ThemedText type="small" themeColor="textSecondary">
           {emptyLabel}
         </ThemedText>
@@ -60,7 +60,7 @@ export function VehiclePhotoGallery({
   }
 
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
+    <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
       {photos.map((photo) => (
         <GalleryThumbnail key={photo.path} photo={photo} canDelete={canDelete} onDelete={() => onDelete(photo)} />
       ))}

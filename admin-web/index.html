@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src https://*.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>KRIHA — Console d'administration</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo">K</span><span>KRIHA <small>Console d'administration</small></span></div>
+    <div id="session" class="session" hidden>
+      <span id="session-email"></span>
+      <button id="logout" class="btn ghost" type="button">Se déconnecter</button>
+    </div>
+  </header>
+
+  <main id="app">
+    <p class="muted center">Chargement…</p>
+  </main>
+
+  <dialog id="key-dialog">
+    <form id="key-form" autocomplete="off">
+      <h2 id="key-title">Clé d'API Gemini</h2>
+      <p class="muted" id="key-agency"></p>
+      <label>Clé d'API
+        <input id="key-input" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Collez la clé ici" />
+      </label>
+      <p class="hint" id="key-hint">Écriture seule : une fois enregistrée, la clé ne peut plus être relue ni affichée.</p>
+      <fieldset>
+        <legend>Offre de cette clé chez Google</legend>
+        <label class="radio"><input type="radio" name="tier" value="free" checked /> Gratuite — coût estimé : 0. <span class="warn">Google peut utiliser les images envoyées.</span></label>
+        <label class="radio"><input type="radio" name="tier" value="paid" /> Payante (facturation activée) — coût estimé selon le tarif saisi.</label>
+      </fieldset>
+      <p id="key-error" class="error" role="alert" hidden></p>
+      <div class="actions">
+        <button type="button" id="key-cancel" class="btn ghost">Annuler</button>
+        <button type="submit" id="key-save" class="btn">Enregistrer</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

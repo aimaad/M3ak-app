@@ -250,6 +250,118 @@ son rôle ni celui d'un autre membre (même famille que la migration 0010), **jo
 d'audit visible uniquement par le owner** (ni un employee, ni le owner d'une autre
 agence), isolation des filiales et des avatars entre deux agences.
 
-Un échec affiche la ligne RLS/politique concernée ; corrigez-la puis relancez le script
-avant de reporter la correction sur le projet de production (via le SQL Editor, comme à
-l'étape 2).
+## Accès par filiale et invitations sécurisées (migrations 0022 à 0026)
+
+À exécuter **dans l'ordre**, une par une, dans le SQL Editor (« Copy raw file » sur GitHub
+puis « Run ») :
+
+- `0022_branch_scoped_access.sql` — un membre rattaché à une filiale ne voit que les
+  véhicules, locations et données liées de sa filiale ; un membre sans filiale voit tout.
+- `0023_member_names_from_signup.sql` — le prénom et le nom saisis à l'inscription sont
+  recopiés sur le profil quand on rejoint une agence.
+- `0024_strict_branch_isolation.sql` — isolation stricte : rien des autres filiales
+  (équipe, invitations, fichiers) ; l'admin (owner) voit toujours tout ; un responsable de
+  filiale invite uniquement dans sa filiale.
+- `0025_shared_vehicles.sql` — un véhicule sans filiale est partagé par toute l'agence.
+- `0026_secure_invitations.sql` — invitations nominatives (prénom, nom, e-mail), code de 12
+  caractères généré par le serveur et jamais stocké en clair, lié à l'e-mail exact de la
+  personne, à usage unique, valable 7 jours, annulable et renvoyable. **Les anciennes
+  invitations par code simple sont annulées** : il faut en recréer.
+
+### Envoi des invitations par e-mail (Gmail)
+
+L'e-mail part depuis la fonction serveur `send-invite` (`supabase/functions/send-invite`).
+Sans elle, tout fonctionne quand même : l'invitation est créée et le code est partagé par
+WhatsApp ou copié (pas d'e-mail automatique).
+
+1. Dans votre compte Google : activez la validation en deux étapes puis créez un **mot de
+   passe d'application** (myaccount.google.com → Sécurité → Mots de passe d'application).
+   Le mot de passe de connexion Gmail ne fonctionne pas.
+2. Dans Supabase → Edge Functions → Secrets, ajoutez :
+   - `SMTP_USER` : votre adresse Gmail d'envoi
+   - `SMTP_PASSWORD` : le mot de passe d'application (16 caractères)
+   - `SMTP_FROM_NAME` : (optionnel) nom affiché, par exemple `M3ak`
+3. Déployez la fonction : `npx supabase functions deploy send-invite` (la connexion
+   Supabase CLI du projet est nécessaire), ou créez-la depuis le tableau de bord en collant
+   le contenu de `supabase/functions/send-invite/index.ts`.
+
+Ces identifiants ne sont **jamais** dans l'app mobile : ils restent des secrets serveur. La
+configuration SMTP de Supabase Auth (e-mails de confirmation) est distincte : la fonction ne
+peut pas la réutiliser, d'où ces deux secrets.
+
+## Clients : documents, notes internes, conducteurs et vérification avant départ (migrations 0028 et 0029)
+
+À exécuter dans l'ordre, une par une, après 0027 :
+
+- `0028_customer_documents_and_notes.sql` — **documents clients multiples** (table
+  `customer_documents` : plusieurs documents par type, libellé libre, autorité, catégories de
+  permis, notes, auteur et date imposés par le serveur, suppression douce réservée aux
+  responsables) ; les documents existants (ancien champ JSON) sont **recopiés**, l'ancien champ
+  est conservé tel quel. **Notes internes** (`customer_notes` + historique des versions) :
+  l'ancienne note libre devient la première note. Colonne `agencies.customer_ocr_enabled`
+  (scan des permis **désactivé par défaut**).
+- `0029_drivers_and_departure_checks.sql` — conducteur = fiche client existante
+  (`drivers.linked_customer_id`, sans doublon), règles des conducteurs d'une réservation
+  (pas de doublon, maximum configurable, verrouillé une fois la location commencée, écriture
+  atomique `set_rental_drivers`), **politique de départ** de l'agence
+  (`agency_departure_policies`, inactive par défaut), liste de contrôle
+  `rental_departure_check`, confirmation humaine horodatée, et contrôle serveur dans
+  `start_rental_with_contract`. Ajoute `contracts.autres_conducteurs`.
+- `0030_block_archive_vehicle_with_active_rentals.sql` — un véhicule réservé ou en location ne
+  peut pas être archivé (contrôle serveur).
+- `0032_agency_ocr_settings.sql` — réglage OCR **par entreprise** : clé d'API Gemini (renseignée par
+  l'opérateur, illisible depuis l'app) et accord du propriétaire. Voir `docs/OCR-CONFIDENTIALITE.md`.
+- `0033_platform_admin_ocr_keys.sql` — administration plateforme : table `platform_admins` et fonctions
+  réservées à l'administrateur (clé Gemini par entreprise, en écriture seule).
+- `0034_ocr_usage_and_web_admin.sql` — suivi d'utilisation de l'OCR cloud (`ocr_usage_events`, compteurs
+  uniquement), tarif saisi par l'administrateur, offre gratuite/payante des clés, vue d'ensemble pour la
+  console web `admin-web/`.
+- `0035_ai_insights.sql` — recommandations IA de l'accueil : accord distinct du propriétaire
+- `0036_activity_traceability.sql` — traçabilité : déclencheurs d'audit sur les tables métier, catégories, résumé par employé (propriétaire uniquement, journal en ajout seul)
+- `0037_handwritten_signatures.sql` — signatures manuscrites : bucket privé `signatures`, signature du membre (profil), copies figées client + agence sur le contrat (ajout seul), « signé » exige la signature du client. Voir `docs/CONTRATS-SIGNATURES.md`.
+- `0038_agency_stamp.sql` — cachet de l'agence (`agencies.stamp_path`, image dans le bucket privé `agency-assets`), apposé sur les contrats PDF.
+- `0039_require_agency_stamp_to_sign.sql` — un contrat ne peut passer à « signé » que si l'agence a enregistré son cachet.
+- `0040_contract_templates.sql` — modèle de contrat propre à chaque agence (`agency_contract_templates`, écriture réservée au propriétaire), modèle figé sur le contrat à la signature (`contracts.terms_snapshot`).
+- `0041_contract_snapshot_values.sql` — informations complémentaires du client et du conducteur 2 figées sur le contrat à sa création (`contracts.snapshot_values`), verrouillées à la signature.
+- `0042_contract_options.sql` — réglages simples du contrat d'une agence (`agency_contract_templates.options`) à partir desquels le modèle est fabriqué.
+- `0043_driver_names_and_logo_required.sql` — prénom et nom séparés pour les conducteurs (`drivers.prenom`, `drivers.nom`) ; le logo de l'agence devient obligatoire pour signer un contrat (en plus du cachet et de la signature du client).
+  (`insights_enabled`), suivi « insights » dans l'utilisation, console web. Voir `docs/ACCUEIL-RAPPORTS.md`.
+- `0031_document_buckets_limits.sql` — buckets `client-documents` et `vehicle-documents` :
+  taille maximale 15 Mo et types JPEG/PNG/PDF imposés **côté serveur** ; vérifie qu'ils restent privés.
+
+### Lecture des documents (permis, carte grise) : Gemini avec la clé de chaque entreprise
+
+Il n'y a **plus d'OCR sur le téléphone**. La lecture passe uniquement par la fonction `scan-document`, avec la clé
+Gemini de l'entreprise (enregistrée par l'administrateur M3AK dans la console web `admin-web/`) et l'accord de son
+propriétaire. Sans clé ou sans accord, la fonction est « non active » : l'app l'indique et propose la saisie manuelle.
+Déploiement : `npx supabase functions deploy scan-document` (aucun secret global ; `GEMINI_API_KEY` n'est plus utilisé).
+Voir `docs/OCR-CONFIDENTIALITE.md`. Les anciennes fonctions `scan-customer-document` et `scan-vehicle-document` n'existent
+plus : supprimez-les du tableau de bord Supabase. La colonne `agencies.customer_ocr_enabled` est conservée mais inutilisée.
+
+## Mot de passe oublié (app mobile et console web)
+
+L'app et la console utilisent un **code reçu par e-mail** (comme pour la confirmation d'inscription) : l'utilisateur
+saisit son e-mail, reçoit un code, puis choisit un nouveau mot de passe. **Une seule configuration est nécessaire
+dans Supabase**, sinon l'e-mail ne contiendra qu'un lien qui ne mène nulle part :
+
+1. Supabase → **Authentication → Email Templates → Reset Password**.
+2. Remplacez le contenu par un message qui affiche le code, par exemple :
+   ```html
+   <h2>Réinitialisation de votre mot de passe M3AK</h2>
+   <p>Votre code : <strong>{{ .Token }}</strong></p>
+   <p>Si vous n'êtes pas à l'origine de cette demande, ignorez ce message.</p>
+   ```
+   et mettez un objet sans accents (comme pour l'invitation), par ex. « Code de reinitialisation M3AK ».
+3. L'envoi passe par le SMTP déjà configuré (Authentication → SMTP Settings). Sans SMTP personnalisé,
+   Supabase limite fortement le nombre d'e-mails par heure.
+
+Sécurité : l'écran répond toujours pareil, que l'adresse existe ou non ; le code est à usage unique et expire ;
+si le nouveau mot de passe est refusé, la session de récupération est refermée.
+
+
+
+## Analyse des inspections (`analyze-inspection`)
+
+Fonction serveur qui analyse les photos d'une inspection avec la clé Gemini de l'entreprise (mêmes accords que `scan-document`) et enregistre les dommages proposés. Voir `docs/INSPECTION.md`.
+
+Déploiement : `npx supabase functions deploy analyze-inspection --project-ref <ref>` (après la migration `0046_inspection_analysis.sql`).

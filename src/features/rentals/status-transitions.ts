@@ -20,8 +20,11 @@ export function canTransitionRentalStatus(current: RentalStatus, next: RentalSta
   return ALLOWED_TRANSITIONS[current].includes(next);
 }
 
-/** Statuts qui bloquent réellement la disponibilité du véhicule (voir availability.ts). */
-export const BLOCKING_RENTAL_STATUSES: RentalStatus[] = ['reservee', 'confirmee', 'en_cours'];
+/**
+ * Statuts qui bloquent la disponibilité du véhicule (voir availability.ts) : une voiture promise, même en attente de
+ * confirmation, ne peut pas être promise à un autre client sur le même créneau (règle serveur : migration 0056).
+ */
+export const BLOCKING_RENTAL_STATUSES: RentalStatus[] = ['en_attente_confirmation', 'reservee', 'confirmee', 'en_cours'];
 
 /** Statuts terminaux : plus aucune transition possible. */
 export function isTerminalRentalStatus(status: RentalStatus): boolean {

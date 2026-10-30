@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,6 +16,10 @@ import { useMyAgency, useMyProfile, useUpdateMyProfile, useUploadMemberAvatar } 
 import type { MemberProfile } from '@/features/agency/types';
 import { signOut, updateMyPassword } from '@/features/auth/api';
 import { isPasswordChangeFormValid, validatePasswordChangeForm } from '@/features/auth/validation';
+import { unregisterThisDevice } from '@/features/notifications/push';
+import { NotificationSettings } from '@/features/notifications/notification-settings';
+import { useRemoveMySignature, useSignature } from '@/features/signatures/hooks';
+import { SignatureView } from '@/features/signatures/signature-pad';
 import { getInitials } from '@/lib/initials';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -43,7 +48,7 @@ export default function ProfilScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('profil.title')} showBack />
 
         {profileQuery.isLoading ? (
@@ -68,6 +73,8 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
   const { t } = useLanguage();
   const updateProfile = useUpdateMyProfile(agencyId);
   const uploadAvatar = useUploadMemberAvatar(agencyId);
+  const signatureQuery = useSignature(profile.signaturePath);
+  const removeSignature = useRemoveMySignature(agencyId);
 
   const [prenom, setPrenom] = useState(profile.prenom ?? '');
   const [nom, setNom] = useState(profile.nom ?? '');
@@ -132,13 +139,13 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
         <View className="flex-row gap-2">
           <Pressable
             onPress={() => handlePickAvatar('camera')}
-            className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2"
+            className="rounded-full border border-line bg-white px-4 py-2"
           >
             <ThemedText type="small">{t('common.camera')}</ThemedText>
           </Pressable>
           <Pressable
             onPress={() => handlePickAvatar('library')}
-            className="rounded-full border border-[#EAE5F2] bg-white px-4 py-2"
+            className="rounded-full border border-line bg-white px-4 py-2"
           >
             <ThemedText type="small">{t('common.gallery')}</ThemedText>
           </Pressable>
@@ -147,14 +154,14 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
       </View>
 
       <Card padded={false} className="px-4">
-        <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+        <View className="flex-row items-center justify-between border-b border-line py-3">
           <ThemedText type="default" themeColor="textSecondary">
             {t('profil.fields.type')}
           </ThemedText>
           <ThemedText type="smallBold">{t(`equipe.roles.${profile.role}`)}</ThemedText>
         </View>
         {profile.branchNom ? (
-          <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
+          <View className="flex-row items-center justify-between border-b border-line py-3">
             <ThemedText type="default" themeColor="textSecondary">
               {t('profil.fields.branch')}
             </ThemedText>
@@ -201,6 +208,35 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
         />
       </View>
 
+      <View className="gap-3">
+        <ThemedText type="smallBold">{t('profil.signature.section')}</ThemedText>
+        <Card className="items-center gap-3">
+          {profile.signaturePath && signatureQuery.data ? (
+            <SignatureView signature={signatureQuery.data} />
+          ) : profile.signaturePath && signatureQuery.isLoading ? (
+            <ActivityIndicator color={M3akPalette.mauve} />
+          ) : (
+            <ThemedText type="small" themeColor="textSecondary" className="text-center">
+              {t('profil.signature.none')}
+            </ThemedText>
+          )}
+          <Button
+            label={profile.signaturePath ? t('profil.signature.change') : t('profil.signature.add')}
+            variant="secondary"
+            onPress={() => router.push('/profil/signature')}
+          />
+          {profile.signaturePath ? (
+            <Button
+              label={t('profil.signature.remove')}
+              variant="ghost"
+              size="sm"
+              disabled={removeSignature.isPending}
+              onPress={() => removeSignature.mutate(profile.id, { onError: () => Alert.alert(t('common.appName'), t('profil.signature.saveError')) })}
+            />
+          ) : null}
+        </Card>
+      </View>
+
       <View className="gap-4">
         <ThemedText type="smallBold">{t('profil.sections.password')}</ThemedText>
         <TextField
@@ -236,7 +272,12 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
         />
       </View>
 
-      <Button label={t('auth.signOut')} variant="danger" onPress={() => signOut()} />
+      <NotificationSettings agencyId={agencyId} />
+
+      <Button label={t('auth.signOut')} variant="danger" onPress={async () => {
+          await unregisterThisDevice();
+          await signOut();
+        }} />
     </ScrollView>
   );
 }

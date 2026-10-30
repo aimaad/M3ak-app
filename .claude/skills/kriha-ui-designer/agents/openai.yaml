@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kriha UI Designer"
+  short_description: "Premium green UI redesign for Kriha on React Native and Expo"
+  brand_color: "#00B884"

@@ -1,22 +1,43 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { DocumentPhotoField } from '@/components/document-photo-field';
-import { ThemedText } from '@/components/themed-text';
+import { Card } from '@/components/card';
+import { ChipGroup } from '@/components/chip-group';
+import { CollapsibleSection } from '@/components/collapsible-section';
 import { TextField } from '@/components/text-field';
-import { findDocument } from '@/features/storage/documents';
+import { ThemedText } from '@/components/themed-text';
+import { ZoomableImage } from '@/components/zoomable-image';
+import { M3akPalette } from '@/constants/theme';
+import { useMyAgency } from '@/features/agency/hooks';
+import { useDeparturePolicy } from '@/features/rentals/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
-import { DOCUMENTS_BUCKET } from './api';
-import { findPotentialDuplicates } from './duplicates';
-import { CUSTOMER_TYPES, DOCUMENT_TYPES, PREFERRED_LANGUAGES } from './types';
-import { isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from './validation';
-import type { Customer, CustomerDocument, CustomerInput, CustomerType, PendingDocument, PreferredLanguage } from './types';
+import {
+  entriesAreValid,
+  entriesFromPending,
+  entriesToPending,
+  isEmptyEntry,
+  licenceGaps,
+  newEntryKey,
+  reconcilePermisNumber,
+  type PendingEntry,
+} from './creation';
+import { DocumentForm } from './document-form';
+import { documentLabel, EMPTY_DOCUMENT_FORM, validateDocumentForm } from './documents';
+import { DuplicateCustomerCard } from './duplicate-customer-card';
+import { findDuplicateMatches } from './duplicates';
+import { EMPTY_CREATION_DRAFT, type CustomerCreationDraft } from './licence-ocr';
+import { CUSTOMER_TYPES, PREFERRED_LANGUAGES } from './types';
+import type { Customer, CustomerInput, CustomerType, PendingDocument, PreferredLanguage } from './types';
+import { fullNameOf, isFormValid, toCustomerInput, validateCustomerForm, type CustomerFormValues } from './validation';
 
 type CustomerFormProps = {
+  /** « create » : documents joints à la création (après scan ou à la main) ; « edit » : les documents se gèrent depuis la fiche. */
+  mode: 'create' | 'edit';
   initialValues?: CustomerFormValues;
-  existingDocuments?: CustomerDocument[];
+  /** Brouillon issu du scan du permis (création uniquement). */
+  draft?: CustomerCreationDraft;
   existingCustomerId?: string;
   allCustomers?: Customer[];
   submitLabel: string;
@@ -26,8 +47,7 @@ type CustomerFormProps = {
   onSubmit: (input: CustomerInput, pendingDocuments: PendingDocument[]) => void;
 };
 
-const EMPTY_VALUES: CustomerFormValues = {
-  nomComplet: '',
+export const EMPTY_CUSTOMER_VALUES: CustomerFormValues = {
   prenom: '',
   nom: '',
   cinOuPasseport: '',
@@ -43,53 +63,12 @@ const EMPTY_VALUES: CustomerFormValues = {
   typeClient: 'particulier',
   raisonSociale: '',
   ice: '',
-  notes: '',
 };
 
-function ChipGroup<T extends string>({
-  options,
-  selected,
-  getLabel,
-  onSelect,
-}: {
-  options: T[];
-  selected: T | null;
-  getLabel: (value: T) => string;
-  onSelect: (value: T) => void;
-}) {
-  return (
-    <View className="flex-row flex-wrap gap-2">
-      {options.map((option) => {
-        const isSelected = selected === option;
-        return (
-          <Pressable
-            key={option}
-            onPress={() => onSelect(option)}
-            className={`rounded-full border px-4 py-2 ${
-              isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
-            }`}
-          >
-            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>
-              {getLabel(option)}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
-function SectionTitle({ children }: { children: string }) {
-  return (
-    <ThemedText type="smallBold" className="mt-2">
-      {children}
-    </ThemedText>
-  );
-}
-
 export function CustomerForm({
+  mode,
   initialValues,
-  existingDocuments = [],
+  draft = EMPTY_CREATION_DRAFT,
   existingCustomerId,
   allCustomers = [],
   submitLabel,
@@ -99,205 +78,303 @@ export function CustomerForm({
   onSubmit,
 }: CustomerFormProps) {
   const { t } = useLanguage();
-  const [values, setValues] = useState<CustomerFormValues>(initialValues ?? EMPTY_VALUES);
+  const agencyQuery = useMyAgency();
+  const [values, setValues] = useState<CustomerFormValues>(() => ({
+    ...(initialValues ?? EMPTY_CUSTOMER_VALUES),
+    ...draft.values,
+  }));
+  const [entries, setEntries] = useState<PendingEntry[]>(() => {
+    const initial = entriesFromPending(draft.pendingDocuments);
+    // Création : la ligne « permis » est toujours là, à remplir (obligatoire pour un particulier).
+    return mode === 'create' && !initial.some((entry) => entry.values.type === 'permis')
+      ? [{ key: newEntryKey(), localUri: null, values: { ...EMPTY_DOCUMENT_FORM, type: 'permis' as const } }, ...initial]
+      : initial;
+  });
   const [touched, setTouched] = useState(false);
-  const [pendingDocuments, setPendingDocuments] = useState<PendingDocument[]>([]);
-  const [documentMeta, setDocumentMeta] = useState<Record<string, { reference: string; expiresAt: string }>>({});
+
+  const scannedPhotos = entries.flatMap((entry) => [
+    ...(entry.localUri ? [{ face: 'recto' as const, uri: entry.localUri }] : []),
+    ...(entry.localUriVerso ? [{ face: 'verso' as const, uri: entry.localUriVerso }] : []),
+  ]).slice(0, 2);
 
   const errors = validateCustomerForm(values);
   const showErrors = touched;
   const isEntreprise = values.typeClient === 'entreprise';
+  const uncertain = new Set<string>(draft.uncertainFields);
 
+  const permisReference = entries.find((entry) => entry.values.type === 'permis')?.values.reference ?? '';
+  const fullName = fullNameOf(values);
   const duplicates = useMemo(
     () =>
-      findPotentialDuplicates(
+      findDuplicateMatches(
         allCustomers,
-        { telephone: values.telephone, cinOuPasseport: values.cinOuPasseport },
+        {
+          telephone: values.telephone,
+          cinOuPasseport: values.cinOuPasseport,
+          numeroPermis: values.numeroPermis || permisReference,
+          nomComplet: fullName,
+          dateNaissance: values.dateNaissance,
+        },
         existingCustomerId
       ),
-    [allCustomers, values.telephone, values.cinOuPasseport, existingCustomerId]
+    [allCustomers, values.telephone, values.cinOuPasseport, values.numeroPermis, permisReference, fullName, values.dateNaissance, existingCustomerId]
   );
 
   function update<K extends keyof CustomerFormValues>(key: K, value: CustomerFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  function pickDocument(type: PendingDocument['type'], localUri: string) {
-    const meta = documentMeta[type];
-    setPendingDocuments((prev) => [
-      ...prev.filter((doc) => doc.type !== type),
-      {
-        type,
-        localUri,
-        reference: meta?.reference?.trim() || null,
-        dateDelivrance: null,
-        expiresAt: meta?.expiresAt?.trim() || null,
-      },
+  const verify = (key: keyof CustomerFormValues) => (uncertain.has(key) ? t('customer.ocr.verifyField') : undefined);
+
+  function updateEntry(key: string, patch: Partial<PendingEntry>) {
+    setEntries((prev) => prev.map((entry) => (entry.key === key ? { ...entry, ...patch } : entry)));
+  }
+
+  function addEntry() {
+    const hasPermis = entries.some((entry) => entry.values.type === 'permis');
+    setEntries((prev) => [
+      ...prev,
+      { key: newEntryKey(), localUri: null, values: { ...EMPTY_DOCUMENT_FORM, type: hasPermis ? 'cin' : 'permis' } },
     ]);
   }
 
+  // Le propriétaire décide si le permis est obligatoire à la création d'un client (oui par défaut).
+  const policyQuery = useDeparturePolicy(agencyQuery.data?.agencyId);
+  const licenceRequired = mode === 'create' && !isEntreprise && (policyQuery.data?.requireLicenceAtCustomer ?? true);
+  const gaps = licenceRequired ? licenceGaps(entries, values.numeroPermis) : [];
+
   function handleSubmit() {
     setTouched(true);
-    if (!isFormValid(errors)) return;
-    onSubmit(toCustomerInput(values), pendingDocuments);
+    if (!isFormValid(errors) || !entriesAreValid(entries) || gaps.length > 0) return;
+    const kept = licenceRequired ? entries : entries.filter((entry) => !isEmptyEntry(entry));
+    const reconciled = reconcilePermisNumber(toCustomerInput(values), entriesToPending(kept));
+    onSubmit(reconciled.input, reconciled.documents);
   }
+
+  const entryBadge = entries.length > 0 ? String(entries.length) : undefined;
 
   return (
     <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-      <SectionTitle>{t('customer.sections.general')}</SectionTitle>
-      <TextField
-        label={t('customer.fields.nomComplet')}
-        value={values.nomComplet}
-        onChangeText={(v) => update('nomComplet', v)}
-        error={showErrors && errors.nomComplet ? t(`customer.form.errors.${errors.nomComplet}`) : undefined}
-      />
-      <TextField
-        label={t('customer.fields.prenom')}
-        value={values.prenom}
-        onChangeText={(v) => update('prenom', v)}
-        placeholder={t('customer.fields.optionalPlaceholder')}
-      />
-      <TextField
-        label={t('customer.fields.nom')}
-        value={values.nom}
-        onChangeText={(v) => update('nom', v)}
-        placeholder={t('customer.fields.optionalPlaceholder')}
-      />
-      <TextField
-        label={t('customer.fields.dateNaissance')}
-        value={values.dateNaissance}
-        onChangeText={(v) => update('dateNaissance', v)}
-        placeholder={t('customer.fields.datePlaceholder')}
-        error={showErrors && errors.dateNaissance ? t(`customer.form.errors.${errors.dateNaissance}`) : undefined}
-      />
+      {draft.fromOcr ? (
+        <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.mauveLight }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.mauveDeep }}>
+            {t('customer.ocr.bannerTitle')}
+          </ThemedText>
+          <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
+            {t('customer.ocr.bannerBody')}
+          </ThemedText>
+          {draft.fromCache ? (
+            <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
+              {t('ocr.fromCache')}
+            </ThemedText>
+          ) : null}
+        </View>
+      ) : null}
 
-      <SectionTitle>{t('customer.sections.coordonnees')}</SectionTitle>
-      <TextField
-        label={t('customer.fields.telephone')}
-        value={values.telephone}
-        onChangeText={(v) => update('telephone', v)}
-        keyboardType="phone-pad"
-        placeholder="+212 6XX XX XX XX"
-        error={showErrors && errors.telephone ? t(`customer.form.errors.${errors.telephone}`) : undefined}
-      />
-      <TextField
-        label={t('customer.fields.telephoneSecondaire')}
-        value={values.telephoneSecondaire}
-        onChangeText={(v) => update('telephoneSecondaire', v)}
-        keyboardType="phone-pad"
-        placeholder={t('customer.fields.optionalPlaceholder')}
-      />
-      {duplicates.length > 0 ? (
-        <View className="rounded-2xl bg-[#FEF3C7] px-4 py-3">
-          <ThemedText type="small" style={{ color: '#B45309' }}>
-            {t('customer.duplicateWarning', { count: duplicates.length, name: duplicates[0].nomComplet })}
+      {draft.fromOcr && scannedPhotos.length > 0 ? (
+        <View className="gap-1">
+          <View className="flex-row gap-2" style={{ height: 150 }}>
+            {scannedPhotos.map((photo) => (
+              <ZoomableImage key={photo.face} uri={photo.uri} label={t(`vehicle.quickCreate.face.${photo.face}`)} style={{ borderRadius: 16 }} />
+            ))}
+          </View>
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('common.zoomHint')}
           </ThemedText>
         </View>
       ) : null}
-      <TextField
-        label={t('customer.fields.email')}
-        value={values.email}
-        onChangeText={(v) => update('email', v)}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        error={showErrors && errors.email ? t(`customer.form.errors.${errors.email}`) : undefined}
-      />
-      <TextField
-        label={t('customer.fields.adresse')}
-        value={values.adresse}
-        onChangeText={(v) => update('adresse', v)}
-      />
-      <TextField label={t('customer.fields.ville')} value={values.ville} onChangeText={(v) => update('ville', v)} />
-      <TextField label={t('customer.fields.pays')} value={values.pays} onChangeText={(v) => update('pays', v)} />
-      <View className="gap-1.5">
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('customer.fields.languePreferee')}
-        </ThemedText>
-        <ChipGroup
-          options={PREFERRED_LANGUAGES}
-          selected={values.languePreferee}
-          getLabel={(l: PreferredLanguage) => t(`customer.language.${l}`)}
-          onSelect={(l) => update('languePreferee', l)}
+
+      {(draft.warnings ?? []).map((code) => (
+        <View key={code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: code === 'licence_expiring' ? M3akPalette.mauveLight : M3akPalette.warningLight }}>
+          <ThemedText type="small" style={{ color: code === 'licence_expiring' ? M3akPalette.mauveDeep : M3akPalette.warning }}>
+            {t(`customer.ocr.checks.${code}`)}
+          </ThemedText>
+        </View>
+      ))}
+
+      <DuplicateCustomerCard matches={duplicates} />
+
+      <CollapsibleSection title={t('customer.sections.general')} defaultOpen>
+        <TextField
+          label={t('customer.fields.prenom')}
+          value={values.prenom}
+          onChangeText={(v) => update('prenom', v)}
+          error={showErrors && errors.prenom ? t(`customer.form.errors.${errors.prenom}`) : undefined}
+          warning={verify('prenom')}
         />
-      </View>
+        <TextField
+          label={t('customer.fields.nom')}
+          value={values.nom}
+          onChangeText={(v) => update('nom', v)}
+          error={showErrors && errors.nom ? t(`customer.form.errors.${errors.nom}`) : undefined}
+          warning={verify('nom')}
+        />
+        <TextField
+          label={t('customer.fields.telephone')}
+          value={values.telephone}
+          onChangeText={(v) => update('telephone', v)}
+          keyboardType="phone-pad"
+          placeholder="+212 6XX XX XX XX"
+          error={showErrors && errors.telephone ? t(`customer.form.errors.${errors.telephone}`) : undefined}
+        />
+      </CollapsibleSection>
 
-      <SectionTitle>{t('customer.sections.type')}</SectionTitle>
-      <ChipGroup
-        options={CUSTOMER_TYPES}
-        selected={values.typeClient}
-        getLabel={(ct: CustomerType) => t(`customer.type.${ct}`)}
-        onSelect={(ct) => update('typeClient', ct)}
-      />
-      {isEntreprise ? (
-        <>
+      {mode === 'create' ? (
+        <CollapsibleSection
+          title={t('customer.sections.documents')}
+          badge={entryBadge}
+          defaultOpen
+        >
           <TextField
-            label={t('customer.fields.raisonSociale')}
-            value={values.raisonSociale}
-            onChangeText={(v) => update('raisonSociale', v)}
-            error={showErrors && errors.raisonSociale ? t(`customer.form.errors.${errors.raisonSociale}`) : undefined}
+            label={t('customer.fields.permis')}
+            value={values.numeroPermis}
+            onChangeText={(v) => update('numeroPermis', v)}
+            autoCapitalize="characters"
+            warning={verify('numeroPermis')}
           />
-          <TextField label={t('customer.fields.ice')} value={values.ice} onChangeText={(v) => update('ice', v)} />
-        </>
+          <TextField
+            label={t('customer.fields.cin')}
+            value={values.cinOuPasseport}
+            onChangeText={(v) => update('cinOuPasseport', v)}
+            autoCapitalize="characters"
+          />
+
+          {entries.map((entry) => {
+            const entryErrors = validateDocumentForm(entry.values);
+            return (
+              <Card key={entry.key} className="gap-3">
+                <View className="flex-row items-center justify-between">
+                  <ThemedText type="smallBold">
+                    {documentLabel(
+                      { type: entry.values.type, customLabel: entry.values.customLabel },
+                      t
+                    )}
+                  </ThemedText>
+                  <Button
+                    label={t('customer.documentsManager.removePending')}
+                    variant="ghost"
+                    size="sm"
+                    onPress={() => setEntries((prev) => prev.filter((e) => e.key !== entry.key))}
+                  />
+                </View>
+                <DocumentForm
+                  values={entry.values}
+                  onChange={(next) => updateEntry(entry.key, { values: next })}
+                  errors={showErrors ? entryErrors : {}}
+                  localUri={entry.localUri}
+                  onPickFile={(uri) => updateEntry(entry.key, { localUri: uri })}
+                  localUriVerso={entry.localUriVerso ?? null}
+                  onPickFileVerso={(uri) => updateEntry(entry.key, { localUriVerso: uri })}
+                  uncertain={entry.values.type === 'permis' ? draft.uncertainDocumentFields : []}
+                />
+              </Card>
+            );
+          })}
+
+          {showErrors && gaps.length > 0 ? (
+            <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
+              {gaps.map((gap) => (
+                <ThemedText key={gap} type="small" style={{ color: M3akPalette.danger }}>
+                  {t(`customer.documentsManager.licenceRequired.${gap}`)}
+                </ThemedText>
+              ))}
+            </View>
+          ) : null}
+
+          <Button
+            label={t('customer.documentsManager.addButton')}
+            variant="secondary"
+            icon="add-circle-outline"
+            onPress={addEntry}
+          />
+          <ThemedText type="small" themeColor="textSecondary">
+            {t(licenceRequired ? 'customer.documentsManager.licenceHint' : 'customer.documentsManager.optionalHint')}
+          </ThemedText>
+        </CollapsibleSection>
+      ) : (
+        <CollapsibleSection title={t('customer.sections.identifiers')}>
+          <TextField
+            label={t('customer.fields.cin')}
+            value={values.cinOuPasseport}
+            onChangeText={(v) => update('cinOuPasseport', v)}
+            autoCapitalize="characters"
+          />
+          <TextField
+            label={t('customer.fields.permis')}
+            value={values.numeroPermis}
+            onChangeText={(v) => update('numeroPermis', v)}
+            autoCapitalize="characters"
+          />
+        </CollapsibleSection>
+      )}
+
+      <CollapsibleSection title={t('customer.sections.coordonnees')}>
+        <TextField
+          label={t('customer.fields.telephoneSecondaire')}
+          value={values.telephoneSecondaire}
+          onChangeText={(v) => update('telephoneSecondaire', v)}
+          keyboardType="phone-pad"
+          optional
+        />
+        <TextField
+          label={t('customer.fields.email')}
+          value={values.email}
+          onChangeText={(v) => update('email', v)}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          error={showErrors && errors.email ? t(`customer.form.errors.${errors.email}`) : undefined}
+        />
+        <TextField
+          label={t('customer.fields.dateNaissance')}
+          value={values.dateNaissance}
+          onChangeText={(v) => update('dateNaissance', v)}
+          placeholder={t('customer.fields.datePlaceholder')}
+          error={showErrors && errors.dateNaissance ? t(`customer.form.errors.${errors.dateNaissance}`) : undefined}
+          warning={verify('dateNaissance')}
+        />
+        <TextField label={t('customer.fields.adresse')} value={values.adresse} onChangeText={(v) => update('adresse', v)} />
+        <TextField label={t('customer.fields.ville')} value={values.ville} onChangeText={(v) => update('ville', v)} />
+        <TextField label={t('customer.fields.pays')} value={values.pays} onChangeText={(v) => update('pays', v)} />
+        <View className="gap-1.5">
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('customer.fields.languePreferee')}
+          </ThemedText>
+          <ChipGroup<PreferredLanguage>
+            options={PREFERRED_LANGUAGES}
+            selected={values.languePreferee}
+            getLabel={(l) => t(`customer.language.${l}`)}
+            onSelect={(l) => update('languePreferee', l)}
+          />
+        </View>
+      </CollapsibleSection>
+
+      <CollapsibleSection title={t('customer.sections.type')} badge={isEntreprise ? t('customer.type.entreprise') : undefined}>
+        <ChipGroup<CustomerType>
+          options={CUSTOMER_TYPES}
+          selected={values.typeClient}
+          getLabel={(ct) => t(`customer.type.${ct}`)}
+          onSelect={(ct) => update('typeClient', ct)}
+        />
+        {isEntreprise ? (
+          <>
+            <TextField
+              label={t('customer.fields.raisonSociale')}
+              value={values.raisonSociale}
+              onChangeText={(v) => update('raisonSociale', v)}
+              error={showErrors && errors.raisonSociale ? t(`customer.form.errors.${errors.raisonSociale}`) : undefined}
+            />
+            <TextField label={t('customer.fields.ice')} value={values.ice} onChangeText={(v) => update('ice', v)} />
+          </>
+        ) : null}
+      </CollapsibleSection>
+
+      {mode === 'create' ? (
+        <View className="rounded-2xl border border-dashed border-line bg-white p-4">
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('customer.afterCreateHint')}
+          </ThemedText>
+        </View>
       ) : null}
-      <TextField
-        label={t('customer.fields.cin')}
-        value={values.cinOuPasseport}
-        onChangeText={(v) => update('cinOuPasseport', v)}
-        autoCapitalize="characters"
-      />
-      <TextField
-        label={t('customer.fields.permis')}
-        value={values.numeroPermis}
-        onChangeText={(v) => update('numeroPermis', v)}
-        autoCapitalize="characters"
-      />
-
-      <SectionTitle>{t('customer.sections.documents')}</SectionTitle>
-      {DOCUMENT_TYPES.map((type) => {
-        const existing = findDocument(existingDocuments, type);
-        return (
-          <View key={type} className="gap-2">
-            <DocumentPhotoField
-              label={t(`customer.documents.${type}`)}
-              bucket={DOCUMENTS_BUCKET}
-              localUri={pendingDocuments.find((d) => d.type === type)?.localUri ?? null}
-              existingPath={existing?.path}
-              onPick={(uri) => pickDocument(type, uri)}
-            />
-            <TextField
-              placeholder={t('customer.documentReferencePlaceholder')}
-              value={documentMeta[type]?.reference ?? ''}
-              onChangeText={(v) =>
-                setDocumentMeta((prev) => ({ ...prev, [type]: { ...prev[type], reference: v, expiresAt: prev[type]?.expiresAt ?? '' } }))
-              }
-            />
-            <TextField
-              placeholder={t('customer.documentExpiryPlaceholder')}
-              value={documentMeta[type]?.expiresAt ?? ''}
-              onChangeText={(v) =>
-                setDocumentMeta((prev) => ({ ...prev, [type]: { ...prev[type], expiresAt: v, reference: prev[type]?.reference ?? '' } }))
-              }
-            />
-          </View>
-        );
-      })}
-
-      <SectionTitle>{t('customer.sections.conducteurs')}</SectionTitle>
-      <View className="rounded-2xl border border-dashed border-[#EAE5F2] bg-white p-4">
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('customer.driversAfterCreateHint')}
-        </ThemedText>
-      </View>
-
-      <SectionTitle>{t('customer.sections.notes')}</SectionTitle>
-      <TextField
-        label={t('customer.fields.notes')}
-        value={values.notes}
-        onChangeText={(v) => update('notes', v)}
-        multiline
-        numberOfLines={3}
-        className="min-h-20"
-      />
 
       {submitError ? (
         <ThemedText type="small" style={{ color: '#DC2626' }}>

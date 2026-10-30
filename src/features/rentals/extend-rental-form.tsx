@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { Calendar, type DateData } from 'react-native-calendars';
 
+import { setCalendarLocale } from './calendar-locale';
+import { BOOKED_DAY_MARK, CALENDAR_THEME } from './calendar-theme';
+
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
@@ -17,7 +20,8 @@ function toDateKey(iso: string): string {
 }
 
 export function ExtendRentalForm({ rental }: { rental: Rental }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  setCalendarLocale(language);
   const [expanded, setExpanded] = useState(false);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -66,14 +70,14 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
 
   const markedDates: Record<string, object> = {};
   for (const date of disabledDates) {
-    markedDates[date] = { disabled: true, disableTouchEvent: true, textColor: '#EAE5F2' };
+    markedDates[date] = { ...BOOKED_DAY_MARK };
   }
   if (selectedDay) {
-    markedDates[selectedDay] = { selected: true, selectedColor: M3akPalette.mauve };
+    markedDates[selectedDay] = { startingDay: true, endingDay: true, color: M3akPalette.mauve, textColor: '#FFFFFF' };
   }
 
   return (
-    <View className="gap-3 rounded-3xl border border-[#EAE5F2] bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
       <ThemedText type="smallBold">{t('locations.extend.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {t('locations.extend.currentEnd', { date: new Date(rental.dateFinPrevue).toLocaleDateString('fr-FR') })}
@@ -85,7 +89,9 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
           if (disabledDates.includes(day.dateString)) return;
           setSelectedDay(day.dateString);
         }}
-        theme={{ todayTextColor: M3akPalette.mauve, arrowColor: M3akPalette.mauve }}
+        firstDay={1}
+        markingType="period"
+        theme={CALENDAR_THEME}
         style={{ borderRadius: 24, overflow: 'hidden' }}
       />
       {error ? (

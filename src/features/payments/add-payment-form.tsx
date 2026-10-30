@@ -7,6 +7,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { useCreatePayment } from './hooks';
 import { PAYMENT_METHODS, type PaymentMethod } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; rentalId: string }) {
   const { t } = useLanguage();
@@ -30,7 +31,7 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
     return (
       <Pressable
         onPress={() => setExpanded(true)}
-        className="items-center rounded-2xl border border-[#EAE5F2] bg-white px-4 py-3"
+        className="items-center rounded-2xl border border-line bg-white px-4 py-3"
       >
         <ThemedText type="smallBold" themeColor="primary">
           {`+ ${t('locations.addPayment')}`}
@@ -40,7 +41,7 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-[#EAE5F2] bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
       <TextField
         label={t('locations.paymentAmount')}
         value={montant}
@@ -59,10 +60,10 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
                 key={method}
                 onPress={() => setMethode(method)}
                 className={`rounded-full border px-3 py-1.5 ${
-                  selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                  selected ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                   {t(`locations.paymentMethods.${method}`)}
                 </ThemedText>
               </Pressable>
@@ -74,7 +75,7 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
         onPress={handleSubmit}
         disabled={!isValid || createPayment.isPending}
         className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
-          !isValid || createPayment.isPending ? 'bg-[#B3A6C2]' : 'bg-[#7C3AED]'
+          !isValid || createPayment.isPending ? 'bg-subtle' : 'bg-brand'
         }`}
       >
         {createPayment.isPending ? <ActivityIndicator color="#ffffff" /> : null}

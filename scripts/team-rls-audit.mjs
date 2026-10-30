@@ -35,10 +35,6 @@ async function createUser() {
   return { id: data.user.id, email, client };
 }
 
-function randomCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
-}
-
 async function createAgencyWithOwner(owner, nom) {
   const { data: agency, error } = await owner.client.from('agencies').insert({ nom, created_by: owner.id }).select().single();
   if (error) throw error;
@@ -47,14 +43,16 @@ async function createAgencyWithOwner(owner, nom) {
 }
 
 async function inviteMember(owner, agencyId, member, role, branchId = null) {
-  const code = randomCode();
-  const { data: invite, error } = await owner.client
-    .from('agency_invites')
-    .insert({ agency_id: agencyId, code, role, branch_id: branchId, created_by: owner.id, expires_at: new Date(Date.now() + 7 * 86400000).toISOString() })
-    .select()
-    .single();
+  const { data: invite, error } = await owner.client.rpc('create_agency_invite', {
+    p_agency_id: agencyId,
+    p_email: member.email,
+    p_prenom: 'Test',
+    p_nom: 'Audit',
+    p_role: role,
+    p_branch_id: branchId,
+  });
   if (error) throw error;
-  const { error: redeemErr } = await member.client.rpc('redeem_invite', { invite_code: code });
+  const { error: redeemErr } = await member.client.rpc('redeem_invite', { invite_code: invite.code });
   if (redeemErr) throw redeemErr;
   return invite;
 }
@@ -110,6 +108,125 @@ async function main() {
     employee2Row.branch_id === null,
     `branch_id=${employee2Row.branch_id}`
   );
+
+  // --- 2b. Accès par filiale : sans filiale = toutes, avec filiale = la sienne ---
+  const { data: branchRabat } = await owner.client
+    .from('branches')
+    .insert({ agency_id: agency.id, nom: 'Rabat', ville: 'Rabat' })
+    .select()
+    .single();
+  const { data: carCasa } = await owner.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: branchCasa.id, immatriculation: '1111-A-1', marque: 'Dacia', modele: 'Logan' })
+    .select()
+    .single();
+  const { data: carRabat } = await owner.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: branchRabat.id, immatriculation: '2222-A-1', marque: 'Renault', modele: 'Clio' })
+    .select()
+    .single();
+  const { data: seenByBranchEmployee } = await employee.client.from('vehicles').select('id').eq('agency_id', agency.id);
+  record(
+    'Employé rattaché à Casablanca : voit uniquement les véhicules de Casablanca',
+    (seenByBranchEmployee ?? []).length === 1 && seenByBranchEmployee[0].id === carCasa?.id,
+    `véhicules vus: ${(seenByBranchEmployee ?? []).length}`
+  );
+  const { data: seenByAllBranches } = await employee2.client.from('vehicles').select('id').eq('agency_id', agency.id);
+  record(
+    "Employé sans filiale : voit les véhicules de toutes les filiales",
+    (seenByAllBranches ?? []).length === 2,
+    `véhicules vus: ${(seenByAllBranches ?? []).length}`
+  );
+  const { data: updatedOther } = await employee.client
+    .from('vehicles')
+    .update({ kilometrage: 1 })
+    .eq('id', carRabat?.id)
+    .select();
+  record(
+    "Employé de Casablanca ne peut PAS modifier un véhicule de Rabat",
+    (updatedOther ?? []).length === 0,
+    `lignes modifiées: ${(updatedOther ?? []).length}`
+  );
+  const { data: ownCar } = await employee.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, immatriculation: '3333-A-1', marque: 'Kia', modele: 'Picanto' })
+    .select()
+    .single();
+  record(
+    "Un véhicule créé par un employé de filiale est rattaché à sa filiale",
+    ownCar?.branch_id === branchCasa.id,
+    `branch_id=${ownCar?.branch_id}`
+  );
+  const { error: otherBranchInsertErr } = await employee.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: branchRabat.id, immatriculation: '4444-A-1', marque: 'Kia', modele: 'Rio' });
+  record(
+    "Employé de Casablanca ne peut PAS créer un véhicule dans Rabat",
+    !!otherBranchInsertErr,
+    otherBranchInsertErr?.message ?? 'AUCUNE ERREUR'
+  );
+
+  // --- 2b'. Véhicule sans filiale = visible par toutes les filiales ---
+  const { data: carShared } = await owner.client
+    .from('vehicles')
+    .insert({ agency_id: agency.id, branch_id: null, immatriculation: '5555-A-1', marque: 'Fiat', modele: 'Tipo' })
+    .select()
+    .single();
+  const { data: sharedSeen } = await employee.client.from('vehicles').select('id').eq('id', carShared?.id);
+  record('Véhicule sans filiale : visible par un employé de filiale', (sharedSeen ?? []).length === 1, `lignes: ${(sharedSeen ?? []).length}`);
+  const { data: sharedTaken } = await employee.client.from('vehicles').update({ branch_id: branchCasa.id }).eq('id', carShared?.id).select();
+  record('Un employé de filiale ne peut PAS s\'approprier un véhicule partagé', (sharedTaken ?? []).length === 0, `lignes modifiées: ${(sharedTaken ?? []).length}`);
+
+  // --- 2c. Isolation stricte : un responsable de filiale ne voit rien des autres ---
+  const manager2 = await createUser();
+  await inviteMember(owner, agency.id, manager2, 'manager', branchRabat.id);
+  const { data: branchesSeenByManager2 } = await manager2.client.from('branches').select('id').eq('agency_id', agency.id);
+  record(
+    'Responsable rattaché à Rabat : ne voit que la filiale Rabat',
+    (branchesSeenByManager2 ?? []).length === 1 && branchesSeenByManager2[0].id === branchRabat.id,
+    `filiales vues: ${(branchesSeenByManager2 ?? []).length}`
+  );
+  const { data: carsSeenByManager2 } = await manager2.client.from('vehicles').select('id').eq('agency_id', agency.id);
+  record(
+    'Responsable de Rabat : ne voit que ses véhicules + les véhicules partagés (pas ceux de Casablanca)',
+    (carsSeenByManager2 ?? []).every((v) => v.id === carRabat?.id || v.id === carShared?.id) && (carsSeenByManager2 ?? []).length === 2,
+    `véhicules vus: ${(carsSeenByManager2 ?? []).length}`
+  );
+  const { data: membersSeenByManager2 } = await manager2.client.from('agency_members').select('user_id').eq('agency_id', agency.id);
+  record(
+    "Responsable de Rabat : ne voit PAS l'employé de Casablanca dans l'équipe",
+    !(membersSeenByManager2 ?? []).some((m) => m.user_id === employee.id),
+    `membres vus: ${(membersSeenByManager2 ?? []).length}`
+  );
+  const { error: manager2BranchErr } = await manager2.client
+    .from('branches')
+    .insert({ agency_id: agency.id, nom: 'Tanger', ville: 'Tanger' });
+  record('Responsable de filiale ne peut PAS créer de filiale', !!manager2BranchErr, manager2BranchErr?.message ?? 'AUCUNE ERREUR');
+  const inviteeCasa = await createUser();
+  const { error: manager2InviteErr } = await manager2.client.rpc('create_agency_invite', {
+    p_agency_id: agency.id, p_email: inviteeCasa.email, p_prenom: 'Test', p_nom: 'Audit', p_role: 'employee', p_branch_id: branchCasa.id,
+  });
+  record('Responsable de Rabat ne peut PAS inviter dans Casablanca', !!manager2InviteErr, manager2InviteErr?.message ?? 'AUCUNE ERREUR');
+  const { data: inviteDefault, error: inviteDefaultErr } = await manager2.client.rpc('create_agency_invite', {
+    p_agency_id: agency.id, p_email: inviteeCasa.email, p_prenom: 'Test', p_nom: 'Audit', p_role: 'employee', p_branch_id: null,
+  });
+  record(
+    'Responsable de Rabat sans filiale précisée : invitation rattachée à Rabat (jamais à toute l\'agence)',
+    !inviteDefaultErr && inviteDefault?.branch_id === branchRabat.id,
+    inviteDefaultErr?.message ?? `branch_id=${inviteDefault?.branch_id}`
+  );
+  const { error: directInsertErr } = await owner.client.from('agency_invites').insert({
+    agency_id: agency.id, role: 'employee', email: 'direct@example.test', expires_at: new Date(Date.now() + 86400000).toISOString(),
+  });
+  record('Insertion directe dans agency_invites interdite (même owner)', !!directInsertErr, directInsertErr?.message ?? 'AUCUNE ERREUR');
+  const wrongUser = await createUser();
+  const { error: wrongEmailErr } = await wrongUser.client.rpc('redeem_invite', { invite_code: inviteDefault?.code ?? 'AAAAAAAAAAAA' });
+  record("Un code d'invitation ne marche PAS avec un autre e-mail", !!wrongEmailErr && /invite_email_mismatch/.test(wrongEmailErr.message), wrongEmailErr?.message ?? 'AUCUNE ERREUR');
+  const { data: reused } = await inviteeCasa.client.rpc('redeem_invite', { invite_code: inviteDefault?.code });
+  const { error: reusedErr } = await inviteeCasa.client.rpc('redeem_invite', { invite_code: inviteDefault?.code });
+  record('Code à usage unique : second usage refusé', reused === 'employee' && !!reusedErr, reusedErr?.message ?? 'AUCUNE ERREUR');
+  const { data: allBranchesOwner } = await owner.client.from('branches').select('id').eq('agency_id', agency.id);
+  record("L'admin (owner) voit toutes les filiales", (allBranchesOwner ?? []).length >= 2, `filiales vues: ${(allBranchesOwner ?? []).length}`);
 
   // --- 3. Isolation entre agences ---
   const { data: seenByOutsider } = await outsider.client.from('branches').select('id').eq('agency_id', agency.id);

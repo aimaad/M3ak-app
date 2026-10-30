@@ -22,6 +22,7 @@ type ContractRow = {
   customer_telephone: string | null;
   customer_cin: string | null;
   driver_nom: string | null;
+  autres_conducteurs: string[] | null;
   vehicle_immatriculation: string;
   vehicle_marque: string;
   vehicle_modele: string;
@@ -33,6 +34,11 @@ type ContractRow = {
   notes: string | null;
   signed_at: string | null;
   signed_by: string | null;
+  client_signature_path: string | null;
+  agency_signature_path: string | null;
+  client_signed_at: string | null;
+  terms_snapshot: unknown | null;
+  snapshot_values: Record<string, string> | null;
   etat_depart: VehicleCondition | null;
   accessoires_depart: AccessoryKey[];
   observations_depart: string | null;
@@ -61,6 +67,7 @@ function fromRow(row: ContractRow): Contract {
     customerTelephone: row.customer_telephone,
     customerCin: row.customer_cin,
     driverNom: row.driver_nom,
+    autresConducteurs: row.autres_conducteurs ?? [],
     vehicleImmatriculation: row.vehicle_immatriculation,
     vehicleMarque: row.vehicle_marque,
     vehicleModele: row.vehicle_modele,
@@ -72,6 +79,11 @@ function fromRow(row: ContractRow): Contract {
     notes: row.notes,
     signedAt: row.signed_at,
     signedBy: row.signed_by,
+    clientSignaturePath: row.client_signature_path,
+    agencySignaturePath: row.agency_signature_path,
+    clientSignedAt: row.client_signed_at,
+    termsSnapshot: row.terms_snapshot ?? null,
+    snapshotValues: row.snapshot_values ?? null,
     etatDepart: row.etat_depart,
     accessoiresDepart: row.accessoires_depart ?? [],
     observationsDepart: row.observations_depart,
@@ -126,6 +138,7 @@ export async function createContract(
     customerTelephone: string | null;
     customerCin: string | null;
     driverNom: string | null;
+    autresConducteurs: string[];
     vehicleImmatriculation: string;
     vehicleMarque: string;
     vehicleModele: string;
@@ -133,6 +146,10 @@ export async function createContract(
     dateFinPrevue: string;
     prixTotal: number | null;
     cautionMontant: number;
+    /** Informations complémentaires du client et du deuxième conducteur (voir snapshot.ts). */
+    snapshotValues?: Record<string, string>;
+    /** État des lieux au départ déjà connu à la création (le contrat est fait après l'inspection de départ). */
+    departure?: { etatDepart: VehicleCondition | null; accessoiresDepart: AccessoryKey[]; observationsDepart: string | null };
   }
 ): Promise<Contract> {
   const userId = await getCurrentUserId();
@@ -146,6 +163,7 @@ export async function createContract(
       customer_telephone: snapshot.customerTelephone,
       customer_cin: snapshot.customerCin,
       driver_nom: snapshot.driverNom,
+      autres_conducteurs: snapshot.autresConducteurs,
       vehicle_immatriculation: snapshot.vehicleImmatriculation,
       vehicle_marque: snapshot.vehicleMarque,
       vehicle_modele: snapshot.vehicleModele,
@@ -153,6 +171,14 @@ export async function createContract(
       date_fin_prevue: snapshot.dateFinPrevue,
       prix_total: snapshot.prixTotal,
       caution_montant: snapshot.cautionMontant,
+      snapshot_values: snapshot.snapshotValues ?? null,
+      ...(snapshot.departure
+        ? {
+            etat_depart: snapshot.departure.etatDepart,
+            accessoires_depart: snapshot.departure.accessoiresDepart,
+            observations_depart: snapshot.departure.observationsDepart,
+          }
+        : {}),
       conditions_particulieres: input.conditionsParticulieres,
       notes: input.notes,
       created_by: userId,
@@ -170,12 +196,24 @@ export async function markReadyToSign(id: string): Promise<Contract> {
   return fromRow(data as ContractRow);
 }
 
-/** Signature manuelle documentée : jamais automatique, toujours horodatée et attribuée. */
-export async function signContract(id: string): Promise<Contract> {
+/**
+ * Signature : le client a signé à l'écran (copie figée déposée avant), l'employé a sa propre signature collée.
+ * Toujours horodatée et attribuée ; la base refuse « signé » sans signature du client.
+ */
+export async function signContract(id: string, signatures: { clientPath: string; agencyPath: string | null }, terms: unknown | null = null): Promise<Contract> {
   const userId = await getCurrentUserId();
+  const now = new Date().toISOString();
   const { data, error } = await getSupabase()
     .from('contracts')
-    .update({ statut: 'signe', signed_at: new Date().toISOString(), signed_by: userId })
+    .update({
+      statut: 'signe',
+      signed_at: now,
+      signed_by: userId,
+      client_signature_path: signatures.clientPath,
+      agency_signature_path: signatures.agencyPath,
+      client_signed_at: now,
+      terms_snapshot: terms,
+    })
     .eq('id', id)
     .select()
     .single();
@@ -187,6 +225,24 @@ export async function cancelContract(id: string): Promise<Contract> {
   const { data, error } = await getSupabase().from('contracts').update({ statut: 'annule' }).eq('id', id).select().single();
   if (error) throw error;
   return fromRow(data as ContractRow);
+}
+
+/**
+ * Correction d'un contrat pas encore signé : l'ancien est annulé (il reste dans l'historique) puis le nouveau est créé
+ * avec les données actuelles de la location. Si la création échoue, un nouvel essai ne ré-annule pas l'ancien.
+ */
+export async function replaceContract(
+  oldContractId: string,
+  agencyId: string,
+  input: ContractCreateInput,
+  snapshot: Parameters<typeof createContract>[2]
+): Promise<Contract> {
+  const old = await getContract(oldContractId);
+  if (old && old.statut !== 'annule') {
+    if (old.statut !== 'preparation' && old.statut !== 'pret_a_signer') throw new Error('contract_not_editable');
+    await cancelContract(oldContractId);
+  }
+  return createContract(agencyId, input, snapshot);
 }
 
 /**

@@ -7,28 +7,28 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
+import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { useMyAgency } from '@/features/agency/hooks';
-import { generateContractPdf } from '@/features/contracts/contract-pdf';
+import { useAgencyDetails, useAgencyMembers, useMyAgency } from '@/features/agency/hooks';
+import { useContractTemplate } from '@/features/contracts/template-hooks';
+import { assertContractIsComplete, buildContractHtml, generateContractPdf } from '@/features/contracts/contract-pdf';
+import { canPrintInBrowser, printHtmlInBrowser } from '@/lib/print-html';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
-import { useCancelContract, useContract, useMarkReadyToSign, useSignContract, useUploadContractPdf } from '@/features/contracts/hooks';
+import { useCancelContract, useContract, useMarkReadyToSign, useUploadContractPdf } from '@/features/contracts/hooks';
+import { usePaymentsForRental } from '@/features/payments/hooks';
 import { useRental } from '@/features/rentals/hooks';
+import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
+import { loadImageForPdf } from '@/features/storage/api';
+import { loadSignature } from '@/features/signatures/api';
+import { useSignature } from '@/features/signatures/hooks';
+import { SignatureView } from '@/features/signatures/signature-pad';
 import { useLanguage } from '@/i18n/use-language';
+import { friendlyErrorKey } from '@/lib/user-errors';
+import { M3akPalette } from '@/constants/theme';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
-      <ThemedText type="default" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold">{value}</ThemedText>
-    </View>
-  );
 }
 
 export default function ContratDetailScreen() {
@@ -37,8 +37,13 @@ export default function ContratDetailScreen() {
   const agencyQuery = useMyAgency();
   const { data: contract, isLoading, isError } = useContract(id);
   const { data: rental } = useRental(contract?.rentalId);
+  const detailsQuery = useAgencyDetails(agencyQuery.data?.agencyId);
+  const templateQuery = useContractTemplate(agencyQuery.data?.agencyId);
+  const paymentsQuery = usePaymentsForRental(contract?.rentalId);
+  const membersQuery = useAgencyMembers(agencyQuery.data?.agencyId);
+  const clientSignature = useSignature(contract?.clientSignaturePath);
+  const agencySignature = useSignature(contract?.agencySignaturePath);
   const markReadyToSign = useMarkReadyToSign();
-  const signContract = useSignContract();
   const cancelContract = useCancelContract();
   const uploadPdf = useUploadContractPdf();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
@@ -49,13 +54,52 @@ export default function ContratDetailScreen() {
     setPdfError(null);
     setIsGeneratingPdf(true);
     try {
-      const localUri = await generateContractPdf(contract, agencyQuery.data.agencyName);
+      const details = detailsQuery.data;
+      const signer = membersQuery.data?.find((member) => member.userId === contract.signedBy);
+      const [client, agency, stampDataUri, logoDataUri] = await Promise.all([
+        loadSignature(contract.clientSignaturePath),
+        loadSignature(contract.agencySignaturePath),
+        loadImageForPdf(AGENCY_ASSETS_BUCKET, details?.stampPath).catch(() => null),
+        loadImageForPdf(AGENCY_ASSETS_BUCKET, details?.logoUrl).catch(() => null),
+      ]);
+      // Le logo est obligatoire sur le contrat : on ne génère jamais un PDF sans lui en silence.
+      if (!details?.logoUrl) {
+        setPdfError(t('contract.logoMissingPdf'));
+        return;
+      }
+      if (!logoDataUri) {
+        setPdfError(t('contract.logoLoadError'));
+        return;
+      }
+      const agencyInfo = {
+        nom: details?.nom ?? agencyQuery.data.agencyName,
+        raisonSociale: details?.raisonSociale,
+        adresse: details?.adresse,
+        ville: details?.ville ?? agencyQuery.data.agencyCity,
+        telephone: details?.telephone,
+        email: details?.email,
+      };
+      const signatures = { client, agency, stampDataUri, stampConfig: details?.stampConfig ?? null, logoDataUri, agencySignerName: signer?.nomComplet ?? null };
+      const extras = {
+        payments: paymentsQuery.data,
+        kmDepart: rental?.kmDepart,
+        kmRetour: rental?.kmRetour,
+        carburantDepart: rental?.carburantDepart,
+      };
+      // Sur le web (PC de l'agence) : boîte d'impression du navigateur, sans créer de fichier ni l'envoyer.
+      if (canPrintInBrowser) {
+        const missing = assertContractIsComplete(contract, agencyInfo.nom);
+        if (missing.length > 0) throw new Error(`Informations manquantes pour générer le contrat : ${missing.join(', ')}`);
+        await printHtmlInBrowser(buildContractHtml(contract, agencyInfo, signatures, templateQuery.data?.template, extras));
+        return;
+      }
+      const localUri = await generateContractPdf(contract, agencyInfo, signatures, templateQuery.data?.template, extras);
       await uploadPdf.mutateAsync({ agencyId: contract.agencyId, contractId: contract.id, localUri });
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(localUri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf' });
       }
     } catch (error) {
-      setPdfError(error instanceof Error ? error.message : t('contract.pdfError'));
+      setPdfError(t(friendlyErrorKey(error, 'contract.pdfError')));
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -73,28 +117,14 @@ export default function ContratDetailScreen() {
     ]);
   }
 
-  function handleSign() {
-    if (!contract) return;
-    Alert.alert(t('contract.signConfirmTitle'), t('contract.signConfirmBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('contract.signAction'),
-        onPress: () =>
-          signContract.mutate(contract.id, {
-            onError: () => Alert.alert(t('common.appName'), t('contract.signError')),
-          }),
-      },
-    ]);
-  }
-
   if (isLoading || isError || !contract) {
     return (
       <ThemedView className="flex-1">
-        <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+        <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color="#7C3AED" />
+              <ActivityIndicator color={M3akPalette.mauve} />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('contract.loadError') : t('contract.notFound')}
@@ -108,11 +138,12 @@ export default function ContratDetailScreen() {
 
   const canMarkReady = contract.statut === 'preparation';
   const canSign = contract.statut === 'pret_a_signer';
+  const canStartRental = !!rental && (rental.statut === 'confirmee' || rental.statut === 'reservee');
   const canCancel = contract.statut === 'preparation' || contract.statut === 'pret_a_signer' || contract.statut === 'signe';
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={contract.numero} showBack />
 
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
@@ -122,6 +153,9 @@ export default function ContratDetailScreen() {
             <InfoRow label={t('locations.vehicle')} value={`${contract.vehicleMarque} ${contract.vehicleModele} · ${contract.vehicleImmatriculation}`} />
             <InfoRow label={t('locations.customer')} value={contract.customerNom} />
             {contract.driverNom ? <InfoRow label={t('locations.driver')} value={contract.driverNom} /> : null}
+            {contract.autresConducteurs.length > 0 ? (
+              <InfoRow label={t('contract.additionalDrivers')} value={contract.autresConducteurs.join(', ')} />
+            ) : null}
             <InfoRow label={t('locations.period')} value={`${formatDateTime(contract.dateDebutPrevue)} → ${formatDateTime(contract.dateFinPrevue)}`} />
             <InfoRow label={t('locations.prixTotal')} value={contract.prixTotal != null ? `${contract.prixTotal.toLocaleString('fr-FR')} MAD` : '—'} />
             <View className="flex-row items-center justify-between py-3">
@@ -147,6 +181,28 @@ export default function ContratDetailScreen() {
             </ThemedText>
           ) : null}
 
+          {contract.clientSignaturePath ? (
+            <View className="gap-2">
+              <ThemedText type="smallBold">{t('contract.sign.signatures')}</ThemedText>
+              <Card className="flex-row items-center justify-around gap-3">
+                <View className="items-center gap-1">
+                  {clientSignature.data ? <SignatureView signature={clientSignature.data} height={70} /> : <ActivityIndicator color={M3akPalette.mauve} />}
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {t('contract.sign.clientLabel')}
+                  </ThemedText>
+                </View>
+                {contract.agencySignaturePath ? (
+                  <View className="items-center gap-1">
+                    {agencySignature.data ? <SignatureView signature={agencySignature.data} height={70} /> : <ActivityIndicator color={M3akPalette.mauve} />}
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('contract.sign.agencyLabel')}
+                    </ThemedText>
+                  </View>
+                ) : null}
+              </Card>
+            </View>
+          ) : null}
+
           <View className="gap-2">
             {canMarkReady ? (
               <Button
@@ -158,25 +214,33 @@ export default function ContratDetailScreen() {
             ) : null}
             {canSign ? (
               <Button
-                label={t('contract.signAction')}
-                onPress={handleSign}
-                disabled={signContract.isPending}
-                loading={signContract.isPending}
+                label={t('contract.sign.start')}
+                onPress={() => router.push({ pathname: '/contrats/[id]/signer', params: { id: contract.id } })}
               />
             ) : null}
             {contract.statut === 'signe' && rental ? (
-              <Button
-                label={t('locations.startAction')}
-                variant="secondary"
-                size="sm"
-                onPress={() =>
-                  router.push({ pathname: '/locations/[id]/depart', params: { id: rental.id, vehicleId: rental.vehicleId } })
-                }
-              />
+              <>
+                {canStartRental ? (
+                  <>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('contract.startHint')}
+                    </ThemedText>
+                    <Button
+                      label={t('locations.startAction')}
+                      onPress={() => router.push({ pathname: '/locations/[id]/depart', params: { id: rental.id, vehicleId: rental.vehicleId } })}
+                    />
+                  </>
+                ) : null}
+                <Button
+                  label={t('contract.continueRental')}
+                  variant={canStartRental ? 'secondary' : 'primary'}
+                  onPress={() => router.push({ pathname: '/locations/[id]', params: { id: rental.id } })}
+                />
+              </>
             ) : null}
 
             <Button
-              label={contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
+              label={canPrintInBrowser ? t('contract.print') : contract.pdfPath ? t('contract.regeneratePdf') : t('contract.generatePdf')}
               variant="secondary"
               onPress={handleGeneratePdf}
               disabled={isGeneratingPdf}
@@ -186,6 +250,14 @@ export default function ContratDetailScreen() {
               <ThemedText type="small" style={{ color: '#DC2626' }}>
                 {pdfError}
               </ThemedText>
+            ) : null}
+
+            {canMarkReady || canSign ? (
+              <Button
+                label={t('contract.editAction')}
+                variant="secondary"
+                onPress={() => router.push({ pathname: '/contrats/nouveau', params: { rentalId: contract.rentalId, replace: contract.id } })}
+              />
             ) : null}
 
             {canCancel ? <Button label={t('contract.cancelAction')} variant="danger" onPress={handleCancel} /> : null}

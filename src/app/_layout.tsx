@@ -1,3 +1,4 @@
+import '@/global.css';
 import '@/i18n';
 
 import {
@@ -7,16 +8,25 @@ import {
   Cairo_700Bold,
   useFonts,
 } from '@expo-google-fonts/cairo';
+import {
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
+import { DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
 import type { ReactNode } from 'react';
 
+import { DesktopShell } from '@/components/desktop-shell';
+import { UndoProvider } from '@/components/undo-toast';
+import { useAgencyAccess } from '@/features/agency/hooks';
 import { SessionProvider, useSession } from '@/features/auth/session-context';
+import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
 
-const PUBLIC_SEGMENTS = new Set(['login', 'signup']);
+const PUBLIC_SEGMENTS = new Set(['login', 'signup', 'mot-de-passe-oublie']);
 
 /**
  * Renvoie vers /login dès que la session disparaît (déconnexion, expiration),
@@ -37,17 +47,40 @@ function AuthGate({ children }: { children: ReactNode }) {
   return children;
 }
 
+/**
+ * Ferme l'application dès que l'accès de l'agence est expiré ou suspendu (le serveur refuse déjà
+ * toutes les données ; ici on affiche simplement l'écran explicatif).
+ */
+function AccessGate({ children }: { children: ReactNode }) {
+  const { session } = useSession();
+  const access = useAgencyAccess();
+  const segments = useSegments();
+  const onBlockedScreen = segments[0] === 'acces-bloque';
+
+  useEffect(() => {
+    if (!session || !access.data) return;
+    if (!access.data.hasAccess && !onBlockedScreen) {
+      router.replace('/acces-bloque');
+    }
+  }, [session, access.data, onBlockedScreen]);
+
+  return children;
+}
+
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const [fontsLoaded] = useFonts({
     Cairo_400Regular,
     Cairo_500Medium,
     Cairo_600SemiBold,
     Cairo_700Bold,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
   });
 
   useEffect(() => {
@@ -63,9 +96,16 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={DefaultTheme}>
           <AuthGate>
-            <Stack screenOptions={{ headerShown: false }} />
+            <AccessGate>
+              <UndoProvider>
+                <DesktopShell>
+                  <Stack screenOptions={{ headerShown: false }} />
+                </DesktopShell>
+                <NotificationsBootstrap />
+              </UndoProvider>
+            </AccessGate>
           </AuthGate>
         </ThemeProvider>
       </SessionProvider>

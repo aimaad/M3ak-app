@@ -1,30 +1,33 @@
-import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
+import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import {
   useAgencyDetails,
   useMyAgency,
   useUpdateAgencyDetails,
-  useUploadAgencyLogo,
 } from '@/features/agency/hooks';
 import {
   isAgencyDetailsFormValid,
+  isAgencyFormDirty,
   toAgencyDetailsInput,
   validateAgencyDetailsForm,
   type AgencyDetailsFormValues,
 } from '@/features/agency/validation';
-import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
+import { useOcrSettings, useSetAiChatEnabled, useSetAiInsightsEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
+import { LogoField } from '@/features/agency/logo-field';
+import { AgencyStampSettings } from '@/features/agency/stamp-settings';
 import type { AgencyDetails } from '@/features/agency/types';
-import { useSignedUrl } from '@/features/storage/hooks';
+import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 function valuesFromDetails(details: AgencyDetails): AgencyDetailsFormValues {
   return {
@@ -39,17 +42,6 @@ function valuesFromDetails(details: AgencyDetails): AgencyDetailsFormValues {
   };
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View className="flex-row items-center justify-between border-b border-[#EAE5F2] py-3">
-      <ThemedText type="default" themeColor="textSecondary">
-        {label}
-      </ThemedText>
-      <ThemedText type="smallBold">{value}</ThemedText>
-    </View>
-  );
-}
-
 export default function EntrepriseScreen() {
   const { t } = useLanguage();
   const membershipQuery = useMyAgency();
@@ -62,7 +54,7 @@ export default function EntrepriseScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader
           title={t('entreprise.title')}
           subtitle={t('entreprise.subtitle')}
@@ -80,7 +72,7 @@ export default function EntrepriseScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#7C3AED" />
+            <ActivityIndicator color={M3akPalette.mauve} />
           </View>
         ) : isError || !agencyId || !detailsQuery.data ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -100,6 +92,154 @@ export default function EntrepriseScreen() {
   );
 }
 
+/**
+ * Lecture des documents : sur l'appareil par défaut. L'analyse par Gemini n'existe que si l'opérateur M3AK
+ * a configuré une clé pour l'entreprise ; le propriétaire doit alors l'autoriser explicitement.
+ */
+function DocumentReadingSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
+  const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetOcrCloudEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.cloudEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.enableConfirmTitle'), t('ocr.enableConfirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
+  return (
+    <View className="gap-2 rounded-2xl border border-line bg-white p-4">
+      <ThemedText type="smallBold">{t('ocr.settingsTitle')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable
+          ? t('ocr.settingsCloudUnavailable')
+          : settings.cloudEnabled
+            ? t('ocr.settingsCloudOn')
+            : t('ocr.settingsCloudOff')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.cloudEnabled ? t('ocr.disable') : t('ocr.enable')}
+            variant={settings.cloudEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
+    </View>
+  );
+}
+
+/** Recommandations IA de l'accueil : mêmes règles (clé configurée par M3AK + accord du propriétaire), accord distinct. */
+function AiInsightsSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
+  const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetAiInsightsEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.insightsEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.insights.confirmTitle'), t('ocr.insights.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.insights.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
+  return (
+    <View className="gap-2 rounded-2xl border border-line bg-white p-4">
+      <ThemedText type="smallBold">{t('ocr.insights.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable ? t('ocr.insights.unavailable') : settings.insightsEnabled ? t('ocr.insights.on') : t('ocr.insights.off')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.insightsEnabled ? t('ocr.insights.disable') : t('ocr.insights.enable')}
+            variant={settings.insightsEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
+    </View>
+  );
+}
+
+/** Chat M3ak : mêmes règles (clé configurée par M3AK + accord du propriétaire), accord distinct (des noms de clients sont transmis à l'IA). */
+function AiChatSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
+  const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetAiChatEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.chatEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.chat.confirmTitle'), t('ocr.chat.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.chat.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
+  return (
+    <View className="gap-2 rounded-2xl border border-line bg-white p-4">
+      <ThemedText type="smallBold">{t('ocr.chat.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable ? t('ocr.chat.unavailable') : settings.chatEnabled ? t('ocr.chat.on') : t('ocr.chat.off')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.chatEnabled ? t('ocr.chat.disable') : t('ocr.chat.enable')}
+            variant={settings.chatEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
+    </View>
+  );
+}
+
 function EntrepriseForm({
   agencyId,
   isOwner,
@@ -111,8 +251,6 @@ function EntrepriseForm({
 }) {
   const { t } = useLanguage();
   const updateDetails = useUpdateAgencyDetails();
-  const uploadLogo = useUploadAgencyLogo();
-  const { data: logoUrl } = useSignedUrl(AGENCY_ASSETS_BUCKET, details.logoUrl ?? undefined);
 
   const [values, setValues] = useState<AgencyDetailsFormValues>(() => valuesFromDetails(details));
   const [touched, setTouched] = useState(false);
@@ -124,56 +262,28 @@ function EntrepriseForm({
     setValues((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSave() {
+  async function handleSave(): Promise<boolean> {
     setTouched(true);
     setFeedback(null);
-    if (!isAgencyDetailsFormValid(errors)) return;
+    if (!isAgencyDetailsFormValid(errors)) return false;
 
     try {
       await updateDetails.mutateAsync({ agencyId, input: toAgencyDetailsInput(values) });
       setFeedback({ type: 'success', message: t('entreprise.saveSuccess') });
+      return true;
     } catch {
       setFeedback({ type: 'error', message: t('entreprise.saveError') });
+      return false;
     }
   }
 
-  async function handlePickLogo() {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
-
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-    if (result.canceled) return;
-
-    const uri = result.assets[0]?.uri;
-    if (!uri) return;
-
-    try {
-      await uploadLogo.mutateAsync({ agencyId, localUri: uri });
-    } catch {
-      setFeedback({ type: 'error', message: t('entreprise.logoError') });
-    }
-  }
+  // Avertit avant de quitter avec des modifications non enregistrées (propriétaire seulement : seul lui peut modifier).
+  const dirty = isOwner && isAgencyFormDirty(values, valuesFromDetails(details));
+  useUnsavedChangesGuard(dirty, handleSave);
 
   return (
     <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-      {isOwner ? (
-        <Pressable onPress={handlePickLogo} className="items-center gap-2">
-          {logoUrl ? (
-            <Image source={{ uri: logoUrl }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />
-          ) : (
-            <View className="h-24 w-24 items-center justify-center rounded-2xl bg-[#FAF9FF]">
-              <ThemedText type="title" themeColor="primary">
-                {values.nom.charAt(0).toUpperCase() || '?'}
-              </ThemedText>
-            </View>
-          )}
-          <ThemedText type="small" themeColor="primary">
-            {t('entreprise.logoChange')}
-          </ThemedText>
-        </Pressable>
-      ) : logoUrl ? (
-        <Image source={{ uri: logoUrl }} className="h-24 w-24 self-center rounded-2xl" resizeMode="cover" />
-      ) : null}
+      <LogoField agencyId={agencyId} logoPath={details.logoUrl} canEdit={isOwner} initial={values.nom.charAt(0).toUpperCase() || '?'} />
 
       {isOwner ? (
         <>
@@ -238,7 +348,7 @@ function EntrepriseForm({
           />
         </>
       ) : (
-        <View className="rounded-3xl border border-[#EAE5F2] bg-white px-4">
+        <View className="rounded-2xl border border-line bg-white px-4">
           <InfoRow label={t('entreprise.fields.nom')} value={values.nom || '—'} />
           <InfoRow label={t('entreprise.fields.raisonSociale')} value={values.raisonSociale || '—'} />
           <InfoRow label={t('entreprise.fields.email')} value={values.email || '—'} />
@@ -254,6 +364,29 @@ function EntrepriseForm({
           </View>
         </View>
       )}
+
+      <AgencyStampSettings key={`${details.stampPath ?? ''}|${JSON.stringify(details.stampConfig)}`} agencyId={agencyId} isOwner={isOwner} details={details} />
+      <DocumentReadingSettings agencyId={agencyId} isOwner={isOwner} />
+      <AiInsightsSettings agencyId={agencyId} isOwner={isOwner} />
+      <AiChatSettings agencyId={agencyId} isOwner={isOwner} />
+
+      {isOwner ? (
+        <Button
+          label={t('contractTemplate.open')}
+          variant="secondary"
+          icon="document-text-outline"
+          onPress={() => router.push('/entreprise/editeur-contrat')}
+        />
+      ) : null}
+
+      {isOwner ? (
+        <Button
+          label={t('entreprise.departurePolicy.open')}
+          variant="secondary"
+          icon="shield-checkmark-outline"
+          onPress={() => router.push('/entreprise/depart')}
+        />
+      ) : null}
 
       {!isOwner ? (
         <ThemedText type="small" themeColor="textSecondary" className="text-center">

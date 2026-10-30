@@ -4,19 +4,21 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { RentalStatus } from './types';
+import { M3akPalette } from '@/constants/theme';
 
-const STYLES: Record<RentalStatus, { background: string; text: string; dot: string }> = {
-  en_attente_confirmation: { background: '#FEF3C7', text: '#B45309', dot: '#B45309' },
-  confirmee: { background: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  reservee: { background: '#DBEAFE', text: '#2563EB', dot: '#2563EB' },
-  en_cours: { background: '#E0F2FE', text: '#0369A1', dot: '#0369A1' },
-  terminee: { background: '#DCFCE7', text: '#15803D', dot: '#15803D' },
-  annulee: { background: '#F1EEF7', text: '#81778F', dot: '#81778F' },
+/** Couleurs des statuts, partagées avec le calendrier : même statut, même couleur partout. */
+export const RENTAL_STATUS_STYLES: Record<RentalStatus, { background: string; text: string; dot: string }> = {
+  en_attente_confirmation: { background: '#FEF3C7', text: '#92400E', dot: '#F59E0B' },
+  confirmee: { background: '#DBEAFE', text: '#1D4ED8', dot: '#2563EB' },
+  reservee: { background: '#DBEAFE', text: '#1D4ED8', dot: '#2563EB' },
+  en_cours: { background: M3akPalette.mauveDeep, text: '#FFFFFF', dot: M3akPalette.emerald },
+  terminee: { background: '#DCFCE7', text: '#166534', dot: '#16A34A' },
+  annulee: { background: '#F1EEF7', text: M3akPalette.muted, dot: M3akPalette.muted },
 };
 
 export function RentalStatusBadge({ status }: { status: RentalStatus }) {
   const { t } = useLanguage();
-  const style = STYLES[status];
+  const style = RENTAL_STATUS_STYLES[status];
 
   return (
     <View

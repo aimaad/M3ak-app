@@ -1,6 +1,8 @@
 {
   "common": {
-    "appName": "M3ak",
+    "close": "Fermer",
+    "zoomHint": "Touchez pour agrandir",
+    "appName": "Kriha",
     "tagline": "L'application intelligente pour votre agence de location",
     "language": "Langue",
     "french": "Français",
@@ -10,11 +12,20 @@
     "cancel": "Annuler",
     "back": "Retour",
     "camera": "Caméra",
-    "gallery": "Galerie"
+    "gallery": "Galerie",
+    "yes": "Oui",
+    "no": "Non",
+    "previous": "Précédent",
+    "next": "Suivant",
+    "pageOf": "Page {{page}} / {{count}}",
+    "optional": "facultatif",
+    "edit": "Modifier"
   },
   "auth": {
     "title": "Connexion",
     "subtitle": "Connectez-vous avec le compte de votre agence",
+    "prenom": "Prénom",
+    "nom": "Nom",
     "email": "Adresse e-mail",
     "password": "Mot de passe",
     "confirmPassword": "Confirmer le mot de passe",
@@ -43,7 +54,23 @@
       "required": "Ce champ est obligatoire.",
       "invalid_email": "Entrez une adresse e-mail valide.",
       "too_short": "6 caractères minimum.",
-      "mismatch": "Les mots de passe ne correspondent pas."
+      "mismatch": "Les mots de passe ne correspondent pas.",
+      "invalid_name": "Entrez un nom valide (2 caractères minimum, sans chiffres)."
+    },
+    "forgot": {
+      "link": "Mot de passe oublié ?",
+      "title": "Mot de passe oublié",
+      "subtitleEmail": "Entrez l'adresse e-mail de votre compte : nous vous enverrons un code.",
+      "subtitleCode": "Entrez le code reçu par e-mail et choisissez un nouveau mot de passe.",
+      "sendCode": "Envoyer le code",
+      "sending": "Envoi…",
+      "codeSent": "Si un compte existe pour cette adresse, un code vient d'être envoyé. Pensez à vérifier vos courriers indésirables.",
+      "sendError": "Impossible d'envoyer le code pour le moment. Réessayez dans quelques minutes.",
+      "codeLabel": "Code reçu par e-mail",
+      "newPassword": "Nouveau mot de passe",
+      "reset": "Changer le mot de passe",
+      "resetting": "Enregistrement…",
+      "resetError": "Code incorrect ou expiré. Réessayez ou renvoyez un nouveau code."
     }
   },
   "agency": {
@@ -51,19 +78,78 @@
   },
   "onboarding": {
     "title": "Bienvenue",
-    "subtitle": "Créez votre agence ou rejoignez-en une avec un code",
-    "createTab": "Créer une agence",
+    "subtitle": "Entrez le code d'invitation reçu pour rejoindre votre agence",
     "joinTab": "Rejoindre",
-    "ownerName": "Votre nom",
-    "agencyName": "Nom de l'agence",
-    "agencyCity": "Ville",
-    "createAction": "Créer mon agence",
-    "createError": "Impossible de créer l'agence. Réessayez.",
     "inviteCode": "Code d'invitation",
     "joinAction": "Rejoindre l'agence",
-    "joinError": "Code invalide, expiré, ou déjà utilisé.",
     "errors": {
       "required": "Remplissez les champs obligatoires."
+    },
+    "joinHint": "Vous êtes connecté avec {{email}}. Ce doit être l'adresse e-mail qui a reçu l'invitation.",
+    "noAgencyNote": "Les agences sont créées par Kriha. Contactez-nous pour ouvrir votre accès.",
+    "start": {
+      "title": "Premiers pas",
+      "progress": "{{done}} sur {{total}} terminées",
+      "hide": "Masquer",
+      "steps": {
+        "joined": {
+          "title": "Rejoindre votre agence",
+          "hint": ""
+        },
+        "logo": {
+          "title": "Ajouter le logo de l'agence",
+          "hint": "Il apparaît en haut de chaque contrat."
+        },
+        "vehicle": {
+          "title": "Ajouter votre première voiture",
+          "hint": "Photographiez la carte grise : Kriha remplit la fiche."
+        },
+        "customer": {
+          "title": "Ajouter votre premier client",
+          "hint": "Photographiez la CIN et le permis."
+        },
+        "rental": {
+          "title": "Créer votre première location",
+          "hint": "Choisissez le client, les dates et la voiture libre."
+        }
+      }
+    },
+    "quick": {
+      "title": "Accès rapide"
+    },
+    "welcome": {
+      "introTitle": "Bienvenue chez Kriha",
+      "introBody": "{{agency}} est créée. Configurons-la ensemble en {{count}} étapes rapides.",
+      "start": "Commencer",
+      "later": "Plus tard",
+      "skipStep": "Passer cette étape",
+      "stepOf": "Étape {{current}} sur {{total}}",
+      "doneTitle": "Votre agence est prête",
+      "doneBody": "Vous pouvez maintenant gérer vos voitures, vos clients et vos locations.",
+      "doneBodySkipped": "Les étapes passées restent dans « Premiers pas » sur l'accueil, quand vous voulez.",
+      "goHome": "Aller à l'accueil",
+      "steps": {
+        "logo": {
+          "title": "Ajoutez le logo de votre agence",
+          "hint": "Il apparaît en haut de chaque contrat.",
+          "action": "Ajouter le logo"
+        },
+        "vehicle": {
+          "title": "Ajoutez votre première voiture",
+          "hint": "Photographiez la carte grise : Kriha remplit la fiche pour vous.",
+          "action": "Ajouter une voiture"
+        },
+        "customer": {
+          "title": "Ajoutez votre premier client",
+          "hint": "Photographiez la CIN et le permis : Kriha lit les documents.",
+          "action": "Ajouter un client"
+        },
+        "rental": {
+          "title": "Créez votre première location",
+          "hint": "Choisissez le client, les dates et une voiture libre.",
+          "action": "Créer une location"
+        }
+      }
     }
   },
   "equipe": {
@@ -72,16 +158,7 @@
     "membersSection": "Membres",
     "unnamedMember": "Membre",
     "inviteSection": "Inviter",
-    "inviteAs": "Inviter un {{role}}",
-    "inviteError": "Impossible de créer l'invitation. Réessayez.",
     "pendingInvites": "Invitations en cours",
-    "inviteActive": "En attente",
-    "inviteUsed": "Utilisée",
-    "inviteExpired": "Expirée",
-    "inviteCreatedTitle": "Code créé : {{code}}",
-    "inviteMessage": "Rejoignez l'agence {{agency}} sur M3ak ! Ouvrez l'app, créez un compte, puis entrez ce code d'invitation : {{code}}",
-    "copyCode": "Copier le code",
-    "shareWhatsapp": "Partager sur WhatsApp",
     "roles": {
       "owner": "Propriétaire",
       "manager": "Responsable",
@@ -96,15 +173,64 @@
     "roleUpdateError": "Impossible de changer ce rôle.",
     "myCompany": "Mon entreprise",
     "branches": "Filiales",
-    "chooseBranch": "Affecter ce {{role}} à quelle filiale ?",
-    "noBranch": "Aucune (agence)"
+    "invite": {
+      "title": "Inviter un membre",
+      "subtitle": "L'invitation est nominative et liée à son e-mail",
+      "cta": "Inviter un membre",
+      "notAllowed": "Seuls les responsables peuvent inviter.",
+      "role": "Rôle",
+      "branch": "Filiale",
+      "allAgency": "Toute l'agence",
+      "yourBranch": "Votre filiale",
+      "yourBranchHint": "Vous pouvez inviter uniquement dans votre filiale.",
+      "emailBinding": "Le code sera lié à cette adresse e-mail : seule cette personne pourra l'utiliser, une seule fois, pendant 7 jours.",
+      "send": "Envoyer l'invitation",
+      "sending": "Envoi en cours…",
+      "createdFor": "Invitation créée pour {{name}}",
+      "emailSent": "E-mail envoyé à {{email}}.",
+      "emailFailed": "L'e-mail n'a pas pu être envoyé. Partagez le code par WhatsApp.",
+      "emailNotConfigured": "L'envoi d'e-mail n'est pas disponible pour le moment. Partagez le code par WhatsApp.",
+      "codeLabel": "Code d'invitation (affiché une seule fois)",
+      "codeHint": "Ce code ne fonctionne qu'avec {{email}}, une seule fois, jusqu'au {{date}}.",
+      "copy": "Copier le code",
+      "copied": "Copié ✓",
+      "whatsapp": "WhatsApp",
+      "done": "Terminé",
+      "whatsappMessage": "Bonjour {{prenom}}, l'agence {{agency}} vous invite sur Kriha en tant que {{role}}.\n1) Installez l'app Kriha et créez un compte avec CETTE adresse e-mail : {{email}}\n2) Choisissez « Rejoindre » et entrez ce code : {{code}}\nCode personnel, à usage unique, valable jusqu'au {{date}}. Ne le partagez pas.",
+      "status": {
+        "pending": "En attente",
+        "accepted": "Acceptée",
+        "expired": "Expirée",
+        "revoked": "Annulée"
+      },
+      "resend": "Renvoyer",
+      "revoke": "Annuler",
+      "revokeConfirmTitle": "Annuler l'invitation de {{name}} ?",
+      "revokeConfirmBody": "Son code ne fonctionnera plus.",
+      "errors": {
+        "generic": "Une erreur est survenue. Réessayez.",
+        "not_allowed": "Vous n'avez pas le droit de faire cela.",
+        "not_authenticated": "Vous devez être connecté.",
+        "role_not_allowed": "Ce rôle ne peut pas être invité.",
+        "invalid_email": "Entrez une adresse e-mail valide.",
+        "invalid_name": "Entrez un prénom et un nom valides.",
+        "branch_access_denied": "Vous pouvez inviter uniquement dans votre filiale.",
+        "branch_must_belong_to_same_agency": "Cette filiale n'appartient pas à votre agence.",
+        "already_member": "Cette personne fait déjà partie de l'agence.",
+        "invite_already_pending": "Une invitation est déjà en attente pour cet e-mail. Renvoyez-la ou annulez-la.",
+        "invite_not_pending": "Cette invitation n'est plus en attente.",
+        "invite_not_found": "Invitation introuvable.",
+        "invite_invalid_or_expired": "Code invalide, expiré, annulé ou déjà utilisé.",
+        "invite_email_mismatch": "Cette invitation est destinée à une autre adresse e-mail. Connectez-vous avec l'e-mail qui a reçu l'invitation.",
+        "email_not_confirmed": "Confirmez d'abord votre adresse e-mail avec le code reçu."
+      }
+    }
   },
   "entreprise": {
     "title": "Mon entreprise",
     "subtitle": "Informations de votre agence",
     "loadError": "Impossible de charger les informations de l'entreprise. Vérifiez votre connexion.",
-    "journal": "Journal",
-    "logoChange": "Changer le logo",
+    "journal": "Traçabilité",
     "fields": {
       "nom": "Nom commercial",
       "raisonSociale": "Raison sociale",
@@ -119,16 +245,134 @@
     "saving": "Enregistrement…",
     "saveSuccess": "Informations enregistrées.",
     "saveError": "Impossible d'enregistrer. Réessayez.",
-    "logoError": "Impossible d'envoyer le logo. Réessayez.",
     "readOnlyHint": "Seul le propriétaire peut modifier ces informations.",
     "errors": {
       "required": "Ce champ est obligatoire.",
       "invalid_email": "Entrez une adresse e-mail valide."
+    },
+    "departurePolicy": {
+      "open": "Exigences avant départ",
+      "title": "Exigences avant départ",
+      "subtitle": "Documents à vérifier avant de remettre un véhicule",
+      "validationTitle": "À faire valider",
+      "validationBody": "Ces exigences sont des modèles proposés, pas des règles juridiques. Faites-les valider par votre agence ou un conseil avant de bloquer les départs.",
+      "block": {
+        "label": "Bloquer le départ si une exigence n'est pas satisfaite",
+        "hint": "Désactivé : la liste de contrôle s'affiche mais n'empêche rien."
+      },
+      "requirements": "Exigences",
+      "requireDriverLicence": {
+        "label": "Permis pour chaque conducteur",
+        "hint": "Le client (s'il conduit) et chaque conducteur associé doivent avoir un permis enregistré."
+      },
+      "requireLicenceValidUntilEnd": {
+        "label": "Permis valide jusqu'au retour",
+        "hint": "Un permis expirant avant la fin de la location bloque ; sinon simple avertissement."
+      },
+      "requireCustomerIdDocument": {
+        "label": "CIN ou passeport du client",
+        "hint": "Le client qui réserve doit avoir une CIN ou un passeport enregistré."
+      },
+      "requireManualConfirmation": {
+        "label": "Confirmation humaine",
+        "hint": "Un employé autorisé confirme avoir vérifié les documents originaux."
+      },
+      "confirmationRole": {
+        "label": "Qui peut confirmer la vérification ?",
+        "employee": "Tout employé",
+        "manager": "Responsables seulement"
+      },
+      "maxAdditional": "Conducteurs supplémentaires maximum par location",
+      "saved": "Exigences enregistrées.",
+      "saveError": "Impossible d'enregistrer.",
+      "creationTitle": "À la création",
+      "creationHelp": "Ce que l'équipe doit avoir avant de créer un client ou une location. C'est vous qui décidez.",
+      "requireIdAtRental": {
+        "label": "CIN ou passeport obligatoire pour une location",
+        "hint": "Impossible de créer une location pour un client sans CIN ni passeport enregistré (numéro ou document)."
+      },
+      "requireLicenceAtCustomer": {
+        "label": "Permis obligatoire pour créer un client",
+        "hint": "Un client particulier ne peut être créé qu'avec les photos recto et verso de son permis, son numéro et sa date d'expiration."
+      },
+      "allowSkipInspection": {
+        "label": "Les employés peuvent ignorer la prise de photos",
+        "hint": "Si c'est désactivé, l'inspection de départ et de retour (photos) devient obligatoire pour les employés. Le gérant et le propriétaire peuvent toujours l'ignorer."
+      },
+      "allowDeclineAi": {
+        "label": "Les employés peuvent refuser l'analyse Kriha",
+        "hint": "Si c'est désactivé, après les photos, l'analyse des dommages par Kriha est obligatoire pour les employés."
+      }
+    },
+    "stamp": {
+      "title": "Cachet de l'agence",
+      "none": "Aucun cachet enregistré. Il est obligatoire pour signer les contrats.",
+      "loading": "Chargement du cachet…",
+      "help": "Photographiez votre cachet sur une feuille blanche bien éclairée, ou choisissez une image dans la galerie. Il sera apposé à côté de la signature de l'agence sur chaque contrat.",
+      "remove": "Retirer le cachet",
+      "error": "Impossible d'enregistrer le cachet. Réessayez.",
+      "add": "Ajouter le cachet",
+      "photoActive": "Vous utilisez la photo de votre cachet physique. Vous pouvez la remplacer par un cachet dessiné par Kriha ci-dessous.",
+      "saved": "Cachet enregistré — c'est celui qui apparaît sur vos contrats.",
+      "notSaved": "Aperçu : pas encore enregistré. Touchez « Enregistrer le cachet ».",
+      "generatedHelp": "Kriha dessine un vrai tampon dans cet ordre : nom de l'agence, adresse (2 lignes si elle est longue), téléphone, puis GSM. Il s'imprime net sur le contrat, à côté de la signature.",
+      "shape": "Forme",
+      "shapes": {
+        "round": "Rond",
+        "rect": "Rectangle",
+        "oval": "Ovale"
+      },
+      "color": "Encre",
+      "colors": {
+        "blue": "Bleu",
+        "red": "Rouge",
+        "black": "Noir"
+      },
+      "titleLabel": "Nom de l'agence (en haut)",
+      "save": "Enregistrer le cachet",
+      "upToDate": "Cachet à jour",
+      "useGenerated": "Utiliser ce cachet à la place de la photo",
+      "photoHelp": "Vous préférez la photo de votre vrai cachet ? Prenez-la sur une feuille blanche, bien à plat.",
+      "addressLabel": "Adresse (sur 2 lignes si elle est longue)",
+      "addressPlaceholder": "Ex. 12 avenue Hassan II, quartier Maarif",
+      "telLabel": "Téléphone fixe",
+      "gsmLabel": "GSM (mobile)"
+    },
+    "logo": {
+      "title": "Logo de l'agence",
+      "required": "Obligatoire",
+      "ok": "Enregistré",
+      "help": "Le logo s'affiche en haut de chaque contrat PDF. Formats acceptés : PNG ou JPEG, 5 Mo maximum, au moins 150 pixels.",
+      "missingOwner": "Ajoutez le logo de votre agence : il est obligatoire pour pouvoir faire signer des contrats.",
+      "missingOther": "Le logo de l'agence n'est pas encore ajouté. Demandez au propriétaire de l'ajouter.",
+      "add": "Ajouter le logo",
+      "change": "Changer le logo",
+      "retry": "Réessayer",
+      "stageChecking": "Vérification de l'image…",
+      "stageUploading": "Envoi du logo… {{percent}} %",
+      "stageSaving": "Enregistrement…",
+      "saved": "Logo enregistré. Il apparaîtra sur vos prochains contrats.",
+      "errors": {
+        "unsupported_type": "Ce format n'est pas accepté. Choisissez une image PNG ou JPEG.",
+        "too_large": "L'image est trop lourde (5 Mo maximum). Choisissez une image plus légère.",
+        "too_small": "L'image est trop petite. Choisissez un logo d'au moins 150 pixels de côté.",
+        "unreadable": "Impossible de lire cette image. Choisissez-en une autre.",
+        "empty": "Cette image est vide. Choisissez-en une autre.",
+        "network": "Pas de connexion. Vérifiez internet puis touchez « Réessayer ».",
+        "permission": "Vous n'avez pas le droit de modifier le logo. Seul le propriétaire le peut.",
+        "permissionPhotos": "L'accès aux photos est refusé. Autorisez-le dans les réglages du téléphone.",
+        "failed": "L'envoi du logo a échoué. Touchez « Réessayer ».",
+        "timeout": "La connexion est trop lente ou instable : l'envoi a été arrêté. Rapprochez-vous du Wi-Fi puis touchez « Réessayer »."
+      },
+      "homeNoticeTitle": "Le logo de votre agence est obligatoire",
+      "homeNotice": "Touchez ici pour l'ajouter dans Mon entreprise : sans logo, vous ne pourrez pas faire signer de contrats.",
+      "stageWaiting": "Envoi terminé, en attente de la réponse du serveur… la connexion est lente, patientez.",
+      "cancel": "Annuler l'envoi"
     }
   },
   "flotte": {
     "title": "Ma Flotte",
-    "subtitle_one": "Gérez votre véhicule",
+    "subtitle_one": "Gérez {{count}} véhicule",
     "subtitle_other": "Gérez vos {{count}} véhicules",
     "searchPlaceholder": "Immatriculation, marque, modèle…",
     "addVehicle": "Ajouter véhicule",
@@ -166,7 +410,8 @@
       "immatriculation": "Immatriculation",
       "prixJour": "Prix / jour",
       "kilometrage": "Kilométrage"
-    }
+    },
+    "emptyNone": "Aucune voiture pour l'instant. Touchez « + Ajouter véhicule » pour créer la première."
   },
   "vehicle": {
     "detailsTitle": "Fiche véhicule",
@@ -182,6 +427,7 @@
     "reactivate": "Réactiver ce véhicule",
     "archiveConfirmTitle": "Archiver ce véhicule ?",
     "archiveConfirmBody": "Il n'apparaîtra plus dans la liste active, mais ses données restent conservées. Vous pourrez le réactiver à tout moment.",
+    "archiveBlockedActiveRentals": "Ce véhicule est réservé ou en location : il ne peut pas être archivé tant que ses locations ne sont pas terminées ou annulées.",
     "archiveError": "Impossible de modifier l'archivage de ce véhicule.",
     "photoDeleteError": "Impossible de supprimer cette photo.",
     "documentExpiryPlaceholder": "Date d'expiration (AAAA-MM-JJ), facultatif",
@@ -190,19 +436,24 @@
     "existingPhotosHint": "{{count}} photo(s) déjà enregistrée(s).",
     "statusLockedHint": "Statut « {{status}} » géré automatiquement par le module locations.",
     "documents": {
-      "carte_grise": "Carte grise",
+      "carte_grise": "Carte grise (recto)",
       "assurance": "Assurance",
-      "visite_technique": "Visite technique"
+      "visite_technique": "Visite technique",
+      "carte_grise_verso": "Carte grise (verso)"
     },
     "fields": {
       "marque": "Marque",
       "modele": "Modèle",
       "immatriculation": "Immatriculation",
+      "vin": "N° de série (VIN)",
+      "finition": "Finition / version",
       "annee": "Année",
       "couleur": "Couleur",
       "categorie": "Catégorie",
       "transmission": "Transmission",
       "carburant": "Carburant",
+      "branch": "Filiale",
+      "allBranches": "Toute l'agence",
       "kilometrage": "Kilométrage",
       "niveauCarburant": "Niveau de carburant actuel (%)",
       "niveauCarburantPlaceholder": "Ex. 75",
@@ -212,7 +463,10 @@
       "prixMois": "Prix / mois (MAD)",
       "optionalPlaceholder": "Facultatif",
       "description": "Description / notes internes",
-      "statut": "Statut"
+      "statut": "Statut",
+      "dateMiseEnCirculation": "Première mise en circulation",
+      "datePlaceholder": "JJ/MM/AAAA",
+      "puissanceFiscale": "Puissance fiscale (CV)"
     },
     "fuel": {
       "essence": "Essence",
@@ -249,6 +503,7 @@
       "createError": "Impossible d'ajouter ce véhicule.",
       "updateError": "Impossible d'enregistrer les modifications.",
       "duplicatePlateError": "Cette immatriculation est déjà utilisée par un autre véhicule de votre agence.",
+      "duplicateVinError": "Ce numéro de série (VIN) est déjà utilisé par un autre véhicule de votre agence.",
       "uploadError": "Le véhicule a été enregistré, mais l'envoi d'un document ou d'une photo a échoué. Réessayez depuis la fiche véhicule.",
       "errors": {
         "required": "Ce champ est obligatoire.",
@@ -256,13 +511,88 @@
         "invalid_year": "Entrez une année valide.",
         "invalid_price": "Entrez un prix supérieur à 0.",
         "invalid_seats": "Entrez un nombre de places entre 1 et 9.",
-        "invalid_fuel_level": "Entrez un pourcentage entre 0 et 100."
+        "invalid_fuel_level": "Entrez un pourcentage entre 0 et 100.",
+        "invalid_cv": "La puissance fiscale doit être un nombre entre 1 et 60.",
+        "invalid_date": "Date invalide : écrivez-la au format JJ/MM/AAAA, sans date future."
       }
+    },
+    "quickCreate": {
+      "subtitle": "Identifiez le véhicule, le reste se remplit tout seul",
+      "scanTitle": "Scanner la carte grise",
+      "scanSubtitle": "Le plus rapide — photographiez le document",
+      "scanHint": "Prenez en photo les deux faces de la carte grise : d'abord le recto, puis le verso. L'analyse se fait ensuite une seule fois pour les deux.",
+      "analyzing": "Analyse du document en cours…",
+      "plateTitle": "Immatriculation ou VIN",
+      "plateSubtitle": "Vérifie d'abord si ce véhicule existe déjà",
+      "checking": "Vérification…",
+      "continue": "Continuer",
+      "checkError": "Impossible de vérifier ce véhicule pour l'instant. Réessayez.",
+      "duplicatePlate": "Un véhicule avec cette immatriculation existe déjà dans votre agence.",
+      "duplicateVin": "Un véhicule avec ce numéro de série (VIN) existe déjà dans votre agence.",
+      "viewExisting": "Voir ce véhicule",
+      "manualTitle": "Ajouter manuellement",
+      "manualSubtitle": "Sans document ni connexion",
+      "retake": "Reprendre la photo",
+      "nothingDetected": "Aucune information n'a pu être lue avec certitude sur ce document. Vous pouvez les saisir manuellement.",
+      "reviewHint": "Vérifiez les informations détectées avant de continuer.",
+      "toVerify": "à vérifier",
+      "reviewBeforeSave": "Certaines informations détectées sont à vérifier avant l'enregistrement.",
+      "finalizeTitle": "Finaliser le véhicule",
+      "priceSuggestion": "Suggestion basée sur vos tarifs : {{price}} MAD/jour — utiliser",
+      "moreInfo": "Informations complémentaires",
+      "saveAction": "Enregistrer la voiture",
+      "successTitle": "Véhicule ajouté !",
+      "successBody": "{{plate}} a bien été enregistré dans votre flotte.",
+      "viewVehicle": "Voir la voiture",
+      "addAnother": "Ajouter une autre voiture",
+      "face": {
+        "recto": "Recto",
+        "verso": "Verso"
+      },
+      "checks": {
+        "usage_not_rental": "Attention : l'usage inscrit sur cette carte grise n'est pas « véhicule loué sans chauffeur ». Vérifiez qu'elle correspond bien à un véhicule de location.",
+        "card_expired": "Attention : la carte grise est expirée (fin de validité dépassée).",
+        "card_expiring": "La carte grise arrive bientôt à sa fin de validité (moins de 60 jours). Une alerte sera créée.",
+        "vin_length": "Le numéro de châssis lu n'a pas 17 caractères : vérifiez-le sur la carte."
+      },
+      "info": {
+        "title": "Autres informations lues sur la carte",
+        "help": "Pour contrôle : elles ne sont pas modifiables ici. La fin de validité devient l'échéance d'une alerte.",
+        "proprietaire": "Propriétaire",
+        "usage": "Usage",
+        "finValidite": "Fin de validité",
+        "immatriculationAnterieure": "Immatriculation antérieure",
+        "genre": "Genre",
+        "type": "Type (code)",
+        "cylindres": "Cylindres",
+        "ptac": "P.T.A.C.",
+        "poidsVide": "Poids à vide"
+      },
+      "faceMissingVerso": "Le verso n'a pas encore été lu : il contient la marque, le modèle, le carburant, le châssis, les places et la puissance. Photographiez-le.",
+      "faceMissingRecto": "Le recto n'a pas encore été lu : il contient l'immatriculation, la date de première mise en circulation, l'usage et la fin de validité. Photographiez-le.",
+      "scanOtherFace": "Ajouter une photo",
+      "bothFaces": "Recto et verso lus. Vérifiez les informations ci-dessous.",
+      "nothingNewFace": "La photo du {{face}} n'a rien donné de lisible : reprenez-la en vérifiant que la bonne face est bien dans le cadre.",
+      "analyzeBoth": "Analyser la carte grise",
+      "photoChange": "Changer",
+      "photoMissing": "Ajoutez au moins une photo pour lancer l'analyse.",
+      "photoOneOnly": "Une seule face ajoutée : l'analyse sera incomplète.",
+      "analyzingBoth": "Analyse du recto et du verso en cours…"
+    },
+    "duplicate": {
+      "title": "Ce véhicule est déjà dans votre flotte",
+      "samePlate": "Un véhicule avec cette immatriculation existe déjà.",
+      "sameVin": "Un véhicule avec ce numéro de série existe déjà.",
+      "archivedNote": "Ce véhicule est archivé.",
+      "fixHint": "Deux véhicules ne peuvent pas avoir la même immatriculation. Si la lecture s'est trompée, corrigez l'immatriculation ou le numéro de série.",
+      "view": "Voir le véhicule existant",
+      "reactivate": "Réactiver ce véhicule",
+      "continueToFix": "Continuer pour corriger"
     }
   },
   "clients": {
     "title": "Clients",
-    "subtitle_one": "Vous avez 1 client",
+    "subtitle_one": "Vous avez {{count}} client",
     "subtitle_other": "Vous avez {{count}} clients",
     "searchPlaceholder": "Nom, téléphone, e-mail, CIN…",
     "addClient": "Ajouter client",
@@ -273,7 +603,8 @@
       "active": "Clients actifs",
       "archived": "Archivés",
       "docsExpirant": "Docs bientôt expirés"
-    }
+    },
+    "emptyNone": "Aucun client pour l'instant. Touchez « + Ajouter client » pour créer le premier."
   },
   "customer": {
     "detailsTitle": "Fiche client",
@@ -303,7 +634,6 @@
     "archiveConfirmTitle": "Archiver ce client ?",
     "archiveConfirmBody": "Il n'apparaîtra plus dans la liste active, mais son historique reste conservé. Vous pourrez le réactiver à tout moment.",
     "archiveError": "Impossible de modifier l'archivage de ce client.",
-    "duplicateWarning": "{{count}} client(s) avec un téléphone ou un document similaire, dont « {{name}} ». Vérifiez avant de continuer.",
     "documentReferencePlaceholder": "Référence / numéro, facultatif",
     "documentExpiryPlaceholder": "Date d'expiration (AAAA-MM-JJ), facultatif",
     "documentReference": "Référence : {{reference}}",
@@ -338,7 +668,9 @@
       "cin": "Photo de la CIN",
       "permis": "Photo du permis",
       "passeport": "Photo du passeport",
-      "autre": "Autre justificatif"
+      "autre": "Autre justificatif",
+      "justificatif_domicile": "Photo du justificatif de domicile",
+      "autre_justificatif": "Photo de l'autre justificatif"
     },
     "type": {
       "particulier": "Particulier",
@@ -355,7 +687,8 @@
       "type": "Type de client",
       "documents": "Documents",
       "conducteurs": "Conducteurs associés",
-      "notes": "Notes internes"
+      "notes": "Notes internes",
+      "identifiers": "Numéros d'identification"
     },
     "form": {
       "newTitle": "Ajouter un client",
@@ -371,11 +704,142 @@
         "invalid_email": "Entrez une adresse e-mail valide.",
         "invalid_date": "Entrez une date valide (AAAA-MM-JJ)."
       }
+    },
+    "afterCreateHint": "Après la création, vous pourrez ajouter d'autres documents, des notes internes et des conducteurs depuis la fiche du client.",
+    "documentTypes": {
+      "permis": "Permis de conduire",
+      "cin": "CIN marocaine",
+      "passeport": "Passeport",
+      "justificatif_domicile": "Justificatif de domicile",
+      "autre_justificatif": "Autre justificatif",
+      "autre": "Autre document"
+    },
+    "create": {
+      "subtitle": "Le plus rapide : scannez le permis, le reste se remplit tout seul.",
+      "scanTitle": "Scanner le permis de conduire",
+      "scanBody": "Prenez le permis en photo : le nom, le numéro, les dates et les catégories sont lus automatiquement. Vous vérifiez et corrigez avant d'enregistrer.",
+      "scanButton": "Scanner le permis",
+      "manualTitle": "Saisie manuelle",
+      "manualBody": "Si vous n'avez pas le document sous la main, ou si la lecture échoue, remplissez la fiche vous-même.",
+      "manualButton": "Saisir à la main"
+    },
+    "ocr": {
+      "scanHint": "Prenez en photo les deux faces du permis : d'abord le recto (nom, numéro, naissance), puis le verso (catégories, fin de validité). Posez-le à plat, bien éclairé. L'analyse se fait ensuite une seule fois pour les deux faces.",
+      "analyzeBoth": "Analyser le permis",
+      "bothRequired": "Ajoutez les deux faces du permis (recto et verso) pour lancer l'analyse.",
+      "checks": {
+        "licence_expired": "Attention : le permis est expiré (fin de validité dépassée). Vérifiez avant de louer.",
+        "licence_expiring": "Le permis arrive bientôt à sa fin de validité (moins de 60 jours).",
+        "no_category_b": "Attention : la catégorie B (voiture) n'apparaît pas sur ce permis. Vérifiez avant de louer."
+      },
+      "analyzing": "Lecture du permis en cours…",
+      "retake": "Reprendre la photo",
+      "manual": "Saisie manuelle",
+      "bannerTitle": "Informations lues sur le permis",
+      "bannerBody": "Vérifiez chaque champ. Ceux marqués « à vérifier » étaient peu lisibles ; les champs vides n'ont pas pu être lus.",
+      "verifyField": "À vérifier : lecture peu certaine"
+    },
+    "documentForm": {
+      "type": "Type de document",
+      "customLabel": "Nom du document",
+      "customLabelPlaceholder": "Ex. carte professionnelle",
+      "file": "Photo ou fichier du document",
+      "fileRecto": "Permis : photo du recto",
+      "fileVerso": "Permis : photo du verso",
+      "reference": "Numéro de référence",
+      "issuingAuthority": "Pays ou autorité de délivrance",
+      "categories": "Catégories de permis",
+      "categoriesPlaceholder": "Ex. B, C",
+      "categoriesValue": "Catégories : {{list}}",
+      "dateDelivrance": "Date de délivrance",
+      "expiresAt": "Date d'expiration",
+      "notes": "Notes sur ce document",
+      "optional": "Facultatif",
+      "errors": {
+        "invalid_date": "Date invalide (AAAA-MM-JJ ou JJ/MM/AAAA).",
+        "dates_order": "L'expiration doit être après la délivrance.",
+        "required": "Ce champ est obligatoire."
+      }
+    },
+    "documentsManager": {
+      "empty": "Aucun document enregistré. Aucun document n'est obligatoire pour créer la fiche.",
+      "loadError": "Impossible de charger les documents.",
+      "addButton": "Ajouter un document",
+      "addTitle": "Nouveau document",
+      "add": "Ajouter",
+      "edit": "Modifier",
+      "replaceFile": "Remplacer le fichier",
+      "uploading": "Envoi en cours…",
+      "delete": "Supprimer",
+      "removePending": "Retirer",
+      "deleteConfirmTitle": "Supprimer ce document ?",
+      "deleteConfirmBody": "Le fichier sera effacé. La trace de l'ajout reste dans l'historique.",
+      "deleteError": "Suppression impossible : réservée aux responsables.",
+      "saveError": "Impossible d'enregistrer ce document. Réessayez.",
+      "uploadError": "Envoi du fichier impossible. Réessayez.",
+      "noFile": "Aucun fichier joint (numéro saisi à la main).",
+      "addedBy": "Ajouté par {{name}} le {{date}}",
+      "unknownMember": "un membre",
+      "licenceHint": "Pour un client particulier, le permis de conduire est obligatoire : photos du recto ET du verso, numéro et date d'expiration. Les autres documents sont facultatifs.",
+      "licenceRequired": {
+        "no_licence": "Ajoutez le permis de conduire de ce client.",
+        "no_photo": "Ajoutez la photo du permis (recto).",
+        "no_verso": "Ajoutez la photo du verso du permis.",
+        "no_number": "Indiquez le numéro du permis.",
+        "no_expiry": "Indiquez la date d'expiration du permis."
+      },
+      "optionalHint": "Aucun document n'est obligatoire pour créer la fiche. Les documents exigés avant un départ sont définis par l'agence.",
+      "status": {
+        "no_date": "Date à vérifier",
+        "ok": "Valide jusqu'au {{date}}",
+        "expiring_soon": "Expire le {{date}}",
+        "expired": "Expiré le {{date}}"
+      }
+    },
+    "driverDocuments": "Documents",
+    "driverDocumentsHide": "Masquer",
+    "driverDocumentsTitle": "Documents de {{name}}",
+    "notes": {
+      "title": "Notes internes",
+      "confidential": "Confidentiel : jamais visible sur les contrats ni par le client",
+      "empty": "Aucune note pour ce client.",
+      "addButton": "Ajouter une note",
+      "add": "Ajouter",
+      "placeholder": "Ex. préfère être appelé le matin",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "deleteConfirmTitle": "Supprimer cette note ?",
+      "deleteConfirmBody": "Elle disparaîtra de la fiche ; son historique est conservé.",
+      "byOn": "Par {{name}} le {{date}}",
+      "importedOn": "Note existante, reprise le {{date}}",
+      "edited": "modifiée le {{date}}",
+      "showHistory": "Voir l'historique",
+      "hideHistory": "Masquer l'historique",
+      "noHistory": "Aucune version précédente.",
+      "previousVersion": "Version de {{name}} avant le {{date}}",
+      "loadError": "Impossible de charger les notes.",
+      "saveError": "Action impossible. Réessayez ou vérifiez vos droits.",
+      "errors": {
+        "required": "Écrivez la note avant de l'enregistrer.",
+        "too_long": "Note trop longue (4000 caractères maximum)."
+      }
+    },
+    "duplicate": {
+      "title": "Ce client semble déjà enregistré",
+      "view": "Ouvrir sa fiche",
+      "more": "… et {{count}} autre(s) fiche(s) semblable(s).",
+      "decide": "Vérifiez avant de continuer : si c'est bien une autre personne, vous pouvez poursuivre l'enregistrement.",
+      "reasons": {
+        "phone": "Même téléphone",
+        "identity_document": "Même CIN ou passeport",
+        "licence_number": "Même numéro de permis",
+        "name_and_birth": "Même nom et même date de naissance"
+      }
     }
   },
   "locations": {
     "title": "Locations",
-    "subtitle_one": "1 location",
+    "subtitle_one": "{{count}} location",
     "subtitle_other": "{{count}} locations",
     "addRental": "Nouvelle location",
     "empty": "Aucune location pour ce statut.",
@@ -496,7 +960,290 @@
       "filterByVehicle": "Véhicule",
       "allVehicles": "Tous les véhicules",
       "viewList": "Vue liste"
-    }
+    },
+    "drivers": {
+      "sectionTitle": "Conducteurs",
+      "contractCustomer": "Client (contrat et paiement)",
+      "principal": "Conducteur principal",
+      "theClient": "le client",
+      "theCustomer": "Le client",
+      "additionalTitle": "Conducteurs supplémentaires",
+      "noneAdditional": "Aucun conducteur supplémentaire.",
+      "edit": "Modifier les conducteurs",
+      "addDrivers": "Ajouter des conducteurs",
+      "question": "Y a-t-il d'autres conducteurs pour cette location ?",
+      "answer": {
+        "no": "Non",
+        "yes": "Oui, ajouter"
+      },
+      "clearTitle": "Retirer les conducteurs ?",
+      "clearBody": "Les conducteurs associés à cette réservation seront retirés (leurs fiches restent enregistrées).",
+      "clearConfirm": "Retirer",
+      "separationHint": "Le client qui réserve et paie peut être différent des personnes autorisées à conduire.",
+      "customerDrives": "Le client conduit lui-même",
+      "makePrincipal": "Définir comme principal",
+      "remove": "Retirer",
+      "additional": "Conducteurs supplémentaires ({{count}}/{{max}})",
+      "searchLabel": "Rechercher un conducteur ou un client",
+      "searchPlaceholder": "Nom ou numéro de téléphone",
+      "noResult": "Aucun résultat : ajoutez-le comme nouveau conducteur.",
+      "kindCustomer": "Client existant",
+      "kindNew": "Nouveau",
+      "driverOf": "Conducteur de {{name}}",
+      "licenceShort": "Permis {{number}}",
+      "newTitle": "Nouveau conducteur",
+      "addNewButton": "Ajouter un nouveau conducteur",
+      "addNew": "Ajouter",
+      "newDocumentsHint": "Vous pourrez ajouter le permis (photo, dates) depuis la fiche du client.",
+      "addErrors": {
+        "duplicate": "Cette personne est déjà associée à cette réservation.",
+        "is_customer": "Le client conduit déjà : il est le conducteur principal.",
+        "too_many": "Maximum {{max}} conducteurs supplémentaires."
+      },
+      "errors": {
+        "generic": "Impossible d'enregistrer les conducteurs. Réessayez.",
+        "duplicate_driver": "Un conducteur apparaît deux fois sur cette réservation.",
+        "too_many_additional_drivers": "Trop de conducteurs supplémentaires pour cette agence.",
+        "rental_drivers_locked": "La location a commencé : les conducteurs ne peuvent plus être modifiés.",
+        "rental_not_found": "Réservation introuvable.",
+        "agency_mismatch": "Ce conducteur n'appartient pas à votre agence."
+      }
+    },
+    "departureCheck": {
+      "title": "Vérification avant départ",
+      "loadError": "Impossible de charger la vérification.",
+      "summary": {
+        "blocked": "Exigences non satisfaites",
+        "confirmation_needed": "Confirmation de la vérification requise",
+        "ready_with_warnings": "Prêt, avec des points à vérifier",
+        "ready": "Prêt au départ"
+      },
+      "enforced": "Cette vérification bloque le départ (politique de l'agence).",
+      "informationOnly": "Information seulement : l'agence n'a pas activé le blocage du départ.",
+      "party": {
+        "client": "Client",
+        "conducteur_principal": "Conducteur principal",
+        "conducteur_supplementaire": "Conducteur supplémentaire"
+      },
+      "noDocuments": "Aucun document enregistré.",
+      "expiresOn": "expire le {{date}}",
+      "noExpiry": "date d'expiration inconnue",
+      "noFile": "sans fichier",
+      "nothingToReport": "Rien à signaler.",
+      "openCustomer": "Ouvrir la fiche client",
+      "openDrivers": "Ouvrir la fiche (conducteurs)",
+      "issues": {
+        "licence_missing": "Permis de conduire manquant",
+        "licence_no_file": "Permis enregistré sans fichier : vérifiez l'original",
+        "licence_expiry_unknown": "Date d'expiration du permis inconnue : à vérifier",
+        "licence_expired": "Permis expiré",
+        "licence_expires_before_end": "Le permis expire avant la fin de la location",
+        "id_missing": "CIN ou passeport manquant",
+        "id_expired": "Pièce d'identité expirée",
+        "id_expires_before_end": "La pièce d'identité expire avant la fin de la location"
+      },
+      "confirmationTitle": "Confirmation",
+      "confirm": "J'ai vérifié les documents originaux",
+      "reconfirm": "Reconfirmer la vérification",
+      "confirmation": {
+        "pending": "Pas encore confirmée.",
+        "confirmed": "Confirmée par {{name}} le {{date}}.",
+        "stale": "Confirmée par {{name}} le {{date}}, mais des documents ou conducteurs ont changé depuis : à reconfirmer."
+      },
+      "fixBlockingFirst": "Corrigez d'abord les exigences en rouge.",
+      "managerOnly": "Seul un responsable peut confirmer.",
+      "cannotConfirm": "Vous ne pouvez pas confirmer cette vérification avec votre rôle actuel.",
+      "roleLoading": "Chargement de votre rôle… Revenez sur cet écran dans un instant.",
+      "startBlocked": "Départ impossible : la vérification avant départ n'est pas satisfaite.",
+      "disclaimer": "La présence d'une photo ne prouve pas la validité d'un document, et la lecture automatique ne certifie ni son authenticité ni le droit de conduire. Seule la vérification du document original, confirmée ici, fait foi.",
+      "errors": {
+        "generic": "Action impossible. Réessayez.",
+        "departure_requirements_not_met": "Exigences avant départ non satisfaites.",
+        "confirmation_requires_manager": "Seul un responsable peut confirmer.",
+        "rental_not_ready_for_departure": "La location n'est pas prête pour le départ.",
+        "rental_not_found": "Réservation introuvable."
+      }
+    },
+    "departInspectionRequired": {
+      "title": "Inspection de départ obligatoire",
+      "body": "Prenez d'abord les photos du véhicule (inspection de départ). La location ne peut pas démarrer tant que l'inspection de départ n'est pas terminée : ces photos prouvent l'état de la voiture avant la location.",
+      "action": "Faire l'inspection de départ"
+    },
+    "journey": {
+      "title": {
+        "depart": "Préparer le départ",
+        "retour": "Retour du véhicule",
+        "termine": "Clôture de la location"
+      },
+      "progress": "{{done}} sur {{total}} étapes terminées",
+      "allDone": "Tout est terminé ✓",
+      "done": "Terminé",
+      "attention": "À regarder (non bloquant)",
+      "locked": "Terminez d'abord : {{step}}",
+      "steps": {
+        "confirmation": {
+          "title": "Confirmer la location",
+          "short": "Valider la réservation",
+          "help": "La location est en attente : confirmez-la pour passer aux étapes suivantes."
+        },
+        "checks": {
+          "title": "Vérifications avant départ",
+          "short": "Pièces d'identité et permis",
+          "help": "Contrôlez les documents du client et des conducteurs, puis confirmez la vérification."
+        },
+        "contract": {
+          "title": "Contrat",
+          "short": "Créer, faire lire et signer",
+          "help": "Le contrat se fait en dernier : il reprend l'inspection (dommages choisis, kilométrage, carburant) et l'acompte. Créez-le, faites-le lire au client, puis faites-le signer.",
+          "view": "Voir le contrat",
+          "open": "Ouvrir le contrat"
+        },
+        "inspection": {
+          "title": "Inspection de départ",
+          "short": "Photos du véhicule (obligatoire)",
+          "help": "Prenez les photos du véhicule : elles prouvent son état avant la location. Vous choisirez ensuite quels dommages inscrire au contrat."
+        },
+        "payment": {
+          "title": "Acompte",
+          "short": "Encaisser l'acompte",
+          "noneAsked": "Aucun acompte demandé",
+          "paid": "Déjà encaissé",
+          "notRequired": "L'acompte n'est pas encore encaissé : vous pouvez tout de même démarrer la location."
+        },
+        "start": {
+          "title": "Démarrer la location",
+          "short": "Kilométrage, carburant, remise des clés",
+          "help": "Tout est prêt : enregistrez le kilométrage et le carburant, puis remettez les clés au client."
+        },
+        "inspection_retour": {
+          "title": "Inspection de retour",
+          "short": "Photos au retour du véhicule",
+          "help": "Reprenez les mêmes photos qu'au départ : l'IA les compare pour trouver les nouveaux dommages."
+        },
+        "damages": {
+          "title": "Dommages et rapport",
+          "short": "Relire les dommages détectés",
+          "help": "Relisez les dommages proposés par l'IA, confirmez ou corrigez-les, puis envoyez le rapport.",
+          "open": "Voir les dommages et le rapport"
+        },
+        "return": {
+          "title": "Retour du véhicule",
+          "short": "Kilométrage, carburant, clôture",
+          "help": "Enregistrez le kilométrage et le carburant au retour pour clôturer la location."
+        },
+        "deposit": {
+          "title": "Caution",
+          "short": "Restituer ou retenir",
+          "help": "Rien à faire pour le moment : la caution se règle une fois la location clôturée."
+        }
+      },
+      "skip": {
+        "title": "Ignorer l'inspection ?",
+        "body": "Aucune photo ne sera prise. En cas de litige, il n'y aura aucune preuve de l'état de la voiture. Cette décision est enregistrée à votre nom.",
+        "confirm": "Ignorer",
+        "action": "Ignorer l'inspection (sans photos)",
+        "skippedShort": "Ignorée — aucune photo",
+        "skippedNote": "Inspection ignorée : aucune photo n'a été prise, l'état de la voiture ne sera pas prouvé.",
+        "doItAnyway": "Faire l'inspection quand même",
+        "decideShort": "Photos prises — analyser ou non ?",
+        "decideAction": "Choisir : analyser les photos ou non"
+      }
+    },
+    "detailsSection": "Détails",
+    "wizard": {
+      "stepOf": "Étape {{current}} sur {{total}}",
+      "next": "Suivant",
+      "previous": "Précédent",
+      "driversCount_one": "{{count}} conducteur ajouté",
+      "driversCount_other": "{{count}} conducteurs ajoutés",
+      "driversNone": "Le client conduit lui-même",
+      "afterCreate": "Après la création, un parcours guidé vous mènera pas à pas : confirmation, vérifications, contrat, inspection de départ, acompte puis départ.",
+      "steps": {
+        "client": {
+          "title": "Client",
+          "help": "Qui loue la voiture ? Cherchez le client par nom, téléphone ou CIN."
+        },
+        "vehicule": {
+          "title": "Voiture libre",
+          "help": "Voici les voitures disponibles pour ces dates, avec le prix de la période. Choisissez-en une."
+        },
+        "dates": {
+          "title": "Dates et lieux",
+          "help": "Quand le client veut-il la voiture ? Choisissez le départ et le retour : Kriha vous montrera ensuite seulement les voitures libres à ces dates."
+        },
+        "conducteurs": {
+          "title": "Conducteurs",
+          "help": "Par défaut le client conduit lui-même. Ajoutez un autre conducteur principal ou des conducteurs supplémentaires si besoin (facultatif)."
+        },
+        "prix": {
+          "title": "Prix et caution",
+          "help": "Vérifiez le prix, ajoutez des frais ou une remise, et fixez l'acompte et la caution."
+        },
+        "recap": {
+          "title": "Récapitulatif",
+          "help": "Relisez tout avant de créer la location."
+        }
+      },
+      "availableCount_one": "{{count}} voiture libre à ces dates",
+      "availableCount_other": "{{count}} voitures libres à ces dates",
+      "noneAvailable": "Aucune voiture libre à ces dates : changez les dates.",
+      "noneAvailableHelp": "Aucune voiture n'est libre pour cette période. Revenez à l'étape précédente pour proposer d'autres dates au client.",
+      "pickDatesFirst": "Choisissez d'abord les dates (étape précédente).",
+      "forPeriod": "Voitures libres du {{start}} au {{end}}",
+      "pickedUnavailable": "{{vehicle}} n'est plus libre à ces dates : choisissez une autre voiture.",
+      "totalForPeriod": "{{total}} pour {{days}} j",
+      "showUnavailable": "Voir les {{count}} voiture(s) non disponibles",
+      "hideUnavailable": "Masquer les voitures non disponibles",
+      "reasons": {
+        "booked": "Déjà réservée — libre à partir du {{date}}",
+        "maintenance": "En maintenance",
+        "indisponible": "Indisponible",
+        "archived": "Archivée"
+      },
+      "identityRequiredTitle": "CIN ou passeport obligatoire",
+      "identityRequiredBody": "{{name}} n'a ni CIN ni passeport enregistré. Le propriétaire de l'agence exige l'un des deux pour créer une location. Complétez la fiche du client, puis revenez ici.",
+      "completeCustomer": "Compléter la fiche du client",
+      "checking": "Vérification des disponibilités…"
+    },
+    "dossier": {
+      "vehicleSection": "Voiture",
+      "currentKm": "Kilométrage actuel",
+      "listPrice": "Prix catalogue / jour",
+      "openVehicle": "Voir la fiche de la voiture",
+      "none": "—",
+      "paymentSection": "Conditions et paiement",
+      "duration": "Durée",
+      "pricePerDay": "Prix par jour appliqué",
+      "paymentStatus": "Statut du paiement",
+      "openContract": "Voir le contrat",
+      "beforeSection": "État avant la location",
+      "notDeparted": "Le départ n'est pas encore enregistré : l'état de la voiture avant la location apparaîtra ici après la remise des clés.",
+      "departedAt": "Départ réel",
+      "existingDamages": "Dommages existants avant la location",
+      "noDamage": "Aucun dommage signalé.",
+      "inspectionSkipped": "Inspection ignorée : aucune photo n'a été prise.",
+      "openInspectionDepart": "Voir l'inspection de départ",
+      "afterSection": "Retour",
+      "returnedAt": "Retour réel",
+      "lateBy": "Retard",
+      "kmReturn": "Kilométrage au retour",
+      "kmDriven": "Kilomètres parcourus",
+      "fuelReturn": "Carburant au retour",
+      "returnCondition": "État général au retour",
+      "lateFee": "Frais de retard proposés",
+      "fuelFee": "Frais de carburant proposés",
+      "feesApplied": "Frais appliqués à la location",
+      "newDamages": "Nouveaux dommages constatés au retour",
+      "noNewDamage": "Aucun nouveau dommage.",
+      "openInspectionRetour": "Voir l'inspection de retour",
+      "title": "Dossier de la location"
+    },
+    "overlap": {
+      "badge": "Chevauchement",
+      "warning": "Cette location chevauche une autre location de la même voiture. Annulez ou déplacez l'une des deux pour éviter une double réservation."
+    },
+    "confirmConflict": "Cette voiture est déjà promise à un autre client sur ce créneau. Annulez ou déplacez l'une des deux locations, puis confirmez de nouveau.",
+    "emptyNone": "Aucune location pour l'instant. Touchez « + Nouvelle location » pour créer la première."
   },
   "contract": {
     "section": "Contrat",
@@ -505,7 +1252,7 @@
     "detailsTitle": "Contrat",
     "notFound": "Contrat introuvable.",
     "listTitle": "Contrats",
-    "listSubtitle_one": "1 contrat",
+    "listSubtitle_one": "{{count}} contrat",
     "listSubtitle_other": "{{count}} contrats",
     "searchPlaceholder": "Référence, client, immatriculation…",
     "loadError": "Impossible de charger les contrats.",
@@ -564,8 +1311,61 @@
       "createError": "Impossible de créer ce contrat.",
       "errors": {
         "required": "Ce champ est obligatoire."
-      }
-    }
+      },
+      "departureTitle": "État des lieux au départ",
+      "departureHelp": "Le contrat se fait en dernier : il reprend l'inspection de départ. Choisissez les dommages à inscrire (le client les lira et signera), et écrivez ceux que l'app n'aurait pas vus.",
+      "inspectionFirst": "L'inspection de départ n'est pas encore faite : ses dommages et ses relevés ne seront pas dans le contrat. Faites-la d'abord.",
+      "damagesTitle": "Dommages existants à inscrire au contrat",
+      "noDamages": "Aucun dommage confirmé à l'inspection de départ.",
+      "inContract": "Sera inscrit dans le contrat",
+      "notInContract": "Ne sera pas inscrit dans le contrat",
+      "writtenDamage": "Autres dommages constatés (à écrire)",
+      "writtenDamagePlaceholder": "Ex. petite rayure sur le pare-chocs avant gauche",
+      "editTitle": "Corriger le contrat",
+      "editHelp": "Vous corrigez le contrat {{numero}}. Les informations du client, de la voiture, des dates et du prix sont relues depuis la location : corrigez-les d'abord sur la location si besoin. L'ancien contrat sera annulé et remplacé par un nouveau numéro."
+    },
+    "additionalDrivers": "Conducteurs supplémentaires",
+    "sign": {
+      "start": "Faire signer le client",
+      "title": "Signature du contrat",
+      "readTitle": "Lire le contrat",
+      "signTitle": "Signer le contrat",
+      "notReady": "Ce contrat n'est pas prêt à être signé.",
+      "scrollHint": "Faites défiler jusqu'à la fin du contrat pour pouvoir continuer.",
+      "accept": "J'ai lu le contrat en entier et j'accepte ses conditions.",
+      "continue": "Passer à la signature",
+      "clientSignature": "Signature du client",
+      "clientHelp": "{{name}}, signez avec le doigt dans le cadre ci-dessous.",
+      "padPlaceholder": "Le client signe ici",
+      "agencySignature": "Signature de l'agence",
+      "staffMissing": "Vous n'avez pas encore enregistré votre signature. Ajoutez-la une fois, elle servira pour tous les contrats.",
+      "confirm": "Valider la signature",
+      "backToReading": "Relire le contrat",
+      "error": "Impossible d'enregistrer la signature. Vérifiez votre connexion et réessayez.",
+      "signatures": "Signatures",
+      "clientLabel": "Client",
+      "agencyLabel": "Agence",
+      "stampMissing": "Le cachet de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
+      "stampMissingOwner": "Le cachet de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
+      "logoMissing": "Le logo de l'agence est obligatoire pour signer un contrat. Demandez au propriétaire de l'ajouter dans Mon entreprise.",
+      "logoMissingOwner": "Le logo de l'agence est obligatoire pour signer un contrat. Ajoutez-le dans Mon entreprise.",
+      "readCardTitle": "Contrat de location",
+      "readCardBody": "Ouvrez le contrat tel qu'il sera imprimé et lisez-le jusqu'en bas (pincez pour agrandir). Vous pourrez ensuite cocher la case et signer.",
+      "openContract": "Lire le contrat",
+      "readAgain": "Relire le contrat",
+      "readDone": "✓ Contrat lu en entier",
+      "readPending": "À lire jusqu'en bas avant de continuer",
+      "viewerTitle": "Contrat de location",
+      "viewerHint": "Faites défiler jusqu'à la fin du contrat",
+      "viewerDone": "✓ Vous êtes arrivé à la fin : vous pouvez fermer"
+    },
+    "logoMissingPdf": "Le logo de l'agence est obligatoire sur le contrat. Ajoutez-le dans Mon entreprise (le propriétaire).",
+    "logoLoadError": "Le logo de l'agence n'a pas pu être chargé dans le PDF. Vérifiez votre connexion puis réessayez.",
+    "continueRental": "Continuer la location",
+    "nextStepHint": "Contrat signé. Il ne reste que le départ : remise des clés depuis la fiche de la location.",
+    "startHint": "Contrat signé : tout est prêt côté contrat. Vous pouvez démarrer la location (remise des clés).",
+    "editAction": "Modifier le contrat",
+    "print": "Imprimer le contrat"
   },
   "inspection": {
     "section": "Inspection",
@@ -580,11 +1380,11 @@
     "angleRequired": "Angle requis : {{angle}}",
     "pendingUpload": "{{count}} photo(s) en attente d'envoi — appuyez pour réessayer",
     "finish": "Terminer l'inspection",
-    "permissionRequired": "M3ak a besoin d'accéder à la caméra pour l'inspection du véhicule.",
+    "permissionRequired": "Kriha a besoin d'accéder à la caméra pour l'inspection du véhicule.",
     "grantPermission": "Autoriser la caméra",
     "angles": {
-      "avant": "Avant",
-      "arriere": "Arrière",
+      "avant": "Face avant",
+      "arriere": "Face arrière",
       "lateral_gauche": "Côté gauche",
       "lateral_droit": "Côté droit",
       "jante_avant_gauche": "Jante avant gauche",
@@ -593,10 +1393,277 @@
       "jante_arriere_droit": "Jante arrière droite",
       "interieur": "Intérieur",
       "tableau_de_bord": "Tableau de bord",
-      "autre": "Autre"
+      "autre": "Autre",
+      "avant_gauche": "Avant gauche (3/4)",
+      "arriere_gauche": "Arrière gauche (3/4)",
+      "arriere_droit": "Arrière droit (3/4)",
+      "avant_droit": "Avant droit (3/4)",
+      "capot": "Capot",
+      "toit": "Toit",
+      "pare_brise": "Pare-brise",
+      "volant": "Volant et console",
+      "frein_a_main": "Frein à main et levier",
+      "siege_avant_gauche": "Siège conducteur",
+      "siege_avant_droit": "Siège passager",
+      "banquette_arriere": "Banquette arrière",
+      "plafond": "Plafond",
+      "tapis": "Tapis de sol",
+      "coffre_interieur": "Coffre ouvert"
+    },
+    "angleHints": {
+      "avant": "Placez-vous à 2 m devant, au centre : toute la face avant dans le cadre (pare-chocs, phares, calandre, plaque).",
+      "avant_gauche": "Coin avant gauche, à 3 m, en diagonale : pare-chocs, aile et portière avant gauches visibles.",
+      "lateral_gauche": "Côté gauche en entier, à 3 m, de face : toit à bas de caisse, roues avant et arrière dans le cadre.",
+      "arriere_gauche": "Coin arrière gauche, à 3 m, en diagonale : aile, feu et pare-chocs arrière gauches visibles.",
+      "arriere": "Placez-vous à 2 m derrière, au centre : coffre, feux, pare-chocs et plaque dans le cadre.",
+      "arriere_droit": "Coin arrière droit, à 3 m, en diagonale : aile, feu et pare-chocs arrière droits visibles.",
+      "lateral_droit": "Côté droit en entier, à 3 m, de face : toit à bas de caisse, roues avant et arrière dans le cadre.",
+      "avant_droit": "Coin avant droit, à 3 m, en diagonale : pare-chocs, aile et portière avant droits visibles.",
+      "capot": "De l'avant, un peu en hauteur : tout le capot, sans reflet de soleil si possible.",
+      "toit": "Tout le toit (montez sur un marchepied ou tenez le téléphone en hauteur) : bosses, rayures, toit ouvrant.",
+      "pare_brise": "Le pare-brise en entier, de l'extérieur : éclats, fissures, impacts.",
+      "jante_avant_gauche": "Roue avant gauche de près : jante (rayures de trottoir), pneu et flanc du pneu.",
+      "jante_avant_droit": "Roue avant droite de près : jante (rayures de trottoir), pneu et flanc du pneu.",
+      "jante_arriere_gauche": "Roue arrière gauche de près : jante, pneu et flanc du pneu.",
+      "jante_arriere_droit": "Roue arrière droite de près : jante, pneu et flanc du pneu.",
+      "tableau_de_bord": "Volant et compteur de face, contact mis : kilométrage et niveau de carburant bien lisibles, voyants visibles.",
+      "volant": "Volant, console centrale, écran, boutons et commandes : cherchez rayures, usure et objets cassés.",
+      "frein_a_main": "Frein à main (ou levier de vitesse) et boîte à gants : état des plastiques, cuir et boutons.",
+      "siege_avant_gauche": "Siège conducteur entier, de la portière ouverte : assise, dossier, bords (déchirures, taches, brûlures).",
+      "siege_avant_droit": "Siège passager entier, de la portière ouverte : assise, dossier, bords (déchirures, taches, brûlures).",
+      "banquette_arriere": "Banquette arrière entière, portière ouverte : assise, dossier, ceintures, taches ou déchirures.",
+      "plafond": "Le plafond de l'habitacle : taches, décollements, traces de fumée.",
+      "tapis": "Tapis de sol avant et arrière : propreté, trous, taches ; relevez-les si besoin.",
+      "coffre_interieur": "Coffre ouvert en entier : fond, roue de secours, triangle, cric, taches ou dégâts."
+    },
+    "groups": {
+      "exterieur": "Extérieur",
+      "roues": "Roues",
+      "interieur": "Intérieur"
+    },
+    "skip": "Ignorer cet angle",
+    "skipTitle": "Ignorer cet angle ?",
+    "skipBody": "« {{angle}} » ne sera pas photographié (voiture sans cet élément). L'analyse ne pourra pas le contrôler.",
+    "skipConfirm": "Ignorer",
+    "analysis": {
+      "title": {
+        "depart": "Rapport d'inspection de départ",
+        "retour": "Rapport d'inspection de retour"
+      },
+      "running": "Analyse des photos en cours…",
+      "runningHint": "L'IA examine chaque angle (extérieur, roues, intérieur) et compare avec le départ. Cela peut prendre jusqu'à 2 minutes : restez sur cet écran.",
+      "relaunch": "Relancer l'analyse",
+      "relaunchTitle": "Relancer l'analyse ?",
+      "relaunchBody": "Les propositions de l'IA seront remplacées, y compris vos validations. Les dommages ajoutés à la main sont conservés.",
+      "relaunchConfirm": "Relancer",
+      "continueWithout": "Continuer sans l'IA",
+      "errors": {
+        "inactive": "L'analyse IA n'est pas active pour votre entreprise. Vous pouvez ajouter les dommages à la main, ou demander au propriétaire de l'activer dans « Mon entreprise ».",
+        "busy": "Le service d'analyse est saturé. Réessayez dans un instant.",
+        "timeout": "L'analyse a pris trop de temps. Vérifiez votre connexion puis relancez.",
+        "noPhotos": "Aucune photo n'est encore envoyée. Reprenez l'inspection, puis relancez l'analyse.",
+        "unavailable": "Impossible de joindre le service d'analyse. Vérifiez votre connexion puis relancez.",
+        "failed": "L'analyse n'a pas abouti. Relancez-la ; sinon ajoutez les dommages à la main."
+      },
+      "partial": "Certaines zones n'ont pas pu être analysées : {{zones}}. Relancez l'analyse pour les contrôler.",
+      "zones": {
+        "avant": "Avant, capot, pare-brise",
+        "cotes": "Côtés",
+        "arriere_toit_roues": "Arrière, toit et roues",
+        "habitacle_avant": "Habitacle avant",
+        "sieges_coffre": "Sièges, plafond et coffre"
+      },
+      "summary": {
+        "new_one": "{{count}} nouveau dommage détecté",
+        "new_other": "{{count}} nouveaux dommages détectés",
+        "none": "Aucun nouveau dommage détecté",
+        "departCount_one": "{{count}} dommage existant enregistré",
+        "departCount_other": "{{count}} dommages existants enregistrés",
+        "departNone": "Aucun dommage existant : la voiture est en bon état au départ",
+        "existing": "{{count}} déjà présent(s) au départ",
+        "toCheck": "{{count}} à vérifier",
+        "notCompared": "Pas de photos de départ pour comparer : impossible de dire ce qui est nouveau. Vérifiez chaque dommage.",
+        "pendingDecision": "{{count}} nouveau(x) dommage(s) à valider avant la retenue."
+      },
+      "readings": {
+        "km": "Kilométrage lu",
+        "fuel": "Carburant lu",
+        "cleanliness": "Propreté",
+        "kmValue": "{{km}} km",
+        "fuelValue": "{{percent}} %",
+        "clean": {
+          "propre": "Propre",
+          "correcte": "Correcte",
+          "sale": "Sale"
+        }
+      },
+      "compare": {
+        "title": "Comparatif départ / retour",
+        "depart": "Départ",
+        "retour": "Retour",
+        "noDepart": "Pas de photo de départ pour cet angle"
+      },
+      "damages": {
+        "title": "Dommages",
+        "empty": "Aucun dommage détecté sur les photos. Si vous voyez quelque chose que l'IA a manqué, ajoutez-le.",
+        "add": "Ajouter un dommage",
+        "new": "Nouveau",
+        "existing": "Déjà présent",
+        "toCheck": "À vérifier",
+        "confidence": "Confiance {{percent}} %",
+        "noDepartPhoto": "Pas de photo de départ pour cet angle : à vérifier",
+        "manual": "Ajouté à la main",
+        "cost": "Coût de réparation (MAD)",
+        "costEstimated": "Estimé par l'IA : {{amount}} MAD",
+        "confirm": "Confirmer",
+        "reject": "Rejeter",
+        "edit": "Modifier",
+        "restore": "Remettre à valider",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "zone": "Emplacement",
+        "type": "Type de dommage",
+        "severity": {
+          "leger": "Léger",
+          "modere": "Moyen",
+          "grave": "Grave"
+        },
+        "isNew": "Apparu pendant cette location",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Ex. rayure profonde de 12 cm",
+        "saveError": "Impossible d'enregistrer. Réessayez.",
+        "photoOf": "Photo : {{angle}}",
+        "status": {
+          "propose": "À valider",
+          "confirme": "Confirmé",
+          "rejete": "Rejeté"
+        }
+      },
+      "zonesLabel": {
+        "pare_choc_avant": "Pare-chocs avant",
+        "pare_choc_arriere": "Pare-chocs arrière",
+        "capot": "Capot",
+        "toit": "Toit",
+        "coffre": "Coffre (extérieur)",
+        "aile_avant_gauche": "Aile avant gauche",
+        "aile_avant_droit": "Aile avant droite",
+        "aile_arriere_gauche": "Aile arrière gauche",
+        "aile_arriere_droit": "Aile arrière droite",
+        "portiere_avant_gauche": "Portière avant gauche",
+        "portiere_avant_droit": "Portière avant droite",
+        "portiere_arriere_gauche": "Portière arrière gauche",
+        "portiere_arriere_droit": "Portière arrière droite",
+        "pare_brise": "Pare-brise",
+        "lunette_arriere": "Lunette arrière",
+        "vitre": "Vitre",
+        "retroviseur_gauche": "Rétroviseur gauche",
+        "retroviseur_droit": "Rétroviseur droit",
+        "calandre": "Calandre",
+        "phare_avant": "Phare avant",
+        "feu_arriere": "Feu arrière",
+        "bas_de_caisse": "Bas de caisse",
+        "jante_avant_gauche": "Jante avant gauche",
+        "jante_avant_droit": "Jante avant droite",
+        "jante_arriere_gauche": "Jante arrière gauche",
+        "jante_arriere_droit": "Jante arrière droite",
+        "pneu_avant_gauche": "Pneu avant gauche",
+        "pneu_avant_droit": "Pneu avant droit",
+        "pneu_arriere_gauche": "Pneu arrière gauche",
+        "pneu_arriere_droit": "Pneu arrière droit",
+        "tableau_de_bord": "Tableau de bord",
+        "volant": "Volant",
+        "frein_a_main": "Frein à main / levier",
+        "siege_avant_gauche": "Siège conducteur",
+        "siege_avant_droit": "Siège passager",
+        "banquette_arriere": "Banquette arrière",
+        "plafond": "Plafond",
+        "tapis": "Tapis de sol",
+        "coffre_interieur": "Coffre (intérieur)",
+        "interieur": "Intérieur (autre)",
+        "autre": "Autre"
+      },
+      "types": {
+        "rayure": "Rayure",
+        "choc": "Choc",
+        "bosse": "Bosse",
+        "fissure": "Fissure",
+        "eclat": "Éclat",
+        "piece_manquante": "Pièce manquante",
+        "salissure": "Salissure",
+        "tache": "Tache",
+        "dechirure": "Déchirure",
+        "brulure": "Brûlure",
+        "casse": "Cassé",
+        "usure": "Usure",
+        "autre": "Autre"
+      },
+      "inspectionDone": "Terminer"
+    },
+    "report": {
+      "title": "Rapport d'inspection",
+      "sharePdf": "Générer et partager le rapport PDF",
+      "depositTitle": "Caution et retenue",
+      "depositBlocked": "Caution bloquée",
+      "deduction": "Retenue sur la caution",
+      "deductionTotal": "Retenue : {{amount}}",
+      "toRefund": "Solde à restituer",
+      "cost": "Coût",
+      "evidence": "Photos des dommages (départ / retour)",
+      "vehicle": "Véhicule",
+      "customer": "Client",
+      "km": "Kilométrage",
+      "fuel": "Carburant",
+      "footer": "Rapport généré par Kriha. L'IA propose, l'employé de l'agence a validé chaque dommage retenu.",
+      "noDeposit": "Aucune caution enregistrée pour cette location. Montant des dommages imputables : {{amount}}.",
+      "validated": "Retenue validée.",
+      "deductionField": "Montant à retenir en MAD (proposé : {{proposed}})",
+      "exceedsDeposit": "Les dommages dépassent la caution de {{excess}} : la retenue est plafonnée à la caution, le reste est à réclamer au client.",
+      "validate": "Valider la retenue ({{amount}})",
+      "validateError": "Impossible d'enregistrer la retenue. Réessayez.",
+      "confirmTitle": "Valider la retenue ?",
+      "confirmBody": "Retenue : {{retenue}}. À restituer au client : {{restitue}}. Cette décision est enregistrée.",
+      "confirmAction": "Valider",
+      "pdfError": "Impossible de générer le rapport. Vérifiez votre connexion et réessayez.",
+      "whatsappError": "Impossible d'ouvrir WhatsApp sur ce téléphone.",
+      "whatsapp": {
+        "button": "Envoyer par WhatsApp",
+        "noPhone": "Le client n'a pas de numéro valide : WhatsApp s'ouvrira sans destinataire, choisissez le contact.",
+        "greeting": "Bonjour, voici le résultat de l'inspection de retour — {{agency}}.",
+        "vehicle": "Véhicule : {{vehicle}} ({{plate}})",
+        "noDamage": "Aucun nouveau dommage constaté. Merci !",
+        "damages": "{{count}} dommage(s) constaté(s) pendant la location :",
+        "total": "Total retenu : {{amount}}",
+        "deposit": "Caution : {{deposit}} — à restituer : {{rest}}",
+        "attached": "Le rapport détaillé avec photos est joint en PDF."
+      }
+    },
+    "openReport": "Voir le rapport et les dommages",
+    "analyzeNow": "Analyser avec l'IA",
+    "decision": {
+      "title": "Analyser les photos avec Kriha ?",
+      "body": "{{count}} photos ont été prises et enregistrées. Kriha peut les analyser pour repérer les dommages (extérieur, roues, intérieur). Vous relirez ensuite chaque dommage un par un.",
+      "yes": "Oui, analyser les photos",
+      "no": "Non, pas d'analyse",
+      "noHint": "Si vous déclinez, les photos restent stockées pour l'inspection et pour la comparaison au retour. Vous pourrez écrire à la main les dommages que vous voyez, s'il y en a.",
+      "declinedTitle": "Analyse déclinée",
+      "declinedBody": "Les {{count}} photos restent stockées pour l'inspection et la comparaison au retour. Si vous voyez un dommage, ajoutez-le ci-dessous ; sinon il n'y a rien à faire.",
+      "skippedTitle": "Inspection ignorée",
+      "skippedBody": "Aucune photo n'a été prise : l'état de la voiture ne sera pas prouvé en cas de litige. Vous pouvez encore faire l'inspection.",
+      "inContract": "Sera inscrit dans le contrat",
+      "notInContract": "Ne sera pas inscrit dans le contrat",
+      "analyzeAnyway": "Analyser quand même",
+      "mandatory": "L'analyse par Kriha est obligatoire dans cette agence."
     }
   },
   "accueil": {
+    "header": {
+      "greeting": "Bonjour, {{name}} 👋",
+      "greetingNoName": "Bonjour 👋",
+      "search": "Poser une question à Kriha",
+      "profile": "Mon profil",
+      "notifications": "Notifications",
+      "unread": "{{count}} non lues"
+    },
     "title": "Accueil",
     "greeting": "Bonjour {{name}}",
     "defaultName": "👋",
@@ -605,11 +1672,112 @@
     "fleetTotalCount_other": "{{count}} véhicules enregistrés",
     "utilizationRate": "Taux d'utilisation",
     "revenueThisMonth": "Chiffre d'affaires (mois)",
-    "revenueChartTitle": "Revenus des {{days}} derniers jours",
     "documentAlertsSection": "Documents à renouveler",
     "maintenanceSection": "Échéances de maintenance",
     "maintenanceEmpty": "Aucune échéance à venir.",
-    "seeAll": "Voir tout"
+    "seeAll": "Voir tout",
+    "roleView": {
+      "owner": "Vue propriétaire : toute votre agence en un coup d'œil",
+      "manager": "Vue responsable : exploitation et flotte",
+      "employee": "Vue comptoir : votre travail du jour"
+    },
+    "financial": {
+      "title": "Finances",
+      "revenueMonth": "Encaissé ce mois",
+      "vsLastMonth": "{{pct}} % par rapport au mois dernier",
+      "noPreviousMonth": "Pas de mois précédent à comparer",
+      "outstanding": "Reste à encaisser",
+      "outstandingHint": "{{count}} location(s) non soldée(s)",
+      "profit30d": "Résultat sur 30 jours",
+      "profitHint": "Encaissé moins frais d'entretien",
+      "maintenanceCost": "Entretien ce mois",
+      "averageBasket": "Panier moyen par location",
+      "cancellationRate": "Taux d'annulation",
+      "cancelledHint": "{{count}} annulation(s) ce mois",
+      "trendTitle": "Encaissements des 6 derniers mois"
+    },
+    "fleet": {
+      "utilizationNow": "En location maintenant",
+      "occupancyMonth": "Occupation du mois",
+      "occupancyHint": "Jours loués sur jours disponibles"
+    },
+    "operations": {
+      "title": "Activité des locations",
+      "departuresToday": "Départs aujourd'hui",
+      "returnsToday": "Retours aujourd'hui",
+      "lateReturns": "Retours en retard",
+      "pendingConfirmation": "À confirmer",
+      "upcoming7Days": "Départs dans les 7 jours",
+      "activeRentals": "Locations en cours",
+      "averageDuration": "Durée moyenne",
+      "days_one": "{{count}} jour",
+      "days_other": "{{count}} jours",
+      "newCustomers": "Nouveaux clients ce mois"
+    },
+    "counter": {
+      "title": "Aujourd'hui au comptoir",
+      "toCollect": "Soldes à encaisser aujourd'hui",
+      "toCollectHint": "Retours prévus aujourd'hui ou en retard avec un reste à payer",
+      "availableNow": "Véhicules disponibles",
+      "newRental": "Nouvelle location",
+      "newCustomer": "Nouveau client"
+    },
+    "performance": {
+      "title": "Performance de la flotte (30 jours)",
+      "top": "Véhicules qui rapportent le plus",
+      "underused": "Véhicules peu loués (moins de {{pct}} % d'occupation)",
+      "noData": "Pas encore assez de données.",
+      "noneUnderused": "Aucun véhicule sous-utilisé.",
+      "occupancy": "{{pct}} % d'occupation"
+    },
+    "maintenanceSummary": {
+      "overdue": "Entretiens en retard",
+      "due": "Entretiens à faire"
+    },
+    "ai": {
+      "title": "Analyse et recommandations IA",
+      "indicatorsTitle": "Indicateurs proposés par l'IA",
+      "recommendationsTitle": "Recommandations de l'IA",
+      "refresh": "Actualiser",
+      "cooldown": "Patientez quelques minutes avant de relancer l'analyse.",
+      "loading": "Analyse en cours…",
+      "analysedAt": "Analyse du {{time}}",
+      "disclaimer": "Suggestions générées par une IA à partir de statistiques sans aucun nom de client. À vérifier avant d'agir : elles ne remplacent pas votre jugement.",
+      "openSettings": "Ouvrir Mon entreprise",
+      "priority": {
+        "high": "Prioritaire",
+        "medium": "À planifier",
+        "low": "Facultatif"
+      },
+      "area": {
+        "revenue": "Revenus",
+        "fleet": "Flotte",
+        "maintenance": "Entretien",
+        "operations": "Exploitation",
+        "customers": "Clients"
+      },
+      "unavailable": {
+        "noKey": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore configurée pour votre entreprise. Contactez KRIHA pour la mettre en place.",
+        "ownerCanEnable": "Cet indicateur ne peut pas être affiché : l'IA est configurée mais pas encore activée. Vous pouvez l'activer dans « Mon entreprise ».",
+        "askOwner": "Cet indicateur ne peut pas être affiché : l'IA n'est pas encore activée pour votre entreprise. Demandez au propriétaire de l'activer."
+      },
+      "errors": {
+        "busy": "L'IA est très sollicitée en ce moment. Réessayez dans quelques instants.",
+        "timeout": "L'analyse prend trop de temps. Réessayez dans un instant.",
+        "limit": "Vous avez atteint le nombre d'analyses autorisées pour aujourd'hui. Réessayez demain.",
+        "inactive": "L'IA n'est pas active pour votre entreprise.",
+        "unavailable": "Impossible de joindre le service d'analyse. Vérifiez votre connexion internet, puis réessayez.",
+        "failed": "L'analyse n'a pas fonctionné. Réessayez dans un instant."
+      }
+    },
+    "askM3ak": {
+      "title": "Demander à Kriha",
+      "hint": "Qui a pris la voiture ? Quelles voitures reviennent cette semaine ?"
+    },
+    "upcoming": {
+      "title": "Locations à venir",
+      "empty": "Aucune location à venir pour le moment."
+    }
   },
   "maintenance": {
     "title": "Maintenance",
@@ -719,22 +1887,536 @@
     "updateSuccess": "Profil mis à jour.",
     "changePassword": "Modifier le mot de passe",
     "passwordError": "Impossible de modifier le mot de passe.",
-    "passwordSuccess": "Mot de passe modifié."
+    "passwordSuccess": "Mot de passe modifié.",
+    "signature": {
+      "section": "Ma signature",
+      "none": "Vous n'avez pas encore de signature. Elle sera ajoutée automatiquement aux contrats que vous faites signer.",
+      "add": "Ajouter ma signature",
+      "change": "Modifier ma signature",
+      "remove": "Retirer ma signature",
+      "title": "Ma signature",
+      "help": "Signez avec le doigt dans le cadre. Cette signature sera collée automatiquement sur les contrats que vous faites signer.",
+      "placeholder": "Signez ici",
+      "clear": "Effacer",
+      "tooShort": "La signature est trop courte. Signez comme sur papier.",
+      "save": "Enregistrer ma signature",
+      "saved": "Votre signature est enregistrée.",
+      "saveError": "Impossible d'enregistrer la signature. Vérifiez votre connexion et réessayez.",
+      "ok": "D'accord"
+    }
   },
   "journal": {
-    "title": "Journal d'activité",
-    "subtitle": "Traçabilité des actions sur l'équipe et les filiales",
-    "empty": "Aucune activité enregistrée pour l'instant.",
-    "loadError": "Impossible de charger le journal. Vérifiez votre connexion.",
+    "title": "Traçabilité",
+    "subtitle": "Tout ce que fait votre équipe, réservé au propriétaire",
+    "empty": "Aucune activité pour cette sélection.",
+    "loadError": "Impossible de charger l'activité. Vérifiez votre connexion et réessayez.",
     "unknownActor": "Quelqu'un",
+    "enabled": "activée",
+    "disabled": "désactivée",
+    "period": {
+      "label": "Période",
+      "day": "Jour",
+      "month": "Mois",
+      "year": "Année",
+      "all": "Tout l'historique",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "allLabel": "Tout l'historique",
+      "custom": "Dates précises",
+      "from": "Du",
+      "to": "Au",
+      "datePlaceholder": "JJ/MM/AAAA",
+      "customHelp": "Saisissez deux dates valides au format JJ/MM/AAAA (la première avant la seconde)."
+    },
+    "filters": {
+      "employee": "Employé",
+      "allEmployees": "Tous les employés",
+      "category": "Type d'action",
+      "allCategories": "Toutes les actions"
+    },
+    "summary": {
+      "title": "Activité par personne",
+      "actions": "{{count}} actions",
+      "last": "Dernière : {{date}}",
+      "none": "Aucune activité."
+    },
+    "loadMore": "Voir plus",
+    "export": "Exporter en PDF",
+    "exporting": "Préparation du PDF…",
+    "exportError": "Impossible de créer le PDF. Réessayez.",
+    "ownerOnly": "Cette page est réservée au propriétaire.",
+    "categories": {
+      "rental": "Locations",
+      "payment": "Paiements",
+      "customer": "Clients",
+      "vehicle": "Véhicules",
+      "contract": "Contrats",
+      "deposit": "Cautions",
+      "maintenance": "Entretien",
+      "inspection": "Inspections",
+      "team": "Équipe",
+      "settings": "Réglages",
+      "other": "Autres"
+    },
+    "fields": {
+      "nom_complet": "nom",
+      "prenom": "prénom",
+      "nom": "nom",
+      "telephone": "téléphone",
+      "telephone_secondaire": "deuxième téléphone",
+      "email": "e-mail",
+      "adresse": "adresse",
+      "ville": "ville",
+      "pays": "pays",
+      "date_naissance": "date de naissance",
+      "cin_ou_passeport": "CIN / passeport",
+      "numero_permis": "numéro de permis",
+      "langue_preferee": "langue",
+      "type_client": "type de client",
+      "raison_sociale": "raison sociale",
+      "ice": "ICE",
+      "consentement_donnees": "consentement"
+    },
+    "pdf": {
+      "title": "Rapport de traçabilité",
+      "filters": "Filtres",
+      "generated": "Édité le {{date}} par {{by}}",
+      "count": "{{count}} actions",
+      "date": "Date",
+      "employee": "Employé",
+      "action": "Action",
+      "truncated": "Seules les 2000 actions les plus récentes sont incluses. Réduisez la période pour voir le reste.",
+      "confidential": "Document confidentiel réservé au propriétaire. Il contient des noms de clients et des montants : ne le diffusez pas.",
+      "share": "Rapport de traçabilité"
+    },
     "actions": {
       "branch_created": "{{actor}} a créé la filiale « {{target}} »",
       "branch_updated": "{{actor}} a modifié la filiale « {{target}} »",
       "branch_deleted": "{{actor}} a supprimé la filiale « {{target}} »",
-      "invite_created": "{{actor}} a créé une invitation ({{code}})",
+      "invite_created": "{{actor}} a invité {{target}}",
+      "invite_resent": "{{actor}} a renvoyé l'invitation de {{target}}",
+      "invite_revoked": "{{actor}} a annulé l'invitation de {{target}}",
       "member_joined": "{{actor}} a rejoint l'agence",
       "member_role_changed": "{{actor}} a changé le rôle de « {{target}} »",
-      "member_removed": "{{actor}} a retiré « {{target}} » de l'agence"
+      "member_removed": "{{actor}} a retiré « {{target}} » de l'agence",
+      "ocr_key_set": "{{actor}} a configuré la clé d'analyse Gemini de l'entreprise",
+      "ocr_key_cleared": "{{actor}} a retiré la clé d'analyse Gemini de l'entreprise",
+      "rental_created": "{{actor}} a créé la location {{target}} ({{vehicle}} pour {{customer}}, {{total}})",
+      "rental_confirmed": "{{actor}} a confirmé la location {{target}} ({{vehicle}})",
+      "rental_started": "{{actor}} a remis le véhicule : location {{target}} ({{vehicle}}, {{customer}})",
+      "rental_completed": "{{actor}} a terminé la location {{target}} ({{vehicle}}, {{customer}})",
+      "rental_cancelled": "{{actor}} a annulé la location {{target}} ({{vehicle}}, {{customer}})",
+      "rental_status_changed": "{{actor}} a changé l'état de la location {{target}}",
+      "rental_dates_changed": "{{actor}} a modifié les dates de la location {{target}} (nouveau total {{total}})",
+      "payment_recorded": "{{actor}} a enregistré un paiement de {{amount}} ({{method}}) sur la location {{target}}",
+      "payment_status_changed": "{{actor}} a modifié un paiement de {{amount}} sur la location {{target}}",
+      "customer_created": "{{actor}} a ajouté le client « {{target}} »",
+      "customer_updated": "{{actor}} a modifié la fiche du client « {{target}} » ({{fields}})",
+      "customer_archived": "{{actor}} a archivé le client « {{target}} »",
+      "customer_reactivated": "{{actor}} a réactivé le client « {{target}} »",
+      "customer_document_added": "{{actor}} a ajouté un document ({{docType}}) à « {{target}} »",
+      "customer_document_deleted": "{{actor}} a supprimé un document ({{docType}}) de « {{target}} »",
+      "customer_note_added": "{{actor}} a ajouté une note sur « {{target}} »",
+      "customer_note_edited": "{{actor}} a modifié une note sur « {{target}} »",
+      "customer_note_deleted": "{{actor}} a supprimé une note sur « {{target}} »",
+      "vehicle_created": "{{actor}} a ajouté le véhicule {{target}}",
+      "vehicle_archived": "{{actor}} a archivé le véhicule {{target}}",
+      "vehicle_reactivated": "{{actor}} a réactivé le véhicule {{target}}",
+      "vehicle_price_changed": "{{actor}} a changé le prix par jour de {{target}} : {{from}} → {{to}}",
+      "contract_created": "{{actor}} a créé le contrat {{target}}",
+      "contract_signed": "{{actor}} a fait signer le contrat {{target}}",
+      "contract_closed": "{{actor}} a clôturé le contrat {{target}}",
+      "contract_cancelled": "{{actor}} a annulé le contrat {{target}}",
+      "contract_status_changed": "{{actor}} a modifié le contrat {{target}}",
+      "deposit_blocked": "{{actor}} a enregistré une caution de {{amount}} sur la location {{target}}",
+      "deposit_resolved": "{{actor}} a réglé la caution de la location {{target}}",
+      "maintenance_created": "{{actor}} a planifié un entretien ({{maintenanceType}}) pour {{target}}",
+      "maintenance_started": "{{actor}} a démarré un entretien ({{maintenanceType}}) pour {{target}}",
+      "maintenance_completed": "{{actor}} a terminé un entretien ({{maintenanceType}}) pour {{target}} — coût {{cost}}",
+      "inspection_created": "{{actor}} a commencé une inspection ({{inspectionType}}) de {{target}}",
+      "inspection_completed": "{{actor}} a terminé l'inspection ({{inspectionType}}) de {{target}}",
+      "departure_check_confirmed": "{{actor}} a confirmé les documents avant départ de la location {{target}}",
+      "ocr_cloud_toggled": "{{actor}} a modifié la lecture automatique des documents : {{state}}",
+      "ai_insights_toggled": "{{actor}} a modifié les analyses et recommandations de l'accueil : {{state}}",
+      "unknown": "{{actor}} a effectué une action",
+      "contract_template_saved": "{{actor}} a enregistré le modèle de contrat de l'agence",
+      "contract_template_removed": "{{actor}} est revenu au modèle de contrat standard"
     }
+  },
+  "ocr": {
+    "keepPhoto": {
+      "label": "Enregistrer la photo dans le dossier",
+      "on": "La photo sera transmise de manière sécurisée à KRIHA avec le dossier, et consultable par les personnes autorisées de votre agence.",
+      "off": "La photo reste sur cet appareil et n'est pas enregistrée. Seules les informations que vous validez sont conservées."
+    },
+    "privacyCloud": "Votre entreprise a activé l'analyse par Google Gemini : la photo est envoyée à Google, avec la clé d'API de votre entreprise, pour être lue. Si vous choisissez d'enregistrer le document, son image est aussi transmise de manière sécurisée au backend KRIHA.",
+    "settingsTitle": "Lecture automatique des documents (OCR)",
+    "settingsCloudUnavailable": "La lecture automatique n'est pas active pour votre entreprise : aucune clé d'API n'est configurée. Contactez KRIHA pour la mettre en place. En attendant, les informations se saisissent à la main.",
+    "settingsCloudOff": "Une clé d'API Gemini est configurée pour votre entreprise, mais la lecture automatique est désactivée.",
+    "settingsCloudOn": "Lecture automatique activée : les photos scannées sont envoyées à Google Gemini avec la clé de votre entreprise. Si la clé est sur l'offre gratuite de Google, Google peut utiliser ces images ; pour des données confidentielles, utilisez une clé avec facturation activée.",
+    "enable": "Activer l'analyse Gemini",
+    "disable": "Désactiver l'analyse Gemini",
+    "enableConfirmTitle": "Activer l'analyse par Gemini ?",
+    "enableConfirmBody": "Les photos de permis et de cartes grises scannées seront envoyées à Google pour être lues, avec la clé d'API de votre entreprise. Elles contiennent des données personnelles : informez vos clients. Avec une clé gratuite, Google peut utiliser les images ; préférez une clé avec facturation activée.",
+    "settingsError": "Impossible de modifier ce réglage. Réessayez.",
+    "ownerOnly": "Seul le propriétaire peut modifier ce réglage.",
+    "inactive": {
+      "noKey": "La lecture automatique des documents n'est pas active pour votre entreprise. Saisissez les informations à la main.",
+      "ownerCanEnable": "La lecture automatique des documents n'est pas encore activée pour votre entreprise. Vous pouvez l'activer dans « Mon entreprise », ou saisir à la main.",
+      "askOwner": "La lecture automatique des documents n'est pas encore activée pour votre entreprise. Demandez au propriétaire de l'activer, ou saisissez à la main.",
+      "openSettings": "Ouvrir Mon entreprise"
+    },
+    "errors": {
+      "inactive": "La lecture automatique n'est pas active pour votre entreprise. Saisissez les informations à la main.",
+      "timeout": "La lecture prend trop de temps. Réessayez, ou saisissez les informations à la main.",
+      "unavailable": "Impossible de contacter le service de lecture. Vérifiez votre connexion internet, puis réessayez.",
+      "nothingRead": "Aucune information n'a pu être lue sur cette photo. Prenez une photo plus nette et bien éclairée, ou saisissez les informations à la main.",
+      "failed": "La lecture du document n'a pas fonctionné. Réessayez avec une photo plus nette, ou saisissez les informations à la main.",
+      "busy": "Le service de lecture est très sollicité en ce moment. Réessayez dans quelques instants, ou saisissez les informations à la main."
+    },
+    "fromCache": "Cette photo a déjà été lue : résultat repris sans nouvel envoi.",
+    "insights": {
+      "title": "Recommandations IA (accueil)",
+      "unavailable": "Les recommandations IA ne sont pas disponibles pour votre entreprise : aucune clé d'API n'est configurée. Contactez KRIHA pour la mettre en place.",
+      "off": "Une clé d'API est configurée, mais les recommandations IA sont désactivées.",
+      "on": "Recommandations IA activées pour le propriétaire et les responsables. Seules des statistiques sans aucun nom de client ni photo sont envoyées à Google Gemini avec la clé de votre entreprise. Avec une clé gratuite, Google peut utiliser ces données ; préférez une clé avec facturation activée.",
+      "enable": "Activer les recommandations IA",
+      "disable": "Désactiver les recommandations IA",
+      "confirmTitle": "Activer les recommandations IA ?",
+      "confirmBody": "Des statistiques de votre agence (nombres de locations, totaux, noms de modèles de véhicules) seront envoyées à Google Gemini avec la clé de votre entreprise pour générer des conseils. Aucun nom de client, téléphone ni photo n'est envoyé."
+    },
+    "chat": {
+      "title": "Chat Kriha",
+      "unavailable": "Indisponible : aucune clé IA n'est configurée pour votre entreprise (KRIHA la configure).",
+      "on": "Activé. Les employés peuvent poser des questions sur les locations, voitures et clients. Pour répondre, les noms et téléphones des clients concernés sont transmis à l'IA ; jamais le CIN, le permis ni les photos.",
+      "off": "Désactivé. Activez-le pour que le personnel pose ses questions à Kriha.",
+      "enable": "Activer le Chat Kriha",
+      "disable": "Désactiver le Chat Kriha",
+      "confirmTitle": "Activer le Chat Kriha ?",
+      "confirmBody": "Pour répondre, Kriha transmet à l'IA (Google Gemini) les résultats de la recherche : noms et téléphones des clients concernés, voitures, dates. Jamais le CIN, le numéro de permis ni les photos. Chaque employé ne voit que ce que ses droits (filiale) lui permettent."
+    }
+  },
+  "errors": {
+    "network": "Impossible de se connecter à internet. Vérifiez votre connexion, puis réessayez.",
+    "rateLimit": "Trop de tentatives en peu de temps. Patientez quelques minutes, puis réessayez.",
+    "permission": "Vous n'avez pas l'autorisation d'effectuer cette action.",
+    "generic": "Un problème est survenu. Réessayez dans un instant.",
+    "emailNotConfirmed": "Votre adresse e-mail n'est pas encore confirmée. Ouvrez le message reçu par e-mail pour la confirmer.",
+    "alreadyRegistered": "Un compte existe déjà avec cette adresse e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ».",
+    "weakPassword": "Ce mot de passe est trop simple. Choisissez-en un plus long, avec des lettres et des chiffres.",
+    "emailSend": "Impossible d'envoyer le code par e-mail pour le moment. Patientez quelques minutes puis réessayez, ou contactez Kriha.",
+    "server": "Nos serveurs ont un souci, ce n'est pas de votre faute. Réessayez dans quelques minutes.",
+    "reference": "Réf. : {{reference}}"
+  },
+  "contractTemplate": {
+    "open": "Mon contrat",
+    "preview": "Voir un aperçu (PDF)",
+    "save": "Enregistrer",
+    "saved": "Votre modèle de contrat est enregistré. Les prochains contrats l'utiliseront.",
+    "saveError": "Impossible d'enregistrer le modèle. Vérifiez votre connexion et réessayez.",
+    "previewTitle": "Quel aperçu ?",
+    "previewBody": "« Contrat vierge » : seules les informations de votre agence sont remplies, le reste est à écrire au stylo (utile pour imprimer). « Avec un exemple » : un faux client est utilisé pour montrer un contrat rempli.",
+    "previewBlank": "Contrat vierge",
+    "previewExample": "Avec un exemple",
+    "simple": {
+      "title": "Mon contrat",
+      "subtitle": "Choisissez ce qui apparaît sur vos contrats",
+      "introTitle": "Votre contrat est déjà prêt",
+      "intro": "Il suffit de régler ce que vous voulez voir dessus, puis de toucher « Enregistrer ». Vous pouvez regarder le résultat avec « Voir un aperçu » avant.",
+      "legalTitle": "Vos informations légales",
+      "legalHelp": "Elles s'écrivent en bas de vos contrats. Laissez vide ce que vous ne voulez pas afficher, et ajoutez vos autres numéros (ICE, etc.). Le nom, l'adresse, le téléphone, le logo et le cachet viennent de « Mon entreprise ».",
+      "patente": "Patente",
+      "rc": "R.C (registre de commerce)",
+      "if": "I.F (identifiant fiscal)",
+      "cnss": "C.N.S.S",
+      "clientTitle": "Informations demandées au client",
+      "clientHelp": "Activez ce que vous voulez voir dans la fiche du conducteur.",
+      "clientFields": {
+        "naissance": "Date de naissance",
+        "nationalite": "Nationalité",
+        "adresseEtranger": "Adresse à l'étranger",
+        "hotel": "Hôtel et numéro de chambre",
+        "cin": "Numéro de CIN",
+        "passeport": "Numéro de passeport"
+      },
+      "sectionsTitle": "Parties du contrat",
+      "sectionsHelp": "Activez ou désactivez chaque partie.",
+      "sections": {
+        "conducteur2": "Deuxième conducteur",
+        "paiement": "Paiement (prix, avance, reste)",
+        "kilometrage": "Kilométrage départ et retour",
+        "carburant": "Niveau de carburant",
+        "etatVehicule": "Schéma de l'état du véhicule au départ",
+        "franchise": "Franchise sinistre",
+        "conditions": "Conditions générales (au verso)"
+      },
+      "editText": "Modifier ce texte",
+      "hideText": "Masquer ce texte",
+      "extraTitle": "Ajouter une information à écrire au stylo",
+      "extraHelp": "Ajoute une ligne vide dans la fiche du conducteur, à remplir à la main (ex. « Numéro de dossier »).",
+      "extraName": "Nom de l'information",
+      "extraPlaceholder": "Ex. : Numéro de dossier",
+      "extraAdd": "Ajouter",
+      "extraLimit": "Vous avez atteint le nombre maximum d'informations en plus.",
+      "conditionsTitle": "Vos conditions (verso)",
+      "conditionsHelp": "Touchez une condition pour la lire et la modifier, en français et en arabe. Vous pouvez en supprimer ou en ajouter.",
+      "newCondition": "Nouvelle condition",
+      "conditionTitleFr": "Titre (français)",
+      "conditionTextFr": "Texte (français)",
+      "conditionTitleAr": "Titre (arabe)",
+      "conditionTextAr": "Texte (arabe)",
+      "addCondition": "Ajouter une condition",
+      "removeCondition": "Supprimer cette condition",
+      "removeConditionTitle": "Supprimer cette condition ?",
+      "removeConditionBody": "Elle disparaîtra du contrat.",
+      "remove": "Supprimer",
+      "reset": "Revenir aux réglages Kriha",
+      "resetTitle": "Revenir aux réglages Kriha ?",
+      "resetBody": "Tous vos réglages seront effacés et le contrat Kriha standard sera utilisé.",
+      "unsaved": "Modifications non enregistrées",
+      "numberTitle": "Ajouter un autre numéro (ex. ICE)",
+      "numberName": "Nom du numéro",
+      "numberNamePlaceholder": "Ex. : ICE",
+      "numberValue": "Numéro",
+      "numberAdd": "Ajouter ce numéro",
+      "numberLimit": "Vous avez atteint le nombre maximum de numéros.",
+      "agencyTitle": "Informations de l'agence sur le contrat",
+      "agencyHelp": "Elles sont lues dans « Mon entreprise » à chaque contrat. N'oubliez pas de toucher « Enregistrer » là-bas après avoir écrit votre adresse et votre téléphone.",
+      "agencyFields": {
+        "name": "Nom",
+        "address": "Adresse",
+        "phone": "Téléphone"
+      },
+      "agencyMissing": "non renseigné",
+      "agencyEdit": "Compléter dans Mon entreprise",
+      "resetConditions": "Remettre les conditions par défaut",
+      "resetConditionsTitle": "Remettre les conditions par défaut ?",
+      "resetConditionsBody": "Toutes vos conditions générales seront remplacées par le texte par défaut Kriha (conditions du carnet de location). Vos mentions légales et vos autres réglages ne changent pas. N'oubliez pas d'enregistrer."
+    }
+  },
+  "unsaved": {
+    "title": "Modifications non enregistrées",
+    "body": "Attention : vous avez fait des modifications qui ne sont pas enregistrées. Si vous quittez maintenant, elles seront perdues.",
+    "stay": "Rester",
+    "save": "Enregistrer et quitter",
+    "discard": "Quitter sans enregistrer"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification pour le moment. Vous serez prévenu ici de tout ce qui se passe dans votre agence.",
+    "loadError": "Impossible de charger les notifications.",
+    "clearAll": "Tout supprimer",
+    "clearConfirmTitle": "Supprimer toutes les notifications ?",
+    "clearConfirmBody": "Elles disparaîtront de votre liste uniquement. Les autres membres de l'équipe gardent les leurs.",
+    "dismiss": "Supprimer",
+    "call": "Appeler {{phone}}",
+    "open": "Ouvrir",
+    "settings": "Notifications",
+    "ago": {
+      "now": "À l'instant",
+      "minutes": "Il y a {{count}} min",
+      "hours": "Il y a {{count}} h",
+      "days": "Il y a {{count}} j"
+    },
+    "prefs": {
+      "title": "Notifications",
+      "enabled": "Recevoir les notifications",
+      "enabledHint": "Retours à prévoir, retards, paiements, maintenance… Désactivé, plus aucune notification ne vous est envoyée.",
+      "push": "Notifications sur ce téléphone",
+      "pushHint": "Reçues même quand l'application est fermée.",
+      "pushUnavailable": "Les notifications sur l'écran de verrouillage ne fonctionnent pas dans Expo Go : elles arrivent avec l'application installée sur le téléphone.",
+      "categories": "Types de notifications",
+      "saveError": "Impossible d'enregistrer ce réglage. Réessayez."
+    },
+    "categories": {
+      "rental": "Locations",
+      "reminder": "Rappels (retours, départs, retards)",
+      "payment": "Paiements et cautions",
+      "contract": "Contrats",
+      "inspection": "Inspections",
+      "maintenance": "Maintenance",
+      "team": "Équipe",
+      "customer": "Clients"
+    },
+    "kinds": {
+      "return_tomorrow": {
+        "title": "Retour prévu demain",
+        "body": "{{customer}} doit rendre {{vehicle}} ({{plate}}) demain. Appelez-le : {{phone}}"
+      },
+      "return_today": {
+        "title": "Retour prévu aujourd'hui",
+        "body": "{{customer}} doit rendre {{vehicle}} ({{plate}}) aujourd'hui. Tél : {{phone}}"
+      },
+      "return_late": {
+        "title": "Retour en retard",
+        "body": "{{customer}} n'a pas rendu {{vehicle}} ({{plate}}). Contactez-le : {{phone}}"
+      },
+      "departure_today": {
+        "title": "Départ prévu aujourd'hui",
+        "body": "{{customer}} vient chercher {{vehicle}} ({{plate}}) aujourd'hui."
+      },
+      "departure_tomorrow": {
+        "title": "Départ prévu demain",
+        "body": "{{customer}} vient chercher {{vehicle}} ({{plate}}) demain."
+      },
+      "departure_late": {
+        "title": "Client en retard au départ",
+        "body": "{{customer}} n'est pas venu chercher {{vehicle}} ({{plate}}). Tél : {{phone}}"
+      },
+      "maintenance_due": {
+        "title": "Entretien à prévoir",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} avant le {{date}}."
+      },
+      "maintenance_overdue": {
+        "title": "Entretien en retard",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} devait être fait le {{date}}."
+      },
+      "licence_expiring": {
+        "title": "Permis bientôt expiré",
+        "body": "Le permis de {{customer}} expire le {{date}}. Tél : {{phone}}"
+      },
+      "rental_created": {
+        "title": "Nouvelle location",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_confirmed": {
+        "title": "Location confirmée",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_started": {
+        "title": "Départ enregistré",
+        "body": "{{customer}} est parti avec {{vehicle}} ({{plate}})."
+      },
+      "rental_returned": {
+        "title": "Voiture rendue",
+        "body": "{{customer}} a rendu {{vehicle}} ({{plate}})."
+      },
+      "rental_cancelled": {
+        "title": "Location annulée",
+        "body": "{{customer}} · {{vehicle}} ({{plate}})"
+      },
+      "rental_extended": {
+        "title": "Location prolongée",
+        "body": "{{customer}} garde {{vehicle}} ({{plate}}) jusqu'au {{end}}."
+      },
+      "payment_received": {
+        "title": "Paiement reçu",
+        "body": "{{amount}} MAD de {{customer}} ({{vehicle}})."
+      },
+      "deposit_retained": {
+        "title": "Retenue sur caution",
+        "body": "{{amount}} MAD retenus sur la caution de {{customer}}."
+      },
+      "contract_signed": {
+        "title": "Contrat signé",
+        "body": "{{contract}} · {{customer}} · {{vehicle}}"
+      },
+      "inspection_analyzed": {
+        "title": "Inspection analysée",
+        "body": "{{vehicle}} : {{count}} dommage(s) détecté(s)."
+      },
+      "inspection_skipped": {
+        "title": "Inspection ignorée",
+        "body": "L'inspection de {{vehicle}} a été ignorée."
+      },
+      "vehicle_maintenance": {
+        "title": "Véhicule en maintenance",
+        "body": "{{vehicle}} ({{plate}}) est passé en maintenance."
+      },
+      "member_joined": {
+        "title": "Nouveau membre dans l'équipe",
+        "body": "{{name}} a rejoint votre équipe."
+      },
+      "customer_created": {
+        "title": "Nouveau client",
+        "body": "{{customer}}"
+      }
+    },
+    "maintenance": {
+      "vidange": "la vidange",
+      "assurance": "l'assurance",
+      "visite_technique": "la visite technique",
+      "freins": "les freins",
+      "pneus": "les pneus",
+      "autre": "l'entretien"
+    },
+    "branch": "Filiale",
+    "total": "{{count}} notification(s)",
+    "fallback": {
+      "title": "Notification",
+      "body": "Vous avez une nouvelle notification."
+    }
+  },
+  "chat": {
+    "title": "Chat Kriha",
+    "subtitle": "Posez vos questions sur l'agence",
+    "newConversation": "Nouvelle conversation",
+    "untitled": "Conversation",
+    "noConversations": "Aucune conversation pour l'instant. Posez votre première question !",
+    "deleteTitle": "Supprimer cette conversation ?",
+    "deleteBody": "Elle disparaîtra de votre historique.",
+    "delete": "Supprimer",
+    "intro": "Posez-moi une question sur vos locations, vos voitures ou vos clients, en français, en arabe ou en darija. Je réponds à partir des données de votre agence.",
+    "placeholder": "Votre question…",
+    "send": "Envoyer",
+    "thinking": "Kriha cherche dans vos données…",
+    "suggestions": {
+      "returnsWeek": "Quelles voitures reviennent cette semaine ?",
+      "availableWeekend": "Quelles voitures sont disponibles ce week-end ?",
+      "whoHasCar": "Qui avait la Logan la semaine dernière ?",
+      "whoDamage": "Qui avait la voiture quand ce dommage est apparu ?",
+      "returnsTomorrow": "Qui doit rendre une voiture demain ?"
+    },
+    "inactive": {
+      "noKey": "Le Chat Kriha n'est pas encore disponible pour votre entreprise : aucune clé IA n'est configurée par KRIHA.",
+      "ownerCanEnable": "Le Chat Kriha est prêt. Activez-le dans Mon entreprise → Chat Kriha.",
+      "askOwner": "Le Chat Kriha n'est pas activé. Demandez au propriétaire de l'agence de l'activer."
+    },
+    "errors": {
+      "inactive": "Le Chat Kriha n'est pas activé pour votre entreprise.",
+      "busy": "L'IA est très sollicitée en ce moment. Réessayez dans un instant.",
+      "timeout": "La réponse prend trop de temps. Réessayez avec une question plus simple.",
+      "limit": "La limite de questions du jour est atteinte pour votre agence. Réessayez demain.",
+      "noAnswer": "Je n'ai pas réussi à répondre. Reformulez votre question.",
+      "unavailable": "Le Chat Kriha n'est pas disponible pour le moment (vérifiez votre connexion).",
+      "failed": "Impossible de répondre pour le moment. Réessayez.",
+      "quota": "Le quota de la clé IA de votre entreprise est atteint. Contactez KRIHA : la clé doit passer sur une offre avec facturation, ou attendre la réinitialisation du quota."
+    },
+    "online": "Répond à partir de vos données",
+    "welcomeTitle": "Bonjour, je suis Kriha",
+    "tryAsking": "Essayez par exemple"
+  },
+  "access": {
+    "blockedTitle": "Accès terminé",
+    "blockedExpired": "Votre période d'essai est terminée. Contactez Kriha pour continuer à utiliser l'application.",
+    "blockedSuspended": "L'accès de votre agence est suspendu. Contactez Kriha pour le réactiver.",
+    "blockedHint": "Vos données sont conservées en sécurité : elles seront de nouveau disponibles dès la réactivation.",
+    "recheck": "Vérifier à nouveau",
+    "stillBlocked": "L'accès est toujours fermé.",
+    "trialBannerTitle": "Période d'essai",
+    "trialLastDay": "Dernier jour d'essai aujourd'hui.",
+    "trialDays": "Il vous reste {{days}} jour(s) d'essai."
+  },
+  "desktop": {
+    "status": "Statut",
+    "active": "Actif",
+    "vehicle": "Voiture",
+    "customer": "Client",
+    "number": "N°",
+    "period": "Période",
+    "plate": "Immatriculation",
+    "model": "Modèle",
+    "mileage": "Kilométrage",
+    "dailyPrice": "Prix / jour",
+    "year": "Année",
+    "total": "Montant",
+    "exportCsv": "Exporter en CSV ({{count}})"
+  },
+  "undoToast": {
+    "undo": "Annuler",
+    "customerArchived": "Client archivé.",
+    "vehicleArchived": "Voiture archivée.",
+    "notificationsCleared": "Notifications supprimées.",
+    "failed": "Impossible d'annuler. Retrouvez l'élément dans les archives."
   }
 }

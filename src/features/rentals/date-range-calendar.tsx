@@ -1,5 +1,11 @@
 import { Calendar, type DateData } from 'react-native-calendars';
 
+import { useLanguage } from '@/i18n/use-language';
+
+import { setCalendarLocale } from './calendar-locale';
+import { BOOKED_DAY_MARK, CALENDAR_THEME } from './calendar-theme';
+import { M3akPalette } from '@/constants/theme';
+
 export type DateRangeValue = { start: string | null; end: string | null };
 
 type DateRangeCalendarProps = {
@@ -9,8 +15,7 @@ type DateRangeCalendarProps = {
   minDate?: string;
 };
 
-const COLOR_PRIMARY = '#7C3AED';
-const COLOR_DISABLED = '#EAE5F2';
+const COLOR_PRIMARY = M3akPalette.mauve;
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -31,11 +36,7 @@ export function buildMarkedDates(
   const marks: Record<string, object> = {};
 
   for (const date of disabledDates) {
-    marks[date] = {
-      disabled: true,
-      disableTouchEvent: true,
-      textColor: '#c3c8d6',
-    };
+    marks[date] = { ...BOOKED_DAY_MARK };
   }
 
   if (range.start && range.end) {
@@ -44,7 +45,7 @@ export function buildMarkedDates(
       marks[cursor] = {
         ...marks[cursor],
         color: COLOR_PRIMARY,
-        textColor: '#ffffff',
+        textColor: '#FFFFFF',
         startingDay: cursor === range.start,
         endingDay: cursor === range.end,
       };
@@ -58,7 +59,7 @@ export function buildMarkedDates(
       startingDay: true,
       endingDay: true,
       color: COLOR_PRIMARY,
-      textColor: '#ffffff',
+      textColor: '#FFFFFF',
     };
   }
 
@@ -66,6 +67,9 @@ export function buildMarkedDates(
 }
 
 export function DateRangeCalendar({ disabledDates, value, onChange, minDate }: DateRangeCalendarProps) {
+  const { language } = useLanguage();
+  setCalendarLocale(language);
+
   function handleDayPress(day: DateData) {
     const date = day.dateString;
     if (disabledDates.includes(date)) return;
@@ -94,11 +98,9 @@ export function DateRangeCalendar({ disabledDates, value, onChange, minDate }: D
       markingType="period"
       markedDates={buildMarkedDates(disabledDates, value)}
       onDayPress={handleDayPress}
-      theme={{
-        todayTextColor: COLOR_PRIMARY,
-        arrowColor: COLOR_PRIMARY,
-        textDisabledColor: COLOR_DISABLED,
-      }}
+      firstDay={1}
+      enableSwipeMonths
+      theme={CALENDAR_THEME}
       style={{ borderRadius: 24, overflow: 'hidden' }}
     />
   );

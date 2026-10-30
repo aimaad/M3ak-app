@@ -1,0 +1,15 @@
+# Netlify : les écrans à identifiant (…/<id>) sont des pages modèles générées à l'export ; on les sert pour tout identifiant.
+/chat/:id                          /chat/[id].html                          200
+/clients/:id                       /clients/[id].html                       200
+/clients/:id/modifier              /clients/[id]/modifier.html              200
+/contrats/:id                      /contrats/[id].html                      200
+/contrats/:id/signer               /contrats/[id]/signer.html               200
+/flotte/:id                        /flotte/[id].html                        200
+/flotte/:id/modifier               /flotte/[id]/modifier.html               200
+/locations/:id                     /locations/[id].html                     200
+/locations/:id/depart              /locations/[id]/depart.html              200
+/locations/:id/retour              /locations/[id]/retour.html              200
+/locations/:id/inspection-depart   /locations/[id]/inspection-depart.html   200
+/locations/:id/inspection-retour   /locations/[id]/inspection-retour.html   200
+/locations/:id/inspection-analyse  /locations/[id]/inspection-analyse.html  200
+/maintenance/:id                   /maintenance/[id].html                   200

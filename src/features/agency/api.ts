@@ -1,7 +1,11 @@
-import { uploadFile } from '@/features/storage/api';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+
+import { uploadFile, uploadFileWithProgress, type UploadProgress } from '@/features/storage/api';
 import { getCurrentUserId, getSupabase } from '@/lib/supabase';
 
-import { generateInviteCode, inviteExpiryDate } from './invite-code';
+import { parseAgencyAccess, type AgencyAccess } from './access';
+import { logoContentType } from './logo-validation';
+import { parseStampConfig, type StampConfig } from './stamp';
 import type {
   AgencyDetails,
   AgencyDetailsInput,
@@ -9,7 +13,8 @@ import type {
   AgencyMember,
   AgencyMembership,
   AgencyRole,
-  AuditLogEntry,
+  CreateInviteInput,
+  InviteResult,
   MemberProfile,
   MemberProfileInput,
 } from './types';
@@ -28,6 +33,8 @@ type AgencyRow = {
   pays: string;
   devise: string;
   logo_url: string | null;
+  stamp_path: string | null;
+  stamp_config?: unknown;
   created_at: string;
 };
 
@@ -43,6 +50,8 @@ function agencyFromRow(row: AgencyRow): AgencyDetails {
     pays: row.pays,
     devise: row.devise,
     logoUrl: row.logo_url,
+    stampPath: row.stamp_path,
+    stampConfig: parseStampConfig(row.stamp_config),
     createdAt: row.created_at,
   };
 }
@@ -80,37 +89,10 @@ export async function getMyAgencyMembership(): Promise<AgencyMembership | null> 
   };
 }
 
-export async function createAgency(
-  nom: string,
-  ville: string | null,
-  ownerName: string
-): Promise<AgencyMembership> {
-  const supabase = getSupabase();
-  const userId = await getCurrentUserId();
-  if (!userId) throw new Error('Non connecté');
-
-  const { data: agency, error: agencyError } = await supabase
-    .from('agencies')
-    .insert({ nom, ville, created_by: userId })
-    .select()
-    .single();
-  if (agencyError) throw agencyError;
-
-  const { error: memberError } = await supabase.from('agency_members').insert({
-    agency_id: agency.id,
-    user_id: userId,
-    role: 'owner',
-    nom_complet: ownerName,
-  });
-  if (memberError) throw memberError;
-
-  return {
-    agencyId: agency.id,
-    role: 'owner',
-    memberName: ownerName,
-    agencyName: agency.nom,
-    agencyCity: agency.ville,
-  };
+export async function getMyAgencyAccess(): Promise<AgencyAccess | null> {
+  const { data, error } = await getSupabase().rpc('my_agency_access');
+  if (error) throw error;
+  return parseAgencyAccess(data);
 }
 
 export async function redeemInvite(code: string): Promise<AgencyRole> {
@@ -150,58 +132,132 @@ export async function listAgencyMembers(agencyId: string): Promise<AgencyMember[
   return (data as AgencyMemberRow[]).map(memberFromRow);
 }
 
+type AgencyInviteRow = {
+  id: string;
+  agency_id: string;
+  email: string | null;
+  prenom: string | null;
+  nom: string | null;
+  role: AgencyRole;
+  branch_id: string | null;
+  expires_at: string;
+  used_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+};
+
 export async function listAgencyInvites(agencyId: string): Promise<AgencyInvite[]> {
   const { data, error } = await getSupabase()
     .from('agency_invites')
-    .select('id, agency_id, code, role, branch_id, expires_at, used_at, created_at')
+    .select('id, agency_id, email, prenom, nom, role, branch_id, expires_at, used_at, revoked_at, created_at')
     .eq('agency_id', agencyId)
+    .not('email', 'is', null)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  return (data ?? []).map((row) => ({
+  return ((data ?? []) as AgencyInviteRow[]).map((row) => ({
     id: row.id,
     agencyId: row.agency_id,
-    code: row.code,
+    email: row.email ?? '',
+    prenom: row.prenom,
+    nom: row.nom,
     role: row.role,
     branchId: row.branch_id,
     expiresAt: row.expires_at,
     usedAt: row.used_at,
+    revokedAt: row.revoked_at,
     createdAt: row.created_at,
   }));
 }
 
-export async function createAgencyInvite(
-  agencyId: string,
-  role: AgencyRole,
-  branchId: string | null
-): Promise<AgencyInvite> {
-  const supabase = getSupabase();
-  const userId = await getCurrentUserId();
+type InvitePayload = {
+  id: string;
+  code: string;
+  email: string;
+  prenom: string;
+  nom: string;
+  role: AgencyRole;
+  branch_name: string | null;
+  agency_name: string;
+  inviter_name: string | null;
+  expires_at: string;
+};
 
-  const { data, error } = await supabase
-    .from('agency_invites')
-    .insert({
-      agency_id: agencyId,
-      code: generateInviteCode(),
-      role,
-      branch_id: branchId,
-      created_by: userId,
-      expires_at: inviteExpiryDate().toISOString(),
-    })
-    .select()
-    .single();
-  if (error) throw error;
+type InviteFunctionResponse = {
+  invite: InvitePayload;
+  emailSent: boolean;
+  emailError: string | null;
+};
 
+function resultFromPayload(payload: InvitePayload, emailSent: boolean, emailError: string | null): InviteResult {
   return {
-    id: data.id,
-    agencyId: data.agency_id,
-    code: data.code,
-    role: data.role,
-    branchId: data.branch_id,
-    expiresAt: data.expires_at,
-    usedAt: data.used_at,
-    createdAt: data.created_at,
+    inviteId: payload.id,
+    code: payload.code,
+    email: payload.email,
+    prenom: payload.prenom,
+    nom: payload.nom,
+    role: payload.role,
+    agencyName: payload.agency_name,
+    branchName: payload.branch_name,
+    inviterName: payload.inviter_name,
+    expiresAt: payload.expires_at,
+    emailSent,
+    emailError,
   };
+}
+
+/**
+ * Appelle la fonction serveur « send-invite » (création + envoi de l'e-mail).
+ * Renvoie null si elle n'est pas déployée / injoignable : l'appelant retombe alors
+ * sur la fonction SQL directe (sans e-mail, partage WhatsApp / copie seulement).
+ * Les refus métier (droits, doublon…) sont remontés comme des erreurs à code court.
+ */
+async function callInviteFunction(body: Record<string, unknown>): Promise<InviteFunctionResponse | null> {
+  const { data, error } = await getSupabase().functions.invoke('send-invite', { body });
+
+  if (error) {
+    if (error instanceof FunctionsHttpError) {
+      if (error.context.status === 404) return null;
+      const parsed = (await error.context.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(parsed?.error ?? 'invite_failed');
+    }
+    return null;
+  }
+  return data as InviteFunctionResponse;
+}
+
+export async function createAgencyInvite(input: CreateInviteInput): Promise<InviteResult> {
+  const viaFunction = await callInviteFunction({ action: 'create', ...input });
+  if (viaFunction) {
+    return resultFromPayload(viaFunction.invite, viaFunction.emailSent, viaFunction.emailError);
+  }
+
+  const { data, error } = await getSupabase().rpc('create_agency_invite', {
+    p_agency_id: input.agencyId,
+    p_email: input.email,
+    p_prenom: input.prenom,
+    p_nom: input.nom,
+    p_role: input.role,
+    p_branch_id: input.branchId,
+  });
+  if (error) throw new Error(error.message);
+  return resultFromPayload(data as InvitePayload, false, 'function_unavailable');
+}
+
+export async function resendAgencyInvite(inviteId: string): Promise<InviteResult> {
+  const viaFunction = await callInviteFunction({ action: 'resend', inviteId });
+  if (viaFunction) {
+    return resultFromPayload(viaFunction.invite, viaFunction.emailSent, viaFunction.emailError);
+  }
+
+  const { data, error } = await getSupabase().rpc('resend_agency_invite', { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
+  return resultFromPayload(data as InvitePayload, false, 'function_unavailable');
+}
+
+export async function revokeAgencyInvite(inviteId: string): Promise<void> {
+  const { error } = await getSupabase().rpc('revoke_agency_invite', { p_invite_id: inviteId });
+  if (error) throw new Error(error.message);
 }
 
 export async function getAgencyDetails(agencyId: string): Promise<AgencyDetails> {
@@ -234,20 +290,57 @@ export async function updateAgencyDetails(
   return agencyFromRow(data as AgencyRow);
 }
 
-export async function uploadAgencyLogo(agencyId: string, localUri: string): Promise<AgencyDetails> {
-  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
-  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
-  const path = `${agencyId}/logo.${extension}`;
+export async function uploadAgencyLogo(
+  agencyId: string,
+  localUri: string,
+  onProgress?: (progress: UploadProgress) => void,
+  signal?: AbortSignal
+): Promise<AgencyDetails> {
+  const contentType = logoContentType({ uri: localUri, mimeType: null }) ?? 'image/jpeg';
+  const extension = contentType === 'image/png' ? 'png' : 'jpg';
+  // Nom unique à chaque envoi : l'ancien logo ne reste pas affiché (image mise en cache sous l'ancien nom).
+  const path = `${agencyId}/logo-${Date.now()}.${extension}`;
 
-  await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, contentType);
+  const { data: before } = await getSupabase().from('agencies').select('logo_url').eq('id', agencyId).maybeSingle();
+  const previousPath = (before as { logo_url: string | null } | null)?.logo_url ?? null;
 
-  const { data, error } = await getSupabase()
-    .from('agencies')
-    .update({ logo_url: path })
-    .eq('id', agencyId)
-    .select()
-    .single();
+  if (onProgress) await uploadFileWithProgress(AGENCY_ASSETS_BUCKET, path, localUri, contentType, onProgress, signal);
+  else await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, contentType);
 
+  const { data, error } = await getSupabase().from('agencies').update({ logo_url: path }).eq('id', agencyId).select().single();
+  if (error) throw error;
+
+  // Nettoyage de l'ancien fichier (sans importance s'il échoue).
+  if (previousPath && previousPath !== path) {
+    getSupabase().storage.from(AGENCY_ASSETS_BUCKET).remove([previousPath]).catch(() => undefined);
+  }
+  return agencyFromRow(data as AgencyRow);
+}
+
+/** Cachet de l'agence (photo ou scan du tampon). Réservé au propriétaire (RLS + déclencheur de chemin). */
+export async function uploadAgencyStamp(agencyId: string, localUri: string): Promise<AgencyDetails> {
+  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase();
+  const isPng = extension === 'png';
+  const path = `${agencyId}/stamp.${isPng ? 'png' : 'jpg'}`;
+
+  await uploadFile(AGENCY_ASSETS_BUCKET, path, localUri, isPng ? 'image/png' : 'image/jpeg');
+
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: path, stamp_config: null }).eq('id', agencyId).select().single();
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+export async function removeAgencyStamp(agencyId: string): Promise<AgencyDetails> {
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_path: null, stamp_config: null }).eq('id', agencyId).select().single();
+  if (error) throw error;
+  return agencyFromRow(data as AgencyRow);
+}
+
+/** Cachet généré par M3ak (vrai tampon dessiné). Il remplace la photo de cachet : un seul des deux est actif. */
+export async function saveAgencyStampConfig(agencyId: string, config: StampConfig): Promise<AgencyDetails> {
+  const valid = parseStampConfig(config);
+  if (!valid) throw new Error('invalid_stamp_config');
+  const { data, error } = await getSupabase().from('agencies').update({ stamp_config: valid, stamp_path: null }).eq('id', agencyId).select().single();
   if (error) throw error;
   return agencyFromRow(data as AgencyRow);
 }
@@ -282,6 +375,7 @@ type MemberProfileRow = {
   nom: string | null;
   nom_complet: string | null;
   photo_path: string | null;
+  signature_path: string | null;
   branch_id: string | null;
   branch: { nom: string } | { nom: string }[] | null;
   created_at: string;
@@ -298,6 +392,7 @@ function profileFromRow(row: MemberProfileRow): MemberProfile {
     nom: row.nom,
     nomComplet: row.nom_complet,
     photoPath: row.photo_path,
+    signaturePath: row.signature_path,
     branchId: row.branch_id,
     branchNom: branch?.nom ?? null,
     createdAt: row.created_at,
@@ -310,7 +405,7 @@ export async function getMyMemberProfile(agencyId: string): Promise<MemberProfil
 
   const { data, error } = await getSupabase()
     .from('agency_members')
-    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, signature_path, branch_id, branch:branches(nom), created_at')
     .eq('agency_id', agencyId)
     .eq('user_id', userId)
     .maybeSingle<MemberProfileRow>();
@@ -326,7 +421,7 @@ export async function updateMyProfile(memberId: string, input: MemberProfileInpu
     .from('agency_members')
     .update({ prenom: input.prenom.trim() || null, nom: input.nom.trim() || null, nom_complet: nomComplet || null })
     .eq('id', memberId)
-    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, signature_path, branch_id, branch:branches(nom), created_at')
     .single<MemberProfileRow>();
 
   if (error) throw error;
@@ -345,32 +440,9 @@ export async function uploadMemberAvatar(agencyId: string, memberId: string, loc
     .from('agency_members')
     .update({ photo_path: path })
     .eq('id', memberId)
-    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, branch_id, branch:branches(nom), created_at')
+    .select('id, agency_id, user_id, role, prenom, nom, nom_complet, photo_path, signature_path, branch_id, branch:branches(nom), created_at')
     .single<MemberProfileRow>();
 
   if (error) throw error;
   return profileFromRow(data);
-}
-
-// ======================================================================
-// Journal d'audit (owner uniquement, lecture seule — RLS le garantit)
-// ======================================================================
-
-export async function listAuditLog(agencyId: string): Promise<AuditLogEntry[]> {
-  const { data, error } = await getSupabase()
-    .from('agency_audit_log')
-    .select('id, actor_name, action, target_label, details, created_at')
-    .eq('agency_id', agencyId)
-    .order('created_at', { ascending: false })
-    .limit(200);
-
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    actorName: row.actor_name,
-    action: row.action,
-    targetLabel: row.target_label,
-    details: row.details,
-    createdAt: row.created_at,
-  }));
 }

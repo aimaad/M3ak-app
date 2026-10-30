@@ -9,54 +9,61 @@ import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { M3akPalette } from '@/constants/theme';
-import { signOut } from '@/features/auth/api';
-import { useCreateAgency, useMyAgency, useRedeemInvite } from '@/features/agency/hooks';
+import { saveMyNames, signOut } from '@/features/auth/api';
+import { buildFullName, readNamesFromMetadata, validatePersonName } from '@/features/auth/names';
+import { useSession } from '@/features/auth/session-context';
+import { useMyAgency, useRedeemInvite } from '@/features/agency/hooks';
+import {
+  formatInviteCode,
+  isValidInviteCode,
+  normalizeInviteCode,
+} from '@/features/agency/invite-code';
+import { inviteErrorKey } from '@/features/agency/invite-errors';
+import { errorReference, friendlyErrorKey, userErrorMessage } from '@/lib/user-errors';
 import { useLanguage } from '@/i18n/use-language';
-
-type Mode = 'create' | 'join';
 
 export default function OnboardingScreen() {
   const { t } = useLanguage();
   const agencyQuery = useMyAgency();
-  const createAgency = useCreateAgency();
   const redeemInvite = useRedeemInvite();
 
-  const [mode, setMode] = useState<Mode>('create');
-  const [nom, setNom] = useState('');
-  const [ville, setVille] = useState('');
-  const [ownerName, setOwnerName] = useState('');
+  const { session } = useSession();
+  // Prénom/nom saisis à l'inscription ; sinon (ancien compte) on les demande ici.
+  const savedNames = readNamesFromMetadata(session?.user.user_metadata);
+  const [prenom, setPrenom] = useState('');
+  const [nomFamille, setNomFamille] = useState('');
+  const names = savedNames ?? { prenom, nom: nomFamille };
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  async function handleCreate() {
-    setError(null);
-    if (!nom.trim() || !ownerName.trim()) {
-      setError(t('onboarding.errors.required'));
-      return;
-    }
-    try {
-      await createAgency.mutateAsync({ nom: nom.trim(), ville: ville.trim() || null, ownerName: ownerName.trim() });
-      router.replace('/accueil');
-    } catch (err) {
-      console.error('Échec de création d\'agence :', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`${t('onboarding.createError')} (${message})`);
-    }
+  function namesAreValid() {
+    return !validatePersonName(names.prenom) && !validatePersonName(names.nom);
+  }
+
+  async function ensureNamesSaved() {
+    if (!savedNames) await saveMyNames(names);
   }
 
   async function handleJoin() {
     setError(null);
-    if (!code.trim()) {
+    if (!isValidInviteCode(code) || !namesAreValid()) {
       setError(t('onboarding.errors.required'));
       return;
     }
     try {
-      await redeemInvite.mutateAsync(code.trim().toUpperCase());
+      await ensureNamesSaved();
+      await redeemInvite.mutateAsync(normalizeInviteCode(code));
       router.replace('/accueil');
     } catch (err) {
       console.error('Échec pour rejoindre une agence :', err);
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`${t('onboarding.joinError')} (${message})`);
+      const general = friendlyErrorKey(err, 'errors.none');
+      if (['errors.network', 'errors.rateLimit', 'errors.emailNotConfirmed', 'errors.server', 'errors.emailSend'].includes(general)) {
+        setError(userErrorMessage(err, t));
+      } else {
+        const key = inviteErrorKey(err);
+        const reference = key.endsWith('.generic') ? errorReference(err) : null;
+        setError(reference ? `${t(key)} ${t('errors.reference', { reference })}` : t(key));
+      }
     }
   }
 
@@ -66,7 +73,7 @@ export default function OnboardingScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader
           title={t('onboarding.title')}
           subtitle={t('onboarding.subtitle')}
@@ -80,72 +87,56 @@ export default function OnboardingScreen() {
         />
 
         <View className="gap-4 px-6">
-          <View className="flex-row gap-2">
-            <Pressable
-              onPress={() => setMode('create')}
-              className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-                mode === 'create' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
-              }`}
-            >
-              <ThemedText type="smallBold" style={{ color: mode === 'create' ? '#ffffff' : '#211A2E' }}>
-                {t('onboarding.createTab')}
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => setMode('join')}
-              className={`flex-1 items-center rounded-2xl border px-4 py-3 ${
-                mode === 'join' ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
-              }`}
-            >
-              <ThemedText type="smallBold" style={{ color: mode === 'join' ? '#ffffff' : '#211A2E' }}>
-                {t('onboarding.joinTab')}
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          {mode === 'create' ? (
-            <View className="gap-4">
-              <TextField label={t('onboarding.ownerName')} value={ownerName} onChangeText={setOwnerName} />
-              <TextField label={t('onboarding.agencyName')} value={nom} onChangeText={setNom} />
-              <TextField label={t('onboarding.agencyCity')} value={ville} onChangeText={setVille} />
-
-              {error ? (
-                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
-                  {error}
-                </ThemedText>
-              ) : null}
-
-              <Button
-                label={t('onboarding.createAction')}
-                onPress={handleCreate}
-                disabled={createAgency.isPending}
-                loading={createAgency.isPending}
-              />
-            </View>
+          {savedNames ? (
+            <ThemedText type="small" themeColor="textSecondary">
+              {buildFullName(savedNames)}
+            </ThemedText>
           ) : (
             <View className="gap-4">
               <TextField
-                label={t('onboarding.inviteCode')}
-                value={code}
-                onChangeText={(v) => setCode(v.toUpperCase())}
-                autoCapitalize="characters"
-                placeholder="A1B2C3"
+                label={t('auth.prenom')}
+                value={prenom}
+                onChangeText={setPrenom}
+                autoComplete="given-name"
               />
-
-              {error ? (
-                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
-                  {error}
-                </ThemedText>
-              ) : null}
-
-              <Button
-                label={t('onboarding.joinAction')}
-                onPress={handleJoin}
-                disabled={redeemInvite.isPending}
-                loading={redeemInvite.isPending}
+              <TextField
+                label={t('auth.nom')}
+                value={nomFamille}
+                onChangeText={setNomFamille}
+                autoComplete="family-name"
               />
             </View>
           )}
+
+          <View className="gap-4">
+            <TextField
+              label={t('onboarding.inviteCode')}
+              value={code}
+              onChangeText={(v) => setCode(formatInviteCode(v))}
+              autoCapitalize="characters"
+              autoCorrect={false}
+              placeholder="ABCD-EFGH-JK23"
+            />
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('onboarding.joinHint', { email: session?.user.email ?? '' })}
+            </ThemedText>
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('onboarding.noAgencyNote')}
+            </ThemedText>
+
+            {error ? (
+              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                {error}
+              </ThemedText>
+            ) : null}
+
+            <Button
+              label={t('onboarding.joinAction')}
+              onPress={handleJoin}
+              disabled={redeemInvite.isPending}
+              loading={redeemInvite.isPending}
+            />
+          </View>
         </View>
       </SafeAreaView>
     </ThemedView>

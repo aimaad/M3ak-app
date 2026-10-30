@@ -1,5 +1,6 @@
 import { customerDocumentAlerts } from '../document-alerts';
 import type { Customer } from '../types';
+import { makeDocument } from '../testing';
 
 function buildCustomer(overrides: Partial<Customer> = {}): Customer {
   return {
@@ -38,8 +39,8 @@ describe('customerDocumentAlerts', () => {
   it('ignore les documents sans date d\'expiration ou encore loin de l\'échéance', () => {
     const customer = buildCustomer({
       documents: [
-        { type: 'cin', path: 'p', uploadedAt: 't', uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: null },
-        { type: 'permis', path: 'p', uploadedAt: 't', uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: '2027-01-01T00:00:00Z' },
+        makeDocument({ type: 'cin', path: 'p', uploadedAt: 't', reference: null, expiresAt: null }),
+        makeDocument({ type: 'permis', path: 'p', uploadedAt: 't', reference: null, expiresAt: '2027-01-01T00:00:00Z' }),
       ],
     });
     expect(customerDocumentAlerts([customer], today)).toEqual([]);
@@ -48,8 +49,8 @@ describe('customerDocumentAlerts', () => {
   it('signale un document expiré ou proche de l\'expiration', () => {
     const customer = buildCustomer({
       documents: [
-        { type: 'cin', path: 'p', uploadedAt: 't', uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: '2026-06-01T00:00:00Z' },
-        { type: 'permis', path: 'p', uploadedAt: 't', uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: '2026-06-20T00:00:00Z' },
+        makeDocument({ type: 'cin', path: 'p', uploadedAt: 't', reference: null, expiresAt: '2026-06-01T00:00:00Z' }),
+        makeDocument({ type: 'permis', path: 'p', uploadedAt: 't', reference: null, expiresAt: '2026-06-20T00:00:00Z' }),
       ],
     });
     const alerts = customerDocumentAlerts([customer], today);
@@ -62,7 +63,7 @@ describe('customerDocumentAlerts', () => {
     const customer = buildCustomer({
       archivedAt: '2026-01-01T00:00:00Z',
       documents: [
-        { type: 'cin', path: 'p', uploadedAt: 't', uploadedBy: null, reference: null, dateDelivrance: null, expiresAt: '2026-06-01T00:00:00Z' },
+        makeDocument({ type: 'cin', path: 'p', uploadedAt: 't', reference: null, expiresAt: '2026-06-01T00:00:00Z' }),
       ],
     });
     expect(customerDocumentAlerts([customer], today)).toEqual([]);

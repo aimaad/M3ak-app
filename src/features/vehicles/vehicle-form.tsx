@@ -2,10 +2,14 @@ import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ChipGroup } from '@/components/chip-group';
 import { DocumentPhotoField } from '@/components/document-photo-field';
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
+import { useMyProfile, useMyAgency } from '@/features/agency/hooks';
+import { useBranches } from '@/features/branches/hooks';
 import { findDocument } from '@/features/storage/documents';
+import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
 import { VEHICLE_DOCUMENTS_BUCKET } from './api';
@@ -27,11 +31,13 @@ import type {
   VehicleStatus,
   VehicleTransmission,
 } from './types';
+import { M3akPalette } from '@/constants/theme';
 
 type VehicleFormProps = {
   initialValues?: VehicleFormValues;
   existingDocuments?: VehicleDocument[];
   existingPhotosCount?: number;
+  initialBranchId?: string | null;
   submitLabel: string;
   submittingLabel: string;
   isSubmitting: boolean;
@@ -47,7 +53,11 @@ const EMPTY_VALUES: VehicleFormValues = {
   marque: '',
   modele: '',
   immatriculation: '',
+  vin: '',
+  finition: '',
   annee: '',
+  dateMiseEnCirculation: '',
+  puissanceFiscale: '',
   categorie: null,
   couleur: '',
   nombrePlaces: '',
@@ -62,42 +72,6 @@ const EMPTY_VALUES: VehicleFormValues = {
   statut: 'disponible',
 };
 
-function ChipGroup<T extends string>({
-  options,
-  selected,
-  getLabel,
-  onSelect,
-  disabled,
-}: {
-  options: T[];
-  selected: T | null;
-  getLabel: (value: T) => string;
-  onSelect: (value: T) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <View className="flex-row flex-wrap gap-2">
-      {options.map((option) => {
-        const isSelected = selected === option;
-        return (
-          <Pressable
-            key={option}
-            onPress={() => !disabled && onSelect(option)}
-            disabled={disabled}
-            className={`rounded-full border px-4 py-2 ${
-              isSelected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
-            } ${disabled ? 'opacity-50' : ''}`}
-          >
-            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : '#211A2E' }}>
-              {getLabel(option)}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
-
 function SectionTitle({ children }: { children: string }) {
   return (
     <ThemedText type="smallBold" className="mt-2">
@@ -110,6 +84,7 @@ export function VehicleForm({
   initialValues,
   existingDocuments = [],
   existingPhotosCount = 0,
+  initialBranchId = null,
   submitLabel,
   submittingLabel,
   isSubmitting,
@@ -122,6 +97,16 @@ export function VehicleForm({
   const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>([]);
   const [documentExpiries, setDocumentExpiries] = useState<Record<string, string>>({});
   const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
+  const [branchId, setBranchId] = useState<string | null>(initialBranchId);
+
+  // Seuls les membres sans filiale (accès à toutes les filiales) choisissent
+  // la filiale du véhicule ; un employé de filiale est rattaché automatiquement.
+  const agencyQuery = useMyAgency();
+  const agencyId = agencyQuery.data?.agencyId;
+  const profileQuery = useMyProfile(agencyId);
+  const branchesQuery = useBranches(agencyId);
+  const branches = branchesQuery.data ?? [];
+  const canChooseBranch = profileQuery.data?.branchId === null && branches.length > 0;
 
   const errors = validateVehicleForm(values);
   const showErrors = touched;
@@ -143,7 +128,11 @@ export function VehicleForm({
       ...doc,
       expiresAt: documentExpiries[doc.type]?.trim() ? documentExpiries[doc.type] : null,
     }));
-    onSubmit(toVehicleInput(values), documentsWithExpiry, pendingPhotos);
+    onSubmit(
+      canChooseBranch ? { ...toVehicleInput(values), branchId } : toVehicleInput(values),
+      documentsWithExpiry,
+      pendingPhotos
+    );
   }
 
   return (
@@ -179,6 +168,33 @@ export function VehicleForm({
         error={showErrors && errors.annee ? t(`vehicle.form.errors.${errors.annee}`) : undefined}
       />
       <TextField
+        label={t('vehicle.fields.dateMiseEnCirculation')}
+        value={values.dateMiseEnCirculation ?? ''}
+        onChangeText={(v) => update('dateMiseEnCirculation', v)}
+        placeholder={t('vehicle.fields.datePlaceholder')}
+        error={showErrors && errors.dateMiseEnCirculation ? t(`vehicle.form.errors.${errors.dateMiseEnCirculation}`) : undefined}
+      />
+      <TextField
+        label={t('vehicle.fields.puissanceFiscale')}
+        value={values.puissanceFiscale ?? ''}
+        onChangeText={(v) => update('puissanceFiscale', v)}
+        keyboardType="number-pad"
+        error={showErrors && errors.puissanceFiscale ? t(`vehicle.form.errors.${errors.puissanceFiscale}`) : undefined}
+      />
+      <TextField
+        label={t('vehicle.fields.finition')}
+        value={values.finition}
+        onChangeText={(v) => update('finition', v)}
+        optional
+      />
+      <TextField
+        label={t('vehicle.fields.vin')}
+        value={values.vin}
+        onChangeText={(v) => update('vin', v)}
+        autoCapitalize="characters"
+        optional
+      />
+      <TextField
         label={t('vehicle.fields.couleur')}
         value={values.couleur}
         onChangeText={(v) => update('couleur', v)}
@@ -207,6 +223,41 @@ export function VehicleForm({
           onSelect={(tr) => update('transmission', tr)}
         />
       </View>
+      {canChooseBranch ? (
+        <View className="gap-1.5">
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('vehicle.fields.branch')}
+          </ThemedText>
+          <View className="flex-row flex-wrap gap-2">
+            <Pressable
+              onPress={() => setBranchId(null)}
+              className={`rounded-full border px-4 py-2 ${
+                branchId === null ? 'border-brand bg-brand' : 'border-line bg-white'
+              }`}
+            >
+              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : M3akPalette.ink }}>
+                {t('vehicle.fields.allBranches')}
+              </ThemedText>
+            </Pressable>
+            {branches.map((branch) => {
+              const isSelected = branchId === branch.id;
+              return (
+                <Pressable
+                  key={branch.id}
+                  onPress={() => setBranchId(branch.id)}
+                  className={`rounded-full border px-4 py-2 ${
+                    isSelected ? 'border-brand bg-brand' : 'border-line bg-white'
+                  }`}
+                >
+                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : M3akPalette.ink }}>
+                    {branch.nom}
+                  </ThemedText>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+      ) : null}
       <View className="gap-1.5">
         <ThemedText type="small" themeColor="textSecondary">
           {t('vehicle.fields.carburant')}
@@ -223,7 +274,7 @@ export function VehicleForm({
       <TextField
         label={t('vehicle.fields.niveauCarburant')}
         value={values.niveauCarburant}
-        onChangeText={(v) => update('niveauCarburant', v)}
+        onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))}
         keyboardType="number-pad"
         placeholder={t('vehicle.fields.niveauCarburantPlaceholder')}
         error={
@@ -244,7 +295,7 @@ export function VehicleForm({
         value={values.prixSemaine}
         onChangeText={(v) => update('prixSemaine', v)}
         keyboardType="number-pad"
-        placeholder={t('vehicle.fields.optionalPlaceholder')}
+        optional
         error={showErrors && errors.prixSemaine ? t(`vehicle.form.errors.${errors.prixSemaine}`) : undefined}
       />
       <TextField
@@ -252,7 +303,7 @@ export function VehicleForm({
         value={values.prixMois}
         onChangeText={(v) => update('prixMois', v)}
         keyboardType="number-pad"
-        placeholder={t('vehicle.fields.optionalPlaceholder')}
+        optional
         error={showErrors && errors.prixMois ? t(`vehicle.form.errors.${errors.prixMois}`) : undefined}
       />
 
@@ -306,7 +357,7 @@ export function VehicleForm({
           {t('vehicle.fields.statut')}
         </ThemedText>
         {statusLocked ? (
-          <View className="rounded-2xl border border-dashed border-[#EAE5F2] bg-white px-4 py-3">
+          <View className="rounded-2xl border border-dashed border-line bg-white px-4 py-3">
             <ThemedText type="small" themeColor="textSecondary">
               {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
             </ThemedText>

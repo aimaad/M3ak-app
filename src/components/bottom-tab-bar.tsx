@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
+import { useSegments } from 'expo-router';
+import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -36,39 +38,64 @@ const SECTIONS: {
   },
 ];
 
-const INACTIVE_COLOR = '#B3A6C2';
+const INACTIVE_COLOR = M3akPalette.subtle;
 
-export function BottomTabBar({ current }: { current: SectionKey }) {
+/** Barre d'onglets du bas (mobile). Chaque onglet garde sa propre pile d'écrans et sa position de défilement. */
+export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
   const theme = useTheme();
+  const isDesktop = useDesktopLayout();
+
+  const segments = useSegments();
+
+  // Écran « de détail » d'un onglet (fiche, formulaire, assistant…) : adresse du type /(tabs)/clients/<id>. La barre est
+  // alors masquée pour laisser la place aux boutons du bas ; seuls les écrans racines des onglets l'affichent.
+  const isDetailScreen = (segments[0] as string) === '(tabs)' && segments.length > 2;
+
+  // Sur grand écran web, le menu latéral remplace la barre du bas.
+  if (isDesktop || isDetailScreen) return null;
+  // L'onglet actif se lit dans l'adresse : plus fiable que l'index du navigateur au tout premier affichage.
+  const pathParts = segments as string[];
+  const currentName = pathParts[0] === '(tabs)' ? pathParts[1] : state.routes[state.index]?.name;
 
   return (
     <View
-      className="absolute inset-x-0 bottom-0 flex-row border-t bg-white"
-      style={{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }}
+      className="flex-row border-t bg-white"
+      style={[{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }, { shadowColor: M3akPalette.mauveDeep, shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 12 }]}
     >
       {SECTIONS.map((section) => {
-        const selected = section.key === current;
+        const route = state.routes.find((candidate) => candidate.name === section.key);
+        const selected = section.key === currentName;
         return (
           <Pressable
             key={section.key}
-            onPress={() => !selected && router.replace(section.href)}
-            className="flex-1 items-center gap-1 pt-2"
+            onPress={() => {
+              if (!route) return;
+              const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+              // On compare à l'onglet réellement affiché par le navigateur (et non à l'adresse) : sinon un clic est
+              // ignoré quand les deux ne concordent plus.
+              const focused = state.routes[state.index]?.key === route.key;
+              if (!focused && !event.defaultPrevented) navigateToTab(route.key);
+            }}
+            className="min-h-14 flex-1 items-center gap-1 pt-2"
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            accessibilityLabel={t(section.labelKey)}
           >
             <View
-              className="h-7 w-11 items-center justify-center rounded-full"
-              style={{ backgroundColor: selected ? M3akPalette.mauveLight : 'transparent' }}
+              className="h-8 w-14 items-center justify-center rounded-full"
+              style={{ backgroundColor: selected ? M3akPalette.emerald : 'transparent' }}
             >
               <Ionicons
                 name={selected ? section.iconActive : section.icon}
-                size={20}
-                color={selected ? M3akPalette.mauve : INACTIVE_COLOR}
+                size={21}
+                color={selected ? M3akPalette.onEmerald : INACTIVE_COLOR}
               />
             </View>
             <ThemedText
               type="small"
-              style={{ color: selected ? M3akPalette.mauve : INACTIVE_COLOR, fontSize: 11 }}
+              style={{ color: selected ? M3akPalette.mauveDeep : M3akPalette.muted, fontSize: 11, fontWeight: selected ? '700' : '500' }}
             >
               {t(section.labelKey)}
             </ThemedText>

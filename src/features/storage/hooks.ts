@@ -7,6 +7,6 @@ export function useSignedUrl(bucket: string, path: string | undefined) {
     queryKey: ['signed-url', bucket, path],
     queryFn: () => getSignedUrl(bucket, path as string),
     enabled: !!path,
-    staleTime: 50 * 60 * 1000,
+    staleTime: 8 * 60 * 1000,
   });
 }

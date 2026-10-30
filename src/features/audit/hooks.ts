@@ -1,0 +1,33 @@
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+
+import { getActivitySummary, listAuditEntries, type AuditQuery } from './api';
+import { auditRange, isAuditRangeValid, type AuditFilters } from './types';
+
+export const AUDIT_PAGE_SIZE = 30;
+
+/** Convertit les filtres de l'écran en requête ; `from` est calculé une fois par rendu de filtre. */
+export function toAuditQuery(agencyId: string, filters: AuditFilters, now: Date = new Date()): AuditQuery {
+  const { from, to } = auditRange(filters, now);
+  return { agencyId, from, to, actorId: filters.actorId, category: filters.category };
+}
+
+export function useAuditEntries(agencyId: string | undefined, filters: AuditFilters) {
+  return useInfiniteQuery({
+    queryKey: ['audit-entries', agencyId, filters],
+    enabled: !!agencyId && isAuditRangeValid(filters),
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => listAuditEntries(toAuditQuery(agencyId as string, filters), pageParam, AUDIT_PAGE_SIZE),
+    getNextPageParam: (lastPage, pages) => (lastPage.length === AUDIT_PAGE_SIZE ? pages.length * AUDIT_PAGE_SIZE : undefined),
+  });
+}
+
+export function useActivitySummary(agencyId: string | undefined, filters: AuditFilters) {
+  return useQuery({
+    queryKey: ['audit-summary', agencyId, filters.granularity, filters.offset, filters.customFrom, filters.customTo],
+    enabled: !!agencyId && isAuditRangeValid(filters),
+    queryFn: () => {
+      const { from, to } = auditRange(filters);
+      return getActivitySummary(agencyId as string, from, to);
+    },
+  });
+}

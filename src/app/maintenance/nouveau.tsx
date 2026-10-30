@@ -21,6 +21,7 @@ import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/fil
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
+import { M3akPalette } from '@/constants/theme';
 
 const EMPTY_VALUES: MaintenanceFormValues = {
   vehicleId: '',
@@ -71,7 +72,7 @@ export default function NouvelleMaintenanceScreen() {
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="flex-1" edges={['top', 'left', 'right']}>
+      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('maintenance.form.newTitle')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
           <PickerField
@@ -105,10 +106,10 @@ export default function NouvelleMaintenanceScreen() {
                     key={type}
                     onPress={() => update('type', type)}
                     className={`rounded-full border px-4 py-2 ${
-                      selected ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#EAE5F2] bg-white'
+                      selected ? 'border-brand bg-brand' : 'border-line bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : '#211A2E' }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
                       {t(`maintenance.types.${type}`)}
                     </ThemedText>
                   </Pressable>

@@ -1,0 +1,37 @@
+import { getSupabase } from '@/lib/supabase';
+
+import { AGENCY_HEADER_LINES, defaultOptions, parseOptions, templateFromOptions, type ContractOptions } from './contract-options';
+import { ensureSignatures, parseTemplate, type ContractTemplate } from './template';
+
+export type StoredTemplate = { template: ContractTemplate; options: ContractOptions | null; updatedAt: string };
+
+const AGENCY_LINES = AGENCY_HEADER_LINES;
+
+/** Réglages et modèle de l'agence, ou null (= modèle M3ak standard). Un contenu invalide est traité comme absent. */
+export async function getContractTemplate(agencyId: string): Promise<StoredTemplate | null> {
+  const { data, error } = await getSupabase().from('agency_contract_templates').select('template, options, updated_at').eq('agency_id', agencyId).maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const options = parseOptions(data.options);
+  // Avec des réglages enregistrés, le modèle est refabriqué à chaque lecture : une amélioration de la mise en page
+  // s'applique donc tout de suite, sans que le propriétaire ait à réenregistrer.
+  const template = options ? parseTemplate(templateFromOptions(options, AGENCY_LINES)) : parseTemplate(data.template);
+  return template ? { template: ensureSignatures(template), options, updatedAt: data.updated_at } : null;
+}
+
+/** Enregistre les réglages ET le modèle qui en découle. */
+export async function saveContractOptions(agencyId: string, options: ContractOptions): Promise<void> {
+  const valid = parseOptions(options) ?? defaultOptions();
+  const template = parseTemplate(templateFromOptions(valid, AGENCY_LINES));
+  if (!template) throw new Error('invalid_template');
+  const { error } = await getSupabase()
+    .from('agency_contract_templates')
+    .upsert({ agency_id: agencyId, template: ensureSignatures(template), options: valid, source_name: null }, { onConflict: 'agency_id' });
+  if (error) throw error;
+}
+
+/** Revient au modèle M3ak standard (supprime les réglages de l'agence). */
+export async function removeContractTemplate(agencyId: string): Promise<void> {
+  const { error } = await getSupabase().from('agency_contract_templates').delete().eq('agency_id', agencyId);
+  if (error) throw error;
+}

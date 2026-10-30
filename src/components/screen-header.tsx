@@ -19,22 +19,22 @@ export function ScreenHeader({ title, subtitle, showBack, right }: ScreenHeaderP
   return (
     <View className="gap-1 px-6 pb-4 pt-2">
       <View className="flex-row items-center justify-between">
-        <View className="flex-row items-center gap-3">
+        <View className="flex-1 flex-row items-center gap-3">
           {showBack ? (
             <Pressable
               onPress={() => router.back()}
               hitSlop={12}
               accessibilityLabel={t('common.back')}
-              className="h-9 w-9 items-center justify-center rounded-full bg-white"
+              className="h-11 w-11 items-center justify-center rounded-full border border-line bg-white"
             >
               <ThemedText type="smallBold">{backArrow}</ThemedText>
             </Pressable>
           ) : null}
-          <ThemedText type="subtitle" className="font-cairo-semibold">
+          <ThemedText type="subtitle" className="flex-1" numberOfLines={2}>
             {title}
           </ThemedText>
         </View>
-        {right}
+        {right ? <View className="ms-3 shrink-0">{right}</View> : null}
       </View>
       {subtitle ? (
         <ThemedText type="default" themeColor="textSecondary">

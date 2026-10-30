@@ -51,10 +51,11 @@ export const VEHICLE_CATEGORIES: VehicleCategory[] = [
 export type VehicleTransmission = 'manuelle' | 'automatique';
 export const VEHICLE_TRANSMISSIONS: VehicleTransmission[] = ['manuelle', 'automatique'];
 
-export type VehicleDocumentType = 'carte_grise' | 'assurance' | 'visite_technique';
+export type VehicleDocumentType = 'carte_grise' | 'carte_grise_verso' | 'assurance' | 'visite_technique';
 
 export const VEHICLE_DOCUMENT_TYPES: VehicleDocumentType[] = [
   'carte_grise',
+  'carte_grise_verso',
   'assurance',
   'visite_technique',
 ];
@@ -82,9 +83,15 @@ export type Vehicle = {
   agencyId: string;
   branchId: string | null;
   immatriculation: string;
+  vin: string | null;
   marque: string;
   modele: string;
+  finition: string | null;
   annee: number | null;
+  /** Première mise en circulation (AAAA-MM-JJ), lue sur la carte grise. */
+  dateMiseEnCirculation?: string | null;
+  /** Puissance fiscale en CV, lue sur la carte grise. */
+  puissanceFiscale?: number | null;
   categorie: VehicleCategory | null;
   couleur: string | null;
   nombrePlaces: number | null;
@@ -107,9 +114,13 @@ export type Vehicle = {
 
 export type VehicleInput = {
   immatriculation: string;
+  vin: string | null;
   marque: string;
   modele: string;
+  finition: string | null;
   annee: number | null;
+  dateMiseEnCirculation?: string | null;
+  puissanceFiscale?: number | null;
   categorie: VehicleCategory | null;
   couleur: string | null;
   nombrePlaces: number | null;
@@ -122,4 +133,6 @@ export type VehicleInput = {
   prixSemaine: number | null;
   prixMois: number | null;
   description: string | null;
+  /** Filiale du véhicule ; absent = inchangé (un membre de filiale est rattaché automatiquement côté serveur). */
+  branchId?: string | null;
 };
