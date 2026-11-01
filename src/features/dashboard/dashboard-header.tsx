@@ -107,6 +107,21 @@ function LogoMark({ height }: { height: number }) {
   );
 }
 
+/** Rond de profil (photo ou initiales) : ouvre le profil. Même bouton dans le hero et dans la petite barre repliée. */
+function ProfileButton({ path, initials }: { path: string | null | undefined; initials: string }) {
+  const { t } = useLanguage();
+  return (
+    <Pressable
+      onPress={() => router.push('/profil')}
+      accessibilityRole="button"
+      accessibilityLabel={t('accueil.header.profile')}
+      className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-primary"
+    >
+      <Avatar path={path} size={40} initials={initials} />
+    </Pressable>
+  );
+}
+
 /** Bouton rond de 44 × 44 : même disque translucide et même trait fin pour toutes les actions. */
 function HeaderIconButton({
   icon,
@@ -205,6 +220,7 @@ export function DashboardHeader({
   }));
 
   const firstName = headerFirstName(prenom, fullName);
+  const initials = getInitials(fullName ?? firstName);
   const greeting = firstName
     ? t('accueil.header.greeting', { name: firstName })
     : t('accueil.header.greetingNoName');
@@ -301,14 +317,7 @@ export function DashboardHeader({
               onPress={() => router.push('/chat')}
             />
             <NotificationBell tone="onForest" />
-            <Pressable
-              onPress={() => router.push('/profil')}
-              accessibilityRole="button"
-              accessibilityLabel={t('accueil.header.profile')}
-              className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-primary"
-            >
-              <Avatar path={avatarPath} size={40} initials={getInitials(fullName ?? firstName)} />
-            </Pressable>
+            <ProfileButton path={avatarPath} initials={initials} />
           </View>
         </View>
 
@@ -408,7 +417,10 @@ export function DashboardHeader({
             M3ak
           </ThemedText>
         </View>
-        <NotificationBell tone="onForest" />
+        <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
+          <NotificationBell tone="onForest" />
+          <ProfileButton path={avatarPath} initials={initials} />
+        </View>
       </Animated.View>
 
       {refreshing ? (
