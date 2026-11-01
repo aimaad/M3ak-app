@@ -28,6 +28,9 @@ import { getInitials } from '@/lib/initials';
 import { headerFirstName } from './header-format';
 import type { DashboardPeriod } from './kpis';
 import { PeriodTabs } from './period-tabs';
+import { CAR_BOX, CAR_FRAMES, HERO_BACKGROUND_NO_CAR } from './showroom/car-frames';
+import { isShowroomAvailable } from './showroom/showroom-math';
+import { ShowroomCar } from './showroom/showroom-car';
 
 const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
 // Version éclaircie du logo, sur fond transparent : lisible directement sur le fond sombre (sans pastille).
@@ -117,6 +120,15 @@ function HeroBackdrop({
   scrollY?: SharedValue<number>;
   reduceMotion: boolean;
 }) {
+  // Animation « showroom » de la voiture : active seulement si la séquence d'images et le fond sans voiture existent
+  // (voir docs/SHOWROOM.md), si l'utilisateur n'a pas réduit les animations et si les images se chargent.
+  // Sinon (aujourd'hui), la photo fixe est affichée, exactement comme avant.
+  const [carReady, setCarReady] = useState(false);
+  const [carFailed, setCarFailed] = useState(false);
+  const showroom =
+    isShowroomAvailable(CAR_FRAMES.length, HERO_BACKGROUND_NO_CAR !== null) &&
+    !carFailed &&
+    !reduceMotion;
   // Très léger mouvement de profondeur : la photo descend un peu pendant que la page monte (le hero, lui, défile normalement).
   const parallax = useAnimatedStyle(() => ({
     transform: [
@@ -151,11 +163,35 @@ function HeroBackdrop({
         style={[{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }, parallax]}
       >
         <Image
-          source={HERO_IMAGE}
+          // Fond sans voiture dès que la voiture animée est prête ; avant (ou en cas d'échec), la photo fixe d'origine.
+          source={
+            showroom && carReady && HERO_BACKGROUND_NO_CAR ? HERO_BACKGROUND_NO_CAR : HERO_IMAGE
+          }
           resizeMode="cover"
           style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
           accessible={false}
         />
+        {showroom ? (
+          // Même cadre que la photo : la voiture animée suit donc son décalage, son échelle et la parallaxe.
+          <View
+            pointerEvents="none"
+            style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
+          >
+            <ShowroomCar
+              frames={CAR_FRAMES}
+              box={{
+                left: CAR_BOX.x * imageWidth,
+                top: CAR_BOX.y * imageHeight,
+                width: CAR_BOX.w * imageWidth,
+                height: CAR_BOX.h * imageHeight,
+              }}
+              scrollY={scrollY}
+              heroHeight={height}
+              onReady={() => setCarReady(true)}
+              onFail={() => setCarFailed(true)}
+            />
+          </View>
+        ) : null}
       </Animated.View>
       <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
         <Defs>
