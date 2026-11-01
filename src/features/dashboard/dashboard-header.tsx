@@ -39,7 +39,7 @@ const DARK = '#171126';
 /** Fondu du bas du hero vers la couleur de la page : pas de bord net. */
 const FADE_HEIGHT = 26;
 const TABS_HEIGHT = 48;
-const TABS_GAP = 16;
+const TABS_GAP = 21;
 /** Espace sous la voiture : sélecteur + fondu. */
 const BELOW_CAR = TABS_HEIGHT + TABS_GAP + FADE_HEIGHT;
 /** Hauteur de la petite barre fixe (sous la zone de sécurité). */
@@ -219,7 +219,7 @@ export function DashboardHeader({
 
       <View
         style={{
-          paddingTop: insets.top + 6,
+          paddingTop: insets.top + 8,
           paddingBottom: FADE_HEIGHT,
           paddingStart: insets.left + 20,
           paddingEnd: insets.right + 20,
@@ -286,7 +286,7 @@ export function DashboardHeader({
           </View>
         </View>
 
-        <View style={{ marginTop: 14, maxWidth: '62%' }}>
+        <View style={{ marginTop: 18, maxWidth: '62%' }}>
           <ThemedText
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -332,7 +332,7 @@ export function DashboardHeader({
             {t('accueil.header.tagline')}
           </ThemedText>
           <View
-            style={{ marginTop: 10, width: 38, height: 3, borderRadius: 2, overflow: 'hidden' }}
+            style={{ marginTop: 12, width: 38, height: 3, borderRadius: 2, overflow: 'hidden' }}
           >
             <Svg width="100%" height="100%" preserveAspectRatio="none">
               <Defs>
