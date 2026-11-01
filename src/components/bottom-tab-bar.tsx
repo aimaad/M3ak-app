@@ -108,7 +108,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
           backgroundColor: 'rgba(251,247,255,0.95)',
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.95)',
-          shadowColor: '#8D31CC',
+          shadowColor: '#9438D8',
           shadowOpacity: 0.28,
           shadowRadius: 24,
           shadowOffset: { width: 0, height: 12 },
@@ -136,7 +136,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                     justifyContent: 'center',
                     borderWidth: 3,
                     borderColor: M3akPalette.background,
-                    shadowColor: '#8D31CC',
+                    shadowColor: '#9438D8',
                     shadowOpacity: 0.55,
                     shadowRadius: 14,
                     shadowOffset: { width: 0, height: 8 },
@@ -153,7 +153,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                     <Defs>
                       <LinearGradient id="tab-plus" x1="0" y1="0" x2="1" y2="1">
                         <Stop offset="0" stopColor="#B25CE8" />
-                        <Stop offset="1" stopColor="#7A2AC0" />
+                        <Stop offset="1" stopColor="#8433CF" />
                       </LinearGradient>
                     </Defs>
                     <Rect width="100%" height="100%" fill="url(#tab-plus)" />

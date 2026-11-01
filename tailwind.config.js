@@ -6,8 +6,8 @@ module.exports = {
     extend: {
       colors: {
         // Jetons M3ak : mêmes valeurs que src/constants/theme.ts (M3akPalette).
-        brand: { DEFAULT: '#8D31CC', deep: '#321943', light: '#F0E1FB', soft: '#F7EEFD' },
-        primary: { DEFAULT: '#8D31CC', pressed: '#7526AE' },
+        brand: { DEFAULT: '#9438D8', deep: '#321943', light: '#F3E7FC', soft: '#F7EEFD' },
+        primary: { DEFAULT: '#9438D8', pressed: '#7E2BBE' },
         'on-primary': '#FFFFFF',
         lavender: '#CB83F5',
         line: { DEFAULT: '#EADCF5', soft: '#F3E9FA' },

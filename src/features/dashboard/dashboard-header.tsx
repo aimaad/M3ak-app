@@ -181,7 +181,7 @@ export function DashboardHeader({
   const focused = useIsFocused();
   const { width: screenWidth } = useWindowDimensions();
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  const logoHeight = screenWidth < 340 ? 44 : 52;
+  const logoHeight = screenWidth < 340 ? 40 : screenWidth < 375 ? 46 : 52;
   const showName = screenWidth >= 340;
   const showAgency = screenWidth >= 375 && !!agencyName?.trim();
 
@@ -337,7 +337,7 @@ export function DashboardHeader({
             <Svg width="100%" height="100%" preserveAspectRatio="none">
               <Defs>
                 <LinearGradient id="kh-accent" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor="#8D31CC" />
+                  <Stop offset="0" stopColor="#9438D8" />
                   <Stop offset="1" stopColor="#CB83F5" />
                 </LinearGradient>
               </Defs>

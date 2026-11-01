@@ -11,10 +11,10 @@ import { Platform } from 'react-native';
 
 export const M3akPalette = {
   /** Mauve signature : boutons, navigation, liens. 7,45:1 avec du texte blanc, 6,9:1 sur le fond ivoire. */
-  mauve: '#8D31CC',
+  mauve: '#9438D8',
   /** Mauve profond : hero, cartes premium, onglet actif (blanc dessus : 14:1). */
   mauveDeep: '#321943',
-  mauveLight: '#F0E1FB',
+  mauveLight: '#F3E7FC',
   mauveSoft: '#F7EEFD',
   /** Lavande douce : accents et éléments secondaires, surtout sur fond sombre (5,8:1 sur le mauve profond). */
   lavender: '#CB83F5',
@@ -51,8 +51,8 @@ export const M3akPalette = {
   neutralText: '#675A7E',
   neutralLight: '#EFEEF3',
   /** Remplissage du bouton principal (même mauve signature) et son état appuyé. */
-  primary: '#8D31CC',
-  primaryPressed: '#7526AE',
+  primary: '#9438D8',
+  primaryPressed: '#7E2BBE',
   /** Texte sur le bouton principal : 7,45:1. */
   onPrimary: '#FFFFFF',
 } as const;
@@ -61,7 +61,7 @@ export const M3akPalette = {
 export const Shadows = {
   card: { shadowColor: '#321943', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
   raised: { shadowColor: '#321943', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
-  button: { shadowColor: '#8D31CC', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  button: { shadowColor: '#9438D8', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
 } as const;
 
 export const Colors = {

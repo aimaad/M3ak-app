@@ -63,7 +63,7 @@ export function GlassCard({
   );
   const shadow = {
     borderRadius: 22,
-    shadowColor: '#8D31CC',
+    shadowColor: '#9438D8',
     shadowOpacity: highlighted ? 0.34 : 0.2,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
@@ -219,9 +219,9 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
         <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
           <Defs>
             <LinearGradient id="rc-bg" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#22102F" />
-              <Stop offset="0.55" stopColor="#321943" />
-              <Stop offset="1" stopColor="#54216F" />
+              <Stop offset="0" stopColor="#2A1340" />
+              <Stop offset="0.5" stopColor="#43205F" />
+              <Stop offset="1" stopColor="#6A2A93" />
             </LinearGradient>
             <RadialGradient id="rc-glow" cx="0.9" cy="0.95" rx="0.7" ry="0.9" fx="0.9" fy="0.95">
               <Stop offset="0" stopColor="#CB83F5" stopOpacity="0.32" />
@@ -247,7 +247,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
               <Defs>
                 <LinearGradient id="rc-area" x1="0" y1="0" x2="0" y2="1">
                   <Stop offset="0" stopColor="#B25CE8" stopOpacity="0.6" />
-                  <Stop offset="1" stopColor="#8D31CC" stopOpacity="0" />
+                  <Stop offset="1" stopColor="#9438D8" stopOpacity="0" />
                 </LinearGradient>
               </Defs>
               <Path d={area} fill="url(#rc-area)" />
