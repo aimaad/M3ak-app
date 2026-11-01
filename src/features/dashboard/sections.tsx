@@ -17,7 +17,11 @@ import { PeriodChart } from './period-chart';
 
 const mad = (value: number) => `${Math.round(value).toLocaleString('fr-FR')} MAD`;
 
-const FLEET_TILES: { statut: StatusFilter; labelKey: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+const FLEET_TILES: {
+  statut: StatusFilter;
+  labelKey: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
   { statut: 'disponible', labelKey: 'flotte.status.disponible', icon: 'checkmark-circle-outline' },
   { statut: 'en_location', labelKey: 'flotte.status.en_location', icon: 'key-outline' },
   { statut: 'maintenance', labelKey: 'flotte.status.maintenance', icon: 'construct-outline' },
@@ -27,7 +31,8 @@ const FLEET_TILES: { statut: StatusFilter; labelKey: string; icon: keyof typeof 
 const goRentals = () => router.push('/locations');
 
 /** Suffixe des textes par période : `today`, `days7`, `days30` (le mois civil, réservé à l'IA, n'est jamais affiché ici). */
-const periodKey = (period: MetricsPeriod) => (period === 'today' ? 'today' : period === '7d' ? 'days7' : 'days30');
+const periodKey = (period: MetricsPeriod) =>
+  period === 'today' ? 'today' : period === '7d' ? 'days7' : 'days30';
 
 /** Carte vedette vert forêt : revenus du mois, variation, tendance sur 6 mois. Réservée au propriétaire (avec le reste des finances). */
 function RevenueHero({ metrics }: { metrics: DashboardMetrics }) {
@@ -43,25 +48,46 @@ function RevenueHero({ metrics }: { metrics: DashboardMetrics }) {
           <ThemedText type="small" style={{ color: '#CBB8E0' }}>
             {t(`accueil.period.revenue.${key}`)}
           </ThemedText>
-          <ThemedText type="title" style={{ color: '#FFFFFF' }} accessibilityLabel={`${t(`accueil.period.revenue.${key}`)} : ${mad(revenue.current)}`}>
+          <ThemedText
+            type="title"
+            style={{ color: '#FFFFFF' }}
+            accessibilityLabel={`${t(`accueil.period.revenue.${key}`)} : ${mad(revenue.current)}`}
+          >
             {mad(revenue.current)}
           </ThemedText>
         </View>
-        <View className="h-11 w-11 items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
+        <View
+          className="h-11 w-11 items-center justify-center rounded-full"
+          style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+        >
           <Ionicons name={trendIcon} size={22} color="#B69ACF" />
         </View>
       </View>
-      <View className="flex-row items-center gap-1.5 self-start rounded-full px-3 py-1" style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}>
-        <Ionicons name={change !== null && change < 0 ? 'arrow-down' : 'arrow-up'} size={14} color={change !== null && change < 0 ? M3akPalette.warning : '#B69ACF'} />
+      <View
+        className="flex-row items-center gap-1.5 self-start rounded-full px-3 py-1"
+        style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+      >
+        <Ionicons
+          name={change !== null && change < 0 ? 'arrow-down' : 'arrow-up'}
+          size={14}
+          color={change !== null && change < 0 ? M3akPalette.warning : '#B69ACF'}
+        />
         <ThemedText type="small" style={{ color: '#FFFFFF' }}>
-          {change === null ? t('accueil.period.noPrevious') : `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.compare.${key}`)}`}
+          {change === null
+            ? t('accueil.period.noPrevious')
+            : `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.compare.${key}`)}`}
         </ThemedText>
       </View>
       <View className="gap-2">
         <ThemedText type="small" style={{ color: '#CBB8E0' }}>
           {t(`accueil.period.trend.${key}`)}
         </ThemedText>
-        <PeriodChart points={metrics.revenueTrend} locale={language === 'ar' ? 'ar' : 'fr-FR'} granularity={metrics.period === 'month' ? 'month' : 'day'} onDeep />
+        <PeriodChart
+          points={metrics.revenueTrend}
+          locale={language === 'ar' ? 'ar' : 'fr-FR'}
+          granularity={metrics.period === 'month' ? 'month' : 'day'}
+          onDeep
+        />
       </View>
     </Card>
   );
@@ -91,8 +117,16 @@ export function FinancialSection({ metrics }: { metrics: DashboardMetrics }) {
           hint={t('accueil.financial.profitHint')}
           tone={metrics.profit < 0 ? 'danger' : 'default'}
         />
-        <KpiCard icon="construct-outline" label={t('accueil.financial.maintenanceCost')} value={mad(maintenance.costInPeriod)} />
-        <KpiCard icon="basket-outline" label={t('accueil.financial.averageBasket')} value={activity.averageBasket === null ? '—' : mad(activity.averageBasket)} />
+        <KpiCard
+          icon="construct-outline"
+          label={t('accueil.financial.maintenanceCost')}
+          value={mad(maintenance.costInPeriod)}
+        />
+        <KpiCard
+          icon="basket-outline"
+          label={t('accueil.financial.averageBasket')}
+          value={activity.averageBasket === null ? '—' : mad(activity.averageBasket)}
+        />
         <KpiCard
           icon="close-circle-outline"
           label={t('accueil.financial.cancellationRate')}
@@ -106,7 +140,13 @@ export function FinancialSection({ metrics }: { metrics: DashboardMetrics }) {
 }
 
 /** Flotte : état des véhicules et taux d'occupation (tous les rôles). */
-export function FleetSection({ metrics, vehicles }: { metrics: DashboardMetrics; vehicles: Vehicle[] }) {
+export function FleetSection({
+  metrics,
+  vehicles,
+}: {
+  metrics: DashboardMetrics;
+  vehicles: Vehicle[];
+}) {
   const { t } = useLanguage();
   const counts = countByStatus(vehicles);
   return (
@@ -115,7 +155,7 @@ export function FleetSection({ metrics, vehicles }: { metrics: DashboardMetrics;
         <ThemedText type="small" themeColor="textSecondary">
           {t('accueil.fleetTotal')}
         </ThemedText>
-        <ThemedText type="title" >
+        <ThemedText type="title">
           {t('accueil.fleetTotalCount', { count: metrics.fleetTotal })}
         </ThemedText>
       </View>
@@ -129,8 +169,17 @@ export function FleetSection({ metrics, vehicles }: { metrics: DashboardMetrics;
             onPress={() => router.push({ pathname: '/flotte', params: { statut: tile.statut } })}
           />
         ))}
-        <KpiCard icon="speedometer-outline" label={t('accueil.fleet.utilizationNow')} value={`${metrics.fleetTotal ? Math.round(((counts.en_location ?? 0) / metrics.fleetTotal) * 100) : 0} %`} />
-        <KpiCard icon="pie-chart-outline" label={t('accueil.fleet.occupancyMonth')} value={`${metrics.occupancyPct} %`} hint={t('accueil.fleet.occupancyHint')} />
+        <KpiCard
+          icon="speedometer-outline"
+          label={t('accueil.fleet.utilizationNow')}
+          value={`${metrics.fleetTotal ? Math.round(((counts.en_location ?? 0) / metrics.fleetTotal) * 100) : 0} %`}
+        />
+        <KpiCard
+          icon="pie-chart-outline"
+          label={t('accueil.fleet.occupancyMonth')}
+          value={`${metrics.occupancyPct} %`}
+          hint={t('accueil.fleet.occupancyHint')}
+        />
       </KpiGrid>
     </View>
   );
@@ -144,8 +193,18 @@ export function OperationsSection({ metrics }: { metrics: DashboardMetrics }) {
     <View className="gap-3">
       <SectionTitle>{t('accueil.operations.title')}</SectionTitle>
       <KpiGrid>
-        <KpiCard icon="arrow-up-circle-outline" label={t('accueil.operations.departuresToday')} value={String(activity.departuresToday)} onPress={goRentals} />
-        <KpiCard icon="arrow-down-circle-outline" label={t('accueil.operations.returnsToday')} value={String(activity.returnsToday)} onPress={goRentals} />
+        <KpiCard
+          icon="arrow-up-circle-outline"
+          label={t('accueil.operations.departuresToday')}
+          value={String(activity.departuresToday)}
+          onPress={goRentals}
+        />
+        <KpiCard
+          icon="arrow-down-circle-outline"
+          label={t('accueil.operations.returnsToday')}
+          value={String(activity.returnsToday)}
+          onPress={goRentals}
+        />
         <KpiCard
           icon="alarm-outline"
           label={t('accueil.operations.lateReturns')}
@@ -160,14 +219,30 @@ export function OperationsSection({ metrics }: { metrics: DashboardMetrics }) {
           tone={activity.pendingConfirmation > 0 ? 'warning' : 'default'}
           onPress={goRentals}
         />
-        <KpiCard icon="calendar-outline" label={t('accueil.operations.upcoming7Days')} value={String(activity.upcoming7Days)} />
-        <KpiCard icon="play-circle-outline" label={t('accueil.operations.activeRentals')} value={String(activity.active)} />
+        <KpiCard
+          icon="calendar-outline"
+          label={t('accueil.operations.upcoming7Days')}
+          value={String(activity.upcoming7Days)}
+        />
+        <KpiCard
+          icon="play-circle-outline"
+          label={t('accueil.operations.activeRentals')}
+          value={String(activity.active)}
+        />
         <KpiCard
           icon="time-outline"
           label={t('accueil.operations.averageDuration')}
-          value={activity.averageDurationDays === null ? '—' : t('accueil.operations.days', { count: activity.averageDurationDays })}
+          value={
+            activity.averageDurationDays === null
+              ? '—'
+              : t('accueil.operations.days', { count: activity.averageDurationDays })
+          }
         />
-        <KpiCard icon="person-add-outline" label={t('accueil.operations.newCustomers')} value={String(metrics.newCustomers)} />
+        <KpiCard
+          icon="person-add-outline"
+          label={t('accueil.operations.newCustomers')}
+          value={String(metrics.newCustomers)}
+        />
       </KpiGrid>
     </View>
   );
@@ -181,8 +256,18 @@ export function CounterSection({ metrics }: { metrics: DashboardMetrics }) {
     <View className="gap-3">
       <SectionTitle>{t('accueil.counter.title')}</SectionTitle>
       <KpiGrid>
-        <KpiCard icon="arrow-up-circle-outline" label={t('accueil.operations.departuresToday')} value={String(activity.departuresToday)} onPress={goRentals} />
-        <KpiCard icon="arrow-down-circle-outline" label={t('accueil.operations.returnsToday')} value={String(activity.returnsToday)} onPress={goRentals} />
+        <KpiCard
+          icon="arrow-up-circle-outline"
+          label={t('accueil.operations.departuresToday')}
+          value={String(activity.departuresToday)}
+          onPress={goRentals}
+        />
+        <KpiCard
+          icon="arrow-down-circle-outline"
+          label={t('accueil.operations.returnsToday')}
+          value={String(activity.returnsToday)}
+          onPress={goRentals}
+        />
         <KpiCard
           icon="alarm-outline"
           label={t('accueil.operations.lateReturns')}
@@ -206,12 +291,32 @@ export function CounterSection({ metrics }: { metrics: DashboardMetrics }) {
           onPress={goRentals}
           wide
         />
-        <KpiCard icon="checkmark-circle-outline" label={t('accueil.counter.availableNow')} value={String(metrics.availableNow)} onPress={() => router.push({ pathname: '/flotte', params: { statut: 'disponible' } })} />
-        <KpiCard icon="calendar-outline" label={t('accueil.operations.upcoming7Days')} value={String(activity.upcoming7Days)} />
+        <KpiCard
+          icon="checkmark-circle-outline"
+          label={t('accueil.counter.availableNow')}
+          value={String(metrics.availableNow)}
+          onPress={() => router.push({ pathname: '/flotte', params: { statut: 'disponible' } })}
+        />
+        <KpiCard
+          icon="calendar-outline"
+          label={t('accueil.operations.upcoming7Days')}
+          value={String(activity.upcoming7Days)}
+        />
       </KpiGrid>
       <View className="flex-row gap-2">
-        <Button label={t('accueil.counter.newRental')} icon="add-circle-outline" style={{ flex: 1 }} onPress={() => router.push('/locations/nouveau')} />
-        <Button label={t('accueil.counter.newCustomer')} variant="secondary" icon="person-add-outline" style={{ flex: 1 }} onPress={() => router.push('/clients/nouveau')} />
+        <Button
+          label={t('accueil.counter.newRental')}
+          icon="add-circle-outline"
+          style={{ flex: 1 }}
+          onPress={() => router.push('/locations/nouveau')}
+        />
+        <Button
+          label={t('accueil.counter.newCustomer')}
+          variant="secondary"
+          icon="person-add-outline"
+          style={{ flex: 1 }}
+          onPress={() => router.push('/clients/nouveau')}
+        />
       </View>
     </View>
   );
@@ -239,7 +344,13 @@ function VehicleRow({ item, showMoney }: { item: VehiclePerformance; showMoney: 
 }
 
 /** Performance de la flotte (propriétaire et responsable) ; l'argent par véhicule n'est visible que du propriétaire. */
-export function PerformanceSection({ metrics, showMoney }: { metrics: DashboardMetrics; showMoney: boolean }) {
+export function PerformanceSection({
+  metrics,
+  showMoney,
+}: {
+  metrics: DashboardMetrics;
+  showMoney: boolean;
+}) {
   const { t } = useLanguage();
   return (
     <View className="gap-3">
@@ -254,7 +365,9 @@ export function PerformanceSection({ metrics, showMoney }: { metrics: DashboardM
               {t('accueil.performance.noData')}
             </ThemedText>
           ) : (
-            metrics.topVehicles.map((item) => <VehicleRow key={item.vehicleId} item={item} showMoney />)
+            metrics.topVehicles.map((item) => (
+              <VehicleRow key={item.vehicleId} item={item} showMoney />
+            ))
           )}
         </View>
       ) : null}
@@ -267,7 +380,9 @@ export function PerformanceSection({ metrics, showMoney }: { metrics: DashboardM
             {t('accueil.performance.noneUnderused')}
           </ThemedText>
         ) : (
-          metrics.underused.map((item) => <VehicleRow key={item.vehicleId} item={item} showMoney={false} />)
+          metrics.underused.map((item) => (
+            <VehicleRow key={item.vehicleId} item={item} showMoney={false} />
+          ))
         )}
       </View>
     </View>

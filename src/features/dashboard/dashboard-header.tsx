@@ -28,6 +28,8 @@ import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
 import { headerFirstName } from './header-format';
+import type { DashboardPeriod } from './kpis';
+import { PeriodTabs } from './period-tabs';
 
 const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
 // Version éclaircie du logo, sur fond transparent : lisible directement sur le mauve profond (sans pastille).
@@ -39,6 +41,13 @@ const MARK_RATIO = 640 / 373;
 const HERO_RATIO = 1094 / 1000;
 const CAR_BOTTOM = 0.67;
 const HERO_SCALE = 1.1;
+/** Zone de fondu en bas du hero, vers la couleur de la page : le hero se fond dans le reste de l'écran (pas de bord net). */
+const FADE_HEIGHT = 40;
+/** Sélecteur de période posé sur le bas du hero : sa hauteur, et l'espace entre la voiture et lui. */
+const TABS_HEIGHT = 48;
+const TABS_GAP = 14;
+/** Espace libre sous la voiture : sélecteur + fondu. */
+const BELOW_CAR = TABS_HEIGHT + TABS_GAP + FADE_HEIGHT;
 
 type DashboardHeaderProps = {
   /** Prénom du profil (peut manquer). */
@@ -48,6 +57,9 @@ type DashboardHeaderProps = {
   agencyName?: string | null;
   agencyCity?: string | null;
   avatarPath?: string | null;
+  /** Période choisie (Aujourd'hui / 7 jours / 30 jours) et son changement : le sélecteur est posé sur le hero. */
+  period: DashboardPeriod;
+  onPeriodChange: (period: DashboardPeriod) => void;
   /** Position de défilement de la page (valeur partagée mise à jour par la liste) : pilote le repli du hero. */
   scrollY: SharedValue<number>;
   /** Hauteur du hero déployé (pour réserver la place au-dessus du contenu). */
@@ -69,7 +81,7 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
   // Photo légèrement plus large que l'écran, calée à droite : toute la voiture reste visible.
   const imageWidth = width * HERO_SCALE;
   const imageHeight = imageWidth * HERO_RATIO;
-  const top = Math.min(0, height - 16 - CAR_BOTTOM * imageHeight);
+  const top = Math.min(0, height - BELOW_CAR - CAR_BOTTOM * imageHeight);
   return (
     <View
       pointerEvents="none"
@@ -156,6 +168,8 @@ export function DashboardHeader({
   agencyName,
   agencyCity,
   avatarPath,
+  period,
+  onPeriodChange,
   scrollY,
   onFullHeight,
   refreshing = false,
@@ -188,18 +202,20 @@ export function DashboardHeader({
     });
   };
 
-  // Le conteneur rétrécit de la hauteur du hero à celle de la petite barre ; ses coins du bas s'affinent un peu.
+  // Le conteneur rétrécit de la hauteur du hero à celle de la petite barre.
   const containerStyle = useAnimatedStyle(() => {
     const y = scrollY.value;
     return {
       height: interpolate(y, [0, range], [fullHeight, compactHeight], Extrapolation.CLAMP),
-      borderBottomStartRadius: interpolate(y, [0, range], [28, 20], Extrapolation.CLAMP),
-      borderBottomEndRadius: interpolate(y, [0, range], [28, 20], Extrapolation.CLAMP),
     };
   });
   // Photo : s'efface avant la fin du repli, la petite barre repose sur le mauve profond uni.
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: interpolate(scrollY.value, [0, range * 0.8], [1, 0], Extrapolation.CLAMP),
+  }));
+  // Fondu du bas : visible hero déployé, il s'efface dès le début du repli (la petite barre est unie).
+  const fadeStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, range * 0.5], [1, 0], Extrapolation.CLAMP),
   }));
   // Hero : s'estompe et remonte, sortant du cadre (les boutons cachés ne sont plus touchables, car rognés).
   const heroStyle = useAnimatedStyle(() => ({
@@ -231,8 +247,6 @@ export function DashboardHeader({
         {
           backgroundColor: '#171321',
           overflow: 'hidden',
-          borderBottomStartRadius: 28,
-          borderBottomEndRadius: 28,
         },
         { height: fullHeight },
         containerStyle,
@@ -252,6 +266,25 @@ export function DashboardHeader({
       </Animated.View>
 
       <Animated.View
+        pointerEvents="none"
+        style={[
+          { position: 'absolute', bottom: 0, start: 0, end: 0, height: FADE_HEIGHT },
+          fadeStyle,
+        ]}
+      >
+        <Svg width="100%" height="100%" preserveAspectRatio="none">
+          <Defs>
+            <LinearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0" stopColor={M3akPalette.background} stopOpacity="0" />
+              <Stop offset="0.5" stopColor={M3akPalette.background} stopOpacity="0.4" />
+              <Stop offset="1" stopColor={M3akPalette.background} stopOpacity="1" />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#kh-fade)" />
+        </Svg>
+      </Animated.View>
+
+      <Animated.View
         onLayout={onLayout}
         style={[
           {
@@ -260,7 +293,7 @@ export function DashboardHeader({
             start: 0,
             end: 0,
             paddingTop: insets.top + 4,
-            paddingBottom: 104,
+            paddingBottom: FADE_HEIGHT,
             paddingStart: insets.left + 20,
             paddingEnd: insets.right + 20,
           },
@@ -358,6 +391,11 @@ export function DashboardHeader({
               backgroundColor: M3akPalette.lavender,
             }}
           />
+        </View>
+
+        {/* Sélecteur de période sur le bas du hero ; l'espace au-dessus laisse voir la voiture de la photo. */}
+        <View style={{ marginTop: 104 }}>
+          <PeriodTabs value={period} onChange={onPeriodChange} />
         </View>
       </Animated.View>
 

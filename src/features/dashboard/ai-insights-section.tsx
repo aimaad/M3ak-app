@@ -20,7 +20,13 @@ const PRIORITY_COLOR: Record<InsightRecommendation['priority'], string> = {
 };
 const TREND_SYMBOL = { up: '▲', down: '▼', flat: '▬' } as const;
 
-function UnavailableCard({ titleKey, availability }: { titleKey: string; availability: InsightsAvailability }) {
+function UnavailableCard({
+  titleKey,
+  availability,
+}: {
+  titleKey: string;
+  availability: InsightsAvailability;
+}) {
   const { t } = useLanguage();
   const messageKey =
     availability === 'owner_can_enable'
@@ -35,7 +41,12 @@ function UnavailableCard({ titleKey, availability }: { titleKey: string; availab
         {t(messageKey)}
       </ThemedText>
       {availability === 'owner_can_enable' ? (
-        <Button label={t('accueil.ai.openSettings')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />
+        <Button
+          label={t('accueil.ai.openSettings')}
+          variant="secondary"
+          size="sm"
+          onPress={() => router.push('/entreprise')}
+        />
       ) : null}
     </Card>
   );
@@ -83,7 +94,14 @@ export function AiInsightsSection({
   }
 
   const insights = data?.insights;
-  const time = data ? new Date(data.at).toLocaleString(language === 'ar' ? 'ar' : 'fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : null;
+  const time = data
+    ? new Date(data.at).toLocaleString(language === 'ar' ? 'ar' : 'fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
 
   return (
     <View className="gap-3">
@@ -161,7 +179,10 @@ export function AiInsightsSection({
                     <ThemedText type="smallBold" className="flex-1">
                       {recommendation.title}
                     </ThemedText>
-                    <ThemedText type="small" style={{ color: PRIORITY_COLOR[recommendation.priority] }}>
+                    <ThemedText
+                      type="small"
+                      style={{ color: PRIORITY_COLOR[recommendation.priority] }}
+                    >
                       {t(`accueil.ai.priority.${recommendation.priority}`)}
                     </ThemedText>
                   </View>

@@ -23,7 +23,6 @@ import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
 import type { DashboardPeriod } from '@/features/dashboard/kpis';
-import { PeriodTabs } from '@/features/dashboard/period-tabs';
 import { dashboardSections, canSeeMoney } from '@/features/dashboard/role-layout';
 import {
   CounterSection,
@@ -249,7 +248,7 @@ export default function AccueilScreen() {
                 gap: 24,
                 paddingHorizontal: 24,
                 paddingBottom: 40,
-                paddingTop: heroHeight + 24,
+                paddingTop: heroHeight + 8,
               }}
               refreshControl={
                 <RefreshControl
@@ -260,8 +259,6 @@ export default function AccueilScreen() {
                 />
               }
             >
-              <PeriodTabs value={period} onChange={setPeriod} />
-
               <Button
                 label={t('locations.addRental')}
                 icon="add"
@@ -446,6 +443,8 @@ export default function AccueilScreen() {
               agencyName={agencyQuery.data?.agencyName}
               agencyCity={agencyQuery.data?.agencyCity}
               avatarPath={profileQuery.data?.photoPath}
+              period={period}
+              onPeriodChange={setPeriod}
               scrollY={scrollY}
               onFullHeight={setHeroHeight}
               refreshing={isRefreshing && !isLoading}

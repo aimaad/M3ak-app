@@ -14,10 +14,19 @@ import { useLanguage } from '@/i18n/use-language';
 import { SectionTitle } from './kpi-card';
 import { upcomingRentals } from './upcoming';
 
-const formatDay = (iso: string, locale: string) => new Date(iso).toLocaleDateString(locale, { day: '2-digit', month: 'short' });
+const formatDay = (iso: string, locale: string) =>
+  new Date(iso).toLocaleDateString(locale, { day: '2-digit', month: 'short' });
 
 /** Prochaines locations (client, voiture, dates, statut) avec lien vers la liste complète. Données déjà chargées par l'écran. */
-export function UpcomingRentalsSection({ rentals, customers, vehicles }: { rentals: Rental[]; customers: Customer[]; vehicles: Vehicle[] }) {
+export function UpcomingRentalsSection({
+  rentals,
+  customers,
+  vehicles,
+}: {
+  rentals: Rental[];
+  customers: Customer[];
+  vehicles: Vehicle[];
+}) {
   const { t, language } = useLanguage();
   const locale = language === 'ar' ? 'ar-MA' : 'fr-FR';
   const items = upcomingRentals(rentals, new Date(), 3);
@@ -26,7 +35,12 @@ export function UpcomingRentalsSection({ rentals, customers, vehicles }: { renta
     <View className="gap-3">
       <View className="flex-row items-center justify-between">
         <SectionTitle>{t('accueil.upcoming.title')}</SectionTitle>
-        <Pressable onPress={() => router.push('/locations')} hitSlop={10} accessibilityRole="link" className="min-h-11 justify-center">
+        <Pressable
+          onPress={() => router.push('/locations')}
+          hitSlop={10}
+          accessibilityRole="link"
+          className="min-h-11 justify-center"
+        >
           <ThemedText type="smallBold" style={{ color: M3akPalette.mauve }}>
             {t('accueil.seeAll')}
           </ThemedText>
@@ -44,11 +58,16 @@ export function UpcomingRentalsSection({ rentals, customers, vehicles }: { renta
             return (
               <PressableCard
                 key={rental.id}
-                onPress={() => router.push({ pathname: '/locations/[id]', params: { id: rental.id } })}
+                onPress={() =>
+                  router.push({ pathname: '/locations/[id]', params: { id: rental.id } })
+                }
                 className="flex-row items-center gap-3"
                 accessibilityRole="link"
               >
-                <View className="h-11 w-11 items-center justify-center rounded-full" style={{ backgroundColor: M3akPalette.mauveLight }}>
+                <View
+                  className="h-11 w-11 items-center justify-center rounded-full"
+                  style={{ backgroundColor: M3akPalette.mauveLight }}
+                >
                   <Ionicons name="car-sport-outline" size={22} color={M3akPalette.mauve} />
                 </View>
                 <View className="flex-1 gap-0.5">
@@ -56,10 +75,17 @@ export function UpcomingRentalsSection({ rentals, customers, vehicles }: { renta
                     {customer?.nomComplet ?? t('locations.unknownCustomer')}
                   </ThemedText>
                   <ThemedText type="small" themeColor="textSecondary" numberOfLines={1}>
-                    {vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('locations.unknownVehicle')}
+                    {vehicle
+                      ? `${vehicle.marque} ${vehicle.modele}`
+                      : t('locations.unknownVehicle')}
                   </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12, lineHeight: 16 }}>
-                    {formatDay(rental.dateDebutPrevue, locale)} → {formatDay(rental.dateFinPrevue, locale)}
+                  <ThemedText
+                    type="small"
+                    themeColor="textSecondary"
+                    style={{ fontSize: 12, lineHeight: 16 }}
+                  >
+                    {formatDay(rental.dateDebutPrevue, locale)} →{' '}
+                    {formatDay(rental.dateFinPrevue, locale)}
                   </ThemedText>
                 </View>
                 <RentalStatusBadge status={rental.statut} />

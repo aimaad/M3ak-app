@@ -54,19 +54,29 @@ export function KpiCard({
   const content = (
     <View className="gap-3">
       {icon ? (
-        <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: TONE_TINT[tone] }}>
+        <View
+          className="h-10 w-10 items-center justify-center rounded-full"
+          style={{ backgroundColor: TONE_TINT[tone] }}
+        >
           <Ionicons name={icon} size={20} color={TONE_COLOR[tone]} />
         </View>
       ) : null}
       <View className="gap-0.5">
-        <ThemedText type="subtitle" style={{ fontSize: 26, lineHeight: 32, color: TONE_TEXT[tone] }}>
+        <ThemedText
+          type="subtitle"
+          style={{ fontSize: 26, lineHeight: 32, color: TONE_TEXT[tone] }}
+        >
           {value}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {label}
         </ThemedText>
         {hint ? (
-          <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 12, lineHeight: 16 }}>
+          <ThemedText
+            type="small"
+            themeColor="textSecondary"
+            style={{ fontSize: 12, lineHeight: 16 }}
+          >
             {hint}
           </ThemedText>
         ) : null}
@@ -75,7 +85,12 @@ export function KpiCard({
   );
   const width = wide ? 'w-full' : 'w-[47%]';
   return onPress ? (
-    <PressableCard onPress={onPress} className={width} accessibilityRole="button" accessibilityLabel={`${label} : ${value}`}>
+    <PressableCard
+      onPress={onPress}
+      className={width}
+      accessibilityRole="button"
+      accessibilityLabel={`${label} : ${value}`}
+    >
       {content}
     </PressableCard>
   ) : (
@@ -89,7 +104,11 @@ export function KpiGrid({ children }: { children: React.ReactNode }) {
 
 export function SectionTitle({ children }: { children: string }) {
   return (
-    <ThemedText type="smallBold" style={{ fontSize: 18, lineHeight: 26 }} accessibilityRole="header">
+    <ThemedText
+      type="smallBold"
+      style={{ fontSize: 18, lineHeight: 26 }}
+      accessibilityRole="header"
+    >
       {children}
     </ThemedText>
   );

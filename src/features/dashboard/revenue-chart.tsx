@@ -21,7 +21,11 @@ export function RevenueChart({ points }: { points: DailyRevenuePoint[] }) {
           const heightRatio = point.total / max;
           const barHeight = Math.max(heightRatio * CHART_HEIGHT, point.total > 0 ? 4 : 2);
           return (
-            <View key={point.date} className="flex-1 items-center justify-end" style={{ height: CHART_HEIGHT }}>
+            <View
+              key={point.date}
+              className="flex-1 items-center justify-end"
+              style={{ height: CHART_HEIGHT }}
+            >
               <View
                 className="w-full rounded-t-md"
                 style={{
