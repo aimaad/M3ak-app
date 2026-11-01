@@ -1,13 +1,18 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
+  Easing,
   Extrapolation,
   interpolate,
   useAnimatedProps,
   useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withDelay,
+  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +41,15 @@ const CAR_BOTTOM = 0.67;
 const HERO_WIDTH = 0.72;
 
 const DARK = '#171126';
+/** Voiles du fond : aubergine profond à gauche, violet légèrement rosé vers le centre. */
+const DEEP_PURPLE = '#321943';
+const PURPLE_ROSE = '#6B386F';
+/** Petite ligne décorative : champagne rosé vers champagne clair (seule touche dorée de l'interface). */
+const CHAMPAGNE = '#C9A58B';
+const CHAMPAGNE_LIGHT = '#E8C7A8';
+/** Parallaxe : décalage maximal de la photo (dp) sur 220 dp de défilement, dans le sens inverse du contenu. */
+const PARALLAX_MAX = 18;
+const PARALLAX_RANGE = 220;
 /** Fondu du bas du hero vers la couleur de la page : pas de bord net. */
 const FADE_HEIGHT = 26;
 const TABS_HEIGHT = 48;
@@ -92,7 +106,33 @@ function HeaderIconButton({
  * Photo du hero : la voiture est calée en bas à droite, à côté du texte (qui reste à gauche), sans déformation. Des voiles
  * aubergine dégradés (gauche, haut, bas) fondent la photo dans le fond et garantissent la lisibilité.
  */
-function HeroBackdrop({ width, height }: { width: number; height: number }) {
+function HeroBackdrop({
+  width,
+  height,
+  scrollY,
+  reduceMotion,
+}: {
+  width: number;
+  height: number;
+  scrollY?: SharedValue<number>;
+  reduceMotion: boolean;
+}) {
+  // Très léger mouvement de profondeur : la photo descend un peu pendant que la page monte (le hero, lui, défile normalement).
+  const parallax = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateY:
+          reduceMotion || !scrollY
+            ? 0
+            : interpolate(
+                scrollY.value,
+                [0, PARALLAX_RANGE],
+                [0, PARALLAX_MAX],
+                Extrapolation.CLAMP
+              ),
+      },
+    ],
+  }));
   let imageWidth = width * HERO_WIDTH;
   let imageHeight = imageWidth * HERO_RATIO;
   // La photo doit toujours couvrir toute la hauteur du hero (petits écrans) : on l'agrandit au besoin.
@@ -106,20 +146,27 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
       pointerEvents="none"
       style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}
     >
-      <Image
-        source={HERO_IMAGE}
-        resizeMode="cover"
-        style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
-        accessible={false}
-      />
+      <Animated.View
+        pointerEvents="none"
+        style={[{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }, parallax]}
+      >
+        <Image
+          source={HERO_IMAGE}
+          resizeMode="cover"
+          style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
+          accessible={false}
+        />
+      </Animated.View>
       <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
         <Defs>
           <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
             <Stop offset="0" stopColor={DARK} stopOpacity="1" />
-            <Stop offset="0.3" stopColor={DARK} stopOpacity="0.95" />
-            <Stop offset="0.55" stopColor={DARK} stopOpacity="0.36" />
-            <Stop offset="0.8" stopColor={DARK} stopOpacity="0.05" />
-            <Stop offset="1" stopColor={DARK} stopOpacity="0" />
+            <Stop offset="0.3" stopColor={DARK} stopOpacity="0.97" />
+            <Stop offset="0.42" stopColor={DEEP_PURPLE} stopOpacity="0.8" />
+            <Stop offset="0.55" stopColor={DEEP_PURPLE} stopOpacity="0.4" />
+            <Stop offset="0.66" stopColor={PURPLE_ROSE} stopOpacity="0.15" />
+            <Stop offset="0.82" stopColor={PURPLE_ROSE} stopOpacity="0.03" />
+            <Stop offset="1" stopColor={PURPLE_ROSE} stopOpacity="0" />
           </LinearGradient>
           <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={DARK} stopOpacity="0.5" />
@@ -127,7 +174,7 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
           </LinearGradient>
           <LinearGradient id="kh-bottom" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0.55" stopColor={DARK} stopOpacity="0" />
-            <Stop offset="1" stopColor={DARK} stopOpacity="0.4" />
+            <Stop offset="1" stopColor={DARK} stopOpacity="0.3" />
           </LinearGradient>
           <LinearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={M3akPalette.background} stopOpacity="0" />
@@ -160,6 +207,8 @@ type DashboardHeaderProps = {
   onPeriodChange: (period: DashboardPeriod) => void;
   /** Hauteur mesurée du hero (pour que la petite barre sache quand apparaître). */
   onHeight?: (height: number) => void;
+  /** Position de défilement de la page : sert uniquement à la parallaxe discrète de la photo. */
+  scrollY?: SharedValue<number>;
 };
 
 /**
@@ -175,11 +224,32 @@ export function DashboardHeader({
   period,
   onPeriodChange,
   onHeight,
+  scrollY,
 }: DashboardHeaderProps) {
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const { width: screenWidth } = useWindowDimensions();
+  const reduceMotion = useReducedMotion();
+  // Entrée : le logo puis le message de bienvenue apparaissent en fondu avec un très léger mouvement vers le haut (6 dp, 450 ms).
+  // Lancée une seule fois au montage : les mises à jour de données ne la relancent pas.
+  const enterLogo = useSharedValue(reduceMotion ? 1 : 0);
+  const enterText = useSharedValue(reduceMotion ? 1 : 0);
+  useEffect(() => {
+    if (reduceMotion) return;
+    const timing = { duration: 450, easing: Easing.out(Easing.cubic) };
+    enterLogo.value = withTiming(1, timing);
+    enterText.value = withDelay(90, withTiming(1, timing));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const logoEnter = useAnimatedStyle(() => ({
+    opacity: enterLogo.value,
+    transform: [{ translateY: (1 - enterLogo.value) * 6 }],
+  }));
+  const textEnter = useAnimatedStyle(() => ({
+    opacity: enterText.value,
+    transform: [{ translateY: (1 - enterText.value) * 6 }],
+  }));
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const logoHeight = screenWidth < 340 ? 40 : screenWidth < 375 ? 46 : 52;
   const showName = screenWidth >= 340;
@@ -215,7 +285,14 @@ export function DashboardHeader({
     <View onLayout={onLayout} style={{ backgroundColor: DARK, overflow: 'hidden' }}>
       {/* Les onglets restent montés : on ne règle la barre d'état (icônes claires) que lorsque l'Accueil est affiché. */}
       {focused ? <StatusBar style="light" /> : null}
-      {size ? <HeroBackdrop width={size.width} height={size.height} /> : null}
+      {size ? (
+        <HeroBackdrop
+          width={size.width}
+          height={size.height}
+          scrollY={scrollY}
+          reduceMotion={reduceMotion}
+        />
+      ) : null}
 
       <View
         style={{
@@ -226,12 +303,15 @@ export function DashboardHeader({
         }}
       >
         <View className="flex-row items-center justify-between" style={{ minHeight: 48, gap: 12 }}>
-          <View
+          <Animated.View
             accessible
             accessibilityRole="image"
             accessibilityLabel="M3ak"
-            className="shrink flex-row items-center"
-            style={{ gap: 8 }}
+            // Mise en page en style (et non en classe) : les classes ne s'appliquent pas au conteneur animé.
+            style={[
+              { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+              logoEnter,
+            ]}
           >
             <LogoMark height={logoHeight} />
             {showName ? (
@@ -274,7 +354,7 @@ export function DashboardHeader({
                 ) : null}
               </View>
             ) : null}
-          </View>
+          </Animated.View>
           <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
             <HeaderIconButton
               icon="search-outline"
@@ -286,7 +366,7 @@ export function DashboardHeader({
           </View>
         </View>
 
-        <View style={{ marginTop: 18, maxWidth: '62%' }}>
+        <Animated.View style={[{ marginTop: 18, maxWidth: '62%' }, textEnter]}>
           <ThemedText
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -337,14 +417,14 @@ export function DashboardHeader({
             <Svg width="100%" height="100%" preserveAspectRatio="none">
               <Defs>
                 <LinearGradient id="kh-accent" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor="#9438D8" />
-                  <Stop offset="1" stopColor="#CB83F5" />
+                  <Stop offset="0" stopColor={CHAMPAGNE} />
+                  <Stop offset="1" stopColor={CHAMPAGNE_LIGHT} />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#kh-accent)" />
             </Svg>
           </View>
-        </View>
+        </Animated.View>
 
         <View style={{ marginTop: TABS_GAP + 6 }}>
           <PeriodTabs value={period} onChange={onPeriodChange} />

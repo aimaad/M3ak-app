@@ -203,6 +203,7 @@ export default function AccueilScreen() {
               period={period}
               onPeriodChange={setPeriod}
               onHeight={setHeroHeight}
+              scrollY={scrollY}
             />
             {isLoading ? (
               <View className="items-center justify-center" style={{ paddingVertical: 48 }}>
