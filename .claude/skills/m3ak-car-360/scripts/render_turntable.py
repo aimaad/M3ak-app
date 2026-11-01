@@ -55,6 +55,7 @@ def parse_args():
     p.add_argument('--paint-color', default='#3D1B57', help='couleur de fond de la peinture (violet aubergine) ; les reflets rosés et orangés viennent de l’environnement')
     p.add_argument('--env-strength', type=float, default=0.55, help="intensité de l'environnement (reflets et lumière ambiante)")
     p.add_argument('--light-scale', type=float, default=0.6, help='multiplicateur des trois lumières de studio')
+    p.add_argument('--device', default='auto', choices=['auto', 'cpu', 'gpu'], help='auto : carte graphique si Cycles en trouve une (beaucoup plus rapide), sinon processeur')
     p.add_argument('--dry-run', action='store_true', help='analyse le modèle et les matériaux, sans rendre')
     p.add_argument('--only-frames', type=str, default='', help='ex. 0,45,90,135 : ne rend que ces images (contrôle rapide)')
     return p.parse_args(argv)
@@ -290,6 +291,32 @@ def add_area_light(name, location, target, energy, size, color):
     return obj
 
 
+def select_device(scene, mode):
+    """Choisit la carte graphique (OptiX/CUDA/HIP/Metal/oneAPI) si elle existe, sinon le processeur. Ne plante jamais : en cas de
+    doute, on retombe sur le processeur."""
+    scene.cycles.device = 'CPU'
+    if mode == 'cpu':
+        return 'CPU'
+    try:
+        prefs = bpy.context.preferences.addons['cycles'].preferences
+        for backend in ('OPTIX', 'CUDA', 'HIP', 'METAL', 'ONEAPI'):
+            try:
+                prefs.compute_device_type = backend
+            except TypeError:
+                continue                                  # ce type de carte n'est pas pris en charge par cette version de Blender
+            prefs.get_devices()
+            gpus = [d for d in prefs.devices if d.type != 'CPU']
+            if gpus:
+                for device in prefs.devices:
+                    device.use = device.type != 'CPU'
+                scene.cycles.device = 'GPU'
+                return 'GPU ' + backend + ' : ' + ', '.join(d.name for d in gpus)
+    except Exception as error:                            # noqa: BLE001 - jamais bloquant
+        print('Carte graphique non utilisable, retour au processeur :', error)
+    scene.cycles.device = 'CPU'
+    return 'CPU'
+
+
 # -------------------------------------------------------------------------------------------------------------------- main
 def main():
     a = parse_args()
@@ -376,7 +403,7 @@ def main():
 
     # --- rendu : Cycles, fond transparent, débruitage, colorimétrie AgX (ou Filmic selon la version).
     scene.render.engine = 'CYCLES'
-    scene.cycles.device = 'CPU'
+    print('Rendu sur :', select_device(scene, a.device))
     scene.cycles.samples = a.samples
     scene.cycles.use_denoising = True
     scene.cycles.use_adaptive_sampling = True

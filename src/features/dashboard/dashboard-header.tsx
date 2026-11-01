@@ -31,6 +31,9 @@ import { PeriodTabs } from './period-tabs';
 import { CAR_BOX, CAR_FRAMES, HERO_BACKGROUND_NO_CAR } from './showroom/car-frames';
 import { isShowroomAvailable } from './showroom/showroom-math';
 import { ShowroomCar } from './showroom/showroom-car';
+import { TURNTABLE_BOX, TURNTABLE_VIDEO } from './turntable/turntable-assets';
+import { isTurntableAvailable, turntableLayout } from './turntable/turntable-math';
+import { TurntableVideo } from './turntable/turntable-video';
 
 const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
 // Version éclaircie du logo, sur fond transparent : lisible directement sur le fond sombre (sans pastille).
@@ -125,7 +128,11 @@ function HeroBackdrop({
   // Sinon (aujourd'hui), la photo fixe est affichée, exactement comme avant.
   const [carReady, setCarReady] = useState(false);
   const [carFailed, setCarFailed] = useState(false);
+  // Vidéo 360° (rendu du vrai modèle 3D) : prioritaire sur la séquence d'images, elle-même prioritaire sur la photo fixe.
+  const [videoFailed, setVideoFailed] = useState(false);
+  const turntable = isTurntableAvailable(TURNTABLE_VIDEO) && !videoFailed && !reduceMotion;
   const showroom =
+    !turntable &&
     isShowroomAvailable(CAR_FRAMES.length, HERO_BACKGROUND_NO_CAR !== null) &&
     !carFailed &&
     !reduceMotion;
@@ -171,6 +178,21 @@ function HeroBackdrop({
           style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
           accessible={false}
         />
+        {turntable && TURNTABLE_VIDEO !== null ? (
+          // Même cadre que la photo : la vidéo (qui contient le décor sans voiture) recouvre l'ancienne voiture et suit la parallaxe.
+          <View
+            pointerEvents="none"
+            style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
+          >
+            <TurntableVideo
+              source={TURNTABLE_VIDEO}
+              layout={turntableLayout(imageWidth, imageHeight, TURNTABLE_BOX)}
+              scrollY={scrollY}
+              heroHeight={height}
+              onFail={() => setVideoFailed(true)}
+            />
+          </View>
+        ) : null}
         {showroom ? (
           // Même cadre que la photo : la voiture animée suit donc son décalage, son échelle et la parallaxe.
           <View

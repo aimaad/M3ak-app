@@ -28,6 +28,7 @@
     "expo-splash-screen": "~58.0.11",
     "expo-status-bar": "~58.0.4",
     "expo-system-ui": "~58.0.6",
+    "expo-video": "~58.0.13",
     "i18next": "^26.4.2",
     "nativewind": "^4.2.7",
     "react": "19.3.0",
