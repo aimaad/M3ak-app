@@ -1657,7 +1657,7 @@
   },
   "accueil": {
     "header": {
-      "tagline": "Gérez votre agence de location de manière intelligente et efficace.",
+      "tagline": "Votre agence, sous contrôle.",
       "greeting": "Bonjour {{name}} 👋",
       "greetingNoName": "Bonjour 👋",
       "search": "Poser une question à M3ak",
