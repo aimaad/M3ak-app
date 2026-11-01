@@ -24,7 +24,7 @@ const LABEL_KEY: Record<DashboardPeriod, string> = {
 
 /** Durée de la transition d'un bouton à l'autre : fluide, sans rebond. */
 const TRANSITION_MS = 220;
-const FILL = { position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 } as const;
+const FILL = { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 } as const;
 
 /**
  * Un bouton de période. Le « violet verre » du bouton choisi (dégradé, reflet, liseré, halo) apparaît en fondu pendant que
@@ -81,57 +81,37 @@ function PeriodTab({
         accessibilityState={{ selected }}
         accessibilityLabel={label}
         className="flex-row items-center justify-center"
-        style={{ flex: 1, borderRadius: 21, gap: 7, paddingHorizontal: 8 }}
+        style={{ flex: 1, borderRadius: 21, overflow: 'hidden', gap: 7, paddingHorizontal: 8 }}
       >
-        {/* Calques fixés aux quatre bords : sans cela le violet démarrerait après les marges du bouton. */}
-        <Animated.View pointerEvents="none" style={[FILL, { borderRadius: 21 }, pillStyle]}>
-          <View style={[FILL, { borderRadius: 21, overflow: 'hidden' }]}>
-            <Svg width="100%" height="100%" preserveAspectRatio="none" style={FILL}>
-              <Defs>
-                <LinearGradient id="kp-selected" x1="0" y1="0" x2="1" y2="1">
-                  <Stop offset="0" stopColor="#B96AF6" />
-                  <Stop offset="0.55" stopColor="#9A45E2" />
-                  <Stop offset="1" stopColor="#8433CF" />
-                </LinearGradient>
-                <LinearGradient id="kp-shine" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.46" />
-                  <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity="0.07" />
-                  <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-                </LinearGradient>
-              </Defs>
-              <Rect width="100%" height="100%" fill="url(#kp-selected)" />
-              <Rect width="100%" height="55%" fill="url(#kp-shine)" />
-            </Svg>
-          </View>
-          {/* Reflet intérieur très discret : un filet clair en haut et un liseré fin à l'intérieur du contour. */}
-          <View
-            style={{
-              position: 'absolute',
-              top: 2,
-              start: 14,
-              end: 14,
-              height: 1,
-              borderRadius: 1,
-              backgroundColor: 'rgba(255,255,255,0.5)',
-            }}
-          />
+        {/* Un seul bord. Le dégradé couvre tout le bouton (le bouton rogne aux coins arrondis) puis un unique liseré clair le
+            souligne : plus de double trait ni de marge entre le violet et le bord. */}
+        <Animated.View pointerEvents="none" style={[FILL, pillStyle]}>
+          <Svg width="100%" height="100%" preserveAspectRatio="none" style={FILL}>
+            <Defs>
+              <LinearGradient id="kp-selected" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0" stopColor="#BE78F8" />
+                <Stop offset="0.5" stopColor="#9946E2" />
+                <Stop offset="1" stopColor="#7F2FCA" />
+              </LinearGradient>
+              <LinearGradient id="kp-shine" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.4" />
+                <Stop offset="0.6" stopColor="#FFFFFF" stopOpacity="0.08" />
+                <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
+              </LinearGradient>
+              <LinearGradient id="kp-rim" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0" />
+                <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.16" />
+              </LinearGradient>
+            </Defs>
+            <Rect width="100%" height="100%" fill="url(#kp-selected)" />
+            <Rect width="100%" height="52%" fill="url(#kp-shine)" />
+            <Rect y="72%" width="100%" height="28%" fill="url(#kp-rim)" />
+          </Svg>
           <View
             style={[
               FILL,
-              { borderRadius: 21, borderWidth: 1, borderColor: 'rgba(255,255,255,0.7)' },
+              { borderRadius: 21, borderWidth: 1, borderColor: 'rgba(255,255,255,0.55)' },
             ]}
-          />
-          <View
-            style={{
-              position: 'absolute',
-              top: 2,
-              bottom: 2,
-              start: 2,
-              end: 2,
-              borderRadius: 19,
-              borderWidth: 1,
-              borderColor: 'rgba(255,255,255,0.12)',
-            }}
           />
         </Animated.View>
 
