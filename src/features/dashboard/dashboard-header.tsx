@@ -2,7 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, View, type LayoutChangeEvent } from 'react-native';
+import {
+  ActivityIndicator,
+  Image,
+  Pressable,
+  useWindowDimensions,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -23,7 +30,10 @@ import { getInitials } from '@/lib/initials';
 import { headerFirstName } from './header-format';
 
 const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
-const MARK = require('../../../assets/images/logo-m3ak-ribbon.png');
+// Version éclaircie du logo, sur fond transparent : lisible directement sur le mauve profond (sans pastille).
+const MARK = require('../../../assets/images/logo-m3ak-ribbon-light.png');
+/** Proportions du fichier (640 × 373). */
+const MARK_RATIO = 640 / 373;
 
 // Proportions de la photo (1000 × 1094) et position verticale du bas de la voiture dans l'image (≈ 67 %).
 const HERO_RATIO = 1094 / 1000;
@@ -90,21 +100,10 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
   );
 }
 
-/** Logo sur pastille blanche : ses mauves foncés se lisent sur le fond sombre. */
-function LogoTile({ width, height }: { width: number; height: number }) {
+/** Logo sur fond transparent, à la hauteur demandée. */
+function LogoMark({ height }: { height: number }) {
   return (
-    <View
-      className="items-center justify-center"
-      style={{
-        width,
-        height,
-        borderRadius: height * 0.3,
-        padding: height * 0.11,
-        backgroundColor: 'rgba(255,255,255,0.96)',
-      }}
-    >
-      <Image source={MARK} resizeMode="contain" style={{ width: '100%', height: '100%' }} />
-    </View>
+    <Image source={MARK} resizeMode="contain" style={{ width: height * MARK_RATIO, height }} />
   );
 }
 
@@ -150,6 +149,11 @@ export function DashboardHeader({
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const arabic = language === 'ar';
+  const { width: screenWidth } = useWindowDimensions();
+  // Logo grand, mais réduit sur les petits écrans pour laisser la place aux trois boutons ; le nom s'efface sous 340 dp.
+  const logoHeight = screenWidth < 340 ? 52 : 62;
+  const showName = screenWidth >= 340;
+  const showProduct = screenWidth >= 390;
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
   const fullHeight = size?.height ?? FALLBACK_HEIGHT + insets.top;
@@ -254,35 +258,41 @@ export function DashboardHeader({
             accessibilityRole="image"
             accessibilityLabel="M3ak"
             className="shrink flex-row items-center"
-            style={{ gap: 10 }}
+            style={{ gap: 8 }}
           >
-            <LogoTile width={58} height={44} />
-            <View className="shrink">
-              <ThemedText
-                numberOfLines={1}
-                style={{
-                  color: '#FFFFFF',
-                  fontSize: 22,
-                  lineHeight: 26,
-                  letterSpacing: -0.3,
-                  fontFamily: fontFamilyFor('fr', 'extrabold'),
-                }}
-              >
-                M3ak
-              </ThemedText>
-              <ThemedText
-                numberOfLines={1}
-                style={{
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: 10.5,
-                  lineHeight: 13,
-                  letterSpacing: arabic ? 0 : 0.2,
-                  fontFamily: fontFamilyFor(language, 'medium'),
-                }}
-              >
-                {t('accueil.header.product')}
-              </ThemedText>
-            </View>
+            <LogoMark height={logoHeight} />
+            {showName ? (
+              <View className="shrink">
+                <ThemedText
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.7}
+                  style={{
+                    color: '#FFFFFF',
+                    fontSize: 22,
+                    lineHeight: 26,
+                    letterSpacing: -0.3,
+                    fontFamily: fontFamilyFor('fr', 'extrabold'),
+                  }}
+                >
+                  M3ak
+                </ThemedText>
+                {showProduct ? (
+                  <ThemedText
+                    numberOfLines={1}
+                    style={{
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: 10.5,
+                      lineHeight: 13,
+                      letterSpacing: arabic ? 0 : 0.2,
+                      fontFamily: fontFamilyFor(language, 'medium'),
+                    }}
+                  >
+                    {t('accueil.header.product')}
+                  </ThemedText>
+                ) : null}
+              </View>
+            ) : null}
           </View>
           <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
             <HeaderIconButton
@@ -384,7 +394,7 @@ export function DashboardHeader({
           className="shrink flex-row items-center"
           style={{ gap: 10 }}
         >
-          <LogoTile width={46} height={34} />
+          <LogoMark height={40} />
           <ThemedText
             numberOfLines={1}
             style={{
