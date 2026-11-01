@@ -16,7 +16,7 @@ import { getInitials } from '@/lib/initials';
 import { headerFirstName } from './header-format';
 
 const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
-const MARK = require('../../../assets/images/logo-m3ak-mark.png');
+const MARK = require('../../../assets/images/logo-m3ak-ribbon.png');
 
 // Proportions de la photo (1000 × 1094) et position verticale du bas de la voiture dans l'image (≈ 67 %).
 const HERO_RATIO = 1094 / 1000;
@@ -144,7 +144,12 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
           className="shrink flex-row items-center"
           style={{ gap: 10 }}
         >
-          <Image source={MARK} resizeMode="contain" style={{ width: 40, height: 38 }} />
+          <View
+            className="items-center justify-center"
+            style={{ width: 58, height: 44, borderRadius: 13, padding: 5, backgroundColor: 'rgba(255,255,255,0.96)' }}
+          >
+            <Image source={MARK} resizeMode="contain" style={{ width: '100%', height: '100%' }} />
+          </View>
           <View className="shrink">
             <ThemedText
               numberOfLines={1}
