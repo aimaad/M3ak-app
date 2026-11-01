@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Image, Pressable, View, type ImageSourcePropType } from 'react-native';
+import { useState } from 'react';
+import { Image, Pressable, View, type LayoutChangeEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
@@ -12,14 +13,15 @@ import { NotificationBell } from '@/features/notifications/notification-bell';
 import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
-import { formatHeaderDate, headerFirstName } from './header-format';
+import { headerFirstName } from './header-format';
 
-/**
- * Logo officiel Kriha. Tant que le fichier n'est pas fourni, l'en-tête n'affiche que le nom en blanc (aucun logo
- * inventé). Pour le brancher : déposer l'image (fond transparent, version claire) dans `assets/images/` puis écrire
- * `require('@/../assets/images/kriha-logo.png')` ici.
- */
-const KRIHA_LOGO: ImageSourcePropType | null = null;
+const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
+const MARK = require('../../../assets/images/logo-m3ak-mark.png');
+
+// Proportions de la photo (1000 × 1094) et position verticale du bas de la voiture dans l'image (≈ 67 %).
+const HERO_RATIO = 1094 / 1000;
+const CAR_BOTTOM = 0.67;
+const HERO_SCALE = 1.1;
 
 type DashboardHeaderProps = {
   /** Prénom du profil (peut manquer). */
@@ -31,25 +33,37 @@ type DashboardHeaderProps = {
   avatarPath?: string | null;
 };
 
-const BUTTON_SIZE = 44;
-
-/** Fond : vert forêt avec une profondeur très discrète (dégradé diagonal + halo doux en haut), sans dépendance de plus. */
-function HeaderBackdrop() {
+/**
+ * Photo du hero : voiture calée en bas à droite (côté « fin » du texte, donc à gauche en arabe), sans déformation.
+ * Un voile sombre dégradé garantit la lisibilité du texte à gauche et des boutons en haut.
+ */
+function HeroBackdrop({ width, height }: { width: number; height: number }) {
+  // Photo légèrement plus large que l'écran, calée à droite : toute la voiture reste visible.
+  const imageWidth = width * HERO_SCALE;
+  const imageHeight = imageWidth * HERO_RATIO;
+  const top = Math.min(0, height - 16 - CAR_BOTTOM * imageHeight);
   return (
     <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}>
-      <Svg width="100%" height="100%" preserveAspectRatio="none">
+      <Image
+        source={HERO_IMAGE}
+        resizeMode="cover"
+        style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
+        accessible={false}
+      />
+      <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
         <Defs>
-          <LinearGradient id="kh-base" x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor="#064E3B" />
-            <Stop offset="1" stopColor="#075E46" />
+          <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor="#0B0716" stopOpacity="0.9" />
+            <Stop offset="0.55" stopColor="#0B0716" stopOpacity="0.5" />
+            <Stop offset="1" stopColor="#0B0716" stopOpacity="0.05" />
           </LinearGradient>
-          <RadialGradient id="kh-glow" cx="0.9" cy="0" rx="0.75" ry="0.9" fx="0.9" fy="0">
-            <Stop offset="0" stopColor="#34D399" stopOpacity="0.16" />
-            <Stop offset="1" stopColor="#34D399" stopOpacity="0" />
-          </RadialGradient>
+          <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#0B0716" stopOpacity="0.55" />
+            <Stop offset="0.5" stopColor="#0B0716" stopOpacity="0" />
+          </LinearGradient>
         </Defs>
-        <Rect width="100%" height="100%" fill="url(#kh-base)" />
-        <Rect width="100%" height="100%" fill="url(#kh-glow)" />
+        <Rect width="100%" height="100%" fill="url(#kh-side)" />
+        <Rect width="100%" height="100%" fill="url(#kh-top)" />
       </Svg>
     </View>
   );
@@ -70,7 +84,7 @@ function HeaderIconButton({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      className="h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 active:bg-white/20"
+      className="h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/25 active:bg-white/25"
     >
       <Ionicons name={icon} size={21} color="#FFFFFF" />
     </Pressable>
@@ -78,58 +92,85 @@ function HeaderIconButton({
 }
 
 /**
- * En-tête du tableau de bord : fond vert forêt qui monte sous la barre d'état (zone de sécurité comprise), marque,
- * trois actions rondes alignées (question à Kriha, notifications, profil), puis date, salutation et agence.
- * Aucune largeur fixe : tout se réduit ou se coupe proprement jusqu'à 320 dp.
+ * En-tête « hero » du tableau de bord : photo, logo M3ak, trois actions rondes (question à M3ak, notifications, profil),
+ * puis agence, salutation et phrase d'accroche. Rien n'a de largeur fixe : le texte se réduit ou se coupe proprement
+ * jusqu'à 320 dp, et la photo s'adapte à la largeur de l'écran.
  */
 export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avatarPath }: DashboardHeaderProps) {
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const arabic = language === 'ar';
+  const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+
+  const onLayout = (event: LayoutChangeEvent) => {
+    const { width, height } = event.nativeEvent.layout;
+    setSize((previous) =>
+      previous && Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
+        ? previous
+        : { width, height }
+    );
+  };
 
   const firstName = headerFirstName(prenom, fullName);
   const greeting = firstName
     ? t('accueil.header.greeting', { name: firstName })
     : t('accueil.header.greetingNoName');
   const agencyLine = [agencyName?.trim(), agencyCity?.trim()].filter(Boolean).join(' · ');
-  const dateText = formatHeaderDate(new Date(), language);
 
   return (
     <View
+      onLayout={onLayout}
       style={{
-        backgroundColor: M3akPalette.mauveDeep,
+        backgroundColor: '#0B0716',
         overflow: 'hidden',
         paddingTop: insets.top + 4,
-        paddingBottom: 18,
+        paddingBottom: 104,
         paddingStart: insets.left + 20,
         paddingEnd: insets.right + 20,
         borderBottomStartRadius: 28,
         borderBottomEndRadius: 28,
       }}
     >
-      <HeaderBackdrop />
+      {size ? <HeroBackdrop width={size.width} height={size.height} /> : null}
       {/* Les onglets restent montés : on ne règle la barre d'état (icônes claires) que lorsque l'Accueil est affiché. */}
       {focused ? <StatusBar style="light" /> : null}
 
-      <View className="flex-row items-center justify-between" style={{ minHeight: BUTTON_SIZE, gap: 12 }}>
-        <View accessible accessibilityRole="image" accessibilityLabel="Kriha" className="shrink flex-row items-center">
-          {KRIHA_LOGO ? (
-            <Image source={KRIHA_LOGO} resizeMode="contain" style={{ height: 28, width: 96 }} />
-          ) : (
+      <View className="flex-row items-center justify-between" style={{ minHeight: 44, gap: 12 }}>
+        <View
+          accessible
+          accessibilityRole="image"
+          accessibilityLabel="M3ak"
+          className="shrink flex-row items-center"
+          style={{ gap: 10 }}
+        >
+          <Image source={MARK} resizeMode="contain" style={{ width: 40, height: 38 }} />
+          <View className="shrink">
             <ThemedText
               numberOfLines={1}
               style={{
                 color: '#FFFFFF',
-                fontSize: 24,
-                lineHeight: 30,
-                letterSpacing: arabic ? 0 : -0.4,
+                fontSize: 22,
+                lineHeight: 26,
+                letterSpacing: -0.3,
                 fontFamily: fontFamilyFor('fr', 'extrabold'),
               }}
             >
-              Kriha
+              M3ak
             </ThemedText>
-          )}
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 10.5,
+                lineHeight: 13,
+                letterSpacing: arabic ? 0 : 0.2,
+                fontFamily: fontFamilyFor(language, 'medium'),
+              }}
+            >
+              {t('accueil.header.product')}
+            </ThemedText>
+          </View>
         </View>
         <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
           <HeaderIconButton
@@ -142,27 +183,29 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
             onPress={() => router.push('/profil')}
             accessibilityRole="button"
             accessibilityLabel={t('accueil.header.profile')}
-            className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/15 active:border-emerald"
+            className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-emerald"
           >
-            <Avatar path={avatarPath} size={BUTTON_SIZE - 4} initials={getInitials(fullName ?? firstName)} />
+            <Avatar path={avatarPath} size={40} initials={getInitials(fullName ?? firstName)} />
           </Pressable>
         </View>
       </View>
 
-      <View style={{ marginTop: 16 }}>
-        <ThemedText
-          numberOfLines={1}
-          style={{
-            color: 'rgba(255,255,255,0.62)',
-            fontSize: 12,
-            lineHeight: 16,
-            letterSpacing: arabic ? 0 : 0.6,
-            textTransform: arabic ? 'none' : 'uppercase',
-            fontFamily: fontFamilyFor(language, 'semibold'),
-          }}
-        >
-          {dateText}
-        </ThemedText>
+      <View style={{ marginTop: 18, maxWidth: '78%' }}>
+        {agencyLine ? (
+          <ThemedText
+            numberOfLines={1}
+            style={{
+              color: 'rgba(255,255,255,0.7)',
+              fontSize: 12,
+              lineHeight: 16,
+              letterSpacing: arabic ? 0 : 0.5,
+              textTransform: arabic ? 'none' : 'uppercase',
+              fontFamily: fontFamilyFor(language, 'semibold'),
+            }}
+          >
+            {agencyLine}
+          </ThemedText>
+        ) : null}
         <ThemedText
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -171,27 +214,28 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
           style={{
             marginTop: 2,
             color: '#FFFFFF',
-            fontSize: 24,
-            lineHeight: 32,
+            fontSize: 25,
+            lineHeight: 33,
             fontFamily: fontFamilyFor(language, 'bold'),
           }}
         >
           {greeting}
         </ThemedText>
-        {agencyLine ? (
-          <ThemedText
-            numberOfLines={1}
-            style={{
-              marginTop: 2,
-              color: '#A7F3D0',
-              fontSize: 14,
-              lineHeight: 20,
-              fontFamily: fontFamilyFor(language, 'semibold'),
-            }}
-          >
-            {agencyLine}
-          </ThemedText>
-        ) : null}
+        <ThemedText
+          numberOfLines={2}
+          style={{
+            marginTop: 4,
+            color: 'rgba(255,255,255,0.86)',
+            fontSize: 13.5,
+            lineHeight: 19,
+            fontFamily: fontFamilyFor(language, 'medium'),
+          }}
+        >
+          {t('accueil.header.tagline')}
+        </ThemedText>
+        <View
+          style={{ marginTop: 10, width: 28, height: 3, borderRadius: 2, backgroundColor: M3akPalette.emerald }}
+        />
       </View>
     </View>
   );

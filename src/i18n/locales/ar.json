@@ -1693,6 +1693,8 @@
   },
   "accueil": {
     "header": {
+      "tagline": "سيّر وكالة كراء السيارات ديالك بذكاء وفعالية.",
+      "product": "نظام تسيير كراء السيارات",
       "greeting": "مرحباً، {{name}} 👋",
       "greetingNoName": "مرحباً 👋",
       "search": "اسأل Kriha",

@@ -1,4 +1,4 @@
-import { badgeLabel, formatHeaderDate, headerFirstName } from '../header-format';
+import { badgeLabel, headerFirstName } from '../header-format';
 
 describe('headerFirstName', () => {
   it('préfère le prénom du profil', () => {
@@ -10,15 +10,6 @@ describe('headerFirstName', () => {
   it('renvoie une chaîne vide sans donnée', () => {
     expect(headerFirstName(undefined, null)).toBe('');
     expect(headerFirstName('  ', '  ')).toBe('');
-  });
-});
-
-describe('formatHeaderDate', () => {
-  it('formate en français avec majuscule', () => {
-    expect(formatHeaderDate(new Date(2026, 9, 30, 12), 'fr')).toBe('Vendredi 30 octobre');
-  });
-  it('produit un texte non vide en arabe', () => {
-    expect(formatHeaderDate(new Date(2026, 9, 30, 12), 'ar').length).toBeGreaterThan(3);
   });
 });
 

@@ -31,7 +31,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
       }
       className={
         onForest
-          ? 'h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 active:bg-white/20'
+          ? 'h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/25 active:bg-white/25'
           : 'h-10 w-10 items-center justify-center rounded-full bg-white'
       }
     >
@@ -49,7 +49,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
             end: onForest ? -2 : -4,
             height: 20,
             borderWidth: onForest ? 2 : 0,
-            borderColor: M3akPalette.mauveDeep,
+            borderColor: onForest ? '#0B0716' : M3akPalette.mauveDeep,
           }}
         >
           <ThemedText type="small" style={{ color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '700' }}>
