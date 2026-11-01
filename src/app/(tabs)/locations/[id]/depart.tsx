@@ -197,7 +197,7 @@ export default function DepartScreen() {
               })}
             </View>
             {touched && contractErrors.etatDepart ? (
-              <ThemedText type="small" style={{ color: '#DC2626' }}>
+              <ThemedText type="small" style={{ color: '#A83C4B' }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -235,7 +235,7 @@ export default function DepartScreen() {
           />
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#DC2626' }}>
+            <ThemedText type="small" style={{ color: '#A83C4B' }}>
               {error}
             </ThemedText>
           ) : null}

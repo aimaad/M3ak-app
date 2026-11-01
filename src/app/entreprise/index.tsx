@@ -334,7 +334,7 @@ function EntrepriseForm({
           />
 
           {feedback ? (
-            <ThemedText type="small" style={{ color: feedback.type === 'success' ? '#15803D' : '#DC2626' }}>
+            <ThemedText type="small" style={{ color: feedback.type === 'success' ? '#116B54' : '#C55461' }}>
               {feedback.message}
             </ThemedText>
           ) : null}

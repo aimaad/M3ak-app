@@ -229,7 +229,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
 
               {analyzed ? (
                 <Card className="gap-3">
-                  <ThemedText type="subtitle" style={{ color: type === 'retour' && counts.nouveaux > 0 ? '#B91C1C' : '#15803D' }}>
+                  <ThemedText type="subtitle" style={{ color: type === 'retour' && counts.nouveaux > 0 ? '#A83C4B' : '#116B54' }}>
                     {type === 'retour'
                       ? counts.nouveaux > 0
                         ? t('inspection.analysis.summary.new', { count: counts.nouveaux })
@@ -251,12 +251,12 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
                     </ThemedText>
                   ) : null}
                   {type === 'retour' && !hasDepart ? (
-                    <ThemedText type="small" style={{ color: '#B45309' }}>
+                    <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                       {t('inspection.analysis.summary.notCompared')}
                     </ThemedText>
                   ) : null}
                   {failedZones.length > 0 ? (
-                    <ThemedText type="small" style={{ color: '#B45309' }}>
+                    <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                       {t('inspection.analysis.partial', { zones: failedZones.map((zone) => t(`inspection.analysis.zones.${zone}`)).join(', ') })}
                     </ThemedText>
                   ) : null}
@@ -317,7 +317,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
               </View>
 
               {type === 'retour' && pending.length > 0 ? (
-                <ThemedText type="small" style={{ color: '#B45309' }}>
+                <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                   {t('inspection.analysis.summary.pendingDecision', { count: pending.length })}
                 </ThemedText>
               ) : null}

@@ -58,7 +58,7 @@ export function buildAuditHtml(input: AuditPdfInput): string {
       td { padding: 6px; border-bottom: 1px solid #E4DCF5; vertical-align: top; }
       .nowrap { white-space: nowrap; }
       .muted { color: #5E5575; font-size: 10px; }
-      .warn { margin-top: 10px; padding: 8px; background: #FEF3C7; color: #78350F; font-size: 11px; }
+      .warn { margin-top: 10px; padding: 8px; background: #FBF1DE; color: #78350F; font-size: 11px; }
       .footer { margin-top: 18px; color: #5E5575; font-size: 10px; }
     </style>
   </head>

@@ -32,7 +32,7 @@ export function TextField({ label, optional, error, warning, className, containe
         accessibilityLabel={rest.accessibilityLabel ?? shownLabel}
         aria-invalid={error ? true : undefined}
         className={`rounded-2xl border px-4 py-3 text-base text-ink ${
-          error ? 'border-[#DC2626]' : warning ? 'border-[#F59E0B]' : focused ? 'border-brand' : 'border-line'
+          error ? 'border-[#C55461]' : warning ? 'border-[#D99835]' : focused ? 'border-brand' : 'border-line'
         } bg-white ${className ?? ''}`}
         onFocus={(event) => {
           setFocused(true);
@@ -45,11 +45,11 @@ export function TextField({ label, optional, error, warning, className, containe
         {...rest}
       />
       {error ? (
-        <ThemedText type="small" accessibilityRole="alert" style={{ color: '#DC2626' }}>
+        <ThemedText type="small" accessibilityRole="alert" style={{ color: '#A83C4B' }}>
           {error}
         </ThemedText>
       ) : warning ? (
-        <ThemedText type="small" style={{ color: '#B45309' }}>
+        <ThemedText type="small" style={{ color: '#8A5A0B' }}>
           {warning}
         </ThemedText>
       ) : null}

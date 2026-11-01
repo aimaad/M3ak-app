@@ -60,7 +60,7 @@ export default function NotificationsScreen() {
           right={
             items.length > 0 ? (
               <Pressable onPress={clearAll} hitSlop={8}>
-                <ThemedText type="small" style={{ color: '#DC2626' }}>
+                <ThemedText type="small" style={{ color: '#A83C4B' }}>
                   {t('notifications.clearAll')}
                 </ThemedText>
               </Pressable>

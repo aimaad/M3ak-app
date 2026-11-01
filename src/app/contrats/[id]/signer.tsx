@@ -192,7 +192,7 @@ export default function SignerContratScreen() {
                   loading={preparing}
                   style={{ alignSelf: 'stretch' }}
                 />
-                <ThemedText type="smallBold" style={{ color: reachedEnd ? '#15803D' : '#B45309' }}>
+                <ThemedText type="smallBold" style={{ color: reachedEnd ? '#116B54' : '#8A5A0B' }}>
                   {reachedEnd ? t('contract.sign.readDone') : t('contract.sign.readPending')}
                 </ThemedText>
               </Card>

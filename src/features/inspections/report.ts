@@ -102,10 +102,10 @@ export function buildReportHtml(data: ReportData): string {
   .head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
   .meta{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;margin:8px 0}
   .meta div span{color:#6B6280}
-  .banner{border-radius:10px;padding:10px 12px;margin:10px 0;font-weight:bold;background:${counts.nouveaux > 0 ? '#FEE2E2' : '#DCFCE7'};color:${counts.nouveaux > 0 ? '#991B1B' : '#166534'}}
+  .banner{border-radius:10px;padding:10px 12px;margin:10px 0;font-weight:bold;background:${counts.nouveaux > 0 ? '#F8E6E9' : '#E3F3EE'};color:${counts.nouveaux > 0 ? '#A83C4B' : '#116B54'}}
   table{width:100%;border-collapse:collapse} th,td{border-bottom:1px solid #E4DCF5;padding:5px 6px;text-align:${rtl ? 'right' : 'left'};vertical-align:top}
   th{background:#FAF9FF;font-size:11px} .num{text-align:${rtl ? 'left' : 'right'};white-space:nowrap} .desc{color:#6B6280;font-size:11px}
-  .new{color:#B91C1C;font-weight:bold} .old{color:#B45309} .red{color:#B91C1C} .sum{width:60%;margin-${rtl ? 'right' : 'left'}:auto} .tot td{font-weight:bold;font-size:13px}
+  .new{color:#A83C4B;font-weight:bold} .old{color:#8A5A0B} .red{color:#A83C4B} .sum{width:60%;margin-${rtl ? 'right' : 'left'}:auto} .tot td{font-weight:bold;font-size:13px}
   .pair{page-break-inside:avoid;margin:8px 0} .cap{font-weight:bold;margin-bottom:3px} .imgs{display:flex;gap:8px} figure{margin:0;flex:1} img{width:100%;max-height:200px;object-fit:contain;background:#000;border-radius:6px} figcaption{font-size:10px;color:#6B6280;text-align:center}
   .foot{margin-top:18px;font-size:10px;color:#6B6280}
   </style></head><body>

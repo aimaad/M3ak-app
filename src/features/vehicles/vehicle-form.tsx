@@ -382,8 +382,8 @@ export function VehicleForm({
       />
 
       {submitError ? (
-        <View className="rounded-2xl bg-[#FEE2E2] px-4 py-3">
-          <ThemedText type="small" style={{ color: '#DC2626' }}>
+        <View className="rounded-2xl bg-[#F8E6E9] px-4 py-3">
+          <ThemedText type="small" style={{ color: '#A83C4B' }}>
             {submitError}
           </ThemedText>
         </View>

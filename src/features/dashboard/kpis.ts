@@ -13,7 +13,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 export const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
 export const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
 const addMonths = (date: Date, delta: number) => new Date(date.getFullYear(), date.getMonth() + delta, 1);
-const addDays = (date: Date, delta: number) => new Date(date.getTime() + delta * DAY_MS);
+const addDays = (date: Date, delta: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + delta, date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
 const inRange = (iso: string | null | undefined, from: Date, to: Date) => {
   if (!iso) return false;
   const time = new Date(iso).getTime();
@@ -21,6 +21,36 @@ const inRange = (iso: string | null | undefined, from: Date, to: Date) => {
 };
 const isSameDay = (iso: string | null | undefined, day: Date) => inRange(iso, startOfDay(day), addDays(startOfDay(day), 1));
 const activeVehicles = (vehicles: Vehicle[]) => vehicles.filter((v) => !v.archivedAt);
+
+// ---------------------------------------------------------------- périodes
+
+/** Périodes proposées sur l'accueil : le jour, les 7 derniers jours, les 30 derniers jours (aujourd'hui inclus). */
+export type DashboardPeriod = 'today' | '7d' | '30d';
+/** `month` (mois civil en cours) n'est plus proposé à l'écran : il alimente seulement l'analyse IA, dont le format est fixé côté serveur. */
+export type MetricsPeriod = DashboardPeriod | 'month';
+
+export const DASHBOARD_PERIODS: DashboardPeriod[] = ['today', '7d', '30d'];
+
+export type PeriodRange = {
+  /** Début (inclus) et fin (exclue) de la période. */
+  from: Date;
+  to: Date;
+  /** Période précédente de même durée, pour la comparaison. */
+  previousFrom: Date;
+  previousTo: Date;
+};
+
+export function periodRange(period: MetricsPeriod, now: Date): PeriodRange {
+  const today = startOfDay(now);
+  const tomorrow = addDays(today, 1);
+  if (period === 'month') {
+    const from = startOfMonth(now);
+    return { from, to: addMonths(from, 1), previousFrom: addMonths(from, -1), previousTo: from };
+  }
+  const days = period === 'today' ? 1 : period === '7d' ? 7 : 30;
+  const from = addDays(tomorrow, -days);
+  return { from, to: tomorrow, previousFrom: addDays(from, -days), previousTo: from };
+}
 
 // ---------------------------------------------------------------- argent
 
@@ -37,10 +67,10 @@ export function netCollected(payments: Payment[], from: Date, to: Date): number 
 
 export type RevenueSummary = { current: number; previous: number; changePct: number | null };
 
-export function revenueSummary(payments: Payment[], now: Date): RevenueSummary {
-  const thisMonth = startOfMonth(now);
-  const current = netCollected(payments, thisMonth, addMonths(thisMonth, 1));
-  const previous = netCollected(payments, addMonths(thisMonth, -1), thisMonth);
+/** Encaissé net sur la période et sur la précédente (par défaut : le mois en cours et le mois d'avant). */
+export function revenueSummary(payments: Payment[], now: Date, range: PeriodRange = periodRange('month', now)): RevenueSummary {
+  const current = netCollected(payments, range.from, range.to);
+  const previous = netCollected(payments, range.previousFrom, range.previousTo);
   return { current, previous, changePct: previous > 0 ? Math.round(((current - previous) / previous) * 100) : null };
 }
 
@@ -53,6 +83,17 @@ export function revenueLastMonths(payments: Payment[], months: number, now: Date
     const start = addMonths(startOfMonth(now), -i);
     const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-01`;
     points.push({ date: key, total: netCollected(payments, start, addMonths(start, 1)) });
+  }
+  return points;
+}
+
+/** Encaissements jour par jour sur les `days` derniers jours (aujourd'hui inclus), en ordre chronologique. */
+export function revenueLastDays(payments: Payment[], days: number, now: Date): MonthlyPoint[] {
+  const points: MonthlyPoint[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const start = addDays(startOfDay(now), -i);
+    const key = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+    points.push({ date: key, total: netCollected(payments, start, addDays(start, 1)) });
   }
   return points;
 }
@@ -189,8 +230,9 @@ export type RentalActivity = {
   departuresToday: number;
   returnsToday: number;
   upcoming7Days: number;
-  startedThisMonth: number;
-  cancelledThisMonth: number;
+  /** Locations démarrées et annulées sur la période. */
+  started: number;
+  cancelled: number;
   cancellationRatePct: number;
   averageDurationDays: number | null;
   averageBasket: number | null;
@@ -198,15 +240,13 @@ export type RentalActivity = {
 
 const isNotStarted = (r: Rental) => r.statut === 'confirmee' || r.statut === 'reservee' || r.statut === 'en_attente_confirmation';
 
-export function rentalActivity(rentals: Rental[], now: Date): RentalActivity {
-  const monthStart = startOfMonth(now);
-  const monthEnd = addMonths(monthStart, 1);
+export function rentalActivity(rentals: Rental[], now: Date, range: PeriodRange = periodRange('month', now)): RentalActivity {
   const today = startOfDay(now);
   const inSevenDays = addDays(today, 8);
 
-  const createdThisMonth = rentals.filter((r) => inRange(r.createdAt, monthStart, monthEnd));
-  const cancelled = createdThisMonth.filter((r) => r.statut === 'annulee');
-  const kept = createdThisMonth.filter((r) => r.statut !== 'annulee');
+  const createdInPeriod = rentals.filter((r) => inRange(r.createdAt, range.from, range.to));
+  const cancelled = createdInPeriod.filter((r) => r.statut === 'annulee');
+  const kept = createdInPeriod.filter((r) => r.statut !== 'annulee');
   const durations = kept.map((r) => r.dureeJours).filter((d): d is number => typeof d === 'number' && d > 0);
   const baskets = kept.map((r) => r.prixTotal).filter((p): p is number => typeof p === 'number' && p > 0);
   const average = (values: number[]) => (values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : null);
@@ -218,9 +258,9 @@ export function rentalActivity(rentals: Rental[], now: Date): RentalActivity {
     departuresToday: rentals.filter((r) => isNotStarted(r) && isSameDay(r.dateDebutPrevue, now)).length,
     returnsToday: rentals.filter((r) => r.statut === 'en_cours' && isSameDay(r.dateFinPrevue, now)).length,
     upcoming7Days: rentals.filter((r) => isNotStarted(r) && inRange(r.dateDebutPrevue, addDays(today, 1), inSevenDays)).length,
-    startedThisMonth: rentals.filter((r) => inRange(r.dateDepartReel, monthStart, monthEnd)).length,
-    cancelledThisMonth: cancelled.length,
-    cancellationRatePct: createdThisMonth.length ? Math.round((cancelled.length / createdThisMonth.length) * 100) : 0,
+    started: rentals.filter((r) => inRange(r.dateDepartReel, range.from, range.to)).length,
+    cancelled: cancelled.length,
+    cancellationRatePct: createdInPeriod.length ? Math.round((cancelled.length / createdInPeriod.length) * 100) : 0,
     averageDurationDays: average(durations),
     averageBasket: baskets.length ? Math.round(baskets.reduce((a, b) => a + b, 0) / baskets.length) : null,
   };
@@ -246,39 +286,38 @@ export function balancesToCollectToday(rentals: Rental[], payments: Payment[], n
 
 // ---------------------------------------------------------------- entretien
 
-export type MaintenanceSummary = { overdue: number; due: number; inProgress: number; costThisMonth: number };
+export type MaintenanceSummary = { overdue: number; due: number; inProgress: number; costInPeriod: number };
 
-export function maintenanceSummary(items: MaintenanceItem[], now: Date): MaintenanceSummary {
-  const monthStart = startOfMonth(now);
-  const monthEnd = addMonths(monthStart, 1);
+export function maintenanceSummary(items: MaintenanceItem[], now: Date, range: PeriodRange = periodRange('month', now)): MaintenanceSummary {
   return {
     overdue: items.filter((i) => i.statut === 'en_retard').length,
     due: items.filter((i) => i.statut === 'due').length,
     inProgress: items.filter((i) => i.statut === 'en_cours').length,
-    costThisMonth: items
-      .filter((i) => i.statut === 'effectuee' && i.cout != null && inRange(i.dateIntervention, monthStart, monthEnd))
+    costInPeriod: items
+      .filter((i) => i.statut === 'effectuee' && i.cout != null && inRange(i.dateIntervention, range.from, range.to))
       .reduce((sum, i) => sum + (i.cout ?? 0), 0),
   };
 }
 
-export function newCustomersThisMonth(customers: { createdAt: string; archivedAt: string | null }[], now: Date): number {
-  const monthStart = startOfMonth(now);
-  return customers.filter((c) => !c.archivedAt && inRange(c.createdAt, monthStart, addMonths(monthStart, 1))).length;
+export function newCustomersInRange(customers: { createdAt: string; archivedAt: string | null }[], range: PeriodRange): number {
+  return customers.filter((c) => !c.archivedAt && inRange(c.createdAt, range.from, range.to)).length;
 }
 
 // ---------------------------------------------------------------- tout en un
 
 export type DashboardMetrics = {
+  period: MetricsPeriod;
   fleetTotal: number;
   availableNow: number;
   revenue: RevenueSummary;
+  /** Encaissements en barres : 6 mois (période `month`), sinon les 7 ou 30 derniers jours. */
   revenueTrend: MonthlyPoint[];
   outstanding: { total: number; count: number };
-  occupancyMonthPct: number;
-  performance30d: VehiclePerformance[];
+  occupancyPct: number;
+  performance: VehiclePerformance[];
   underused: VehiclePerformance[];
   topVehicles: VehiclePerformance[];
-  profit30d: number;
+  profit: number;
   activity: RentalActivity;
   toCollectToday: { count: number; total: number };
   maintenance: MaintenanceSummary;
@@ -292,27 +331,36 @@ export function computeDashboardMetrics(input: {
   maintenance: MaintenanceItem[];
   customers: { createdAt: string; archivedAt: string | null }[];
   now?: Date;
+  /** Période des chiffres « sur une durée » (revenus, occupation, résultat…). Par défaut : le mois en cours. */
+  period?: MetricsPeriod;
 }): DashboardMetrics {
   const now = input.now ?? new Date();
+  const period = input.period ?? 'month';
   const fleet = activeVehicles(input.vehicles);
-  const monthStart = startOfMonth(now);
-  const thirtyDaysAgo = addDays(startOfDay(now), -30);
-  const performance30d = vehiclePerformance(input.vehicles, input.rentals, input.payments, input.maintenance, thirtyDaysAgo, addDays(startOfDay(now), 1), now);
+  const range = periodRange(period, now);
+  const tomorrow = addDays(startOfDay(now), 1);
+  // L'occupation et la performance ne regardent jamais le futur ; pour `month` la performance garde sa fenêtre historique de 30 jours.
+  const performanceFrom = period === 'month' ? addDays(startOfDay(now), -30) : range.from;
+  const performance = vehiclePerformance(input.vehicles, input.rentals, input.payments, input.maintenance, performanceFrom, tomorrow, now);
 
   return {
+    period,
     fleetTotal: fleet.length,
     availableNow: fleet.filter((v) => v.statut === 'disponible').length,
-    revenue: revenueSummary(input.payments, now),
-    revenueTrend: revenueLastMonths(input.payments, 6, now),
+    revenue: revenueSummary(input.payments, now, range),
+    revenueTrend:
+      period === 'month'
+        ? revenueLastMonths(input.payments, 6, now)
+        : revenueLastDays(input.payments, period === '30d' ? 30 : 7, now),
     outstanding: outstandingBalances(input.rentals, input.payments),
-    occupancyMonthPct: occupancyRate(input.vehicles, input.rentals, monthStart, addDays(startOfDay(now), 1), now),
-    performance30d,
-    underused: underusedVehicles(performance30d),
-    topVehicles: topVehiclesByRevenue(performance30d),
-    profit30d: performance30d.reduce((sum, p) => sum + p.profit, 0),
-    activity: rentalActivity(input.rentals, now),
+    occupancyPct: occupancyRate(input.vehicles, input.rentals, range.from, tomorrow, now),
+    performance,
+    underused: underusedVehicles(performance),
+    topVehicles: topVehiclesByRevenue(performance),
+    profit: performance.reduce((sum, p) => sum + p.profit, 0),
+    activity: rentalActivity(input.rentals, now, range),
     toCollectToday: balancesToCollectToday(input.rentals, input.payments, now),
-    maintenance: maintenanceSummary(input.maintenance, now),
-    newCustomers: newCustomersThisMonth(input.customers, now),
+    maintenance: maintenanceSummary(input.maintenance, now, range),
+    newCustomers: newCustomersInRange(input.customers, range),
   };
 }

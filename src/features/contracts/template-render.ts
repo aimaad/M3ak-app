@@ -176,9 +176,9 @@ export function gaugeSvg(percent: number | null): string {
   const angle = Math.PI * (1 - percent / 100);
   const x = (80 + 58 * Math.cos(angle)).toFixed(1);
   const y = (70 - 58 * Math.sin(angle)).toFixed(1);
-  const needle = `<line x1="80" y1="70" x2="${x}" y2="${y}" stroke="#B91C1C" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#B91C1C"/>`;
-  const arc = percent > 0 ? `<path d="M16 70 A64 64 0 0 1 ${(80 + 64 * Math.cos(angle)).toFixed(1)} ${(70 - 64 * Math.sin(angle)).toFixed(1)}" fill="none" stroke="#B91C1C" stroke-width="5" opacity="0.35"/>` : '';
-  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke={M3akPalette.ink} stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill="#B91C1C">${Math.round(percent)} %</text></svg>`;
+  const needle = `<line x1="80" y1="70" x2="${x}" y2="${y}" stroke="#A83C4B" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#A83C4B"/>`;
+  const arc = percent > 0 ? `<path d="M16 70 A64 64 0 0 1 ${(80 + 64 * Math.cos(angle)).toFixed(1)} ${(70 - 64 * Math.sin(angle)).toFixed(1)}" fill="none" stroke="#A83C4B" stroke-width="5" opacity="0.35"/>` : '';
+  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke={M3akPalette.ink} stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill="#A83C4B">${Math.round(percent)} %</text></svg>`;
 }
 
 
@@ -212,7 +212,7 @@ const CSS = `
   .boxbody { padding: 4px 6px; }
   .frow { display: flex; gap: 4px; padding: 1.5px 0; align-items: baseline; }
   .flabel { white-space: nowrap; font-size: 9.5px; }
-  .fvalue { flex: 1; border-bottom: 1px dotted #7A7090; min-height: 12px; font-weight: bold; color: #1D3FA8; font-size: 9.5px; }
+  .fvalue { flex: 1; border-bottom: 1px dotted #7A7090; min-height: 12px; font-weight: bold; color: #3F62AD; font-size: 9.5px; }
   .boxtext { font-size: 7.5px; line-height: 1.3; text-align: justify; }
   .pair { display: flex; gap: 8px; align-items: stretch; }
   .pair > * { flex: 1; min-width: 0; }

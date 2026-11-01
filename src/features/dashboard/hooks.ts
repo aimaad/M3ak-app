@@ -12,33 +12,37 @@ import { useVehicles } from '@/features/vehicles/hooks';
 import { buildInsightsPayload, type AiInsights, type InsightsLanguage } from './insights';
 import { fetchInsights } from './insights-api';
 import { insightsCacheKey, readInsightsCache, writeInsightsCache } from './insights-cache';
-import { computeDashboardMetrics } from './kpis';
+import { computeDashboardMetrics, type DashboardPeriod } from './kpis';
 
 const EMPTY: never[] = [];
 
 /** Toutes les données de l'accueil (déjà filtrées par la sécurité du serveur) et les indicateurs calculés. */
-export function useDashboardMetrics() {
+export function useDashboardMetrics(period: DashboardPeriod = 'today') {
   const vehicles = useVehicles();
   const rentals = useRentals();
   const payments = useAllPayments();
   const maintenance = useMaintenanceItems();
   const customers = useCustomers();
 
-  const metrics = useMemo(
-    () =>
-      computeDashboardMetrics({
-        vehicles: vehicles.data ?? EMPTY,
-        rentals: rentals.data ?? EMPTY,
-        payments: payments.data ?? EMPTY,
-        maintenance: maintenance.data ?? EMPTY,
-        customers: customers.data ?? EMPTY,
-      }),
-    [vehicles.data, rentals.data, payments.data, maintenance.data, customers.data]
-  );
+  const { metrics, insightsMetrics } = useMemo(() => {
+    const input = {
+      vehicles: vehicles.data ?? EMPTY,
+      rentals: rentals.data ?? EMPTY,
+      payments: payments.data ?? EMPTY,
+      maintenance: maintenance.data ?? EMPTY,
+      customers: customers.data ?? EMPTY,
+    };
+    return {
+      metrics: computeDashboardMetrics({ ...input, period }),
+      // L'analyse IA garde son format (mois en cours) quelle que soit la période choisie à l'écran : changer de période ne la relance pas.
+      insightsMetrics: computeDashboardMetrics({ ...input, period: 'month' }),
+    };
+  }, [vehicles.data, rentals.data, payments.data, maintenance.data, customers.data, period]);
 
   const queries = [vehicles, rentals, payments, maintenance, customers];
   return {
     metrics,
+    insightsMetrics,
     vehicles: vehicles.data ?? EMPTY,
     maintenanceItems: maintenance.data ?? EMPTY,
     customers: customers.data ?? EMPTY,

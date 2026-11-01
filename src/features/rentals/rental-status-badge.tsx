@@ -8,12 +8,12 @@ import { M3akPalette } from '@/constants/theme';
 
 /** Couleurs des statuts, partagées avec le calendrier : même statut, même couleur partout. */
 export const RENTAL_STATUS_STYLES: Record<RentalStatus, { background: string; text: string; dot: string }> = {
-  en_attente_confirmation: { background: '#FEF3C7', text: '#92400E', dot: '#F59E0B' },
-  confirmee: { background: '#DBEAFE', text: '#1D4ED8', dot: '#2563EB' },
-  reservee: { background: '#DBEAFE', text: '#1D4ED8', dot: '#2563EB' },
-  en_cours: { background: M3akPalette.mauveDeep, text: '#FFFFFF', dot: M3akPalette.emerald },
-  terminee: { background: '#DCFCE7', text: '#166534', dot: '#16A34A' },
-  annulee: { background: '#F1EEF7', text: M3akPalette.muted, dot: M3akPalette.muted },
+  en_attente_confirmation: { background: M3akPalette.warningLight, text: M3akPalette.warningText, dot: M3akPalette.warning },
+  confirmee: { background: M3akPalette.mauveLight, text: M3akPalette.mauveDeep, dot: M3akPalette.mauve },
+  reservee: { background: M3akPalette.mauveLight, text: M3akPalette.mauveDeep, dot: M3akPalette.mauve },
+  en_cours: { background: M3akPalette.infoLight, text: M3akPalette.infoText, dot: M3akPalette.info },
+  terminee: { background: M3akPalette.successLight, text: M3akPalette.successText, dot: M3akPalette.success },
+  annulee: { background: M3akPalette.neutralLight, text: M3akPalette.neutralText, dot: M3akPalette.neutral },
 };
 
 export function RentalStatusBadge({ status }: { status: RentalStatus }) {

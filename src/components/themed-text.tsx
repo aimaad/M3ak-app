@@ -38,7 +38,7 @@ export function ThemedText({ style, type = 'default', themeColor, children, ...r
   );
 }
 
-/** Une graisse par type de texte (les polices Kriha n'ont qu'un fichier par graisse). */
+/** Une graisse par type de texte (les polices M3ak n'ont qu'un fichier par graisse). */
 const WEIGHT_BY_TYPE: Record<NonNullable<ThemedTextProps['type']>, FontWeightName | null> = {
   default: 'medium',
   small: 'medium',

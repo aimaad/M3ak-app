@@ -30,6 +30,6 @@ export const BOOKED_DAY_MARK = {
   disableTouchEvent: true,
   startingDay: true,
   endingDay: true,
-  color: '#FEE2E2',
-  textColor: '#B91C1C',
+  color: '#F8E6E9',
+  textColor: '#A83C4B',
 } as const;

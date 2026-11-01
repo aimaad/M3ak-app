@@ -213,9 +213,9 @@ export default function ClientsScreen() {
 
         <Pressable
           onPress={() => router.push('/clients/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-emerald px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.onEmerald }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.onPrimary }}>
             {`+ ${t('clients.addClient')}`}
           </ThemedText>
         </Pressable>

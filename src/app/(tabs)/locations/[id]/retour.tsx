@@ -162,7 +162,7 @@ export default function RetourScreen() {
               })}
             </View>
             {touched && contractErrors.etatRetour ? (
-              <ThemedText type="small" style={{ color: '#DC2626' }}>
+              <ThemedText type="small" style={{ color: '#A83C4B' }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -179,9 +179,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#DC2626] bg-[#FEE2E2]' : 'border-line bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#C55461] bg-[#F8E6E9]' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#DC2626' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? '#C55461' : M3akPalette.ink }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -200,17 +200,17 @@ export default function RetourScreen() {
           />
 
           {fees && totalFrais > 0 ? (
-            <View className="gap-2 rounded-2xl bg-[#FEF3C7] p-4">
-              <ThemedText type="smallBold" style={{ color: '#B45309' }}>
+            <View className="gap-2 rounded-2xl bg-[#FBF1DE] p-4">
+              <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
                 {t('contract.fields.fraisProposes')}
               </ThemedText>
               {fees.retardMinutes > 0 ? (
-                <ThemedText type="small" style={{ color: '#B45309' }}>
+                <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                   {t('contract.feeRetard', { minutes: fees.retardMinutes, amount: fees.fraisRetard })}
                 </ThemedText>
               ) : null}
               {fees.fraisCarburant > 0 ? (
-                <ThemedText type="small" style={{ color: '#B45309' }}>
+                <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                   {t('contract.feeCarburant', { amount: fees.fraisCarburant })}
                 </ThemedText>
               ) : null}
@@ -229,7 +229,7 @@ export default function RetourScreen() {
           ) : null}
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#DC2626' }}>
+            <ThemedText type="small" style={{ color: '#A83C4B' }}>
               {error}
             </ThemedText>
           ) : null}

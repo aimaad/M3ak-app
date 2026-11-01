@@ -13,7 +13,7 @@ import { DamageEditor, parseCost, type DamageDraft } from './damage-editor';
 import { confidencePercent, effectiveCost, needsCheck, type Damage } from './damages';
 import { usePhotoSignedUrl } from './hooks';
 
-const SEVERITY_COLOR = { leger: '#B45309', modere: '#C2410C', grave: '#B91C1C' } as const;
+const SEVERITY_COLOR = { leger: '#8A5A0B', modere: '#C2410C', grave: '#A83C4B' } as const;
 
 type Props = {
   damage: Damage;
@@ -46,7 +46,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
   const percent = confidencePercent(damage);
   const check = needsCheck(damage);
   const rejected = damage.statut === 'rejete';
-  const color = damage.nouveau ? '#DC2626' : '#D97706';
+  const color = damage.nouveau ? '#C55461' : '#D97706';
 
   async function run(patch: DamagePatch) {
     setSaving(true);
@@ -85,19 +85,19 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       </View>
 
       <View className="flex-row flex-wrap gap-1.5">
-        <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? '#FEE2E2' : '#FEF3C7'} />
+        <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? '#F8E6E9' : '#FBF1DE'} />
         <Badge
           text={t(`inspection.analysis.damages.status.${damage.statut}`)}
-          color={damage.statut === 'confirme' ? '#15803D' : damage.statut === 'rejete' ? '#6B7280' : M3akPalette.mauveDeep}
-          bg={damage.statut === 'confirme' ? '#DCFCE7' : damage.statut === 'rejete' ? '#F3F4F6' : M3akPalette.mauveLight}
+          color={damage.statut === 'confirme' ? '#116B54' : damage.statut === 'rejete' ? '#6B7280' : M3akPalette.mauveDeep}
+          bg={damage.statut === 'confirme' ? '#E3F3EE' : damage.statut === 'rejete' ? '#F3F4F6' : M3akPalette.mauveLight}
         />
-        {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color="#1D4ED8" bg="#DBEAFE" /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
-        {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color="#B45309" bg="#FEF3C7" /> : null}
+        {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color="#3F62AD" bg="#E8EEF9" /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
+        {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color="#8A5A0B" bg="#FBF1DE" /> : null}
       </View>
 
       {damage.description ? <ThemedText type="small">{damage.description}</ThemedText> : null}
       {damage.comparaison === 'retour_seul' && damage.source === 'ia' ? (
-        <ThemedText type="small" style={{ color: '#B45309' }}>
+        <ThemedText type="small" style={{ color: '#8A5A0B' }}>
           {t('inspection.analysis.damages.noDepartPhoto')}
         </ThemedText>
       ) : null}

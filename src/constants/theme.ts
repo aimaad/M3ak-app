@@ -1,51 +1,67 @@
 /**
- * Design system Kriha (vert premium) : voir docs/DESIGN.md et .claude/skills/kriha-ui-designer/references/design-system.md.
+ * Palette officielle M3ak (mauve) : voir docs/DESIGN.md.
  *
- * Les noms historiques (`mauve`, `mauveDeep`…) sont conservés pour ne pas toucher des centaines de lignes : ce sont des
- * RÔLES, pas des couleurs. `mauve` = couleur d'action (texte et icônes sur clair, fond portant du texte blanc) ;
- * `mauveDeep` = vert forêt (cartes vedettes, titres). L'émeraude vif `emerald` est réservé au bouton principal, avec
- * du texte très foncé (`onEmerald`) car du blanc sur `#00B884` n'atteint que 2,56:1.
+ * Les noms historiques (`mauve`, `mauveDeep`…) sont des RÔLES : `mauve` = mauve signature (boutons, navigation, texte et
+ * icônes d'action), `mauveDeep` = mauve profond (hero, cartes premium). Les couleurs fonctionnelles (`success`, `info`,
+ * `warning`, `danger`, `neutral`) servent aux pastilles, icônes et fonds ; pour du TEXTE sur clair on prend la variante
+ * `*Text`, plus foncée (les teintes d'origine n'atteignent pas 4,5:1 sur blanc, l'ambre d'à peine 2,5:1).
  */
 
 import { Platform } from 'react-native';
 
 export const M3akPalette = {
-  /** Action : 5,35:1 avec du texte blanc, 4,73:1 sur la teinte claire. */
-  mauve: '#007A59',
-  /** Vert forêt : cartes vedettes, grands titres, onglet actif (blanc dessus : 9,7:1). */
-  mauveDeep: '#064E3B',
-  mauveLight: '#E3F5EE',
-  mauveSoft: '#EEF7F3',
-  background: '#F5FAF8',
+  /** Mauve signature : boutons, navigation, liens. 7,45:1 avec du texte blanc, 6,9:1 sur le fond ivoire. */
+  mauve: '#684394',
+  /** Mauve profond : hero, cartes premium, onglet actif (blanc dessus : 14:1). */
+  mauveDeep: '#35204F',
+  mauveLight: '#EDE6F3',
+  mauveSoft: '#F3EFF8',
+  /** Lavande douce : accents et éléments secondaires, surtout sur fond sombre (5,8:1 sur le mauve profond). */
+  lavender: '#B69ACF',
+  /** Noir aubergine : fonds sombres et titres. */
+  aubergine: '#171321',
+  /** Blanc ivoire : fond principal. */
+  background: '#F7F5FA',
+  /** Blanc pur : cartes et surfaces. */
   surface: '#FFFFFF',
-  ink: '#172B26',
+  ink: '#171321',
   /** Texte secondaire : au moins 4,5:1 sur blanc, sur le fond et sur les teintes claires. */
-  muted: '#566774',
+  muted: '#625C74',
   /** Icônes et textes d'appoint inactifs : 3:1 sur blanc, jamais pour du texte courant. */
-  subtle: '#778894',
-  border: '#E5EDE9',
-  success: '#15803D',
-  successLight: '#DCFCE7',
-  danger: '#DC2626',
-  dangerLight: '#FEE2E2',
-  warning: '#B45309',
-  warningLight: '#FEF3C7',
-  info: '#2563EB',
-  infoLight: '#DBEAFE',
-  /** Émeraude Kriha : bouton principal, pastille d'onglet, accents sur forêt. Jamais pour du petit texte. */
-  emerald: '#00B884',
-  emeraldPressed: '#008F69',
-  /** Texte sur émeraude : 6,2:1. */
-  onEmerald: '#04271E',
-  /** Accent éditorial sur forêt (5,3:1), à utiliser avec parcimonie. */
-  gold: '#F2B35D',
+  subtle: '#8A849A',
+  border: '#E6E0EE',
+  /** Disponible / succès. */
+  success: '#17856A',
+  successText: '#116B54',
+  successLight: '#E3F3EE',
+  /** En location / information. */
+  info: '#5479C7',
+  infoText: '#3F62AD',
+  infoLight: '#E8EEF9',
+  /** Maintenance / attention (le texte sur ambre est le noir aubergine : 7,4:1). */
+  warning: '#D99835',
+  warningText: '#8A5A0B',
+  warningLight: '#FBF1DE',
+  /** Retard / erreur. */
+  danger: '#C55461',
+  dangerText: '#A83C4B',
+  dangerLight: '#F8E6E9',
+  /** Indisponible / neutre. */
+  neutral: '#9692A3',
+  neutralText: '#625C74',
+  neutralLight: '#EFEEF3',
+  /** Remplissage du bouton principal (même mauve signature) et son état appuyé. */
+  primary: '#684394',
+  primaryPressed: '#563679',
+  /** Texte sur le bouton principal : 7,45:1. */
+  onPrimary: '#FFFFFF',
 } as const;
 
-/** Ombres légères teintées de vert forêt (jamais un gris ou un noir pur) : bordures et espaces d'abord. */
+/** Ombres légères teintées de mauve profond (jamais un gris ou un noir pur) : bordures et espaces d'abord. */
 export const Shadows = {
-  card: { shadowColor: '#064E3B', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  raised: { shadowColor: '#064E3B', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
-  button: { shadowColor: '#00B884', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  card: { shadowColor: '#35204F', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  raised: { shadowColor: '#35204F', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
+  button: { shadowColor: '#684394', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
 } as const;
 
 export const Colors = {
@@ -57,23 +73,23 @@ export const Colors = {
     textSecondary: M3akPalette.muted,
     primary: M3akPalette.mauve,
     accent: M3akPalette.mauveDeep,
-    success: M3akPalette.success,
-    warning: M3akPalette.warning,
-    danger: M3akPalette.danger,
+    success: M3akPalette.successText,
+    warning: M3akPalette.warningText,
+    danger: M3akPalette.dangerText,
     border: M3akPalette.border,
   },
   dark: {
     text: '#F5F2FC',
-    background: '#0E1C18',
-    backgroundElement: '#14261F',
-    backgroundSelected: '#1D3A30',
-    textSecondary: '#94A3B8',
-    primary: M3akPalette.mauve,
-    accent: '#6EE7B7',
+    background: '#171321',
+    backgroundElement: '#211A2E',
+    backgroundSelected: '#35204F',
+    textSecondary: '#B3AEC2',
+    primary: M3akPalette.lavender,
+    accent: M3akPalette.lavender,
     success: '#4ADE80',
-    warning: '#FBBF24',
-    danger: '#F87171',
-    border: '#1F3A32',
+    warning: '#D99835',
+    danger: '#E08A94',
+    border: '#2E2640',
   },
 } as const;
 
@@ -99,7 +115,7 @@ export const Fonts = Platform.select({
 export type FontWeightName = 'medium' | 'semibold' | 'bold' | 'extrabold';
 
 /**
- * Typographie Kriha : Plus Jakarta Sans pour le latin (titres, chiffres), Cairo pour l'arabe (Plus Jakarta n'a pas
+ * Typographie M3ak : Plus Jakarta Sans pour le latin (titres, chiffres), Cairo pour l'arabe (Plus Jakarta n'a pas
  * de glyphes arabes). Un fichier de police par graisse : on ne s'appuie pas sur `fontWeight` avec une police perso.
  */
 export const Typefaces = {

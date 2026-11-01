@@ -57,7 +57,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
             <Ionicons
               name={step.done ? 'checkmark-circle' : 'ellipse-outline'}
               size={24}
-              color={step.done ? '#15803D' : M3akPalette.mauve}
+              color={step.done ? '#116B54' : M3akPalette.mauve}
             />
             <View className="flex-1">
               <ThemedText

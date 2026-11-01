@@ -187,8 +187,8 @@ export default function NouveauContratScreen() {
                 {t('contract.form.departureHelp')}
               </ThemedText>
               {!inspectionDone ? (
-                <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FEF3C7' }}>
-                  <ThemedText type="small" style={{ color: '#92400E' }}>
+                <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FBF1DE' }}>
+                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                     {t('contract.form.inspectionFirst')}
                   </ThemedText>
                   <Button
@@ -243,7 +243,7 @@ export default function NouveauContratScreen() {
               <View className="gap-2">
                 <ThemedText type="small" themeColor="textSecondary">{t('contract.form.damagesTitle')}</ThemedText>
                 {inspectionDone && candidates.length === 0 ? (
-                  <ThemedText type="small" style={{ color: '#15803D' }}>{t('contract.form.noDamages')}</ThemedText>
+                  <ThemedText type="small" style={{ color: '#116B54' }}>{t('contract.form.noDamages')}</ThemedText>
                 ) : null}
                 {candidates.map((damage) => {
                   const included = isIncluded(damage);
@@ -299,7 +299,7 @@ export default function NouveauContratScreen() {
             />
 
             {submitError ? (
-              <ThemedText type="small" style={{ color: '#DC2626' }}>
+              <ThemedText type="small" style={{ color: '#A83C4B' }}>
                 {submitError}
               </ThemedText>
             ) : null}

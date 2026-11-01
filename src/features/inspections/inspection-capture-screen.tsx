@@ -241,7 +241,7 @@ export function InspectionCaptureScreen({
                   <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
                     {t(`inspection.groups.${entry.group}`)}
                   </ThemedText>
-                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#15803D' : M3akPalette.ink }}>
+                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#116B54' : M3akPalette.ink }}>
                     {done}/{entry.angles.length}
                   </ThemedText>
                 </View>
@@ -260,13 +260,13 @@ export function InspectionCaptureScreen({
                     selected
                       ? 'border-brand bg-brand'
                       : done
-                        ? 'border-[#15803D] bg-[#DCFCE7]'
+                        ? 'border-[#116B54] bg-[#E3F3EE]'
                         : 'border-line bg-white'
                   }`}
                 >
                   <ThemedText
                     type="small"
-                    style={{ color: selected ? '#ffffff' : done ? '#15803D' : M3akPalette.ink }}
+                    style={{ color: selected ? '#ffffff' : done ? '#116B54' : M3akPalette.ink }}
                   >
                     {`${done ? '✓ ' : skipped.includes(angle) ? '– ' : ''}${t(`inspection.angles.${angle}`)}`}
                   </ThemedText>

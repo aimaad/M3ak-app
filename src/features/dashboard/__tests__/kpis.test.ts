@@ -6,6 +6,8 @@ import type { Vehicle } from '@/features/vehicles/types';
 import {
   balancesToCollectToday,
   computeDashboardMetrics,
+  periodRange,
+  revenueLastDays,
   maintenanceSummary,
   occupancyRate,
   outstandingBalances,
@@ -120,7 +122,7 @@ describe('activité du comptoir', () => {
 
   it('compte retards, retours et départs du jour, confirmations en attente et annulations', () => {
     const activity = rentalActivity(rentals, NOW);
-    expect(activity).toMatchObject({ active: 2, lateReturns: 1, returnsToday: 1, departuresToday: 1, pendingConfirmation: 1, upcoming7Days: 1, cancelledThisMonth: 1 });
+    expect(activity).toMatchObject({ active: 2, lateReturns: 1, returnsToday: 1, departuresToday: 1, pendingConfirmation: 1, upcoming7Days: 1, cancelled: 1 });
     expect(activity.cancellationRatePct).toBe(Math.round((1 / 5) * 100));
   });
 
@@ -138,7 +140,7 @@ describe('entretien', () => {
       maint('4', { statut: 'effectuee', cout: 450, dateIntervention: iso(2026, 10, 5) }),
       maint('5', { statut: 'effectuee', cout: 900, dateIntervention: iso(2026, 9, 5) }),
     ];
-    expect(maintenanceSummary(items, NOW)).toEqual({ overdue: 1, due: 1, inProgress: 1, costThisMonth: 450 });
+    expect(maintenanceSummary(items, NOW)).toEqual({ overdue: 1, due: 1, inProgress: 1, costInPeriod: 450 });
   });
 });
 
@@ -147,8 +149,114 @@ describe('computeDashboardMetrics', () => {
     const metrics = computeDashboardMetrics({ vehicles: [], rentals: [], payments: [], maintenance: [], customers: [], now: NOW });
     expect(metrics.fleetTotal).toBe(0);
     expect(metrics.revenue).toEqual({ current: 0, previous: 0, changePct: null });
-    expect(metrics.occupancyMonthPct).toBe(0);
+    expect(metrics.occupancyPct).toBe(0);
     expect(metrics.revenueTrend).toHaveLength(6);
     expect(Object.values(metrics.activity).every((v) => v === null || Number.isFinite(v))).toBe(true);
+  });
+});
+
+describe('périodes (aujourd\'hui, 7 jours, 30 jours)', () => {
+  it('délimite chaque période et la période précédente de même durée', () => {
+    const day = periodRange('today', NOW);
+    expect(day.from).toEqual(new Date(2026, 9, 17));
+    expect(day.to).toEqual(new Date(2026, 9, 18));
+    expect(day.previousFrom).toEqual(new Date(2026, 9, 16));
+
+    const week = periodRange('7d', NOW);
+    expect(week.from).toEqual(new Date(2026, 9, 11));
+    expect(week.to).toEqual(new Date(2026, 9, 18));
+    expect(week.previousFrom).toEqual(new Date(2026, 9, 4));
+    expect(week.previousTo).toEqual(week.from);
+
+    const month = periodRange('30d', NOW);
+    expect(month.from).toEqual(new Date(2026, 8, 18));
+    expect(month.previousFrom).toEqual(new Date(2026, 7, 19));
+  });
+
+  const payments = [
+    payment('a', 'r1', 300, iso(2026, 10, 17)), // aujourd'hui
+    payment('b', 'r1', 100, iso(2026, 10, 16)), // hier
+    payment('c', 'r1', 400, iso(2026, 10, 12)), // dans les 7 jours
+    payment('d', 'r1', 500, iso(2026, 10, 2)), // dans les 30 jours, pas dans les 7
+    payment('e', 'r1', 700, iso(2026, 9, 25)), // 30 jours précédents… non : dans les 30 jours
+    payment('f', 'r1', 900, iso(2026, 9, 5)), // 30 jours précédents
+    payment('g', 'r1', 250, iso(2026, 10, 17), 'rembourse'),
+    payment('h', 'r1', 999, iso(2026, 10, 17), 'en_attente'), // ne compte pas
+  ];
+
+  it("revenus du jour comparés à la veille", () => {
+    const m = computeDashboardMetrics({ vehicles: [], rentals: [], payments, maintenance: [], customers: [], now: NOW, period: 'today' });
+    expect(m.revenue).toEqual({ current: 50, previous: 100, changePct: -50 });
+  });
+
+  it('revenus sur 7 jours comparés aux 7 jours précédents', () => {
+    const m = computeDashboardMetrics({ vehicles: [], rentals: [], payments, maintenance: [], customers: [], now: NOW, period: '7d' });
+    expect(m.revenue.current).toBe(300 + 100 + 400 - 250);
+    expect(m.revenue.previous).toBe(0);
+    expect(m.revenue.changePct).toBeNull();
+  });
+
+  it('revenus sur 30 jours comparés aux 30 jours précédents', () => {
+    const m = computeDashboardMetrics({ vehicles: [], rentals: [], payments, maintenance: [], customers: [], now: NOW, period: '30d' });
+    expect(m.revenue.current).toBe(300 + 100 + 400 + 500 + 700 - 250);
+    expect(m.revenue.previous).toBe(900);
+  });
+
+  it('graphique : 7 barres pour aujourd\'hui et 7 jours, 30 barres pour 30 jours, 6 mois pour le mois civil', () => {
+    const build = (period: 'today' | '7d' | '30d' | 'month') =>
+      computeDashboardMetrics({ vehicles: [], rentals: [], payments, maintenance: [], customers: [], now: NOW, period }).revenueTrend;
+    expect(build('today')).toHaveLength(7);
+    expect(build('7d')).toHaveLength(7);
+    expect(build('30d')).toHaveLength(30);
+    expect(build('month')).toHaveLength(6);
+    const week = build('7d');
+    expect(week[week.length - 1]).toEqual({ date: '2026-10-17', total: 50 });
+    expect(week[0].date).toBe('2026-10-11');
+  });
+
+  it('revenueLastDays : jours sans paiement à zéro, dans l\'ordre', () => {
+    const points = revenueLastDays([payment('a', 'r', 120, iso(2026, 10, 16))], 3, NOW);
+    expect(points).toEqual([
+      { date: '2026-10-15', total: 0 },
+      { date: '2026-10-16', total: 120 },
+      { date: '2026-10-17', total: 0 },
+    ]);
+  });
+
+  it('activité, entretien et nouveaux clients suivent la période', () => {
+    const rentals = [
+      rental('r1', { createdAt: iso(2026, 10, 17), statut: 'en_cours', dateDepartReel: iso(2026, 10, 17), prixTotal: 600, dureeJours: 3 }),
+      rental('r2', { createdAt: iso(2026, 10, 12), statut: 'annulee', prixTotal: 400, dureeJours: 2 }),
+      rental('r3', { createdAt: iso(2026, 9, 25), statut: 'terminee', prixTotal: 1000, dureeJours: 5 }),
+    ];
+    const maintenance = [
+      maint('m1', { cout: 200, dateIntervention: iso(2026, 10, 17) }),
+      maint('m2', { cout: 300, dateIntervention: iso(2026, 10, 2) }),
+    ];
+    const customers = [
+      { createdAt: iso(2026, 10, 17), archivedAt: null },
+      { createdAt: iso(2026, 10, 12), archivedAt: null },
+      { createdAt: iso(2026, 9, 1), archivedAt: null },
+    ];
+    const at = (period: 'today' | '7d' | '30d') =>
+      computeDashboardMetrics({ vehicles: [], rentals, payments: [], maintenance, customers, now: NOW, period });
+    expect(at('today').activity.started).toBe(1);
+    expect(at('today').activity.cancelled).toBe(0);
+    expect(at('today').maintenance.costInPeriod).toBe(200);
+    expect(at('today').newCustomers).toBe(1);
+    expect(at('7d').activity.cancelled).toBe(1);
+    expect(at('7d').activity.cancellationRatePct).toBe(50);
+    expect(at('7d').maintenance.costInPeriod).toBe(200);
+    expect(at('7d').newCustomers).toBe(2);
+    expect(at('30d').maintenance.costInPeriod).toBe(500);
+    expect(at('30d').activity.averageBasket).toBe(800);
+  });
+
+  it("le compteur « maintenant » (flotte, solde à encaisser) ne dépend pas de la période", () => {
+    const vehicles = [vehicle('v1'), vehicle('v2', { statut: 'en_location' })];
+    const base = { vehicles, rentals: [], payments: [], maintenance: [], customers: [], now: NOW };
+    expect(computeDashboardMetrics({ ...base, period: 'today' }).availableNow).toBe(
+      computeDashboardMetrics({ ...base, period: '30d' }).availableNow
+    );
   });
 });

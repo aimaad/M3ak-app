@@ -17,8 +17,8 @@ export function DuplicateCustomerCard({ matches }: { matches: DuplicateMatch[] }
   const shown = matches.slice(0, 2);
 
   return (
-    <View className="gap-3 rounded-2xl bg-[#FEF3C7] px-4 py-3">
-      <ThemedText type="smallBold" style={{ color: '#B45309' }}>
+    <View className="gap-3 rounded-2xl bg-[#FBF1DE] px-4 py-3">
+      <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
         {t('customer.duplicate.title')}
       </ThemedText>
       {shown.map(({ customer, reasons }) => (

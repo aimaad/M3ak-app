@@ -44,12 +44,12 @@ function Boxes({ boxes }: { boxes: ImageBox[] }) {
             width: `${box.w * 100}%`,
             height: `${box.h * 100}%`,
             borderWidth: 2,
-            borderColor: box.color ?? '#DC2626',
+            borderColor: box.color ?? '#C55461',
             borderRadius: 4,
           }}
         >
           {box.label ? (
-            <View style={{ position: 'absolute', top: -10, left: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: box.color ?? '#DC2626', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+            <View style={{ position: 'absolute', top: -10, left: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: box.color ?? '#C55461', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
               <ThemedText type="small" style={{ color: '#fff', fontSize: 11, lineHeight: 14 }}>
                 {box.label}
               </ThemedText>

@@ -105,7 +105,7 @@ export function DriverList({
                 </Pressable>
                 {canRemove ? (
                   <Pressable onPress={() => handleRemove(driver.id)} hitSlop={8}>
-                    <ThemedText type="small" style={{ color: '#DC2626' }}>
+                    <ThemedText type="small" style={{ color: '#A83C4B' }}>
                       {t('customer.removeDriver')}
                     </ThemedText>
                   </Pressable>

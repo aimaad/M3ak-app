@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -21,6 +21,8 @@ import { DashboardHeader } from '@/features/dashboard/dashboard-header';
 import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
+import type { DashboardPeriod } from '@/features/dashboard/kpis';
+import { PeriodTabs } from '@/features/dashboard/period-tabs';
 import { dashboardSections, canSeeMoney } from '@/features/dashboard/role-layout';
 import {
   CounterSection,
@@ -133,8 +135,11 @@ export default function AccueilScreen() {
     : null;
   const sections = dashboardSections(role);
 
+  // Période des chiffres « sur une durée » (revenus, occupation, résultat…) ; les compteurs du jour et de l'état de la flotte n'en dépendent pas.
+  const [period, setPeriod] = useState<DashboardPeriod>('today');
   const {
     metrics,
+    insightsMetrics,
     vehicles,
     maintenanceItems,
     customers,
@@ -142,14 +147,14 @@ export default function AccueilScreen() {
     isComplete,
     isRefreshing,
     refetchAll,
-  } = useDashboardMetrics();
+  } = useDashboardMetrics(period);
   const { agencyId, insightsAvailability } = useOcrSettings();
   const insights = useAiInsights({
     enabled: insightsAvailability === 'active' && isComplete,
     agencyId,
     role,
     language: language === 'ar' ? 'ar' : 'fr',
-    metrics,
+    metrics: insightsMetrics,
   });
 
   const { session } = useSession();
@@ -246,6 +251,8 @@ export default function AccueilScreen() {
               />
             }
           >
+            <PeriodTabs value={period} onChange={setPeriod} />
+
             <Button
               label={t('locations.addRental')}
               icon="add"
@@ -261,12 +268,12 @@ export default function AccueilScreen() {
               <View
                 className="h-12 w-12 items-center justify-center rounded-full"
                 style={{
-                  backgroundColor: M3akPalette.emerald,
+                  backgroundColor: M3akPalette.primary,
                   ...Shadows.button,
                   shadowOpacity: 0.25,
                 }}
               >
-                <Ionicons name="sparkles" size={22} color={M3akPalette.onEmerald} />
+                <Ionicons name="sparkles" size={22} color={M3akPalette.onPrimary} />
               </View>
               <View className="flex-1 gap-0.5">
                 <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>
@@ -281,11 +288,11 @@ export default function AccueilScreen() {
             </ThemedText>
 
             {trialDays !== null ? (
-              <View className="gap-1 rounded-2xl bg-[#FEF3C7] px-4 py-3">
-                <ThemedText type="smallBold" style={{ color: '#92400E' }}>
+              <View className="gap-1 rounded-2xl bg-[#FBF1DE] px-4 py-3">
+                <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
                   {t('access.trialBannerTitle')}
                 </ThemedText>
-                <ThemedText type="small" style={{ color: '#92400E' }}>
+                <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                   {trialDays <= 1
                     ? t('access.trialLastDay')
                     : t('access.trialDays', { days: trialDays })}
@@ -305,7 +312,7 @@ export default function AccueilScreen() {
             {logoMissing && !startVisible ? (
               <Pressable
                 onPress={() => router.push('/entreprise')}
-                className="gap-1 rounded-2xl bg-[#FEE2E2] px-4 py-3"
+                className="gap-1 rounded-2xl bg-[#F8E6E9] px-4 py-3"
               >
                 <ThemedText type="smallBold" style={{ color: M3akPalette.danger }}>
                   {t('entreprise.logo.homeNoticeTitle')}

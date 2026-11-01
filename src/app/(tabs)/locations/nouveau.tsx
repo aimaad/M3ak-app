@@ -263,11 +263,11 @@ export default function NouvelleLocationScreen() {
           ) : null}
 
           {stepKey === 'client' && identityMissing && customer ? (
-            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FEE2E2' }}>
-              <ThemedText type="smallBold" style={{ color: '#991B1B' }}>
+            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#F8E6E9' }}>
+              <ThemedText type="smallBold" style={{ color: '#A83C4B' }}>
                 {t('locations.wizard.identityRequiredTitle')}
               </ThemedText>
-              <ThemedText type="small" style={{ color: '#991B1B' }}>
+              <ThemedText type="small" style={{ color: '#A83C4B' }}>
                 {t('locations.wizard.identityRequiredBody', { name: customer.nomComplet })}
               </ThemedText>
               <Button label={t('locations.wizard.completeCustomer')} size="sm" onPress={() => router.push(`/clients/${customer.id}/modifier`)} />
@@ -286,12 +286,12 @@ export default function NouvelleLocationScreen() {
                   <TextField label={t('locations.heureRetour')} value={heureRetour} onChangeText={setHeureRetour} placeholder="18:00" containerClassName="flex-1" />
                 </View>
                 {showErrors && errors.dates ? (
-                  <ThemedText type="small" style={{ color: '#DC2626' }}>
+                  <ThemedText type="small" style={{ color: '#A83C4B' }}>
                     {t(`locations.form.errors.${errors.dates}`)}
                   </ThemedText>
                 ) : null}
                 {availability ? (
-                  <ThemedText type="smallBold" style={{ color: availability.available.length > 0 ? '#15803D' : '#B91C1C' }}>
+                  <ThemedText type="smallBold" style={{ color: availability.available.length > 0 ? '#116B54' : '#A83C4B' }}>
                     {availability.available.length > 0
                       ? t('locations.wizard.availableCount', { count: availability.available.length })
                       : t('locations.wizard.noneAvailable')}
@@ -306,7 +306,7 @@ export default function NouvelleLocationScreen() {
           {stepKey === 'vehicule' ? (
             <>
               {!availability ? (
-                <ThemedText type="small" style={hasPeriod ? undefined : { color: '#B91C1C' }} themeColor={hasPeriod ? 'textSecondary' : undefined}>
+                <ThemedText type="small" style={hasPeriod ? undefined : { color: '#A83C4B' }} themeColor={hasPeriod ? 'textSecondary' : undefined}>
                   {hasPeriod ? t('locations.wizard.checking') : t('locations.wizard.pickDatesFirst')}
                 </ThemedText>
               ) : (
@@ -315,7 +315,7 @@ export default function NouvelleLocationScreen() {
                     {t('locations.wizard.forPeriod', { start: formatDate(startISO), end: formatDate(endISO) })}
                   </ThemedText>
                   {pickedBecameUnavailable ? (
-                    <ThemedText type="small" style={{ color: '#B45309' }}>
+                    <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                       {t('locations.wizard.pickedUnavailable', { vehicle: `${pickedVehicle?.marque} ${pickedVehicle?.modele}` })}
                     </ThemedText>
                   ) : null}
@@ -355,7 +355,7 @@ export default function NouvelleLocationScreen() {
                     });
                   })()}
                   {showErrors && errors.vehicleId ? (
-                    <ThemedText type="small" style={{ color: '#DC2626' }}>
+                    <ThemedText type="small" style={{ color: '#A83C4B' }}>
                       {t(`locations.form.errors.${errors.vehicleId}`)}
                     </ThemedText>
                   ) : null}
@@ -468,7 +468,7 @@ export default function NouvelleLocationScreen() {
                 {t('locations.wizard.afterCreate')}
               </ThemedText>
               {submitError ? (
-                <ThemedText type="small" style={{ color: '#DC2626' }}>
+                <ThemedText type="small" style={{ color: '#A83C4B' }}>
                   {submitError}
                 </ThemedText>
               ) : null}

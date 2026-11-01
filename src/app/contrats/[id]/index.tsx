@@ -247,7 +247,7 @@ export default function ContratDetailScreen() {
               loading={isGeneratingPdf}
             />
             {pdfError ? (
-              <ThemedText type="small" style={{ color: '#DC2626' }}>
+              <ThemedText type="small" style={{ color: '#A83C4B' }}>
                 {pdfError}
               </ThemedText>
             ) : null}

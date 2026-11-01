@@ -183,9 +183,9 @@ export default function LocationsScreen() {
 
         <Pressable
           onPress={() => router.push('/locations/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-emerald px-5 py-4`}
+          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.onEmerald }}>
+          <ThemedText type="smallBold" style={{ color: M3akPalette.onPrimary }}>
             {`+ ${t('locations.addRental')}`}
           </ThemedText>
         </Pressable>

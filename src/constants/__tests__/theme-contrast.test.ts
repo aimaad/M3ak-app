@@ -13,18 +13,15 @@ const contrast = (a: string, b: string) => {
   return (hi + 0.05) / (lo + 0.05);
 };
 
-describe('contraste du design system Kriha (WCAG AA : 4,5 pour le texte, 3 pour les icônes)', () => {
-  it('texte blanc sur le vert d\'action et sur le vert forêt', () => {
+describe('contraste de la palette M3ak (WCAG AA : 4,5 pour le texte, 3 pour les icônes)', () => {
+  it('texte blanc sur le mauve signature (boutons) et sur le mauve profond (hero)', () => {
+    expect(contrast(P.onPrimary, P.primary)).toBeGreaterThanOrEqual(4.5);
     expect(contrast('#FFFFFF', P.mauve)).toBeGreaterThanOrEqual(4.5);
     expect(contrast('#FFFFFF', P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast('#FFFFFF', P.primaryPressed)).toBeGreaterThanOrEqual(4.5);
   });
 
-  it('texte foncé sur l\'émeraude du bouton principal (le blanc y échoue, d\'où ce jeton)', () => {
-    expect(contrast(P.onEmerald, P.emerald)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast('#FFFFFF', P.emerald)).toBeLessThan(4.5);
-  });
-
-  it('texte vert d\'action sur blanc et sur les teintes claires', () => {
+  it("texte mauve d'action sur blanc, sur le fond ivoire et sur les teintes claires", () => {
     for (const bg of ['#FFFFFF', P.background, P.mauveLight, P.mauveSoft]) expect(contrast(P.mauve, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
@@ -41,17 +38,28 @@ describe('contraste du design system Kriha (WCAG AA : 4,5 pour le texte, 3 pour 
     expect(contrast(P.subtle, '#FFFFFF')).toBeGreaterThanOrEqual(3);
   });
 
-  it('textes clairs sur la carte vert forêt (revenus)', () => {
-    expect(contrast('#A7F3D0', P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast('#6EE7B7', P.mauveDeep)).toBeGreaterThanOrEqual(3);
-    expect(contrast(P.gold, P.mauveDeep)).toBeGreaterThanOrEqual(3);
+  it('textes clairs et accents sur le mauve profond (hero, carte des revenus)', () => {
+    expect(contrast('#CBB8E0', P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(P.lavender, P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(P.warning, P.mauveDeep)).toBeGreaterThanOrEqual(3);
   });
 
-  it('statuts : avertissement et succès lisibles sur leur fond clair ; le rouge sert d\'icône (3:1), le texte rouge sur rouge pâle est le rouge foncé', () => {
-    expect(contrast(P.warning, P.warningLight)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(P.success, P.successLight)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(P.danger, P.dangerLight)).toBeGreaterThanOrEqual(3);
-    expect(contrast('#B91C1C', P.dangerLight)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(P.danger, '#FFFFFF')).toBeGreaterThanOrEqual(4.5);
+  it('couleurs fonctionnelles : le texte sur fond clair utilise les variantes foncées (4,5:1)', () => {
+    const pairs: [string, string][] = [
+      [P.successText, P.successLight],
+      [P.infoText, P.infoLight],
+      [P.warningText, P.warningLight],
+      [P.dangerText, P.dangerLight],
+      [P.neutralText, P.neutralLight],
+    ];
+    for (const [text, bg] of pairs) {
+      expect(contrast(text, bg)).toBeGreaterThanOrEqual(4.5);
+      expect(contrast(text, '#FFFFFF')).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('couleurs fonctionnelles : pastilles et icônes lisibles (3:1) sur blanc, texte noir aubergine sur ambre', () => {
+    for (const color of [P.success, P.info, P.danger, P.neutral]) expect(contrast(color, '#FFFFFF')).toBeGreaterThanOrEqual(3);
+    expect(contrast(P.aubergine, P.warning)).toBeGreaterThanOrEqual(4.5);
   });
 });

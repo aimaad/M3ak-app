@@ -53,13 +53,13 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
       <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
         <Defs>
           <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#0B0716" stopOpacity="0.9" />
-            <Stop offset="0.55" stopColor="#0B0716" stopOpacity="0.5" />
-            <Stop offset="1" stopColor="#0B0716" stopOpacity="0.05" />
+            <Stop offset="0" stopColor="#171321" stopOpacity="0.9" />
+            <Stop offset="0.55" stopColor="#171321" stopOpacity="0.5" />
+            <Stop offset="1" stopColor="#171321" stopOpacity="0.05" />
           </LinearGradient>
           <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#0B0716" stopOpacity="0.55" />
-            <Stop offset="0.5" stopColor="#0B0716" stopOpacity="0" />
+            <Stop offset="0" stopColor="#171321" stopOpacity="0.55" />
+            <Stop offset="0.5" stopColor="#171321" stopOpacity="0" />
           </LinearGradient>
         </Defs>
         <Rect width="100%" height="100%" fill="url(#kh-side)" />
@@ -122,7 +122,7 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
     <View
       onLayout={onLayout}
       style={{
-        backgroundColor: '#0B0716',
+        backgroundColor: '#171321',
         overflow: 'hidden',
         paddingTop: insets.top + 4,
         paddingBottom: 104,
@@ -183,7 +183,7 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
             onPress={() => router.push('/profil')}
             accessibilityRole="button"
             accessibilityLabel={t('accueil.header.profile')}
-            className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-emerald"
+            className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-primary"
           >
             <Avatar path={avatarPath} size={40} initials={getInitials(fullName ?? firstName)} />
           </Pressable>
@@ -234,7 +234,7 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
           {t('accueil.header.tagline')}
         </ThemedText>
         <View
-          style={{ marginTop: 10, width: 28, height: 3, borderRadius: 2, backgroundColor: M3akPalette.emerald }}
+          style={{ marginTop: 10, width: 28, height: 3, borderRadius: 2, backgroundColor: M3akPalette.lavender }}
         />
       </View>
     </View>

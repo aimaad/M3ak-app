@@ -15,7 +15,7 @@ import { PAGE } from './template-render';
  * pour agrandir, et chaque feuille est présentée comme une page posée sur un fond gris.
  */
 export function viewerHtml(contractHtml: string): string {
-  const head = `<meta name="viewport" content="width=${PAGE.width}, minimum-scale=0.1, maximum-scale=5, user-scalable=yes" /><style>html,body{background:#E5E7EB}.sheet{background:#fff;margin:0 auto 14px;box-shadow:0 1px 5px rgba(0,0,0,.25);page-break-after:auto}</style>`;
+  const head = `<meta name="viewport" content="width=${PAGE.width}, minimum-scale=0.1, maximum-scale=5, user-scalable=yes" /><style>html,body{background:#E6E0EE}.sheet{background:#fff;margin:0 auto 14px;box-shadow:0 1px 5px rgba(0,0,0,.25);page-break-after:auto}</style>`;
   return contractHtml.includes('<head>') ? contractHtml.replace('<head>', `<head>${head}`) : `<head>${head}</head>${contractHtml}`;
 }
 
@@ -40,11 +40,11 @@ export function ContractViewer({ visible, html, reachedEnd, onReachEnd, onClose 
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={{ flex: 1, backgroundColor: '#E5E7EB', paddingTop: topInset, paddingBottom: bottomInset }}>
+      <View style={{ flex: 1, backgroundColor: '#E6E0EE', paddingTop: topInset, paddingBottom: bottomInset }}>
         <View className="flex-row items-center justify-between bg-white px-5 pb-3 pt-1">
           <View className="flex-1 pr-3">
             <ThemedText type="smallBold">{t('contract.sign.viewerTitle')}</ThemedText>
-            <ThemedText type="small" style={{ color: reachedEnd ? '#15803D' : '#B45309' }}>
+            <ThemedText type="small" style={{ color: reachedEnd ? '#116B54' : '#8A5A0B' }}>
               {reachedEnd ? t('contract.sign.viewerDone') : t('contract.sign.viewerHint')}
             </ThemedText>
           </View>
@@ -71,7 +71,7 @@ export function ContractViewer({ visible, html, reachedEnd, onReachEnd, onClose 
                 <ActivityIndicator color={M3akPalette.mauve} />
               </View>
             )}
-            style={{ flex: 1, backgroundColor: '#E5E7EB' }}
+            style={{ flex: 1, backgroundColor: '#E6E0EE' }}
           />
         ) : (
           <View className="flex-1 items-center justify-center">

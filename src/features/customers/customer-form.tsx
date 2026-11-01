@@ -377,7 +377,7 @@ export function CustomerForm({
       ) : null}
 
       {submitError ? (
-        <ThemedText type="small" style={{ color: '#DC2626' }}>
+        <ThemedText type="small" style={{ color: '#A83C4B' }}>
           {submitError}
         </ThemedText>
       ) : null}

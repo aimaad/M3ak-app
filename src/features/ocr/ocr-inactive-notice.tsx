@@ -12,8 +12,8 @@ export function OcrInactiveNotice({ availability }: { availability: OcrAvailabil
   const { t } = useLanguage();
   if (availability === 'active' || availability === 'loading') return null;
   return (
-    <View className="gap-2 rounded-2xl bg-[#FEF3C7] px-4 py-3">
-      <ThemedText type="small" style={{ color: '#B45309' }}>
+    <View className="gap-2 rounded-2xl bg-[#FBF1DE] px-4 py-3">
+      <ThemedText type="small" style={{ color: '#8A5A0B' }}>
         {t(inactiveMessageKey(availability))}
       </ThemedText>
       {availability === 'owner_can_enable' ? (

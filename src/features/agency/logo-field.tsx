@@ -162,7 +162,7 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       ) : null}
 
       {phase === 'error' && errorKey ? (
-        <View className="w-full gap-2 rounded-2xl bg-[#FEE2E2] px-4 py-3">
+        <View className="w-full gap-2 rounded-2xl bg-[#F8E6E9] px-4 py-3">
           <ThemedText type="small" style={{ color: M3akPalette.danger }}>
             {t(errorKey)}
           </ThemedText>

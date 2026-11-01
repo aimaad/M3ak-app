@@ -212,7 +212,7 @@ export function CustomerNotesSection({
     <View className="gap-3">
       <View className="gap-1">
         <ThemedText type="smallBold">{t('customer.notes.title')}</ThemedText>
-        <View className="self-start rounded-full bg-[#FEF3C7] px-2.5 py-1">
+        <View className="self-start rounded-full bg-[#FBF1DE] px-2.5 py-1">
           <ThemedText type="small" style={{ color: M3akPalette.warning, fontSize: 11 }}>
             {t('customer.notes.confidential')}
           </ThemedText>

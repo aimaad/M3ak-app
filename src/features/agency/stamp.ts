@@ -10,7 +10,7 @@ export type StampColor = 'blue' | 'red' | 'black';
 
 export const STAMP_SHAPES: StampShape[] = ['round', 'rect', 'oval'];
 export const STAMP_COLORS: StampColor[] = ['blue', 'red', 'black'];
-export const STAMP_INK: Record<StampColor, string> = { blue: '#1D3FA8', red: '#B91C1C', black: '#1F2937' };
+export const STAMP_INK: Record<StampColor, string> = { blue: '#3F62AD', red: '#A83C4B', black: '#1F2937' };
 
 export const STAMP_LIMITS = { title: 36, address: 80, phone: 24 } as const;
 

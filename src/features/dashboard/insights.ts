@@ -38,8 +38,8 @@ export type InsightsPayload = {
 export function buildInsightsPayload(role: AgencyRole, metrics: DashboardMetrics): InsightsPayload {
   const owner = role === 'owner';
   const payload: InsightsPayload = {
-    fleet: { total: metrics.fleetTotal, available: metrics.availableNow, occupancyMonthPct: metrics.occupancyMonthPct },
-    vehicles: metrics.performance30d.slice(0, 8).map((p) => ({
+    fleet: { total: metrics.fleetTotal, available: metrics.availableNow, occupancyMonthPct: metrics.occupancyPct },
+    vehicles: metrics.performance.slice(0, 8).map((p) => ({
       label: p.label,
       occupancyPct: p.occupancyPct,
       ...(owner ? { revenue: p.revenue, maintenanceCost: p.maintenanceCost } : {}),
@@ -61,8 +61,8 @@ export function buildInsightsPayload(role: AgencyRole, metrics: DashboardMetrics
       changePct: metrics.revenue.changePct,
       outstandingTotal: metrics.outstanding.total,
       outstandingCount: metrics.outstanding.count,
-      profit30d: metrics.profit30d,
-      maintenanceCostMonth: metrics.maintenance.costThisMonth,
+      profit30d: metrics.profit,
+      maintenanceCostMonth: metrics.maintenance.costInPeriod,
       averageBasket: metrics.activity.averageBasket,
       revenueTrend: metrics.revenueTrend.map((p) => p.total),
     };

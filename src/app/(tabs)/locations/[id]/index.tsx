@@ -115,9 +115,9 @@ export default function LocationDetailScreen() {
 
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
           {overlappingRentalIds(vehicleRentalsQuery.data ?? []).has(rental.id) ? (
-            <View className="gap-1 rounded-2xl border border-[#FECACA] bg-[#FEE2E2] p-4">
+            <View className="gap-1 rounded-2xl border border-[#EFC9CE] bg-[#F8E6E9] p-4">
               <OverlapBadge />
-              <ThemedText type="small" style={{ color: '#991B1B' }}>
+              <ThemedText type="small" style={{ color: '#A83C4B' }}>
                 {t('locations.overlap.warning')}
               </ThemedText>
             </View>

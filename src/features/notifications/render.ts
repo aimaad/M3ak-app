@@ -77,8 +77,8 @@ export function timeAgo(iso: string, now: Date, t: Translate): string {
 
 export const SEVERITY_COLORS: Record<NotificationSeverity, { bar: string; background: string }> = {
   info: { bar: M3akPalette.mauve, background: '#F3EEFF' },
-  warning: { bar: '#F59E0B', background: '#FEF3C7' },
-  urgent: { bar: '#DC2626', background: '#FEE2E2' },
+  warning: { bar: '#D99835', background: '#FBF1DE' },
+  urgent: { bar: '#C55461', background: '#F8E6E9' },
 };
 
 export const CATEGORY_ICONS = {

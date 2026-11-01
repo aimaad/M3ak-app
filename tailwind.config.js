@@ -5,14 +5,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Jetons Kriha : mêmes valeurs que src/constants/theme.ts (M3akPalette).
-        brand: { DEFAULT: '#007A59', deep: '#064E3B', light: '#E3F5EE', soft: '#EEF7F3' },
-        emerald: { DEFAULT: '#00B884', pressed: '#008F69' },
-        'on-emerald': '#04271E',
-        line: { DEFAULT: '#E5EDE9', soft: '#EEF4F1' },
-        canvas: '#F5FAF8',
-        ink: '#172B26',
-        subtle: '#778894',
+        // Jetons M3ak : mêmes valeurs que src/constants/theme.ts (M3akPalette).
+        brand: { DEFAULT: '#684394', deep: '#35204F', light: '#EDE6F3', soft: '#F3EFF8' },
+        primary: { DEFAULT: '#684394', pressed: '#563679' },
+        'on-primary': '#FFFFFF',
+        lavender: '#B69ACF',
+        line: { DEFAULT: '#E6E0EE', soft: '#EFEAF5' },
+        canvas: '#F7F5FA',
+        ink: '#171321',
+        subtle: '#8A849A',
       },
       fontFamily: {
         cairo: ['Cairo_400Regular'],

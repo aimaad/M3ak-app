@@ -15,6 +15,14 @@ const TONE_COLOR: Record<Tone, string> = {
   danger: M3akPalette.danger,
 };
 
+/** Texte de la valeur : variantes foncées des couleurs fonctionnelles (4,5:1 sur blanc). */
+const TONE_TEXT: Record<Tone, string> = {
+  default: M3akPalette.ink,
+  good: M3akPalette.successText,
+  warning: M3akPalette.warningText,
+  danger: M3akPalette.dangerText,
+};
+
 const TONE_TINT: Record<Tone, string> = {
   default: M3akPalette.mauveLight,
   good: M3akPalette.successLight,
@@ -51,7 +59,7 @@ export function KpiCard({
         </View>
       ) : null}
       <View className="gap-0.5">
-        <ThemedText type="subtitle" style={{ fontSize: 26, lineHeight: 32, color: tone === 'default' ? M3akPalette.ink : TONE_COLOR[tone] }}>
+        <ThemedText type="subtitle" style={{ fontSize: 26, lineHeight: 32, color: TONE_TEXT[tone] }}>
           {value}
         </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">

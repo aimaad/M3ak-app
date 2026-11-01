@@ -70,9 +70,9 @@ export default function ChatListScreen() {
                   hitSlop={10}
                   accessibilityRole="button"
                   accessibilityLabel={t('chat.delete')}
-                  className="h-11 w-11 items-center justify-center rounded-full bg-[#FEE2E2]"
+                  className="h-11 w-11 items-center justify-center rounded-full bg-[#F8E6E9]"
                 >
-                  <Ionicons name="trash-outline" size={18} color="#B91C1C" />
+                  <Ionicons name="trash-outline" size={18} color="#A83C4B" />
                 </Pressable>
               </PressableCard>
             )}

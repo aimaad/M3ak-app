@@ -179,13 +179,13 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
               <>
                 <View className="flex-row justify-between">
                   <ThemedText type="small" themeColor="textSecondary">{t('inspection.report.deduction')}</ThemedText>
-                  <ThemedText type="smallBold" style={{ color: '#B91C1C' }}>{`− ${mad(deposit.montantRetenu)}`}</ThemedText>
+                  <ThemedText type="smallBold" style={{ color: '#A83C4B' }}>{`− ${mad(deposit.montantRetenu)}`}</ThemedText>
                 </View>
                 <View className="flex-row justify-between">
                   <ThemedText type="small" themeColor="textSecondary">{t('inspection.report.toRefund')}</ThemedText>
-                  <ThemedText type="smallBold" style={{ color: '#15803D' }}>{mad(deposit.montantRestitue)}</ThemedText>
+                  <ThemedText type="smallBold" style={{ color: '#116B54' }}>{mad(deposit.montantRestitue)}</ThemedText>
                 </View>
-                <ThemedText type="small" style={{ color: '#15803D' }}>
+                <ThemedText type="small" style={{ color: '#116B54' }}>
                   {t('inspection.report.validated')}
                 </ThemedText>
               </>
@@ -200,17 +200,17 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
                 />
                 <View className="flex-row justify-between">
                   <ThemedText type="small" themeColor="textSecondary">{t('inspection.report.toRefund')}</ThemedText>
-                  <ThemedText type="smallBold" style={{ color: '#15803D' }}>
+                  <ThemedText type="smallBold" style={{ color: '#116B54' }}>
                     {mad(Math.max(deposit.montantBloque - (amount ?? 0), 0))}
                   </ThemedText>
                 </View>
                 {amount !== null && amount > deposit.montantBloque ? (
-                  <ThemedText type="small" style={{ color: '#B45309' }}>
+                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                     {t('inspection.report.exceedsDeposit', { excess: mad(amount - deposit.montantBloque) })}
                   </ThemedText>
                 ) : null}
                 {blockedByPending ? (
-                  <ThemedText type="small" style={{ color: '#B45309' }}>
+                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
                     {t('inspection.analysis.summary.pendingDecision', { count: pendingCount })}
                   </ThemedText>
                 ) : null}

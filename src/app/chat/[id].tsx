@@ -97,7 +97,7 @@ export default function ChatConversationScreen() {
               {t('chat.title')}
             </ThemedText>
             <View className="flex-row items-center gap-1.5">
-              <View className="h-2 w-2 rounded-full bg-[#16A34A]" />
+              <View className="h-2 w-2 rounded-full bg-[#17856A]" />
               <ThemedText type="small" style={{ color: M3akPalette.muted, fontSize: 12 }}>
                 {t('chat.online')}
               </ThemedText>
@@ -154,9 +154,9 @@ export default function ChatConversationScreen() {
             ) : null}
 
             {error ? (
-              <View className="flex-row items-start gap-2 rounded-2xl border border-[#FECACA] bg-[#FEE2E2] p-3">
-                <Ionicons name="alert-circle" size={18} color="#B91C1C" />
-                <ThemedText type="small" style={{ flex: 1, color: '#991B1B' }}>
+              <View className="flex-row items-start gap-2 rounded-2xl border border-[#EFC9CE] bg-[#F8E6E9] p-3">
+                <Ionicons name="alert-circle" size={18} color="#A83C4B" />
+                <ThemedText type="small" style={{ flex: 1, color: '#A83C4B' }}>
                   {error}
                 </ThemedText>
               </View>

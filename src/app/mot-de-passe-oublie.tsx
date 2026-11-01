@@ -106,7 +106,7 @@ export default function ForgotPasswordScreen() {
                 keyboardType="email-address"
               />
               {error ? (
-                <ThemedText type="small" style={{ color: '#DC2626' }}>
+                <ThemedText type="small" style={{ color: '#A83C4B' }}>
                   {error}
                 </ThemedText>
               ) : null}
@@ -148,7 +148,7 @@ export default function ForgotPasswordScreen() {
                 error={touched && passwordErrors.confirmPassword ? t(`auth.errors.${passwordErrors.confirmPassword}`) : undefined}
               />
               {error ? (
-                <ThemedText type="small" style={{ color: '#DC2626' }}>
+                <ThemedText type="small" style={{ color: '#A83C4B' }}>
                   {error}
                 </ThemedText>
               ) : null}

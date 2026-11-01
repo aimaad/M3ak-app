@@ -44,12 +44,12 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
         <View
           className="absolute min-w-5 items-center justify-center rounded-full px-1"
           style={{
-            backgroundColor: hasUrgent ? '#DC2626' : '#F59E0B',
+            backgroundColor: hasUrgent ? '#C55461' : '#D99835',
             top: onForest ? -2 : -4,
             end: onForest ? -2 : -4,
             height: 20,
             borderWidth: onForest ? 2 : 0,
-            borderColor: onForest ? '#0B0716' : M3akPalette.mauveDeep,
+            borderColor: onForest ? '#171321' : M3akPalette.mauveDeep,
           }}
         >
           <ThemedText type="small" style={{ color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '700' }}>

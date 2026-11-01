@@ -1,35 +1,25 @@
-import { View } from 'react-native';
+import { Image, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { fontFamilyFor, M3akPalette } from '@/constants/theme';
+
+const MARK = require('../../assets/images/logo-m3ak-mark.png');
 
 type LogoProps = {
   size?: 'md' | 'lg';
   /** Pastille seule, sans le nom (en-têtes étroits, menu latéral). */
   markOnly?: boolean;
-  /** `light` : nom en blanc, pour un fond vert forêt. */
+  /** `light` : nom en blanc, pour un fond mauve profond. */
   tone?: 'dark' | 'light';
 };
 
-/**
- * Logo typographique Kriha : pastille émeraude « K » + nom. Provisoire : à remplacer par le fichier du logo officiel
- * (image) quand il sera fourni ; l'icône et l'écran de lancement de l'application sont des fichiers à part.
- */
+/** Logo M3ak : pastille mauve (fichier officiel `assets/images/logo-m3ak-mark.png`) + nom. */
 export function Logo({ size = 'md', markOnly = false, tone = 'dark' }: LogoProps) {
-  const box = size === 'lg' ? 72 : 44;
+  const height = size === 'lg' ? 72 : 44;
   const wordSize = size === 'lg' ? 40 : 24;
   return (
-    <View accessible accessibilityRole="image" accessibilityLabel="Kriha" className="flex-row items-center" style={{ gap: size === 'lg' ? 14 : 10 }}>
-      <View
-        className="items-center justify-center"
-        style={{ width: box, height: box, borderRadius: box * 0.3, backgroundColor: M3akPalette.emerald }}
-      >
-        <ThemedText
-          style={{ color: M3akPalette.onEmerald, fontSize: box * 0.56, lineHeight: box * 0.7, fontFamily: fontFamilyFor('fr', 'extrabold') }}
-        >
-          K
-        </ThemedText>
-      </View>
+    <View accessible accessibilityRole="image" accessibilityLabel="M3ak" className="flex-row items-center" style={{ gap: size === 'lg' ? 14 : 10 }}>
+      <Image source={MARK} resizeMode="contain" style={{ width: height * 1.03, height }} />
       {markOnly ? null : (
         <ThemedText
           style={{
@@ -40,7 +30,7 @@ export function Logo({ size = 'md', markOnly = false, tone = 'dark' }: LogoProps
             letterSpacing: -0.5,
           }}
         >
-          Kriha
+          M3ak
         </ThemedText>
       )}
     </View>

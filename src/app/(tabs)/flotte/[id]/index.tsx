@@ -285,7 +285,7 @@ export default function VehicleDetailScreen() {
                       </View>
                       <ThemedText
                         type="small"
-                        style={{ color: item.statut === 'effectuee' ? '#15803D' : item.statut === 'en_cours' ? '#0369A1' : M3akPalette.muted }}
+                        style={{ color: item.statut === 'effectuee' ? '#116B54' : item.statut === 'en_cours' ? '#3F62AD' : M3akPalette.muted }}
                       >
                         {item.statut === 'effectuee'
                           ? t('maintenance.done')

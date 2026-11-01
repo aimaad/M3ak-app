@@ -71,7 +71,7 @@ export default function FilialesScreen() {
                     ) : null}
                   </View>
                   {isManager ? (
-                    <ThemedText type="small" style={{ color: '#DC2626' }}>
+                    <ThemedText type="small" style={{ color: '#A83C4B' }}>
                       {t('filiales.delete')}
                     </ThemedText>
                   ) : null}
