@@ -11,7 +11,7 @@ import type { VideoSource } from 'expo-video';
  * Pour l'activer : `export const TURNTABLE_VIDEO = require('../../../../assets/images/showroom/car-turntable.mp4');`
  * (le `require` doit rester littéral : Metro le résout à la compilation).
  */
-export const TURNTABLE_VIDEO: VideoSource | null = null;
+export const TURNTABLE_VIDEO: VideoSource | null = require('../../../../assets/images/showroom/car-turntable.mp4');
 
 /**
  * Zone de la photo reprise par la vidéo, en fractions de la photo (0 à 1). DOIT être identique au `CROP` utilisé à l'encodage

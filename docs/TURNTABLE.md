@@ -11,6 +11,8 @@ La Maybach de l'Accueil tourne sur elle-même à 360°, en boucle (6 s). C'est u
 | `src/features/dashboard/turntable/turntable-assets.ts` | branche la vidéo (`TURNTABLE_VIDEO`, `null` = hero inchangé) et sa zone `TURNTABLE_BOX` |
 | `src/features/dashboard/turntable/turntable-video.tsx` | lecteur (expo-video) : muet, boucle, pause hors écran |
 
+> **État actuel : aperçu rapide** (120 images, 600 × 400, 16 échantillons, 555 Ko, 4 s par tour). Il montre bien la rotation mais il est plus granuleux que le rendu final : refaire le rendu avec la commande ci-dessous (180 images, 720 × 480, 40 échantillons) pour la qualité définitive.
+
 ## Fabriquer la vidéo
 Blender se pilote depuis Python (`pip install bpy` dans un environnement isolé). Rendu des 180 images (environ 1 h sur 4 cœurs) :
 ```
