@@ -15,8 +15,10 @@ const LABEL_KEY: Record<DashboardPeriod, string> = {
 };
 
 /**
- * Sélecteur de période posé sur le hero : Aujourd'hui / 7 jours / 30 jours. Verre sombre (fond translucide, liseré clair) ;
- * la période choisie est un bouton mauve en dégradé avec un léger halo (blanc dessus : au moins 5,4:1). 48 dp de haut.
+ * Sélecteur de période posé sur le hero : Aujourd'hui / 7 jours / 30 jours. Gélule de verre sombre (fond mauve très foncé
+ * translucide, liseré lavande, léger halo) ; la période choisie est un bouton plus large en dégradé violet lumineux, avec un
+ * reflet clair en haut, un liseré blanc et un halo ; les autres n'ont que l'icône calendrier et le texte, espacés. 48 dp
+ * de haut ; blanc sur le dégradé : au moins 4,9:1.
  */
 export function PeriodTabs({
   value,
@@ -30,14 +32,18 @@ export function PeriodTabs({
     <View
       accessibilityRole="tablist"
       accessibilityLabel={t('accueil.period.label')}
-      className="flex-row rounded-full"
+      className="flex-row items-center rounded-full"
       style={{
         height: 48,
-        padding: 4,
-        gap: 4,
-        backgroundColor: 'rgba(23,19,33,0.62)',
+        paddingHorizontal: 4,
+        backgroundColor: 'rgba(30,18,52,0.72)',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.18)',
+        borderColor: 'rgba(182,154,207,0.45)',
+        shadowColor: '#A66BFF',
+        shadowOpacity: 0.35,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 4 },
+        elevation: 3,
       }}
     >
       {DASHBOARD_PERIODS.map((period) => {
@@ -48,18 +54,23 @@ export function PeriodTabs({
             onPress={() => onChange(period)}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
-            className="flex-1 flex-row items-center justify-center rounded-full px-2"
+            className="flex-row items-center justify-center rounded-full px-2"
             style={[
-              { gap: 6, overflow: selected ? 'hidden' : 'visible' },
+              {
+                flex: selected ? 1.3 : 1,
+                height: 40,
+                gap: 7,
+                overflow: selected ? 'hidden' : 'visible',
+              },
               selected
                 ? {
                     borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.35)',
-                    shadowColor: '#8A5CC2',
-                    shadowOpacity: 0.7,
-                    shadowRadius: 10,
+                    borderColor: 'rgba(255,255,255,0.45)',
+                    shadowColor: '#A66BFF',
+                    shadowOpacity: 0.85,
+                    shadowRadius: 12,
                     shadowOffset: { width: 0, height: 0 },
-                    elevation: 4,
+                    elevation: 5,
                   }
                 : null,
             ]}
@@ -73,18 +84,19 @@ export function PeriodTabs({
               >
                 <Defs>
                   <LinearGradient id="kp-selected" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0" stopColor="#8A5CC2" />
-                    <Stop offset="1" stopColor="#684394" />
+                    <Stop offset="0" stopColor="#8A50DC" />
+                    <Stop offset="1" stopColor="#6B3BB5" />
+                  </LinearGradient>
+                  <LinearGradient id="kp-shine" x1="0" y1="0" x2="0" y2="1">
+                    <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.28" />
+                    <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0" />
                   </LinearGradient>
                 </Defs>
                 <Rect width="100%" height="100%" fill="url(#kp-selected)" />
+                <Rect width="100%" height="100%" fill="url(#kp-shine)" />
               </Svg>
             ) : null}
-            <Ionicons
-              name="calendar-outline"
-              size={16}
-              color={selected ? '#FFFFFF' : 'rgba(255,255,255,0.85)'}
-            />
+            <Ionicons name="calendar-outline" size={17} color="#FFFFFF" />
             <ThemedText
               numberOfLines={1}
               adjustsFontSizeToFit
@@ -92,7 +104,7 @@ export function PeriodTabs({
               style={{
                 fontSize: 13.5,
                 lineHeight: 18,
-                color: selected ? '#FFFFFF' : 'rgba(255,255,255,0.85)',
+                color: '#FFFFFF',
                 fontFamily: fontFamilyFor(language, selected ? 'bold' : 'semibold'),
               }}
             >

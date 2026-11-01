@@ -1,0 +1,475 @@
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useState, type ReactNode } from 'react';
+import { Pressable, View, type LayoutChangeEvent } from 'react-native';
+import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+
+import { ThemedText } from '@/components/themed-text';
+import { fontFamilyFor, M3akPalette } from '@/constants/theme';
+import { isRTL } from '@/i18n';
+import { useLanguage } from '@/i18n/use-language';
+
+import { buildAreaPaths } from './chart-path';
+import type { DashboardMetrics, MetricsPeriod } from './kpis';
+
+const mad = (value: number) => `${Math.round(value).toLocaleString('fr-FR')} MAD`;
+const periodKey = (period: MetricsPeriod) =>
+  period === 'today' ? 'today' : period === '7d' ? 'days7' : 'days30';
+
+/**
+ * Carte « verre » claire : dégradé blanc vers lavande très pâle, liseré blanc, ombre mauve diffuse. Appuyable si `onPress`.
+ * `highlighted` : variante mauve clair à liseré mauve (l'action principale d'une rangée).
+ */
+function GlassCard({
+  children,
+  onPress,
+  highlighted = false,
+  label,
+  className,
+}: {
+  children: ReactNode;
+  onPress?: () => void;
+  highlighted?: boolean;
+  label?: string;
+  className?: string;
+}) {
+  const content = (
+    <View
+      className={`overflow-hidden rounded-[20px] ${className ?? ''}`}
+      style={{
+        borderWidth: 1,
+        borderColor: highlighted ? 'rgba(104,67,148,0.45)' : 'rgba(255,255,255,0.95)',
+      }}
+    >
+      <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
+        <Defs>
+          <LinearGradient id={highlighted ? 'gc-hi' : 'gc-lo'} x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={highlighted ? '#F3ECFB' : '#FFFFFF'} />
+            <Stop offset="1" stopColor={highlighted ? '#E2D4F2' : '#F1ECF8'} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill={`url(#${highlighted ? 'gc-hi' : 'gc-lo'})`} />
+      </Svg>
+      {children}
+    </View>
+  );
+  const shadow = {
+    borderRadius: 20,
+    shadowColor: '#684394',
+    shadowOpacity: highlighted ? 0.28 : 0.14,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3,
+  } as const;
+  if (!onPress) return <View style={shadow}>{content}</View>;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [shadow, { opacity: pressed ? 0.85 : 1 }]}
+    >
+      {content}
+    </Pressable>
+  );
+}
+
+function IconTile({ icon, size = 36 }: { icon: keyof typeof Ionicons.glyphMap; size?: number }) {
+  return (
+    <View
+      className="items-center justify-center"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: size * 0.33,
+        backgroundColor: M3akPalette.mauveLight,
+      }}
+    >
+      <Ionicons name={icon} size={size * 0.55} color={M3akPalette.mauve} />
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------- trois compteurs
+
+const goRentals = () => router.push('/locations');
+
+/** Locations en cours, départs et retours du jour : trois cartes côte à côte (tous les rôles, aucun montant). */
+export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
+  const { t, language } = useLanguage();
+  const items: {
+    key: string;
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    value: number;
+  }[] = [
+    {
+      key: 'active',
+      icon: 'car-outline',
+      label: t('accueil.operations.activeRentals'),
+      value: metrics.activity.active,
+    },
+    {
+      key: 'departures',
+      icon: 'calendar-outline',
+      label: t('accueil.operations.departuresToday'),
+      value: metrics.activity.departuresToday,
+    },
+    {
+      key: 'returns',
+      icon: 'arrow-undo-outline',
+      label: t('accueil.operations.returnsToday'),
+      value: metrics.activity.returnsToday,
+    },
+  ];
+  return (
+    <View className="flex-row" style={{ gap: 12 }}>
+      {items.map((item) => (
+        <View key={item.key} className="flex-1">
+          <GlassCard onPress={goRentals} label={`${item.label} : ${item.value}`}>
+            <View className="gap-2 p-3" style={{ minHeight: 132 }}>
+              <IconTile icon={item.icon} />
+              <ThemedText
+                numberOfLines={2}
+                style={{
+                  color: M3akPalette.muted,
+                  fontSize: 12.5,
+                  lineHeight: 16,
+                  fontFamily: fontFamilyFor(language, 'semibold'),
+                }}
+              >
+                {item.label}
+              </ThemedText>
+              <View className="flex-1 justify-end">
+                <ThemedText
+                  style={{
+                    color: M3akPalette.ink,
+                    fontSize: 28,
+                    lineHeight: 34,
+                    fontFamily: fontFamilyFor(language, 'extrabold'),
+                  }}
+                >
+                  {String(item.value)}
+                </ThemedText>
+              </View>
+            </View>
+          </GlassCard>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------- chiffre d'affaires
+
+/** Carte mauve profond : montant encaissé sur la période, variation, courbe des encaissements (propriétaire seulement). */
+export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
+  const { t, language } = useLanguage();
+  const [width, setWidth] = useState(0);
+  const key = periodKey(metrics.period);
+  const { revenue } = metrics;
+  const change = revenue.changePct;
+  const negative = change !== null && change < 0;
+
+  const chartWidth = Math.round(width * 0.6);
+  const chartHeight = 84;
+  const { line, area, end } = buildAreaPaths(
+    metrics.revenueTrend.map((point) => point.total),
+    chartWidth,
+    chartHeight,
+    8
+  );
+
+  const badge =
+    change === null
+      ? {
+          bg: 'rgba(255,255,255,0.14)',
+          fg: 'rgba(255,255,255,0.85)',
+          text: t('accueil.period.noCompare'),
+          icon: 'remove' as const,
+        }
+      : {
+          bg: negative ? 'rgba(197,84,97,0.30)' : 'rgba(23,133,106,0.32)',
+          fg: negative ? '#F6B8C0' : '#9BF0D6',
+          text: `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.vs.${key}`)}`,
+          icon: (negative ? 'arrow-down' : 'arrow-up') as 'arrow-down' | 'arrow-up',
+        };
+
+  return (
+    <View
+      onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}
+      className="overflow-hidden rounded-[22px]"
+      style={{
+        shadowColor: '#35204F',
+        shadowOpacity: 0.3,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 10 },
+        elevation: 5,
+      }}
+    >
+      <View
+        className="overflow-hidden rounded-[22px]"
+        style={{ borderWidth: 1, borderColor: 'rgba(182,154,207,0.35)' }}
+      >
+        <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
+          <Defs>
+            <LinearGradient id="rc-bg" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor="#35204F" />
+              <Stop offset="1" stopColor="#52337A" />
+            </LinearGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#rc-bg)" />
+        </Svg>
+
+        {chartWidth > 0 && line ? (
+          <View
+            pointerEvents="none"
+            style={{
+              position: 'absolute',
+              bottom: 6,
+              end: 0,
+              width: chartWidth,
+              height: chartHeight,
+            }}
+          >
+            <Svg width={chartWidth} height={chartHeight}>
+              <Defs>
+                <LinearGradient id="rc-area" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor="#B69ACF" stopOpacity="0.5" />
+                  <Stop offset="1" stopColor="#B69ACF" stopOpacity="0" />
+                </LinearGradient>
+              </Defs>
+              <Path d={area} fill="url(#rc-area)" />
+              <Path
+                d={line}
+                fill="none"
+                stroke="#D9C6F0"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {end ? (
+                <Circle
+                  cx={Math.min(end.x, chartWidth - 5)}
+                  cy={end.y}
+                  r={4.5}
+                  fill="#FFFFFF"
+                  stroke="#B69ACF"
+                  strokeWidth={2}
+                />
+              ) : null}
+            </Svg>
+          </View>
+        ) : null}
+
+        <View className="gap-1.5 p-[18px]" style={{ minHeight: 132 }}>
+          <View className="flex-row items-center gap-2">
+            <View
+              className="h-9 w-9 items-center justify-center rounded-xl"
+              style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+            >
+              <Ionicons name="bar-chart" size={19} color="#FFFFFF" />
+            </View>
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                color: '#CBB8E0',
+                fontSize: 13,
+                lineHeight: 18,
+                fontFamily: fontFamilyFor(language, 'semibold'),
+              }}
+            >
+              {t(`accueil.period.revenue.${key}`)}
+            </ThemedText>
+          </View>
+          <ThemedText
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+            accessibilityLabel={`${t(`accueil.period.revenue.${key}`)} : ${mad(revenue.current)}`}
+            style={{
+              color: '#FFFFFF',
+              fontSize: 30,
+              lineHeight: 38,
+              fontFamily: fontFamilyFor(language, 'extrabold'),
+            }}
+          >
+            {mad(revenue.current)}
+          </ThemedText>
+          <View
+            className="flex-row items-center gap-1.5 self-start rounded-full px-2.5 py-1"
+            style={{ backgroundColor: badge.bg }}
+          >
+            <Ionicons name={badge.icon} size={13} color={badge.fg} />
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                color: badge.fg,
+                fontSize: 12,
+                lineHeight: 16,
+                fontFamily: fontFamilyFor(language, 'bold'),
+              }}
+            >
+              {badge.text}
+            </ThemedText>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------- accès rapide
+
+type Tile = { key: string; href: string; icon: keyof typeof Ionicons.glyphMap; labelKey: string };
+
+const MAIN_TILES: Tile[] = [
+  {
+    key: 'rental',
+    href: '/locations/nouveau',
+    icon: 'car-sport-outline',
+    labelKey: 'locations.addRental',
+  },
+  {
+    key: 'bookings',
+    href: '/locations/calendrier',
+    icon: 'calendar-number-outline',
+    labelKey: 'accueil.quick.bookings',
+  },
+  { key: 'fleet', href: '/flotte', icon: 'car-outline', labelKey: 'accueil.quick.fleet' },
+  { key: 'clients', href: '/clients', icon: 'people-outline', labelKey: 'clients.title' },
+];
+
+/** Écrans sans onglet, visibles après « Tout voir » : sans eux, Contrats, Maintenance… seraient presque introuvables. */
+const MORE_TILES: (Tile & { managersOnly?: boolean; ownerOnly?: boolean })[] = [
+  {
+    key: 'contracts',
+    href: '/contrats',
+    icon: 'document-text-outline',
+    labelKey: 'contract.listTitle',
+  },
+  {
+    key: 'maintenance',
+    href: '/maintenance',
+    icon: 'construct-outline',
+    labelKey: 'maintenance.title',
+  },
+  { key: 'chat', href: '/chat', icon: 'chatbubbles-outline', labelKey: 'chat.title' },
+  {
+    key: 'company',
+    href: '/entreprise',
+    icon: 'business-outline',
+    labelKey: 'entreprise.title',
+    managersOnly: true,
+  },
+  {
+    key: 'journal',
+    href: '/journal',
+    icon: 'shield-checkmark-outline',
+    labelKey: 'journal.title',
+    ownerOnly: true,
+  },
+];
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const rows: T[][] = [];
+  for (let i = 0; i < items.length; i += size) rows.push(items.slice(i, i + size));
+  return rows;
+}
+
+function QuickTile({ tile, highlighted = false }: { tile: Tile; highlighted?: boolean }) {
+  const { t, language } = useLanguage();
+  return (
+    <View className="flex-1">
+      <GlassCard
+        onPress={() => router.push(tile.href as never)}
+        highlighted={highlighted}
+        label={t(tile.labelKey)}
+      >
+        <View className="items-center justify-center gap-2 px-1 py-3" style={{ minHeight: 88 }}>
+          <Ionicons
+            name={tile.icon}
+            size={26}
+            color={highlighted ? M3akPalette.mauve : M3akPalette.mauveDeep}
+          />
+          <ThemedText
+            numberOfLines={2}
+            style={{
+              color: M3akPalette.ink,
+              fontSize: 12,
+              lineHeight: 15,
+              textAlign: 'center',
+              fontFamily: fontFamilyFor(language, highlighted ? 'bold' : 'semibold'),
+            }}
+          >
+            {t(tile.labelKey)}
+          </ThemedText>
+        </View>
+      </GlassCard>
+    </View>
+  );
+}
+
+/** Accès rapide : quatre grands raccourcis, et « Tout voir » déplie les autres écrans selon le rôle. */
+export function QuickAccessTiles({ role }: { role: string | null | undefined }) {
+  const { t, language } = useLanguage();
+  const [expanded, setExpanded] = useState(false);
+  const more = MORE_TILES.filter(
+    (tile) =>
+      (!tile.ownerOnly || role === 'owner') &&
+      (!tile.managersOnly || role === 'owner' || role === 'manager')
+  );
+  const arrow = isRTL(language) ? 'arrow-back' : 'arrow-forward';
+  return (
+    <View className="gap-3">
+      <View className="flex-row items-center justify-between">
+        <ThemedText type="subtitle" style={{ fontSize: 18, lineHeight: 24 }}>
+          {t('onboarding.quick.title')}
+        </ThemedText>
+        {more.length > 0 ? (
+          <Pressable
+            onPress={() => setExpanded((value) => !value)}
+            accessibilityRole="button"
+            accessibilityState={{ expanded }}
+            hitSlop={8}
+            className="min-h-11 flex-row items-center justify-center"
+            style={{ gap: 4 }}
+          >
+            <ThemedText
+              style={{
+                color: M3akPalette.mauve,
+                fontSize: 14,
+                lineHeight: 20,
+                fontFamily: fontFamilyFor(language, 'bold'),
+              }}
+            >
+              {expanded ? t('accueil.quick.seeLess') : t('accueil.quick.seeAll')}
+            </ThemedText>
+            <Ionicons name={expanded ? 'chevron-up' : arrow} size={16} color={M3akPalette.mauve} />
+          </Pressable>
+        ) : null}
+      </View>
+      <View className="flex-row" style={{ gap: 10 }}>
+        {MAIN_TILES.map((tile, index) => (
+          <QuickTile key={tile.key} tile={tile} highlighted={index === 0} />
+        ))}
+      </View>
+      {expanded
+        ? chunk(more, 4).map((row) => (
+            <View
+              key={row.map((tile) => tile.key).join('-')}
+              className="flex-row"
+              style={{ gap: 10 }}
+            >
+              {row.map((tile) => (
+                <QuickTile key={tile.key} tile={tile} />
+              ))}
+              {Array.from({ length: 4 - row.length }).map((_, index) => (
+                <View key={`spacer-${index}`} className="flex-1" />
+              ))}
+            </View>
+          ))
+        : null}
+    </View>
+  );
+}

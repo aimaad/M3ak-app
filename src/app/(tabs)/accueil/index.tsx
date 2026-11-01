@@ -5,7 +5,6 @@ import { ActivityIndicator, Pressable, RefreshControl, View } from 'react-native
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/button';
 import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -19,6 +18,7 @@ import {
 } from '@/features/agency/hooks';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
 import { DashboardHeader } from '@/features/dashboard/dashboard-header';
+import { QuickAccessTiles, RevenueCard, StatTrio } from '@/features/dashboard/home-cards';
 import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
@@ -66,60 +66,6 @@ function formatShortDate(iso: string): string {
     month: 'short',
     year: 'numeric',
   });
-}
-
-type QuickItem = {
-  href: '/contrats' | '/maintenance' | '/chat' | '/journal' | '/entreprise';
-  labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  managersOnly?: boolean;
-  ownerOnly?: boolean;
-};
-
-const QUICK_ITEMS: QuickItem[] = [
-  { href: '/contrats', labelKey: 'contract.listTitle', icon: 'document-text-outline' },
-  { href: '/maintenance', labelKey: 'maintenance.title', icon: 'construct-outline' },
-  { href: '/chat', labelKey: 'chat.title', icon: 'chatbubbles-outline' },
-  {
-    href: '/entreprise',
-    labelKey: 'entreprise.title',
-    icon: 'business-outline',
-    managersOnly: true,
-  },
-  {
-    href: '/journal',
-    labelKey: 'journal.title',
-    icon: 'shield-checkmark-outline',
-    ownerOnly: true,
-  },
-];
-
-/** Raccourcis vers les écrans qui n'ont pas d'onglet : sans eux, Contrats et Maintenance étaient presque introuvables. */
-function QuickAccess({ role }: { role: string | null | undefined }) {
-  const { t } = useLanguage();
-  const items = QUICK_ITEMS.filter(
-    (item) =>
-      (!item.ownerOnly || role === 'owner') &&
-      (!item.managersOnly || role === 'owner' || role === 'manager')
-  );
-  return (
-    <View className="gap-2">
-      <ThemedText type="smallBold">{t('onboarding.quick.title')}</ThemedText>
-      <View className="flex-row flex-wrap gap-2">
-        {items.map((item) => (
-          <Pressable
-            key={item.href}
-            onPress={() => router.push(item.href)}
-            accessibilityRole="link"
-            className="min-h-11 flex-row items-center gap-2 rounded-full border border-line bg-white px-4"
-          >
-            <Ionicons name={item.icon} size={18} color={M3akPalette.mauve} />
-            <ThemedText type="smallBold">{t(item.labelKey)}</ThemedText>
-          </Pressable>
-        ))}
-      </View>
-    </View>
-  );
 }
 
 export default function AccueilScreen() {
@@ -259,11 +205,45 @@ export default function AccueilScreen() {
                 />
               }
             >
-              <Button
-                label={t('locations.addRental')}
-                icon="add"
-                onPress={() => router.push('/locations/nouveau')}
+              {trialDays !== null ? (
+                <View className="gap-1 rounded-2xl bg-[#FBF1DE] px-4 py-3">
+                  <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
+                    {t('access.trialBannerTitle')}
+                  </ThemedText>
+                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                    {trialDays <= 1
+                      ? t('access.trialLastDay')
+                      : t('access.trialDays', { days: trialDays })}
+                  </ThemedText>
+                </View>
+              ) : null}
+
+              <GettingStartedCard
+                steps={gettingStarted}
+                userId={session?.user.id}
+                agencyId={agencyQuery.data?.agencyId}
+                ready={startReady}
               />
+
+              {logoMissing && !startVisible ? (
+                <Pressable
+                  onPress={() => router.push('/entreprise')}
+                  className="gap-1 rounded-2xl bg-[#F8E6E9] px-4 py-3"
+                >
+                  <ThemedText type="smallBold" style={{ color: M3akPalette.dangerText }}>
+                    {t('entreprise.logo.homeNoticeTitle')}
+                  </ThemedText>
+                  <ThemedText type="small" style={{ color: M3akPalette.dangerText }}>
+                    {t('entreprise.logo.homeNotice')}
+                  </ThemedText>
+                </Pressable>
+              ) : null}
+
+              <StatTrio metrics={metrics} />
+
+              {canSeeMoney(role) ? <RevenueCard metrics={metrics} /> : null}
+
+              <QuickAccessTiles role={role} />
 
               <Pressable
                 onPress={() => router.push('/chat')}
@@ -292,42 +272,6 @@ export default function AccueilScreen() {
               <ThemedText type="small" themeColor="textSecondary">
                 {t(`accueil.roleView.${role ?? 'employee'}`)}
               </ThemedText>
-
-              {trialDays !== null ? (
-                <View className="gap-1 rounded-2xl bg-[#FBF1DE] px-4 py-3">
-                  <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
-                    {t('access.trialBannerTitle')}
-                  </ThemedText>
-                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
-                    {trialDays <= 1
-                      ? t('access.trialLastDay')
-                      : t('access.trialDays', { days: trialDays })}
-                  </ThemedText>
-                </View>
-              ) : null}
-
-              <QuickAccess role={role} />
-
-              <GettingStartedCard
-                steps={gettingStarted}
-                userId={session?.user.id}
-                agencyId={agencyQuery.data?.agencyId}
-                ready={startReady}
-              />
-
-              {logoMissing && !startVisible ? (
-                <Pressable
-                  onPress={() => router.push('/entreprise')}
-                  className="gap-1 rounded-2xl bg-[#F8E6E9] px-4 py-3"
-                >
-                  <ThemedText type="smallBold" style={{ color: M3akPalette.danger }}>
-                    {t('entreprise.logo.homeNoticeTitle')}
-                  </ThemedText>
-                  <ThemedText type="small" style={{ color: M3akPalette.danger }}>
-                    {t('entreprise.logo.homeNotice')}
-                  </ThemedText>
-                </Pressable>
-              ) : null}
 
               {sections.map((section) => {
                 switch (section) {

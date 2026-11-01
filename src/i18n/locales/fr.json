@@ -1797,7 +1797,19 @@
         "days7": "Encaissements des 7 derniers jours",
         "days30": "Encaissements des 30 derniers jours"
       },
-      "cancelledHint": "{{count}} annulation(s) sur la période"
+      "cancelledHint": "{{count}} annulation(s) sur la période",
+      "vs": {
+        "today": "vs. hier",
+        "days7": "vs. 7 jours préc.",
+        "days30": "vs. 30 jours préc."
+      },
+      "noCompare": "Pas de comparaison"
+    },
+    "quick": {
+      "seeAll": "Tout voir",
+      "seeLess": "Réduire",
+      "bookings": "Réservations",
+      "fleet": "Parc véhicules"
     }
   },
   "maintenance": {

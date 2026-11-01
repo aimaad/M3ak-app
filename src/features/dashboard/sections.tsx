@@ -11,9 +11,8 @@ import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
 
 import { KpiCard, KpiGrid, SectionTitle } from './kpi-card';
-import type { DashboardMetrics, MetricsPeriod, VehiclePerformance } from './kpis';
+import type { DashboardMetrics, VehiclePerformance } from './kpis';
 import { UNDERUSED_THRESHOLD_PCT } from './kpis';
-import { PeriodChart } from './period-chart';
 
 const mad = (value: number) => `${Math.round(value).toLocaleString('fr-FR')} MAD`;
 
@@ -30,76 +29,12 @@ const FLEET_TILES: {
 
 const goRentals = () => router.push('/locations');
 
-/** Suffixe des textes par période : `today`, `days7`, `days30` (le mois civil, réservé à l'IA, n'est jamais affiché ici). */
-const periodKey = (period: MetricsPeriod) =>
-  period === 'today' ? 'today' : period === '7d' ? 'days7' : 'days30';
-
-/** Carte vedette vert forêt : revenus du mois, variation, tendance sur 6 mois. Réservée au propriétaire (avec le reste des finances). */
-function RevenueHero({ metrics }: { metrics: DashboardMetrics }) {
-  const { t, language } = useLanguage();
-  const { revenue } = metrics;
-  const change = revenue.changePct;
-  const key = periodKey(metrics.period);
-  const trendIcon = change !== null && change < 0 ? 'trending-down' : 'trending-up';
-  return (
-    <Card variant="forest" className="gap-4">
-      <View className="flex-row items-start justify-between gap-3">
-        <View className="flex-1 gap-1">
-          <ThemedText type="small" style={{ color: '#CBB8E0' }}>
-            {t(`accueil.period.revenue.${key}`)}
-          </ThemedText>
-          <ThemedText
-            type="title"
-            style={{ color: '#FFFFFF' }}
-            accessibilityLabel={`${t(`accueil.period.revenue.${key}`)} : ${mad(revenue.current)}`}
-          >
-            {mad(revenue.current)}
-          </ThemedText>
-        </View>
-        <View
-          className="h-11 w-11 items-center justify-center rounded-full"
-          style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-        >
-          <Ionicons name={trendIcon} size={22} color="#B69ACF" />
-        </View>
-      </View>
-      <View
-        className="flex-row items-center gap-1.5 self-start rounded-full px-3 py-1"
-        style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
-      >
-        <Ionicons
-          name={change !== null && change < 0 ? 'arrow-down' : 'arrow-up'}
-          size={14}
-          color={change !== null && change < 0 ? M3akPalette.warning : '#B69ACF'}
-        />
-        <ThemedText type="small" style={{ color: '#FFFFFF' }}>
-          {change === null
-            ? t('accueil.period.noPrevious')
-            : `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.compare.${key}`)}`}
-        </ThemedText>
-      </View>
-      <View className="gap-2">
-        <ThemedText type="small" style={{ color: '#CBB8E0' }}>
-          {t(`accueil.period.trend.${key}`)}
-        </ThemedText>
-        <PeriodChart
-          points={metrics.revenueTrend}
-          locale={language === 'ar' ? 'ar' : 'fr-FR'}
-          granularity={metrics.period === 'month' ? 'month' : 'day'}
-          onDeep
-        />
-      </View>
-    </Card>
-  );
-}
-
 /** Finances : réservé au propriétaire. */
 export function FinancialSection({ metrics }: { metrics: DashboardMetrics }) {
   const { t } = useLanguage();
   const { outstanding, activity, maintenance } = metrics;
   return (
     <View className="gap-3">
-      <RevenueHero metrics={metrics} />
       <SectionTitle>{t('accueil.financial.title')}</SectionTitle>
       <KpiGrid>
         <KpiCard
