@@ -11,25 +11,25 @@ import { Platform } from 'react-native';
 
 export const M3akPalette = {
   /** Mauve signature : boutons, navigation, liens. 7,45:1 avec du texte blanc, 6,9:1 sur le fond ivoire. */
-  mauve: '#684394',
+  mauve: '#8D31CC',
   /** Mauve profond : hero, cartes premium, onglet actif (blanc dessus : 14:1). */
-  mauveDeep: '#35204F',
-  mauveLight: '#EDE6F3',
-  mauveSoft: '#F3EFF8',
+  mauveDeep: '#321943',
+  mauveLight: '#F0E1FB',
+  mauveSoft: '#F7EEFD',
   /** Lavande douce : accents et éléments secondaires, surtout sur fond sombre (5,8:1 sur le mauve profond). */
-  lavender: '#B69ACF',
+  lavender: '#CB83F5',
   /** Noir aubergine : fonds sombres et titres. */
-  aubergine: '#171321',
+  aubergine: '#171126',
   /** Blanc ivoire : fond principal. */
-  background: '#F7F5FA',
+  background: '#F8F3FC',
   /** Blanc pur : cartes et surfaces. */
   surface: '#FFFFFF',
-  ink: '#171321',
+  ink: '#171126',
   /** Texte secondaire : au moins 4,5:1 sur blanc, sur le fond et sur les teintes claires. */
-  muted: '#625C74',
+  muted: '#675A7E',
   /** Icônes et textes d'appoint inactifs : 3:1 sur blanc, jamais pour du texte courant. */
-  subtle: '#8A849A',
-  border: '#E6E0EE',
+  subtle: '#9686AE',
+  border: '#EADCF5',
   /** Disponible / succès. */
   success: '#17856A',
   successText: '#116B54',
@@ -48,20 +48,20 @@ export const M3akPalette = {
   dangerLight: '#F8E6E9',
   /** Indisponible / neutre. */
   neutral: '#9692A3',
-  neutralText: '#625C74',
+  neutralText: '#675A7E',
   neutralLight: '#EFEEF3',
   /** Remplissage du bouton principal (même mauve signature) et son état appuyé. */
-  primary: '#684394',
-  primaryPressed: '#563679',
+  primary: '#8D31CC',
+  primaryPressed: '#7526AE',
   /** Texte sur le bouton principal : 7,45:1. */
   onPrimary: '#FFFFFF',
 } as const;
 
 /** Ombres légères teintées de mauve profond (jamais un gris ou un noir pur) : bordures et espaces d'abord. */
 export const Shadows = {
-  card: { shadowColor: '#35204F', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  raised: { shadowColor: '#35204F', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
-  button: { shadowColor: '#684394', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  card: { shadowColor: '#321943', shadowOpacity: 0.06, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
+  raised: { shadowColor: '#321943', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
+  button: { shadowColor: '#8D31CC', shadowOpacity: 0.28, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
 } as const;
 
 export const Colors = {
@@ -80,9 +80,9 @@ export const Colors = {
   },
   dark: {
     text: '#F5F2FC',
-    background: '#171321',
+    background: '#171126',
     backgroundElement: '#211A2E',
-    backgroundSelected: '#35204F',
+    backgroundSelected: '#321943',
     textSecondary: '#B3AEC2',
     primary: M3akPalette.lavender,
     accent: M3akPalette.lavender,

@@ -39,7 +39,7 @@ describe('contraste de la palette M3ak (WCAG AA : 4,5 pour le texte, 3 pour les 
   });
 
   it('textes clairs et accents sur le mauve profond (hero, carte des revenus)', () => {
-    expect(contrast('#CBB8E0', P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast('#E2C3F8', P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(P.lavender, P.mauveDeep)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(P.warning, P.mauveDeep)).toBeGreaterThanOrEqual(3);
   });

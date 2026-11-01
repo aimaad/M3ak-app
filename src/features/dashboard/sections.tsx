@@ -1,5 +1,6 @@
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
@@ -75,7 +76,21 @@ export function FleetSection({
   const counts = countByStatus(vehicles);
   return (
     <View className="gap-3">
-      <SectionTitle>{t('accueil.fleet.title')}</SectionTitle>
+      <View className="flex-row items-center justify-between">
+        <SectionTitle>{t('accueil.fleet.title')}</SectionTitle>
+        <Pressable
+          onPress={() => router.push('/flotte')}
+          accessibilityRole="link"
+          hitSlop={8}
+          className="min-h-11 flex-row items-center justify-center"
+          style={{ gap: 4 }}
+        >
+          <ThemedText type="smallBold" style={{ color: M3akPalette.mauve }}>
+            {t('accueil.fleet.seeFleet')}
+          </ThemedText>
+          <Ionicons name="arrow-forward" size={16} color={M3akPalette.mauve} />
+        </Pressable>
+      </View>
       <FleetDonut vehicles={vehicles} />
       <KpiGrid>
         <KpiCard

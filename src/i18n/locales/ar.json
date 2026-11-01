@@ -1734,7 +1734,9 @@
       "occupancyHint": "أيام الكراء على الأيام المتاحة",
       "title": "حالة الأسطول",
       "vehicles": "سيارات",
-      "empty": "ما كاين حتى سيارة دابا"
+      "empty": "ما كاين حتى سيارة دابا",
+      "seeFleet": "شوف الأسطول",
+      "others": "أخرى"
     },
     "operations": {
       "title": "نشاط الكراءات",
@@ -1751,7 +1753,8 @@
       "days_zero": "{{count}} أيام",
       "days_two": "{{count}} أيام",
       "days_few": "{{count}} أيام",
-      "days_many": "{{count}} أيام"
+      "days_many": "{{count}} أيام",
+      "activeShort": "كراءات جارية"
     },
     "counter": {
       "title": "اليوم فالكونطوار",
@@ -1857,7 +1860,8 @@
       "seeAll": "شوف الكل",
       "seeLess": "قلّص",
       "bookings": "الحجوزات",
-      "fleet": "الأسطول"
+      "fleet": "الأسطول",
+      "newRentalHint": "كراء جديد"
     }
   },
   "maintenance": {

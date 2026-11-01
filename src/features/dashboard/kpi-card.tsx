@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
-import { Card, PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
+
+import { GlassCard } from './home-cards';
 
 type Tone = 'default' | 'good' | 'warning' | 'danger';
 
@@ -87,17 +88,13 @@ export function KpiCard({
     </View>
   );
   const width = wide ? 'w-full' : 'w-[47%]';
-  return onPress ? (
-    <PressableCard
-      onPress={onPress}
-      className={width}
-      accessibilityRole="button"
-      accessibilityLabel={`${label} : ${value}`}
-    >
-      {content}
-    </PressableCard>
-  ) : (
-    <Card className={width}>{content}</Card>
+  // Même carte « verre » que les compteurs de l'accueil : dégradé blanc-lavande, liseré clair, ombre lavande.
+  return (
+    <View className={width}>
+      <GlassCard onPress={onPress} label={onPress ? `${label} : ${value}` : undefined}>
+        <View className="p-4">{content}</View>
+      </GlassCard>
+    </View>
   );
 }
 

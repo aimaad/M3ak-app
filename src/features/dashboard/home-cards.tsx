@@ -2,7 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, {
+  Circle,
+  Defs,
+  LinearGradient,
+  Path,
+  RadialGradient,
+  Rect,
+  Stop,
+} from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { fontFamilyFor, M3akPalette } from '@/constants/theme';
@@ -38,14 +46,14 @@ export function GlassCard({
       className={`overflow-hidden rounded-[22px] ${className ?? ''}`}
       style={{
         borderWidth: 1,
-        borderColor: highlighted ? 'rgba(104,67,148,0.45)' : 'rgba(255,255,255,0.95)',
+        borderColor: highlighted ? 'rgba(141,49,204,0.5)' : 'rgba(255,255,255,0.98)',
       }}
     >
       <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
         <Defs>
           <LinearGradient id={highlighted ? 'gc-hi' : 'gc-lo'} x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={highlighted ? '#F3ECFB' : '#FFFFFF'} />
-            <Stop offset="1" stopColor={highlighted ? '#E2D4F2' : '#F1ECF8'} />
+            <Stop offset="0" stopColor={highlighted ? '#F6E8FE' : '#FFFFFF'} />
+            <Stop offset="1" stopColor={highlighted ? '#D9B0F6' : '#F1E3FB'} />
           </LinearGradient>
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#${highlighted ? 'gc-hi' : 'gc-lo'})`} />
@@ -55,11 +63,11 @@ export function GlassCard({
   );
   const shadow = {
     borderRadius: 22,
-    shadowColor: '#684394',
-    shadowOpacity: highlighted ? 0.28 : 0.14,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
+    shadowColor: '#8D31CC',
+    shadowOpacity: highlighted ? 0.34 : 0.2,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 4,
   } as const;
   if (!onPress) return <View style={shadow}>{content}</View>;
   return (
@@ -74,7 +82,7 @@ export function GlassCard({
   );
 }
 
-function IconTile({ icon, size = 32 }: { icon: keyof typeof Ionicons.glyphMap; size?: number }) {
+function IconTile({ icon, size = 30 }: { icon: keyof typeof Ionicons.glyphMap; size?: number }) {
   return (
     <View
       className="items-center justify-center"
@@ -106,7 +114,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
     {
       key: 'active',
       icon: 'car-outline',
-      label: t('accueil.operations.activeRentals'),
+      label: t('accueil.operations.activeShort'),
       value: metrics.activity.active,
     },
     {
@@ -127,7 +135,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
       {items.map((item) => (
         <View key={item.key} className="flex-1">
           <GlassCard onPress={goRentals} label={`${item.label} : ${item.value}`}>
-            <View className="p-3" style={{ minHeight: 112, gap: 6 }}>
+            <View style={{ padding: 11, gap: 5 }}>
               <IconTile icon={item.icon} />
               <ThemedText
                 numberOfLines={2}
@@ -172,7 +180,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
   const negative = change !== null && change < 0;
 
   const chartWidth = Math.round(width * 0.6);
-  const chartHeight = 84;
+  const chartHeight = 70;
   const values = metrics.revenueTrend.map((point) => point.total);
   const trend = hasTrend(values);
   const { line, area, end } = buildAreaPaths(values, chartWidth, chartHeight, 8);
@@ -186,8 +194,8 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
           icon: 'remove' as const,
         }
       : {
-          bg: negative ? 'rgba(197,84,97,0.30)' : 'rgba(23,133,106,0.32)',
-          fg: negative ? '#F6B8C0' : '#9BF0D6',
+          bg: negative ? 'rgba(197,84,97,0.30)' : 'rgba(45,212,191,0.2)',
+          fg: negative ? '#F6B8C0' : '#5EEAD4',
           text: `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.vs.${key}`)}`,
           icon: (negative ? 'arrow-down' : 'arrow-up') as 'arrow-down' | 'arrow-up',
         };
@@ -197,7 +205,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
       onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}
       className="overflow-hidden rounded-[22px]"
       style={{
-        shadowColor: '#35204F',
+        shadowColor: '#321943',
         shadowOpacity: 0.3,
         shadowRadius: 18,
         shadowOffset: { width: 0, height: 10 },
@@ -211,11 +219,17 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
         <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
           <Defs>
             <LinearGradient id="rc-bg" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#35204F" />
-              <Stop offset="1" stopColor="#52337A" />
+              <Stop offset="0" stopColor="#22102F" />
+              <Stop offset="0.55" stopColor="#321943" />
+              <Stop offset="1" stopColor="#54216F" />
             </LinearGradient>
+            <RadialGradient id="rc-glow" cx="0.9" cy="0.95" rx="0.7" ry="0.9" fx="0.9" fy="0.95">
+              <Stop offset="0" stopColor="#CB83F5" stopOpacity="0.32" />
+              <Stop offset="1" stopColor="#CB83F5" stopOpacity="0" />
+            </RadialGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#rc-bg)" />
+          <Rect width="100%" height="100%" fill="url(#rc-glow)" />
         </Svg>
 
         {chartWidth > 0 && trend && line ? (
@@ -232,15 +246,24 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
             <Svg width={chartWidth} height={chartHeight}>
               <Defs>
                 <LinearGradient id="rc-area" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#B69ACF" stopOpacity="0.5" />
-                  <Stop offset="1" stopColor="#B69ACF" stopOpacity="0" />
+                  <Stop offset="0" stopColor="#B25CE8" stopOpacity="0.6" />
+                  <Stop offset="1" stopColor="#8D31CC" stopOpacity="0" />
                 </LinearGradient>
               </Defs>
               <Path d={area} fill="url(#rc-area)" />
               <Path
                 d={line}
                 fill="none"
-                stroke="#D9C6F0"
+                stroke="#CB83F5"
+                strokeOpacity={0.35}
+                strokeWidth={8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <Path
+                d={line}
+                fill="none"
+                stroke="#E8D2FA"
                 strokeWidth={2.5}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -251,7 +274,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                   cy={end.y}
                   r={4.5}
                   fill="#FFFFFF"
-                  stroke="#B69ACF"
+                  stroke="#CB83F5"
                   strokeWidth={2}
                 />
               ) : null}
@@ -274,16 +297,16 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                   width={7}
                   height={[6, 10, 7, 14, 9, 16, 11, 18][index]}
                   rx={3}
-                  fill="#B69ACF"
+                  fill="#CB83F5"
                   fillOpacity={0.22}
                 />
               ))}
-              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill="#B69ACF" fillOpacity={0.4} />
+              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill="#CB83F5" fillOpacity={0.4} />
             </Svg>
             <ThemedText
               numberOfLines={3}
               style={{
-                color: '#CBB8E0',
+                color: '#E2C3F8',
                 fontSize: 11.5,
                 lineHeight: 15,
                 textAlign: 'center',
@@ -295,7 +318,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
           </View>
         ) : null}
 
-        <View className="gap-1.5 p-[18px]" style={{ minHeight: 132 }}>
+        <View className="gap-1 p-4" style={{ minHeight: 108 }}>
           <View className="flex-row items-center gap-2">
             <View
               className="h-9 w-9 items-center justify-center rounded-xl"
@@ -306,7 +329,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
             <ThemedText
               numberOfLines={1}
               style={{
-                color: '#CBB8E0',
+                color: '#E2C3F8',
                 fontSize: 13,
                 lineHeight: 18,
                 fontFamily: fontFamilyFor(language, 'semibold'),
@@ -419,7 +442,7 @@ function QuickTile({ tile, highlighted = false }: { tile: Tile; highlighted?: bo
         highlighted={highlighted}
         label={t(tile.labelKey)}
       >
-        <View className="items-center justify-center gap-2 px-1 py-3" style={{ minHeight: 88 }}>
+        <View className="items-center justify-center gap-2 px-1 py-3" style={{ minHeight: 78 }}>
           <Ionicons
             name={tile.icon}
             size={26}
@@ -456,7 +479,7 @@ export function QuickAccessTiles({ role }: { role: string | null | undefined }) 
   return (
     <View className="gap-3">
       <View className="flex-row items-center justify-between">
-        <ThemedText type="subtitle" style={{ fontSize: 18, lineHeight: 24 }}>
+        <ThemedText type="subtitle" style={{ fontSize: 17, lineHeight: 22 }}>
           {t('onboarding.quick.title')}
         </ThemedText>
         {more.length > 0 ? (

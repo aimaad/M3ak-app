@@ -16,7 +16,12 @@ const round = (value: number) => Math.round(value * 100) / 100;
  * avec `padding` de marge. Série vide : rien à tracer. Série constante (ou un seul point) : ligne plate près du bas, jamais
  * de division par zéro. Les valeurs négatives (remboursements) sont gérées : l'échelle va du minimum au maximum.
  */
-export function buildAreaPaths(values: number[], width: number, height: number, padding = 6): AreaChartPaths {
+export function buildAreaPaths(
+  values: number[],
+  width: number,
+  height: number,
+  padding = 6
+): AreaChartPaths {
   if (values.length === 0 || width <= 0 || height <= 0) return { line: '', area: '', end: null };
 
   const min = Math.min(...values);
@@ -69,7 +74,11 @@ export type DonutSegment = {
  * Arcs d'un anneau de rayon `radius` : un par entrée à valeur positive, séparés par un petit vide (`gap`, en px d'arc).
  * Aucune entrée positive : liste vide (l'écran dessine alors un anneau neutre). Un seul arc occupe tout l'anneau, sans vide.
  */
-export function donutSegments(entries: { key: string; value: number }[], radius: number, gap = 3): DonutSegment[] {
+export function donutSegments(
+  entries: { key: string; value: number }[],
+  radius: number,
+  gap = 3
+): DonutSegment[] {
   const positive = entries.filter((entry) => entry.value > 0);
   const total = positive.reduce((sum, entry) => sum + entry.value, 0);
   if (total === 0) return [];

@@ -38,7 +38,11 @@ export type InsightsPayload = {
 export function buildInsightsPayload(role: AgencyRole, metrics: DashboardMetrics): InsightsPayload {
   const owner = role === 'owner';
   const payload: InsightsPayload = {
-    fleet: { total: metrics.fleetTotal, available: metrics.availableNow, occupancyMonthPct: metrics.occupancyPct },
+    fleet: {
+      total: metrics.fleetTotal,
+      available: metrics.availableNow,
+      occupancyMonthPct: metrics.occupancyPct,
+    },
     vehicles: metrics.performance.slice(0, 8).map((p) => ({
       label: p.label,
       occupancyPct: p.occupancyPct,
@@ -52,7 +56,11 @@ export function buildInsightsPayload(role: AgencyRole, metrics: DashboardMetrics
       cancellationRatePct: metrics.activity.cancellationRatePct,
       averageDurationDays: metrics.activity.averageDurationDays,
     },
-    maintenance: { overdue: metrics.maintenance.overdue, due: metrics.maintenance.due, inProgress: metrics.maintenance.inProgress },
+    maintenance: {
+      overdue: metrics.maintenance.overdue,
+      due: metrics.maintenance.due,
+      inProgress: metrics.maintenance.inProgress,
+    },
   };
   if (owner) {
     payload.money = {
@@ -72,14 +80,23 @@ export function buildInsightsPayload(role: AgencyRole, metrics: DashboardMetrics
 
 // ---------------------------------------------------------------- réponse
 
-export type InsightIndicator = { label: string; value: string; trend: 'up' | 'down' | 'flat'; explanation: string | null };
+export type InsightIndicator = {
+  label: string;
+  value: string;
+  trend: 'up' | 'down' | 'flat';
+  explanation: string | null;
+};
 export type InsightRecommendation = {
   title: string;
   detail: string;
   priority: 'high' | 'medium' | 'low';
   area: 'revenue' | 'fleet' | 'maintenance' | 'operations' | 'customers';
 };
-export type AiInsights = { summary: string | null; indicators: InsightIndicator[]; recommendations: InsightRecommendation[] };
+export type AiInsights = {
+  summary: string | null;
+  indicators: InsightIndicator[];
+  recommendations: InsightRecommendation[];
+};
 
 const TRENDS = ['up', 'down', 'flat'] as const;
 const PRIORITIES = ['high', 'medium', 'low'] as const;
@@ -101,7 +118,16 @@ export function parseInsights(raw: unknown): AiInsights | null {
       const i = (typeof item === 'object' && item !== null ? item : {}) as Record<string, unknown>;
       const label = clean(i.label, 60);
       const value = clean(i.value, 40);
-      return label && value ? [{ label, value, trend: oneOf(TRENDS, i.trend, 'flat'), explanation: clean(i.explanation, 200) }] : [];
+      return label && value
+        ? [
+            {
+              label,
+              value,
+              trend: oneOf(TRENDS, i.trend, 'flat'),
+              explanation: clean(i.explanation, 200),
+            },
+          ]
+        : [];
     });
   const recommendations = asList(source.recommendations)
     .slice(0, 5)
@@ -110,9 +136,18 @@ export function parseInsights(raw: unknown): AiInsights | null {
       const title = clean(r.title, 80);
       const detail = clean(r.detail, 300);
       return title && detail
-        ? [{ title, detail, priority: oneOf(PRIORITIES, r.priority, 'medium'), area: oneOf(AREAS, r.area, 'operations') }]
+        ? [
+            {
+              title,
+              detail,
+              priority: oneOf(PRIORITIES, r.priority, 'medium'),
+              area: oneOf(AREAS, r.area, 'operations'),
+            },
+          ]
         : [];
     });
   const summary = clean(source.summary, 500);
-  return summary || indicators.length || recommendations.length ? { summary, indicators, recommendations } : null;
+  return summary || indicators.length || recommendations.length
+    ? { summary, indicators, recommendations }
+    : null;
 }

@@ -6,14 +6,14 @@ module.exports = {
     extend: {
       colors: {
         // Jetons M3ak : mêmes valeurs que src/constants/theme.ts (M3akPalette).
-        brand: { DEFAULT: '#684394', deep: '#35204F', light: '#EDE6F3', soft: '#F3EFF8' },
-        primary: { DEFAULT: '#684394', pressed: '#563679' },
+        brand: { DEFAULT: '#8D31CC', deep: '#321943', light: '#F0E1FB', soft: '#F7EEFD' },
+        primary: { DEFAULT: '#8D31CC', pressed: '#7526AE' },
         'on-primary': '#FFFFFF',
-        lavender: '#B69ACF',
-        line: { DEFAULT: '#E6E0EE', soft: '#EFEAF5' },
-        canvas: '#F7F5FA',
-        ink: '#171321',
-        subtle: '#8A849A',
+        lavender: '#CB83F5',
+        line: { DEFAULT: '#EADCF5', soft: '#F3E9FA' },
+        canvas: '#F8F3FC',
+        ink: '#171126',
+        subtle: '#9686AE',
       },
       fontFamily: {
         cairo: ['Cairo_400Regular'],

@@ -5,18 +5,19 @@ Principes tirés du skill `mobile-app-ui-design` (règles 60/30/10, grille de 8,
 ## Logo
 Logos fournis par le propriétaire : `assets/images/logo-m3ak.png` (avec le nom) et `logo-m3ak-mark.png` (tuile seule). Le composant `Logo` affiche la tuile + le nom ; l'icône iOS (`icon.png`), les icônes Android, l'écran de lancement et le favicon en sont tirés.
 
-## Palette officielle M3ak
+## Palette M3ak
+Révisée pour se rapprocher de la maquette cible (violets plus lumineux, lavandes brillantes, aubergines profonds) : noir violet `#171126`, aubergine `#321943`, violet profond `#54216F`, violet lumineux `#8D31CC` (boutons, navigation, liens), lavande brillante `#CB83F5` (accents sur fond sombre), fond lavande `#F8F3FC`. Les couleurs fonctionnelles ci-dessous sont inchangées.
 Jetons dans `src/constants/theme.ts` (`M3akPalette`, `Shadows`, `Typefaces`) et `tailwind.config.js` (classes `bg-brand`, `border-line`, `bg-canvas`, `bg-primary`, `text-on-primary`…). **Aucune couleur de marque écrite en dur** : toujours un jeton. Les noms historiques `mauve*` sont des RÔLES (voir le commentaire de `theme.ts`).
 
 | Rôle | Jeton | Valeur | Usage |
 |---|---|---|---|
-| Noir aubergine | `aubergine`, `ink` | `#171321` | fonds sombres, titres, texte principal |
-| Mauve profond | `mauveDeep`, `brand-deep` | `#35204F` | hero, cartes premium (revenus), menu latéral PC. Blanc dessus : 14:1 |
-| Mauve signature | `mauve`, `primary`, `brand` | `#684394` | boutons, navigation, liens. Blanc dessus : 7,45:1 ; sur le fond ivoire : 6,9:1 |
-| Lavande douce | `lavender` | `#B69ACF` | accents sur fond sombre (5,8:1 sur le mauve profond) |
-| Blanc ivoire | `background`, `canvas` | `#F7F5FA` | fond principal |
+| Noir aubergine | `aubergine`, `ink` | `#171126` | fonds sombres, titres, texte principal |
+| Mauve profond | `mauveDeep`, `brand-deep` | `#321943` | hero, cartes premium (revenus), menu latéral PC. Blanc dessus : 14:1 |
+| Mauve signature | `mauve`, `primary`, `brand` | `#8D31CC` | boutons, navigation, liens. Blanc dessus : 7,45:1 ; sur le fond ivoire : 6,9:1 |
+| Lavande douce | `lavender` | `#CB83F5` | accents sur fond sombre (5,8:1 sur le mauve profond) |
+| Blanc ivoire | `background`, `canvas` | `#F8F3FC` | fond principal |
 | Blanc pur | `surface` | `#FFFFFF` | cartes et surfaces |
-| Texte secondaire | `muted` | `#625C74` | lisible (≥ 4,5:1) sur toutes les surfaces |
+| Texte secondaire | `muted` | `#675A7E` | lisible (≥ 4,5:1) sur toutes les surfaces |
 
 ### Couleurs fonctionnelles
 Les teintes d'origine servent aux **pastilles, icônes et fonds** ; pour du **texte sur clair** on prend la variante `*Text`, plus foncée (l'ambre n'atteint que 2,5:1 sur blanc). Test : `theme-contrast.test.ts`.
@@ -27,7 +28,7 @@ Les teintes d'origine servent aux **pastilles, icônes et fonds** ; pour du **te
 | En location / information | `info` `#5479C7` | `infoText` `#3F62AD` | `infoLight` | véhicule en location, location en cours |
 | Maintenance / attention | `warning` `#D99835` | `warningText` `#8A5A0B` | `warningLight` | maintenance, à confirmer |
 | Retard / erreur | `danger` `#C55461` | `dangerText` `#A83C4B` | `dangerLight` | retards, erreurs de saisie |
-| Indisponible / neutre | `neutral` `#9692A3` | `neutralText` `#625C74` | `neutralLight` | indisponible, annulée |
+| Indisponible / neutre | `neutral` `#9692A3` | `neutralText` `#675A7E` | `neutralLight` | indisponible, annulée |
 
 - **Typographie** : Plus Jakarta Sans (latin) et Cairo (arabe), une police par graisse (`fontFamilyFor`). Échelle : corps 14–16, titre de section 18, titre de page 28, grand chiffre 34.
 - **Formes** : cartes 16 px (`rounded-2xl`), cartes vedettes 24 px, ombres très légères teintées mauve profond, zones tactiles ≥ 44.

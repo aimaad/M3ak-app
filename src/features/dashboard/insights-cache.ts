@@ -20,7 +20,12 @@ async function load(storage: KeyValueStorage, now: number): Promise<Record<strin
     if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return {};
     const fresh: Record<string, Entry> = {};
     for (const [key, entry] of Object.entries(parsed as Record<string, Entry>)) {
-      if (typeof entry?.at === 'number' && now - entry.at < INSIGHTS_CACHE_TTL_MS && now >= entry.at - 60_000) fresh[key] = entry;
+      if (
+        typeof entry?.at === 'number' &&
+        now - entry.at < INSIGHTS_CACHE_TTL_MS &&
+        now >= entry.at - 60_000
+      )
+        fresh[key] = entry;
     }
     return fresh;
   } catch {
@@ -28,20 +33,32 @@ async function load(storage: KeyValueStorage, now: number): Promise<Record<strin
   }
 }
 
-export const insightsCacheKey = (agencyId: string, role: string, language: string) => `${agencyId}:${role}:${language}`;
+export const insightsCacheKey = (agencyId: string, role: string, language: string) =>
+  `${agencyId}:${role}:${language}`;
 
 export type CachedInsights = { insights: AiInsights; at: number };
 
-export async function readInsightsCache(storage: KeyValueStorage, key: string, now = Date.now()): Promise<CachedInsights | null> {
+export async function readInsightsCache(
+  storage: KeyValueStorage,
+  key: string,
+  now = Date.now()
+): Promise<CachedInsights | null> {
   const entry = (await load(storage, now))[key];
   return entry ? { insights: entry.insights, at: entry.at } : null;
 }
 
-export async function writeInsightsCache(storage: KeyValueStorage, key: string, insights: AiInsights, now = Date.now()): Promise<void> {
+export async function writeInsightsCache(
+  storage: KeyValueStorage,
+  key: string,
+  insights: AiInsights,
+  now = Date.now()
+): Promise<void> {
   try {
     const map = await load(storage, now);
     map[key] = { at: now, insights };
-    const newest = Object.entries(map).sort((a, b) => b[1].at - a[1].at).slice(0, MAX_ENTRIES);
+    const newest = Object.entries(map)
+      .sort((a, b) => b[1].at - a[1].at)
+      .slice(0, MAX_ENTRIES);
     await storage.setItem(STORAGE_KEY, JSON.stringify(Object.fromEntries(newest)));
   } catch {
     // confort : un échec d'écriture ne doit jamais empêcher l'affichage

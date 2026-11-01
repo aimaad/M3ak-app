@@ -2,7 +2,12 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { getSupabase } from '@/lib/supabase';
 
-import { parseInsights, type AiInsights, type InsightsLanguage, type InsightsPayload } from './insights';
+import {
+  parseInsights,
+  type AiInsights,
+  type InsightsLanguage,
+  type InsightsPayload,
+} from './insights';
 
 /**
  * Appelle la fonction serveur `generate-insights` (Gemini avec la clé de l'entreprise). Le serveur refuse tant que la
@@ -24,15 +29,32 @@ export class InsightsError extends Error {
   }
 }
 
-const KNOWN: InsightsErrorCode[] = ['insights_disabled', 'ocr_not_configured', 'ocr_busy', 'ocr_timeout', 'insights_limit', 'not_allowed'];
-const asCode = (raw: unknown): InsightsErrorCode => (KNOWN.includes(raw as InsightsErrorCode) ? (raw as InsightsErrorCode) : 'ocr_failed');
+const KNOWN: InsightsErrorCode[] = [
+  'insights_disabled',
+  'ocr_not_configured',
+  'ocr_busy',
+  'ocr_timeout',
+  'insights_limit',
+  'not_allowed',
+];
+const asCode = (raw: unknown): InsightsErrorCode =>
+  KNOWN.includes(raw as InsightsErrorCode) ? (raw as InsightsErrorCode) : 'ocr_failed';
 const TIMEOUT_MS = 70_000;
 
-export async function fetchInsights(payload: InsightsPayload, language: InsightsLanguage): Promise<AiInsights> {
-  let outcome: Awaited<ReturnType<ReturnType<typeof getSupabase>['functions']['invoke']>> | 'timeout';
+export async function fetchInsights(
+  payload: InsightsPayload,
+  language: InsightsLanguage
+): Promise<AiInsights> {
+  let outcome:
+    Awaited<ReturnType<ReturnType<typeof getSupabase>['functions']['invoke']>> | 'timeout';
   try {
-    const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), TIMEOUT_MS));
-    outcome = await Promise.race([getSupabase().functions.invoke('generate-insights', { body: { payload, language } }), timeout]);
+    const timeout = new Promise<'timeout'>((resolve) =>
+      setTimeout(() => resolve('timeout'), TIMEOUT_MS)
+    );
+    outcome = await Promise.race([
+      getSupabase().functions.invoke('generate-insights', { body: { payload, language } }),
+      timeout,
+    ]);
   } catch {
     throw new InsightsError('unavailable');
   }
@@ -75,4 +97,3 @@ export function insightsErrorMessageKey(error: unknown): string {
       return 'accueil.ai.errors.failed';
   }
 }
-

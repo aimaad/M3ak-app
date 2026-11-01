@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useSegments } from 'expo-router';
+import { router, useSegments } from 'expo-router';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
@@ -56,6 +57,17 @@ const SECTIONS: {
 ];
 
 const INACTIVE_COLOR = M3akPalette.subtle;
+const PLUS_SIZE = 58;
+
+/** Ordre dans la barre : trois onglets, le « + » central, deux onglets. Les cinq destinations sont celles d'avant. */
+const ITEMS: ((typeof SECTIONS)[number] | 'plus')[] = [
+  SECTIONS[0],
+  SECTIONS[1],
+  SECTIONS[2],
+  'plus',
+  SECTIONS[3],
+  SECTIONS[4],
+];
 
 /** Barre d'onglets du bas (mobile). Chaque onglet garde sa propre pile d'écrans et sa position de défilement. */
 export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
@@ -77,32 +89,81 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
 
   return (
     // Barre flottante : un bloc de la couleur de la page (il prend sa place dans la mise en page, rien n'est recouvert) qui porte
-    // une gélule blanche translucide aux coins très arrondis, avec une ombre mauve diffuse.
+    // une grande gélule blanc-lavande translucide aux coins très arrondis, avec une ombre lavande diffuse. Le bouton « + » central
+    // (création d'une location) dépasse légèrement de la barre ; les cinq onglets sont répartis de part et d'autre.
     <View
       style={{
         backgroundColor: M3akPalette.background,
-        paddingTop: 6,
+        paddingTop: 22,
         paddingBottom: Math.max(insets.bottom, 12),
-        paddingStart: Math.max(insets.left, 0) + 16,
-        paddingEnd: Math.max(insets.right, 0) + 16,
+        paddingStart: Math.max(insets.left, 0) + 14,
+        paddingEnd: Math.max(insets.right, 0) + 14,
       }}
     >
       <View
-        className="flex-row"
+        className="flex-row items-center"
         style={{
-          borderRadius: 30,
+          borderRadius: 32,
           paddingHorizontal: 6,
-          backgroundColor: 'rgba(255,255,255,0.94)',
+          backgroundColor: 'rgba(251,247,255,0.95)',
           borderWidth: 1,
-          borderColor: 'rgba(182,154,207,0.28)',
-          shadowColor: M3akPalette.mauveDeep,
-          shadowOpacity: 0.18,
-          shadowRadius: 22,
-          shadowOffset: { width: 0, height: 10 },
-          elevation: 12,
+          borderColor: 'rgba(255,255,255,0.95)',
+          shadowColor: '#8D31CC',
+          shadowOpacity: 0.28,
+          shadowRadius: 24,
+          shadowOffset: { width: 0, height: 12 },
+          elevation: 14,
         }}
       >
-        {SECTIONS.map((section) => {
+        {ITEMS.map((item) => {
+          if (item === 'plus') {
+            return (
+              <View
+                key="plus"
+                className="items-center"
+                style={{ width: PLUS_SIZE + 12, marginTop: -26 }}
+              >
+                <Pressable
+                  onPress={() => router.push('/locations/nouveau')}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('locations.addRental')}
+                  style={({ pressed }) => ({
+                    width: PLUS_SIZE,
+                    height: PLUS_SIZE,
+                    borderRadius: PLUS_SIZE / 2,
+                    overflow: 'hidden',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderWidth: 3,
+                    borderColor: M3akPalette.background,
+                    shadowColor: '#8D31CC',
+                    shadowOpacity: 0.55,
+                    shadowRadius: 14,
+                    shadowOffset: { width: 0, height: 8 },
+                    elevation: 10,
+                    transform: [{ scale: pressed ? 0.95 : 1 }],
+                  })}
+                >
+                  <Svg
+                    width="100%"
+                    height="100%"
+                    preserveAspectRatio="none"
+                    style={{ position: 'absolute' }}
+                  >
+                    <Defs>
+                      <LinearGradient id="tab-plus" x1="0" y1="0" x2="1" y2="1">
+                        <Stop offset="0" stopColor="#B25CE8" />
+                        <Stop offset="1" stopColor="#7A2AC0" />
+                      </LinearGradient>
+                    </Defs>
+                    <Rect width="100%" height="100%" fill="url(#tab-plus)" />
+                  </Svg>
+                  <Ionicons name="add" size={32} color="#FFFFFF" />
+                </Pressable>
+              </View>
+            );
+          }
+          const section = item;
           const route = state.routes.find((candidate) => candidate.name === section.key);
           const selected = section.key === currentName;
           return (
@@ -120,42 +181,42 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                 const focused = state.routes[state.index]?.key === route.key;
                 if (!focused && !event.defaultPrevented) navigateToTab(route.key);
               }}
-              className="min-h-16 flex-1 items-center gap-1 pb-1.5 pt-2"
+              className="min-h-16 flex-1 items-center justify-center"
               accessibilityRole="tab"
               accessibilityState={{ selected }}
               accessibilityLabel={t(section.labelKey)}
             >
               <View
-                className="h-8 w-14 items-center justify-center rounded-full"
+                className="items-center justify-center"
                 style={{
-                  backgroundColor: selected ? M3akPalette.primary : 'transparent',
-                  ...(selected
-                    ? {
-                        shadowColor: M3akPalette.primary,
-                        shadowOpacity: 0.35,
-                        shadowRadius: 8,
-                        shadowOffset: { width: 0, height: 4 },
-                        elevation: 4,
-                      }
-                    : null),
+                  gap: 3,
+                  minWidth: 52,
+                  paddingHorizontal: 6,
+                  paddingVertical: 7,
+                  borderRadius: 20,
+                  backgroundColor: selected ? '#EBD3FB' : 'transparent',
+                  borderWidth: 1,
+                  borderColor: selected ? 'rgba(141,49,204,0.18)' : 'transparent',
                 }}
               >
                 <Ionicons
                   name={selected ? section.iconActive : section.icon}
-                  size={21}
-                  color={selected ? M3akPalette.onPrimary : INACTIVE_COLOR}
+                  size={22}
+                  color={selected ? M3akPalette.mauve : INACTIVE_COLOR}
                 />
+                <ThemedText
+                  type="small"
+                  numberOfLines={1}
+                  style={{
+                    color: selected ? M3akPalette.mauve : M3akPalette.muted,
+                    fontSize: 10.5,
+                    lineHeight: 13,
+                    fontWeight: selected ? '700' : '500',
+                  }}
+                >
+                  {t(section.labelKey)}
+                </ThemedText>
               </View>
-              <ThemedText
-                type="small"
-                style={{
-                  color: selected ? M3akPalette.mauve : M3akPalette.muted,
-                  fontSize: 11,
-                  fontWeight: selected ? '700' : '500',
-                }}
-              >
-                {t(section.labelKey)}
-              </ThemedText>
             </Pressable>
           );
         })}

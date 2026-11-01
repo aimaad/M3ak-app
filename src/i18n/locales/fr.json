@@ -1698,7 +1698,9 @@
       "occupancyHint": "Jours loués sur jours disponibles",
       "title": "État du parc",
       "vehicles": "véhicules",
-      "empty": "Aucun véhicule pour l'instant"
+      "empty": "Aucun véhicule pour l'instant",
+      "seeFleet": "Voir le parc",
+      "others": "Autres"
     },
     "operations": {
       "title": "Activité des locations",
@@ -1711,7 +1713,8 @@
       "averageDuration": "Durée moyenne",
       "days_one": "{{count}} jour",
       "days_other": "{{count}} jours",
-      "newCustomers": "Nouveaux clients"
+      "newCustomers": "Nouveaux clients",
+      "activeShort": "Locations actives"
     },
     "counter": {
       "title": "Aujourd'hui au comptoir",
@@ -1813,7 +1816,8 @@
       "seeAll": "Tout voir",
       "seeLess": "Réduire",
       "bookings": "Réservation",
-      "fleet": "Parc véhicules"
+      "fleet": "Parc véhicules",
+      "newRentalHint": "Nouvelle location"
     }
   },
   "maintenance": {

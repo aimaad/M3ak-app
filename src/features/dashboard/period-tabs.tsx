@@ -38,12 +38,12 @@ export function PeriodTabs({
       style={{
         height: 48,
         paddingHorizontal: 4,
-        backgroundColor: 'rgba(30,18,52,0.72)',
+        backgroundColor: 'rgba(38,16,58,0.66)',
         borderWidth: 1,
-        borderColor: 'rgba(182,154,207,0.45)',
-        shadowColor: '#A66BFF',
-        shadowOpacity: 0.35,
-        shadowRadius: 14,
+        borderColor: 'rgba(203,131,245,0.55)',
+        shadowColor: '#CB83F5',
+        shadowOpacity: 0.4,
+        shadowRadius: 16,
         shadowOffset: { width: 0, height: 4 },
         elevation: 3,
       }}
@@ -67,10 +67,10 @@ export function PeriodTabs({
               selected
                 ? {
                     borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.45)',
-                    shadowColor: '#A66BFF',
-                    shadowOpacity: 0.85,
-                    shadowRadius: 12,
+                    borderColor: 'rgba(255,255,255,0.6)',
+                    shadowColor: '#CB83F5',
+                    shadowOpacity: 0.95,
+                    shadowRadius: 14,
                     shadowOffset: { width: 0, height: 0 },
                     elevation: 5,
                   }
@@ -86,11 +86,11 @@ export function PeriodTabs({
               >
                 <Defs>
                   <LinearGradient id="kp-selected" x1="0" y1="0" x2="1" y2="1">
-                    <Stop offset="0" stopColor="#8A50DC" />
-                    <Stop offset="1" stopColor="#6B3BB5" />
+                    <Stop offset="0" stopColor="#A04AE0" />
+                    <Stop offset="1" stopColor="#7A2AC0" />
                   </LinearGradient>
                   <LinearGradient id="kp-shine" x1="0" y1="0" x2="0" y2="1">
-                    <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.28" />
+                    <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.34" />
                     <Stop offset="0.55" stopColor="#FFFFFF" stopOpacity="0" />
                   </LinearGradient>
                 </Defs>

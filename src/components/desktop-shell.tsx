@@ -85,7 +85,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 className="min-h-11 flex-row items-center gap-3 rounded-xl px-3"
                 style={{ backgroundColor: selected ? M3akPalette.primary : 'transparent' }}
               >
-                <Ionicons name={item.icon} size={20} color={selected ? M3akPalette.onPrimary : '#CBB8E0'} />
+                <Ionicons name={item.icon} size={20} color={selected ? M3akPalette.onPrimary : '#E2C3F8'} />
                 <ThemedText type="smallBold" style={{ color: selected ? M3akPalette.onPrimary : '#E4DCF5' }}>
                   {t(item.labelKey)}
                 </ThemedText>
@@ -95,7 +95,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
         </ScrollView>
         <View className="gap-1 border-t px-3 py-3" style={{ borderColor: 'rgba(255,255,255,0.14)' }}>
           <Pressable onPress={() => signOut()} className="min-h-11 flex-row items-center gap-3 rounded-xl px-3">
-            <Ionicons name="log-out-outline" size={20} color="#CBB8E0" />
+            <Ionicons name="log-out-outline" size={20} color="#E2C3F8" />
             <ThemedText type="smallBold" style={{ color: '#E4DCF5' }}>{t('auth.signOut')}</ThemedText>
           </Pressable>
         </View>

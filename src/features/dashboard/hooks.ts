@@ -84,7 +84,10 @@ export function useAiInsights(options: {
         const cached = await readInsightsCache(storage, key);
         if (cached) return cached;
       }
-      const insights = await fetchInsights(buildInsightsPayload(role as AgencyRole, metrics), language);
+      const insights = await fetchInsights(
+        buildInsightsPayload(role as AgencyRole, metrics),
+        language
+      );
       const at = Date.now();
       if (storage && key) await writeInsightsCache(storage, key, insights, at);
       return { insights, at };

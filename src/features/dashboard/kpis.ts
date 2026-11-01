@@ -10,16 +10,28 @@ import type { Vehicle } from '@/features/vehicles/types';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate());
+export const startOfDay = (date: Date) =>
+  new Date(date.getFullYear(), date.getMonth(), date.getDate());
 export const startOfMonth = (date: Date) => new Date(date.getFullYear(), date.getMonth(), 1);
-const addMonths = (date: Date, delta: number) => new Date(date.getFullYear(), date.getMonth() + delta, 1);
-const addDays = (date: Date, delta: number) => new Date(date.getFullYear(), date.getMonth(), date.getDate() + delta, date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
+const addMonths = (date: Date, delta: number) =>
+  new Date(date.getFullYear(), date.getMonth() + delta, 1);
+const addDays = (date: Date, delta: number) =>
+  new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate() + delta,
+    date.getHours(),
+    date.getMinutes(),
+    date.getSeconds(),
+    date.getMilliseconds()
+  );
 const inRange = (iso: string | null | undefined, from: Date, to: Date) => {
   if (!iso) return false;
   const time = new Date(iso).getTime();
   return time >= from.getTime() && time < to.getTime();
 };
-const isSameDay = (iso: string | null | undefined, day: Date) => inRange(iso, startOfDay(day), addDays(startOfDay(day), 1));
+const isSameDay = (iso: string | null | undefined, day: Date) =>
+  inRange(iso, startOfDay(day), addDays(startOfDay(day), 1));
 const activeVehicles = (vehicles: Vehicle[]) => vehicles.filter((v) => !v.archivedAt);
 
 // ---------------------------------------------------------------- périodes
@@ -62,16 +74,26 @@ function netAmount(payment: Payment): number {
 }
 
 export function netCollected(payments: Payment[], from: Date, to: Date): number {
-  return payments.filter((p) => inRange(p.datePaiement, from, to)).reduce((sum, p) => sum + netAmount(p), 0);
+  return payments
+    .filter((p) => inRange(p.datePaiement, from, to))
+    .reduce((sum, p) => sum + netAmount(p), 0);
 }
 
 export type RevenueSummary = { current: number; previous: number; changePct: number | null };
 
 /** Encaissé net sur la période et sur la précédente (par défaut : le mois en cours et le mois d'avant). */
-export function revenueSummary(payments: Payment[], now: Date, range: PeriodRange = periodRange('month', now)): RevenueSummary {
+export function revenueSummary(
+  payments: Payment[],
+  now: Date,
+  range: PeriodRange = periodRange('month', now)
+): RevenueSummary {
   const current = netCollected(payments, range.from, range.to);
   const previous = netCollected(payments, range.previousFrom, range.previousTo);
-  return { current, previous, changePct: previous > 0 ? Math.round(((current - previous) / previous) * 100) : null };
+  return {
+    current,
+    previous,
+    changePct: previous > 0 ? Math.round(((current - previous) / previous) * 100) : null,
+  };
 }
 
 export type MonthlyPoint = { date: string; total: number };
@@ -100,7 +122,8 @@ export function revenueLastDays(payments: Payment[], days: number, now: Date): M
 
 function collectedByRental(payments: Payment[]): Map<string, number> {
   const map = new Map<string, number>();
-  for (const payment of payments) map.set(payment.rentalId, (map.get(payment.rentalId) ?? 0) + netAmount(payment));
+  for (const payment of payments)
+    map.set(payment.rentalId, (map.get(payment.rentalId) ?? 0) + netAmount(payment));
   return map;
 }
 
@@ -110,7 +133,10 @@ export function rentalBalance(rental: Rental, collected: Map<string, number>): n
 }
 
 /** Locations commencées ou terminées dont le solde n'est pas réglé. */
-export function outstandingBalances(rentals: Rental[], payments: Payment[]): { total: number; count: number } {
+export function outstandingBalances(
+  rentals: Rental[],
+  payments: Payment[]
+): { total: number; count: number } {
   const collected = collectedByRental(payments);
   let total = 0;
   let count = 0;
@@ -130,7 +156,10 @@ export function outstandingBalances(rentals: Rental[], payments: Payment[]): { t
 function rentalInterval(rental: Rental, now: Date): { start: number; end: number } | null {
   if (rental.statut !== 'en_cours' && rental.statut !== 'terminee') return null;
   const start = new Date(rental.dateDepartReel ?? rental.dateDebutPrevue).getTime();
-  const end = new Date(rental.dateRetourReel ?? (rental.statut === 'en_cours' ? now.toISOString() : rental.dateFinPrevue)).getTime();
+  const end = new Date(
+    rental.dateRetourReel ??
+      (rental.statut === 'en_cours' ? now.toISOString() : rental.dateFinPrevue)
+  ).getTime();
   return Number.isNaN(start) || Number.isNaN(end) || end <= start ? null : { start, end };
 }
 
@@ -143,15 +172,24 @@ function occupiedDays(rental: Rental, from: Date, to: Date, now: Date): number {
   return end > start ? Math.ceil((end - start) / DAY_MS) : 0;
 }
 
-const periodDays = (from: Date, to: Date) => Math.max(1, Math.round((to.getTime() - from.getTime()) / DAY_MS));
+const periodDays = (from: Date, to: Date) =>
+  Math.max(1, Math.round((to.getTime() - from.getTime()) / DAY_MS));
 
 /** Taux d'occupation de la flotte sur la période (jours loués / jours disponibles), en %. */
-export function occupancyRate(vehicles: Vehicle[], rentals: Rental[], from: Date, to: Date, now: Date): number {
+export function occupancyRate(
+  vehicles: Vehicle[],
+  rentals: Rental[],
+  from: Date,
+  to: Date,
+  now: Date
+): number {
   const fleet = activeVehicles(vehicles);
   if (fleet.length === 0) return 0;
   const capacity = fleet.length * periodDays(from, to);
   const ids = new Set(fleet.map((v) => v.id));
-  const occupied = rentals.filter((r) => ids.has(r.vehicleId)).reduce((sum, r) => sum + occupiedDays(r, from, to, now), 0);
+  const occupied = rentals
+    .filter((r) => ids.has(r.vehicleId))
+    .reduce((sum, r) => sum + occupiedDays(r, from, to, now), 0);
   return Math.min(100, Math.round((occupied / capacity) * 100));
 }
 
@@ -180,17 +218,24 @@ export function vehiclePerformance(
   for (const payment of payments) {
     if (!inRange(payment.datePaiement, from, to)) continue;
     const vehicleId = vehicleOfRental.get(payment.rentalId);
-    if (vehicleId) revenueByVehicle.set(vehicleId, (revenueByVehicle.get(vehicleId) ?? 0) + netAmount(payment));
+    if (vehicleId)
+      revenueByVehicle.set(vehicleId, (revenueByVehicle.get(vehicleId) ?? 0) + netAmount(payment));
   }
   const costByVehicle = new Map<string, number>();
   for (const item of maintenance) {
-    if (item.statut === 'effectuee' && item.cout != null && inRange(item.dateIntervention, from, to)) {
+    if (
+      item.statut === 'effectuee' &&
+      item.cout != null &&
+      inRange(item.dateIntervention, from, to)
+    ) {
       costByVehicle.set(item.vehicleId, (costByVehicle.get(item.vehicleId) ?? 0) + item.cout);
     }
   }
 
   return activeVehicles(vehicles).map((vehicle) => {
-    const occupied = rentals.filter((r) => r.vehicleId === vehicle.id).reduce((sum, r) => sum + occupiedDays(r, from, to, now), 0);
+    const occupied = rentals
+      .filter((r) => r.vehicleId === vehicle.id)
+      .reduce((sum, r) => sum + occupiedDays(r, from, to, now), 0);
     const revenue = revenueByVehicle.get(vehicle.id) ?? 0;
     const maintenanceCost = costByVehicle.get(vehicle.id) ?? 0;
     return {
@@ -207,14 +252,20 @@ export function vehiclePerformance(
 export const UNDERUSED_THRESHOLD_PCT = 20;
 
 /** Véhicules les moins utilisés (occupation sous le seuil), du moins loué au plus loué. */
-export function underusedVehicles(performance: VehiclePerformance[], limit = 3): VehiclePerformance[] {
+export function underusedVehicles(
+  performance: VehiclePerformance[],
+  limit = 3
+): VehiclePerformance[] {
   return performance
     .filter((p) => p.occupancyPct < UNDERUSED_THRESHOLD_PCT)
     .sort((a, b) => a.occupancyPct - b.occupancyPct || a.revenue - b.revenue)
     .slice(0, limit);
 }
 
-export function topVehiclesByRevenue(performance: VehiclePerformance[], limit = 3): VehiclePerformance[] {
+export function topVehiclesByRevenue(
+  performance: VehiclePerformance[],
+  limit = 3
+): VehiclePerformance[] {
   return performance
     .filter((p) => p.revenue > 0)
     .sort((a, b) => b.revenue - a.revenue)
@@ -238,36 +289,62 @@ export type RentalActivity = {
   averageBasket: number | null;
 };
 
-const isNotStarted = (r: Rental) => r.statut === 'confirmee' || r.statut === 'reservee' || r.statut === 'en_attente_confirmation';
+const isNotStarted = (r: Rental) =>
+  r.statut === 'confirmee' || r.statut === 'reservee' || r.statut === 'en_attente_confirmation';
 
-export function rentalActivity(rentals: Rental[], now: Date, range: PeriodRange = periodRange('month', now)): RentalActivity {
+export function rentalActivity(
+  rentals: Rental[],
+  now: Date,
+  range: PeriodRange = periodRange('month', now)
+): RentalActivity {
   const today = startOfDay(now);
   const inSevenDays = addDays(today, 8);
 
   const createdInPeriod = rentals.filter((r) => inRange(r.createdAt, range.from, range.to));
   const cancelled = createdInPeriod.filter((r) => r.statut === 'annulee');
   const kept = createdInPeriod.filter((r) => r.statut !== 'annulee');
-  const durations = kept.map((r) => r.dureeJours).filter((d): d is number => typeof d === 'number' && d > 0);
-  const baskets = kept.map((r) => r.prixTotal).filter((p): p is number => typeof p === 'number' && p > 0);
-  const average = (values: number[]) => (values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : null);
+  const durations = kept
+    .map((r) => r.dureeJours)
+    .filter((d): d is number => typeof d === 'number' && d > 0);
+  const baskets = kept
+    .map((r) => r.prixTotal)
+    .filter((p): p is number => typeof p === 'number' && p > 0);
+  const average = (values: number[]) =>
+    values.length
+      ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10
+      : null;
 
   return {
     active: rentals.filter((r) => r.statut === 'en_cours').length,
-    lateReturns: rentals.filter((r) => r.statut === 'en_cours' && new Date(r.dateFinPrevue).getTime() < now.getTime()).length,
+    lateReturns: rentals.filter(
+      (r) => r.statut === 'en_cours' && new Date(r.dateFinPrevue).getTime() < now.getTime()
+    ).length,
     pendingConfirmation: rentals.filter((r) => r.statut === 'en_attente_confirmation').length,
-    departuresToday: rentals.filter((r) => isNotStarted(r) && isSameDay(r.dateDebutPrevue, now)).length,
-    returnsToday: rentals.filter((r) => r.statut === 'en_cours' && isSameDay(r.dateFinPrevue, now)).length,
-    upcoming7Days: rentals.filter((r) => isNotStarted(r) && inRange(r.dateDebutPrevue, addDays(today, 1), inSevenDays)).length,
+    departuresToday: rentals.filter((r) => isNotStarted(r) && isSameDay(r.dateDebutPrevue, now))
+      .length,
+    returnsToday: rentals.filter((r) => r.statut === 'en_cours' && isSameDay(r.dateFinPrevue, now))
+      .length,
+    upcoming7Days: rentals.filter(
+      (r) => isNotStarted(r) && inRange(r.dateDebutPrevue, addDays(today, 1), inSevenDays)
+    ).length,
     started: rentals.filter((r) => inRange(r.dateDepartReel, range.from, range.to)).length,
     cancelled: cancelled.length,
-    cancellationRatePct: createdInPeriod.length ? Math.round((cancelled.length / createdInPeriod.length) * 100) : 0,
+    cancellationRatePct: createdInPeriod.length
+      ? Math.round((cancelled.length / createdInPeriod.length) * 100)
+      : 0,
     averageDurationDays: average(durations),
-    averageBasket: baskets.length ? Math.round(baskets.reduce((a, b) => a + b, 0) / baskets.length) : null,
+    averageBasket: baskets.length
+      ? Math.round(baskets.reduce((a, b) => a + b, 0) / baskets.length)
+      : null,
   };
 }
 
 /** Locations à encaisser aujourd'hui : retour prévu aujourd'hui ou en retard, avec un solde non réglé. */
-export function balancesToCollectToday(rentals: Rental[], payments: Payment[], now: Date): { count: number; total: number } {
+export function balancesToCollectToday(
+  rentals: Rental[],
+  payments: Payment[],
+  now: Date
+): { count: number; total: number } {
   const collected = collectedByRental(payments);
   const endOfToday = addDays(startOfDay(now), 1).getTime();
   let count = 0;
@@ -286,21 +363,39 @@ export function balancesToCollectToday(rentals: Rental[], payments: Payment[], n
 
 // ---------------------------------------------------------------- entretien
 
-export type MaintenanceSummary = { overdue: number; due: number; inProgress: number; costInPeriod: number };
+export type MaintenanceSummary = {
+  overdue: number;
+  due: number;
+  inProgress: number;
+  costInPeriod: number;
+};
 
-export function maintenanceSummary(items: MaintenanceItem[], now: Date, range: PeriodRange = periodRange('month', now)): MaintenanceSummary {
+export function maintenanceSummary(
+  items: MaintenanceItem[],
+  now: Date,
+  range: PeriodRange = periodRange('month', now)
+): MaintenanceSummary {
   return {
     overdue: items.filter((i) => i.statut === 'en_retard').length,
     due: items.filter((i) => i.statut === 'due').length,
     inProgress: items.filter((i) => i.statut === 'en_cours').length,
     costInPeriod: items
-      .filter((i) => i.statut === 'effectuee' && i.cout != null && inRange(i.dateIntervention, range.from, range.to))
+      .filter(
+        (i) =>
+          i.statut === 'effectuee' &&
+          i.cout != null &&
+          inRange(i.dateIntervention, range.from, range.to)
+      )
       .reduce((sum, i) => sum + (i.cout ?? 0), 0),
   };
 }
 
-export function newCustomersInRange(customers: { createdAt: string; archivedAt: string | null }[], range: PeriodRange): number {
-  return customers.filter((c) => !c.archivedAt && inRange(c.createdAt, range.from, range.to)).length;
+export function newCustomersInRange(
+  customers: { createdAt: string; archivedAt: string | null }[],
+  range: PeriodRange
+): number {
+  return customers.filter((c) => !c.archivedAt && inRange(c.createdAt, range.from, range.to))
+    .length;
 }
 
 // ---------------------------------------------------------------- tout en un
@@ -341,7 +436,15 @@ export function computeDashboardMetrics(input: {
   const tomorrow = addDays(startOfDay(now), 1);
   // L'occupation et la performance ne regardent jamais le futur ; pour `month` la performance garde sa fenêtre historique de 30 jours.
   const performanceFrom = period === 'month' ? addDays(startOfDay(now), -30) : range.from;
-  const performance = vehiclePerformance(input.vehicles, input.rentals, input.payments, input.maintenance, performanceFrom, tomorrow, now);
+  const performance = vehiclePerformance(
+    input.vehicles,
+    input.rentals,
+    input.payments,
+    input.maintenance,
+    performanceFrom,
+    tomorrow,
+    now
+  );
 
   return {
     period,

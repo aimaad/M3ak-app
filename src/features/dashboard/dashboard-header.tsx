@@ -33,9 +33,9 @@ const HERO_RATIO = 1094 / 1000;
 /** Position verticale du bas de la voiture dans la photo (≈ 67 %). */
 const CAR_BOTTOM = 0.67;
 /** Largeur de la photo par rapport à l'écran : la voiture occupe la moitié droite, le texte reste à gauche. */
-const HERO_WIDTH = 0.76;
+const HERO_WIDTH = 0.72;
 
-const DARK = '#171321';
+const DARK = '#171126';
 /** Fondu du bas du hero vers la couleur de la page : pas de bord net. */
 const FADE_HEIGHT = 26;
 const TABS_HEIGHT = 48;
@@ -116,18 +116,18 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
         <Defs>
           <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
             <Stop offset="0" stopColor={DARK} stopOpacity="1" />
-            <Stop offset="0.2" stopColor={DARK} stopOpacity="0.96" />
-            <Stop offset="0.5" stopColor={DARK} stopOpacity="0.45" />
-            <Stop offset="0.8" stopColor={DARK} stopOpacity="0.08" />
+            <Stop offset="0.3" stopColor={DARK} stopOpacity="0.95" />
+            <Stop offset="0.55" stopColor={DARK} stopOpacity="0.36" />
+            <Stop offset="0.8" stopColor={DARK} stopOpacity="0.05" />
             <Stop offset="1" stopColor={DARK} stopOpacity="0" />
           </LinearGradient>
           <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={DARK} stopOpacity="0.7" />
-            <Stop offset="0.45" stopColor={DARK} stopOpacity="0" />
+            <Stop offset="0" stopColor={DARK} stopOpacity="0.5" />
+            <Stop offset="0.4" stopColor={DARK} stopOpacity="0" />
           </LinearGradient>
           <LinearGradient id="kh-bottom" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0.55" stopColor={DARK} stopOpacity="0" />
-            <Stop offset="1" stopColor={DARK} stopOpacity="0.55" />
+            <Stop offset="1" stopColor={DARK} stopOpacity="0.4" />
           </LinearGradient>
           <LinearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
             <Stop offset="0" stopColor={M3akPalette.background} stopOpacity="0" />
@@ -204,6 +204,12 @@ export function DashboardHeader({
   const greeting = firstName
     ? t('accueil.header.greeting', { name: firstName })
     : t('accueil.header.greetingNoName');
+  // Le prénom est mis en lavande lumineuse : on coupe le texte traduit autour d'un repère à la place du prénom.
+  const MARKER = '\uE000';
+  const greetingParts = firstName
+    ? t('accueil.header.greeting', { name: MARKER }).split(MARKER)
+    : null;
+  const hasTwoParts = greetingParts?.length === 2;
 
   return (
     <View onLayout={onLayout} style={{ backgroundColor: DARK, overflow: 'hidden' }}>
@@ -228,6 +234,15 @@ export function DashboardHeader({
             style={{ gap: 8 }}
           >
             <LogoMark height={logoHeight} />
+            {showName ? (
+              <View
+                style={{
+                  width: 1,
+                  height: logoHeight * 0.62,
+                  backgroundColor: 'rgba(255,255,255,0.35)',
+                }}
+              />
+            ) : null}
             {showName ? (
               <View className="shrink">
                 <ThemedText
@@ -284,29 +299,51 @@ export function DashboardHeader({
               fontFamily: fontFamilyFor(language, 'bold'),
             }}
           >
-            {greeting}
+            {greetingParts && hasTwoParts ? (
+              <>
+                {greetingParts[0]}
+                <ThemedText
+                  style={{
+                    color: M3akPalette.lavender,
+                    fontSize: 24,
+                    lineHeight: 31,
+                    fontFamily: fontFamilyFor(language, 'bold'),
+                  }}
+                >
+                  {firstName}
+                </ThemedText>
+                {greetingParts[1]}
+              </>
+            ) : (
+              greeting
+            )}
           </ThemedText>
           <ThemedText
             numberOfLines={3}
             style={{
               marginTop: 4,
+              maxWidth: '100%',
               color: 'rgba(255,255,255,0.86)',
-              fontSize: 12.5,
-              lineHeight: 17,
+              fontSize: 11.5,
+              lineHeight: 16,
               fontFamily: fontFamilyFor(language, 'medium'),
             }}
           >
             {t('accueil.header.tagline')}
           </ThemedText>
           <View
-            style={{
-              marginTop: 10,
-              width: 28,
-              height: 3,
-              borderRadius: 2,
-              backgroundColor: M3akPalette.lavender,
-            }}
-          />
+            style={{ marginTop: 10, width: 38, height: 3, borderRadius: 2, overflow: 'hidden' }}
+          >
+            <Svg width="100%" height="100%" preserveAspectRatio="none">
+              <Defs>
+                <LinearGradient id="kh-accent" x1="0" y1="0" x2="1" y2="0">
+                  <Stop offset="0" stopColor="#8D31CC" />
+                  <Stop offset="1" stopColor="#CB83F5" />
+                </LinearGradient>
+              </Defs>
+              <Rect width="100%" height="100%" fill="url(#kh-accent)" />
+            </Svg>
+          </View>
         </View>
 
         <View style={{ marginTop: TABS_GAP + 6 }}>
