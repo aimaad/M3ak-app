@@ -2,7 +2,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { Image, Pressable, View, type LayoutChangeEvent } from 'react-native';
+import { ActivityIndicator, Image, Pressable, View, type LayoutChangeEvent } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedProps,
+  useAnimatedStyle,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
@@ -31,7 +38,18 @@ type DashboardHeaderProps = {
   agencyName?: string | null;
   agencyCity?: string | null;
   avatarPath?: string | null;
+  /** Position de défilement de la page (valeur partagée mise à jour par la liste) : pilote le repli du hero. */
+  scrollY: SharedValue<number>;
+  /** Hauteur du hero déployé (pour réserver la place au-dessus du contenu). */
+  onFullHeight?: (height: number) => void;
+  /** Actualisation en cours : un petit indicateur remplace celui de la liste, masqué sous l'en-tête. */
+  refreshing?: boolean;
 };
+
+/** Hauteur de la petite barre repliée, sous la zone de sécurité. */
+const COMPACT_BAR = 56;
+/** Hauteur supposée du hero tant qu'il n'est pas mesuré (évite un saut au premier affichage). */
+const FALLBACK_HEIGHT = 330;
 
 /**
  * Photo du hero : voiture calée en bas à droite (côté « fin » du texte, donc à gauche en arabe), sans déformation.
@@ -43,7 +61,10 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
   const imageHeight = imageWidth * HERO_RATIO;
   const top = Math.min(0, height - 16 - CAR_BOTTOM * imageHeight);
   return (
-    <View pointerEvents="none" style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}>
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}
+    >
       <Image
         source={HERO_IMAGE}
         resizeMode="cover"
@@ -65,6 +86,24 @@ function HeroBackdrop({ width, height }: { width: number; height: number }) {
         <Rect width="100%" height="100%" fill="url(#kh-side)" />
         <Rect width="100%" height="100%" fill="url(#kh-top)" />
       </Svg>
+    </View>
+  );
+}
+
+/** Logo sur pastille blanche : ses mauves foncés se lisent sur le fond sombre. */
+function LogoTile({ width, height }: { width: number; height: number }) {
+  return (
+    <View
+      className="items-center justify-center"
+      style={{
+        width,
+        height,
+        borderRadius: height * 0.3,
+        padding: height * 0.11,
+        backgroundColor: 'rgba(255,255,255,0.96)',
+      }}
+    >
+      <Image source={MARK} resizeMode="contain" style={{ width: '100%', height: '100%' }} />
     </View>
   );
 }
@@ -92,25 +131,74 @@ function HeaderIconButton({
 }
 
 /**
- * En-tête « hero » du tableau de bord : photo, logo M3ak, trois actions rondes (question à M3ak, notifications, profil),
- * puis agence, salutation et phrase d'accroche. Rien n'a de largeur fixe : le texte se réduit ou se coupe proprement
- * jusqu'à 320 dp, et la photo s'adapte à la largeur de l'écran.
+ * En-tête « hero » du tableau de bord, qui se replie quand on fait défiler la page : le grand hero (photo, salutation,
+ * agence, accroche) rétrécit en douceur, puis laisse place à une petite barre avec le logo M3ak et les notifications.
+ * Tout est piloté par `scrollY` sur le fil d'interface (Reanimated) : pas de saccade. Rien n'a de largeur fixe : le texte
+ * se réduit ou se coupe proprement jusqu'à 320 dp, et la photo s'adapte à la largeur de l'écran.
  */
-export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avatarPath }: DashboardHeaderProps) {
+export function DashboardHeader({
+  prenom,
+  fullName,
+  agencyName,
+  agencyCity,
+  avatarPath,
+  scrollY,
+  onFullHeight,
+  refreshing = false,
+}: DashboardHeaderProps) {
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
   const arabic = language === 'ar';
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
+  const fullHeight = size?.height ?? FALLBACK_HEIGHT + insets.top;
+  const compactHeight = insets.top + COMPACT_BAR;
+  const range = Math.max(fullHeight - compactHeight, 1);
+
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
-    setSize((previous) =>
-      previous && Math.abs(previous.width - width) < 1 && Math.abs(previous.height - height) < 1
-        ? previous
-        : { width, height }
-    );
+    setSize((previous) => {
+      if (
+        previous &&
+        Math.abs(previous.width - width) < 1 &&
+        Math.abs(previous.height - height) < 1
+      )
+        return previous;
+      onFullHeight?.(height);
+      return { width, height };
+    });
   };
+
+  // Le conteneur rétrécit de la hauteur du hero à celle de la petite barre ; ses coins du bas s'affinent un peu.
+  const containerStyle = useAnimatedStyle(() => {
+    const y = scrollY.value;
+    return {
+      height: interpolate(y, [0, range], [fullHeight, compactHeight], Extrapolation.CLAMP),
+      borderBottomStartRadius: interpolate(y, [0, range], [28, 20], Extrapolation.CLAMP),
+      borderBottomEndRadius: interpolate(y, [0, range], [28, 20], Extrapolation.CLAMP),
+    };
+  });
+  // Photo : s'efface avant la fin du repli, la petite barre repose sur le mauve profond uni.
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, range * 0.8], [1, 0], Extrapolation.CLAMP),
+  }));
+  // Hero : s'estompe et remonte, sortant du cadre (les boutons cachés ne sont plus touchables, car rognés).
+  const heroStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, range * 0.55], [1, 0], Extrapolation.CLAMP),
+    transform: [
+      {
+        translateY: interpolate(scrollY.value, [0, range], [0, -range * 0.6], Extrapolation.CLAMP),
+      },
+    ],
+  }));
+  // Petite barre : apparaît en fin de repli ; tant qu'elle est invisible elle ne reçoit aucun toucher.
+  const compactStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [range * 0.55, range * 0.95], [0, 1], Extrapolation.CLAMP),
+  }));
+  const compactProps = useAnimatedProps(() => ({
+    pointerEvents: scrollY.value > range * 0.7 ? ('auto' as const) : ('none' as const),
+  }));
 
   const firstName = headerFirstName(prenom, fullName);
   const greeting = firstName
@@ -119,24 +207,176 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
   const agencyLine = [agencyName?.trim(), agencyCity?.trim()].filter(Boolean).join(' · ');
 
   return (
-    <View
-      onLayout={onLayout}
-      style={{
-        backgroundColor: '#171321',
-        overflow: 'hidden',
-        paddingTop: insets.top + 4,
-        paddingBottom: 104,
-        paddingStart: insets.left + 20,
-        paddingEnd: insets.right + 20,
-        borderBottomStartRadius: 28,
-        borderBottomEndRadius: 28,
-      }}
+    <Animated.View
+      style={[
+        {
+          backgroundColor: '#171321',
+          overflow: 'hidden',
+          borderBottomStartRadius: 28,
+          borderBottomEndRadius: 28,
+        },
+        { height: fullHeight },
+        containerStyle,
+      ]}
     >
-      {size ? <HeroBackdrop width={size.width} height={size.height} /> : null}
       {/* Les onglets restent montés : on ne règle la barre d'état (icônes claires) que lorsque l'Accueil est affiché. */}
       {focused ? <StatusBar style="light" /> : null}
 
-      <View className="flex-row items-center justify-between" style={{ minHeight: 44, gap: 12 }}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          { position: 'absolute', top: 0, start: 0, end: 0, height: fullHeight },
+          backdropStyle,
+        ]}
+      >
+        {size ? <HeroBackdrop width={size.width} height={size.height} /> : null}
+      </Animated.View>
+
+      <Animated.View
+        onLayout={onLayout}
+        style={[
+          {
+            position: 'absolute',
+            top: 0,
+            start: 0,
+            end: 0,
+            paddingTop: insets.top + 4,
+            paddingBottom: 104,
+            paddingStart: insets.left + 20,
+            paddingEnd: insets.right + 20,
+          },
+          heroStyle,
+        ]}
+      >
+        <View className="flex-row items-center justify-between" style={{ minHeight: 44, gap: 12 }}>
+          <View
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel="M3ak"
+            className="shrink flex-row items-center"
+            style={{ gap: 10 }}
+          >
+            <LogoTile width={58} height={44} />
+            <View className="shrink">
+              <ThemedText
+                numberOfLines={1}
+                style={{
+                  color: '#FFFFFF',
+                  fontSize: 22,
+                  lineHeight: 26,
+                  letterSpacing: -0.3,
+                  fontFamily: fontFamilyFor('fr', 'extrabold'),
+                }}
+              >
+                M3ak
+              </ThemedText>
+              <ThemedText
+                numberOfLines={1}
+                style={{
+                  color: 'rgba(255,255,255,0.7)',
+                  fontSize: 10.5,
+                  lineHeight: 13,
+                  letterSpacing: arabic ? 0 : 0.2,
+                  fontFamily: fontFamilyFor(language, 'medium'),
+                }}
+              >
+                {t('accueil.header.product')}
+              </ThemedText>
+            </View>
+          </View>
+          <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
+            <HeaderIconButton
+              icon="search-outline"
+              label={t('accueil.header.search')}
+              onPress={() => router.push('/chat')}
+            />
+            <NotificationBell tone="onForest" />
+            <Pressable
+              onPress={() => router.push('/profil')}
+              accessibilityRole="button"
+              accessibilityLabel={t('accueil.header.profile')}
+              className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-primary"
+            >
+              <Avatar path={avatarPath} size={40} initials={getInitials(fullName ?? firstName)} />
+            </Pressable>
+          </View>
+        </View>
+
+        <View style={{ marginTop: 18, maxWidth: '78%' }}>
+          {agencyLine ? (
+            <ThemedText
+              numberOfLines={1}
+              style={{
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: 12,
+                lineHeight: 16,
+                letterSpacing: arabic ? 0 : 0.5,
+                textTransform: arabic ? 'none' : 'uppercase',
+                fontFamily: fontFamilyFor(language, 'semibold'),
+              }}
+            >
+              {agencyLine}
+            </ThemedText>
+          ) : null}
+          <ThemedText
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.75}
+            accessibilityRole="header"
+            style={{
+              marginTop: 2,
+              color: '#FFFFFF',
+              fontSize: 25,
+              lineHeight: 33,
+              fontFamily: fontFamilyFor(language, 'bold'),
+            }}
+          >
+            {greeting}
+          </ThemedText>
+          <ThemedText
+            numberOfLines={2}
+            style={{
+              marginTop: 4,
+              color: 'rgba(255,255,255,0.86)',
+              fontSize: 13.5,
+              lineHeight: 19,
+              fontFamily: fontFamilyFor(language, 'medium'),
+            }}
+          >
+            {t('accueil.header.tagline')}
+          </ThemedText>
+          <View
+            style={{
+              marginTop: 10,
+              width: 28,
+              height: 3,
+              borderRadius: 2,
+              backgroundColor: M3akPalette.lavender,
+            }}
+          />
+        </View>
+      </Animated.View>
+
+      {/* Petite barre repliée : logo M3ak à gauche, notifications à droite. */}
+      <Animated.View
+        animatedProps={compactProps}
+        style={[
+          {
+            position: 'absolute',
+            top: insets.top,
+            start: 0,
+            end: 0,
+            height: COMPACT_BAR,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 12,
+            paddingStart: insets.left + 20,
+            paddingEnd: insets.right + 20,
+          },
+          compactStyle,
+        ]}
+      >
         <View
           accessible
           accessibilityRole="image"
@@ -144,104 +384,31 @@ export function DashboardHeader({ prenom, fullName, agencyName, agencyCity, avat
           className="shrink flex-row items-center"
           style={{ gap: 10 }}
         >
-          <View
-            className="items-center justify-center"
-            style={{ width: 58, height: 44, borderRadius: 13, padding: 5, backgroundColor: 'rgba(255,255,255,0.96)' }}
-          >
-            <Image source={MARK} resizeMode="contain" style={{ width: '100%', height: '100%' }} />
-          </View>
-          <View className="shrink">
-            <ThemedText
-              numberOfLines={1}
-              style={{
-                color: '#FFFFFF',
-                fontSize: 22,
-                lineHeight: 26,
-                letterSpacing: -0.3,
-                fontFamily: fontFamilyFor('fr', 'extrabold'),
-              }}
-            >
-              M3ak
-            </ThemedText>
-            <ThemedText
-              numberOfLines={1}
-              style={{
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: 10.5,
-                lineHeight: 13,
-                letterSpacing: arabic ? 0 : 0.2,
-                fontFamily: fontFamilyFor(language, 'medium'),
-              }}
-            >
-              {t('accueil.header.product')}
-            </ThemedText>
-          </View>
-        </View>
-        <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
-          <HeaderIconButton
-            icon="search-outline"
-            label={t('accueil.header.search')}
-            onPress={() => router.push('/chat')}
-          />
-          <NotificationBell tone="onForest" />
-          <Pressable
-            onPress={() => router.push('/profil')}
-            accessibilityRole="button"
-            accessibilityLabel={t('accueil.header.profile')}
-            className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-primary"
-          >
-            <Avatar path={avatarPath} size={40} initials={getInitials(fullName ?? firstName)} />
-          </Pressable>
-        </View>
-      </View>
-
-      <View style={{ marginTop: 18, maxWidth: '78%' }}>
-        {agencyLine ? (
+          <LogoTile width={46} height={34} />
           <ThemedText
             numberOfLines={1}
             style={{
-              color: 'rgba(255,255,255,0.7)',
-              fontSize: 12,
-              lineHeight: 16,
-              letterSpacing: arabic ? 0 : 0.5,
-              textTransform: arabic ? 'none' : 'uppercase',
-              fontFamily: fontFamilyFor(language, 'semibold'),
+              color: '#FFFFFF',
+              fontSize: 20,
+              lineHeight: 24,
+              letterSpacing: -0.3,
+              fontFamily: fontFamilyFor('fr', 'extrabold'),
             }}
           >
-            {agencyLine}
+            M3ak
           </ThemedText>
-        ) : null}
-        <ThemedText
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.75}
-          accessibilityRole="header"
-          style={{
-            marginTop: 2,
-            color: '#FFFFFF',
-            fontSize: 25,
-            lineHeight: 33,
-            fontFamily: fontFamilyFor(language, 'bold'),
-          }}
-        >
-          {greeting}
-        </ThemedText>
-        <ThemedText
-          numberOfLines={2}
-          style={{
-            marginTop: 4,
-            color: 'rgba(255,255,255,0.86)',
-            fontSize: 13.5,
-            lineHeight: 19,
-            fontFamily: fontFamilyFor(language, 'medium'),
-          }}
-        >
-          {t('accueil.header.tagline')}
-        </ThemedText>
+        </View>
+        <NotificationBell tone="onForest" />
+      </Animated.View>
+
+      {refreshing ? (
         <View
-          style={{ marginTop: 10, width: 28, height: 3, borderRadius: 2, backgroundColor: M3akPalette.lavender }}
-        />
-      </View>
-    </View>
+          pointerEvents="none"
+          style={{ position: 'absolute', bottom: 8, start: 0, end: 0, alignItems: 'center' }}
+        >
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        </View>
+      ) : null}
+    </Animated.View>
   );
 }
