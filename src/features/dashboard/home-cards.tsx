@@ -12,6 +12,8 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
+import { OPENING_PHASES } from '@/features/opening/opening-timeline';
+import { Reveal } from '@/features/opening/reveal';
 import { ThemedText } from '@/components/themed-text';
 import { fontFamilyFor, M3akPalette } from '@/constants/theme';
 import { isRTL } from '@/i18n';
@@ -132,8 +134,13 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
   ];
   return (
     <View className="flex-row" style={{ gap: 12 }}>
-      {items.map((item) => (
-        <View key={item.key} className="flex-1">
+      {items.map((item, index) => (
+        <Reveal
+          key={item.key}
+          from={OPENING_PHASES.awakeningStart + 200 + index * 130}
+          to={OPENING_PHASES.awakeningStart + 650 + index * 130}
+          style={{ flex: 1 }}
+        >
           <GlassCard onPress={goRentals} label={`${item.label} : ${item.value}`}>
             <View style={{ padding: 11, gap: 5 }}>
               <IconTile icon={item.icon} />
@@ -162,7 +169,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
               </View>
             </View>
           </GlassCard>
-        </View>
+        </Reveal>
       ))}
     </View>
   );

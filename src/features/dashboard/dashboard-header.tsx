@@ -4,15 +4,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
-  Easing,
   Extrapolation,
   interpolate,
   useAnimatedProps,
   useAnimatedStyle,
   useReducedMotion,
-  useSharedValue,
-  withDelay,
-  withTiming,
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -22,46 +18,34 @@ import { Avatar } from '@/components/avatar';
 import { ThemedText } from '@/components/themed-text';
 import { fontFamilyFor, M3akPalette } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
+import {
+  endOpening,
+  openingTime,
+  startOpening,
+  useOpeningStatus,
+} from '@/features/opening/opening-store';
+import { OPENING_PHASES as P } from '@/features/opening/opening-timeline';
+import { Reveal, useReveal } from '@/features/opening/reveal';
 import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
 import { headerFirstName } from './header-format';
+import { HeroOpening, type MarkTarget } from './hero-opening';
+import { HERO_DARK, HERO_FADE_HEIGHT, HeroScene } from './hero-scene';
 import type { DashboardPeriod } from './kpis';
 import { PeriodTabs } from './period-tabs';
-import { CAR_BOX, CAR_FRAMES, HERO_BACKGROUND_NO_CAR } from './showroom/car-frames';
-import { isShowroomAvailable } from './showroom/showroom-math';
-import { ShowroomCar } from './showroom/showroom-car';
-import { TURNTABLE_BOX, TURNTABLE_VIDEO } from './turntable/turntable-assets';
-import { isTurntableAvailable, turntableLayout } from './turntable/turntable-math';
-import { TurntableVideo } from './turntable/turntable-video';
 
-const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
 // Version éclaircie du logo, sur fond transparent : lisible directement sur le fond sombre (sans pastille).
 const MARK = require('../../../assets/images/logo-m3ak-ribbon-light.png');
-/** Proportions du logo (640 × 373) et de la photo (1000 × 1094). */
+/** Proportions du logo (640 × 373). */
 const MARK_RATIO = 640 / 373;
-const HERO_RATIO = 1094 / 1000;
-/** Position verticale du bas de la voiture dans la photo (≈ 67 %). */
-const CAR_BOTTOM = 0.67;
-/** Largeur de la photo par rapport à l'écran : la voiture occupe la moitié droite, le texte reste à gauche. */
-const HERO_WIDTH = 0.72;
 
-const DARK = '#171126';
-/** Voiles du fond : aubergine profond à gauche, violet légèrement rosé vers le centre. */
-const DEEP_PURPLE = '#321943';
-const PURPLE_ROSE = '#6B386F';
+const DARK = HERO_DARK;
 /** Petite ligne décorative : champagne rosé vers champagne clair (seule touche dorée de l'interface). */
 const CHAMPAGNE = '#C9A58B';
 const CHAMPAGNE_LIGHT = '#E8C7A8';
-/** Parallaxe : décalage maximal de la photo (dp) sur 220 dp de défilement, dans le sens inverse du contenu. */
-const PARALLAX_MAX = 18;
-const PARALLAX_RANGE = 220;
-/** Fondu du bas du hero vers la couleur de la page : pas de bord net. */
-const FADE_HEIGHT = 26;
-const TABS_HEIGHT = 48;
+const FADE_HEIGHT = HERO_FADE_HEIGHT;
 const TABS_GAP = 21;
-/** Espace sous la voiture : sélecteur + fondu. */
-const BELOW_CAR = TABS_HEIGHT + TABS_GAP + FADE_HEIGHT;
 /** Hauteur de la petite barre fixe (sous la zone de sécurité). */
 const COMPACT_BAR = 56;
 
@@ -108,151 +92,6 @@ function HeaderIconButton({
   );
 }
 
-/**
- * Photo du hero : la voiture est calée en bas à droite, à côté du texte (qui reste à gauche), sans déformation. Des voiles
- * aubergine dégradés (gauche, haut, bas) fondent la photo dans le fond et garantissent la lisibilité.
- */
-function HeroBackdrop({
-  width,
-  height,
-  scrollY,
-  reduceMotion,
-}: {
-  width: number;
-  height: number;
-  scrollY?: SharedValue<number>;
-  reduceMotion: boolean;
-}) {
-  // Animation « showroom » de la voiture : active seulement si la séquence d'images et le fond sans voiture existent
-  // (voir docs/SHOWROOM.md), si l'utilisateur n'a pas réduit les animations et si les images se chargent.
-  // Sinon (aujourd'hui), la photo fixe est affichée, exactement comme avant.
-  const [carReady, setCarReady] = useState(false);
-  const [carFailed, setCarFailed] = useState(false);
-  // Vidéo 360° (rendu du vrai modèle 3D) : prioritaire sur la séquence d'images, elle-même prioritaire sur la photo fixe.
-  const [videoFailed, setVideoFailed] = useState(false);
-  const turntable = isTurntableAvailable(TURNTABLE_VIDEO) && !videoFailed && !reduceMotion;
-  const showroom =
-    !turntable &&
-    isShowroomAvailable(CAR_FRAMES.length, HERO_BACKGROUND_NO_CAR !== null) &&
-    !carFailed &&
-    !reduceMotion;
-  // Très léger mouvement de profondeur : la photo descend un peu pendant que la page monte (le hero, lui, défile normalement).
-  const parallax = useAnimatedStyle(() => ({
-    transform: [
-      {
-        translateY:
-          reduceMotion || !scrollY
-            ? 0
-            : interpolate(
-                scrollY.value,
-                [0, PARALLAX_RANGE],
-                [0, PARALLAX_MAX],
-                Extrapolation.CLAMP
-              ),
-      },
-    ],
-  }));
-  let imageWidth = width * HERO_WIDTH;
-  let imageHeight = imageWidth * HERO_RATIO;
-  // La photo doit toujours couvrir toute la hauteur du hero (petits écrans) : on l'agrandit au besoin.
-  if (imageHeight < height) {
-    imageWidth *= height / imageHeight;
-    imageHeight = height;
-  }
-  const top = Math.min(0, height - BELOW_CAR - CAR_BOTTOM * imageHeight);
-  return (
-    <View
-      pointerEvents="none"
-      style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}
-    >
-      <Animated.View
-        pointerEvents="none"
-        style={[{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }, parallax]}
-      >
-        <Image
-          // Fond sans voiture dès que la voiture animée est prête ; avant (ou en cas d'échec), la photo fixe d'origine.
-          source={
-            showroom && carReady && HERO_BACKGROUND_NO_CAR ? HERO_BACKGROUND_NO_CAR : HERO_IMAGE
-          }
-          resizeMode="cover"
-          style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
-          accessible={false}
-        />
-        {turntable && TURNTABLE_VIDEO !== null ? (
-          // Même cadre que la photo : la vidéo (qui contient le décor sans voiture) recouvre l'ancienne voiture et suit la parallaxe.
-          <View
-            pointerEvents="none"
-            style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
-          >
-            <TurntableVideo
-              source={TURNTABLE_VIDEO}
-              layout={turntableLayout(imageWidth, imageHeight, TURNTABLE_BOX)}
-              scrollY={scrollY}
-              heroHeight={height}
-              onFail={() => setVideoFailed(true)}
-            />
-          </View>
-        ) : null}
-        {showroom ? (
-          // Même cadre que la photo : la voiture animée suit donc son décalage, son échelle et la parallaxe.
-          <View
-            pointerEvents="none"
-            style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
-          >
-            <ShowroomCar
-              frames={CAR_FRAMES}
-              box={{
-                left: CAR_BOX.x * imageWidth,
-                top: CAR_BOX.y * imageHeight,
-                width: CAR_BOX.w * imageWidth,
-                height: CAR_BOX.h * imageHeight,
-              }}
-              scrollY={scrollY}
-              heroHeight={height}
-              onReady={() => setCarReady(true)}
-              onFail={() => setCarFailed(true)}
-            />
-          </View>
-        ) : null}
-      </Animated.View>
-      <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
-        <Defs>
-          <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor={DARK} stopOpacity="1" />
-            <Stop offset="0.3" stopColor={DARK} stopOpacity="0.97" />
-            <Stop offset="0.42" stopColor={DEEP_PURPLE} stopOpacity="0.8" />
-            <Stop offset="0.55" stopColor={DEEP_PURPLE} stopOpacity="0.4" />
-            <Stop offset="0.66" stopColor={PURPLE_ROSE} stopOpacity="0.15" />
-            <Stop offset="0.82" stopColor={PURPLE_ROSE} stopOpacity="0.03" />
-            <Stop offset="1" stopColor={PURPLE_ROSE} stopOpacity="0" />
-          </LinearGradient>
-          <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={DARK} stopOpacity="0.5" />
-            <Stop offset="0.4" stopColor={DARK} stopOpacity="0" />
-          </LinearGradient>
-          <LinearGradient id="kh-bottom" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0.55" stopColor={DARK} stopOpacity="0" />
-            <Stop offset="1" stopColor={DARK} stopOpacity="0.3" />
-          </LinearGradient>
-          <LinearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor={M3akPalette.background} stopOpacity="0" />
-            <Stop offset="1" stopColor={M3akPalette.background} stopOpacity="1" />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill="url(#kh-side)" />
-        <Rect width="100%" height="100%" fill="url(#kh-top)" />
-        <Rect width="100%" height="100%" fill="url(#kh-bottom)" />
-        <Rect
-          y={Math.max(height - FADE_HEIGHT, 0)}
-          width="100%"
-          height={FADE_HEIGHT}
-          fill="url(#kh-fade)"
-        />
-      </Svg>
-    </View>
-  );
-}
-
 type DashboardHeaderProps = {
   /** Prénom du profil (peut manquer). */
   prenom?: string | null;
@@ -289,26 +128,35 @@ export function DashboardHeader({
   const focused = useIsFocused();
   const { width: screenWidth } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
-  // Entrée : le logo puis le message de bienvenue apparaissent en fondu avec un très léger mouvement vers le haut (6 dp, 450 ms).
-  // Lancée une seule fois au montage : les mises à jour de données ne la relancent pas.
-  const enterLogo = useSharedValue(reduceMotion ? 1 : 0);
-  const enterText = useSharedValue(reduceMotion ? 1 : 0);
-  useEffect(() => {
-    if (reduceMotion) return;
-    const timing = { duration: 450, easing: Easing.out(Easing.cubic) };
-    enterLogo.value = withTiming(1, timing);
-    enterText.value = withDelay(90, withTiming(1, timing));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const logoEnter = useAnimatedStyle(() => ({
-    opacity: enterLogo.value,
-    transform: [{ translateY: (1 - enterLogo.value) * 6 }],
+  // Ouverture : chaque élément du hero apparaît à son heure sur l'horloge unique (voir features/opening). Hors ouverture,
+  // l'horloge est à la fin et tout est simplement visible.
+  const opening = useOpeningStatus();
+  const [imageReady, setImageReady] = useState(false);
+  const [wrapperBox, setWrapperBox] = useState<{ x: number; y: number } | null>(null);
+  const [markBox, setMarkBox] = useState<{ x: number; y: number; w: number; h: number } | null>(
+    null
+  );
+  const markTarget: MarkTarget | null =
+    wrapperBox && markBox
+      ? {
+          x: wrapperBox.x + markBox.x,
+          y: wrapperBox.y + markBox.y,
+          width: markBox.w,
+          height: markBox.h,
+        }
+      : null;
+  // Le vrai logo prend la place du logo volant à l'instant exact de son arrivée.
+  const markVisible = useAnimatedStyle(() => ({
+    opacity: openingTime.value >= P.flightEnd ? 1 : 0,
   }));
-  const textEnter = useAnimatedStyle(() => ({
-    opacity: enterText.value,
-    transform: [{ translateY: (1 - enterText.value) * 6 }],
-  }));
+  const nameReveal = useReveal(P.awakeningStart + 100, P.awakeningStart + 600);
+  const greetingReveal = useReveal(P.awakeningStart + 250, P.awakeningStart + 750, 10);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
+  // Dès que la photo est affichée et que le logo est mesuré, on lance la chronologie ; sinon on abandonne proprement.
+  const ready = !!size && imageReady && !!markTarget;
+  useEffect(() => {
+    if (opening === 'armed' && ready && size) startOpening(size.height);
+  }, [opening, ready, size]);
   const logoHeight = screenWidth < 340 ? 40 : screenWidth < 375 ? 46 : 52;
   const showName = screenWidth >= 340;
   const showAgency = screenWidth >= 375 && !!agencyName?.trim();
@@ -344,12 +192,17 @@ export function DashboardHeader({
       {/* Les onglets restent montés : on ne règle la barre d'état (icônes claires) que lorsque l'Accueil est affiché. */}
       {focused ? <StatusBar style="light" /> : null}
       {size ? (
-        <HeroBackdrop
+        <HeroScene
           width={size.width}
           height={size.height}
           scrollY={scrollY}
           reduceMotion={reduceMotion}
+          onReady={() => setImageReady(true)}
+          onError={endOpening}
         />
+      ) : null}
+      {size && opening !== 'idle' ? (
+        <HeroOpening width={size.width} height={size.height} markTarget={markTarget} />
       ) : null}
 
       <View
@@ -361,70 +214,100 @@ export function DashboardHeader({
         }}
       >
         <View className="flex-row items-center justify-between" style={{ minHeight: 48, gap: 12 }}>
-          <Animated.View
+          <View
             accessible
             accessibilityRole="image"
             accessibilityLabel="M3ak"
+            onLayout={(event) => {
+              const { x, y } = event.nativeEvent.layout;
+              setWrapperBox((previous) =>
+                previous && previous.x === x && previous.y === y ? previous : { x, y }
+              );
+            }}
             // Mise en page en style (et non en classe) : les classes ne s'appliquent pas au conteneur animé.
-            style={[
-              { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-              logoEnter,
-            ]}
+            style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}
           >
-            <LogoMark height={logoHeight} />
+            <Animated.View
+              onLayout={(event) => {
+                const { x, y, width, height } = event.nativeEvent.layout;
+                setMarkBox((previous) =>
+                  previous &&
+                  previous.x === x &&
+                  previous.y === y &&
+                  previous.w === width &&
+                  previous.h === height
+                    ? previous
+                    : { x, y, w: width, h: height }
+                );
+              }}
+              style={markVisible}
+            >
+              <LogoMark height={logoHeight} />
+            </Animated.View>
             {showName ? (
-              <View
-                style={{
-                  width: 1,
-                  height: logoHeight * 0.62,
-                  backgroundColor: 'rgba(255,255,255,0.35)',
-                }}
-              />
-            ) : null}
-            {showName ? (
-              <View className="shrink">
-                <ThemedText
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.7}
+              <Animated.View
+                style={[
+                  { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+                  nameReveal,
+                ]}
+              >
+                <View
                   style={{
-                    color: '#FFFFFF',
-                    fontSize: 22,
-                    lineHeight: 26,
-                    letterSpacing: -0.3,
-                    fontFamily: fontFamilyFor('fr', 'extrabold'),
+                    width: 1,
+                    height: logoHeight * 0.62,
+                    backgroundColor: 'rgba(255,255,255,0.35)',
                   }}
-                >
-                  M3ak
-                </ThemedText>
-                {showAgency ? (
+                />
+                <View className="shrink">
                   <ThemedText
                     numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.7}
                     style={{
-                      color: 'rgba(255,255,255,0.7)',
-                      fontSize: 11,
-                      lineHeight: 14,
-                      fontFamily: fontFamilyFor(language, 'medium'),
+                      color: '#FFFFFF',
+                      fontSize: 22,
+                      lineHeight: 26,
+                      letterSpacing: -0.3,
+                      fontFamily: fontFamilyFor('fr', 'extrabold'),
                     }}
                   >
-                    {agencyName?.trim()}
+                    M3ak
                   </ThemedText>
-                ) : null}
-              </View>
+                  {showAgency ? (
+                    <ThemedText
+                      numberOfLines={1}
+                      style={{
+                        color: 'rgba(255,255,255,0.7)',
+                        fontSize: 11,
+                        lineHeight: 14,
+                        fontFamily: fontFamilyFor(language, 'medium'),
+                      }}
+                    >
+                      {agencyName?.trim()}
+                    </ThemedText>
+                  ) : null}
+                </View>
+              </Animated.View>
             ) : null}
-          </Animated.View>
+          </View>
           <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
-            <HeaderIconButton
-              icon="search-outline"
-              label={t('accueil.header.search')}
-              onPress={() => router.push('/chat')}
-            />
-            <NotificationBell tone="onForest" />
-            <ProfileButton path={avatarPath} initials={initials} />
+            <Reveal from={P.awakeningStart + 150} to={P.awakeningStart + 600}>
+              <HeaderIconButton
+                icon="search-outline"
+                label={t('accueil.header.search')}
+                onPress={() => router.push('/chat')}
+              />
+            </Reveal>
+            <Reveal from={P.awakeningStart + 230} to={P.awakeningStart + 680}>
+              <NotificationBell tone="onForest" />
+            </Reveal>
+            <Reveal from={P.awakeningStart + 310} to={P.awakeningStart + 760}>
+              <ProfileButton path={avatarPath} initials={initials} />
+            </Reveal>
           </View>
         </View>
 
-        <Animated.View style={[{ marginTop: 18, maxWidth: '62%' }, textEnter]}>
+        <Animated.View style={[{ marginTop: 18, maxWidth: '62%' }, greetingReveal]}>
           <ThemedText
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -485,7 +368,9 @@ export function DashboardHeader({
         </Animated.View>
 
         <View style={{ marginTop: TABS_GAP + 6 }}>
-          <PeriodTabs value={period} onChange={onPeriodChange} />
+          <Reveal from={P.awakeningStart + 450} to={P.end}>
+            <PeriodTabs value={period} onChange={onPeriodChange} />
+          </Reveal>
         </View>
       </View>
     </View>

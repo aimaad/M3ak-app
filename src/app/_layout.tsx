@@ -17,13 +17,17 @@ import {
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useReducedMotion } from 'react-native-reanimated';
 import type { ReactNode } from 'react';
 
 import { DesktopShell } from '@/components/desktop-shell';
 import { UndoProvider } from '@/components/undo-toast';
 import { useAgencyAccess } from '@/features/agency/hooks';
 import { SessionProvider, useSession } from '@/features/auth/session-context';
+import { OpeningGate } from '@/features/opening/opening-gate';
+import { armOpening } from '@/features/opening/opening-store';
+import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
 
 const PUBLIC_SEGMENTS = new Set(['login', 'signup', 'mot-de-passe-oublie']);
@@ -83,6 +87,14 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
+  // Ouverture cinématographique : armée une seule fois, avant le premier affichage (sauf animations réduites / écran bureau).
+  const reduceMotion = useReducedMotion();
+  const desktop = useDesktopLayout();
+  useState(() => {
+    armOpening({ reduceMotion, disabled: desktop });
+    return null;
+  });
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -100,9 +112,11 @@ export default function RootLayout() {
           <AuthGate>
             <AccessGate>
               <UndoProvider>
-                <DesktopShell>
-                  <Stack screenOptions={{ headerShown: false }} />
-                </DesktopShell>
+                <OpeningGate>
+                  <DesktopShell>
+                    <Stack screenOptions={{ headerShown: false }} />
+                  </DesktopShell>
+                </OpeningGate>
                 <NotificationsBootstrap />
               </UndoProvider>
             </AccessGate>
