@@ -7,7 +7,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
-import { useTheme } from '@/hooks/use-theme';
 import { useLanguage } from '@/i18n/use-language';
 
 export type SectionKey = 'accueil' | 'flotte' | 'clients' | 'locations' | 'equipe';
@@ -19,8 +18,20 @@ const SECTIONS: {
   icon: keyof typeof Ionicons.glyphMap;
   iconActive: keyof typeof Ionicons.glyphMap;
 }[] = [
-  { key: 'accueil', href: '/accueil', labelKey: 'accueil.title', icon: 'home-outline', iconActive: 'home' },
-  { key: 'flotte', href: '/flotte', labelKey: 'flotte.title', icon: 'car-outline', iconActive: 'car' },
+  {
+    key: 'accueil',
+    href: '/accueil',
+    labelKey: 'accueil.title',
+    icon: 'home-outline',
+    iconActive: 'home',
+  },
+  {
+    key: 'flotte',
+    href: '/flotte',
+    labelKey: 'flotte.title',
+    icon: 'car-outline',
+    iconActive: 'car',
+  },
   {
     key: 'clients',
     href: '/clients',
@@ -28,7 +39,13 @@ const SECTIONS: {
     icon: 'people-outline',
     iconActive: 'people',
   },
-  { key: 'locations', href: '/locations', labelKey: 'locations.title', icon: 'key-outline', iconActive: 'key' },
+  {
+    key: 'locations',
+    href: '/locations',
+    labelKey: 'locations.title',
+    icon: 'key-outline',
+    iconActive: 'key',
+  },
   {
     key: 'equipe',
     href: '/equipe',
@@ -44,7 +61,6 @@ const INACTIVE_COLOR = M3akPalette.subtle;
 export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
   const { t } = useLanguage();
   const insets = useSafeAreaInsets();
-  const theme = useTheme();
   const isDesktop = useDesktopLayout();
 
   const segments = useSegments();
@@ -60,48 +76,90 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
   const currentName = pathParts[0] === '(tabs)' ? pathParts[1] : state.routes[state.index]?.name;
 
   return (
+    // Barre flottante : un bloc de la couleur de la page (il prend sa place dans la mise en page, rien n'est recouvert) qui porte
+    // une gélule blanche translucide aux coins très arrondis, avec une ombre mauve diffuse.
     <View
-      className="flex-row border-t bg-white"
-      style={[{ paddingBottom: Math.max(insets.bottom, 10), borderColor: theme.border }, { shadowColor: M3akPalette.mauveDeep, shadowOpacity: 0.1, shadowRadius: 16, shadowOffset: { width: 0, height: -6 }, elevation: 12 }]}
+      style={{
+        backgroundColor: M3akPalette.background,
+        paddingTop: 6,
+        paddingBottom: Math.max(insets.bottom, 12),
+        paddingStart: Math.max(insets.left, 0) + 16,
+        paddingEnd: Math.max(insets.right, 0) + 16,
+      }}
     >
-      {SECTIONS.map((section) => {
-        const route = state.routes.find((candidate) => candidate.name === section.key);
-        const selected = section.key === currentName;
-        return (
-          <Pressable
-            key={section.key}
-            onPress={() => {
-              if (!route) return;
-              const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              // On compare à l'onglet réellement affiché par le navigateur (et non à l'adresse) : sinon un clic est
-              // ignoré quand les deux ne concordent plus.
-              const focused = state.routes[state.index]?.key === route.key;
-              if (!focused && !event.defaultPrevented) navigateToTab(route.key);
-            }}
-            className="min-h-14 flex-1 items-center gap-1 pt-2"
-            accessibilityRole="tab"
-            accessibilityState={{ selected }}
-            accessibilityLabel={t(section.labelKey)}
-          >
-            <View
-              className="h-8 w-14 items-center justify-center rounded-full"
-              style={{ backgroundColor: selected ? M3akPalette.primary : 'transparent' }}
+      <View
+        className="flex-row"
+        style={{
+          borderRadius: 30,
+          paddingHorizontal: 6,
+          backgroundColor: 'rgba(255,255,255,0.94)',
+          borderWidth: 1,
+          borderColor: 'rgba(182,154,207,0.28)',
+          shadowColor: M3akPalette.mauveDeep,
+          shadowOpacity: 0.18,
+          shadowRadius: 22,
+          shadowOffset: { width: 0, height: 10 },
+          elevation: 12,
+        }}
+      >
+        {SECTIONS.map((section) => {
+          const route = state.routes.find((candidate) => candidate.name === section.key);
+          const selected = section.key === currentName;
+          return (
+            <Pressable
+              key={section.key}
+              onPress={() => {
+                if (!route) return;
+                const event = emitter.emit({
+                  type: 'tabPress',
+                  target: route.key,
+                  canPreventDefault: true,
+                });
+                // On compare à l'onglet réellement affiché par le navigateur (et non à l'adresse) : sinon un clic est
+                // ignoré quand les deux ne concordent plus.
+                const focused = state.routes[state.index]?.key === route.key;
+                if (!focused && !event.defaultPrevented) navigateToTab(route.key);
+              }}
+              className="min-h-16 flex-1 items-center gap-1 pb-1.5 pt-2"
+              accessibilityRole="tab"
+              accessibilityState={{ selected }}
+              accessibilityLabel={t(section.labelKey)}
             >
-              <Ionicons
-                name={selected ? section.iconActive : section.icon}
-                size={21}
-                color={selected ? M3akPalette.onPrimary : INACTIVE_COLOR}
-              />
-            </View>
-            <ThemedText
-              type="small"
-              style={{ color: selected ? M3akPalette.mauveDeep : M3akPalette.muted, fontSize: 11, fontWeight: selected ? '700' : '500' }}
-            >
-              {t(section.labelKey)}
-            </ThemedText>
-          </Pressable>
-        );
-      })}
+              <View
+                className="h-8 w-14 items-center justify-center rounded-full"
+                style={{
+                  backgroundColor: selected ? M3akPalette.primary : 'transparent',
+                  ...(selected
+                    ? {
+                        shadowColor: M3akPalette.primary,
+                        shadowOpacity: 0.35,
+                        shadowRadius: 8,
+                        shadowOffset: { width: 0, height: 4 },
+                        elevation: 4,
+                      }
+                    : null),
+                }}
+              >
+                <Ionicons
+                  name={selected ? section.iconActive : section.icon}
+                  size={21}
+                  color={selected ? M3akPalette.onPrimary : INACTIVE_COLOR}
+                />
+              </View>
+              <ThemedText
+                type="small"
+                style={{
+                  color: selected ? M3akPalette.mauve : M3akPalette.muted,
+                  fontSize: 11,
+                  fontWeight: selected ? '700' : '500',
+                }}
+              >
+                {t(section.labelKey)}
+              </ThemedText>
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }

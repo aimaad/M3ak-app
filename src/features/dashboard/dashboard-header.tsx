@@ -2,14 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  useWindowDimensions,
-  View,
-  type LayoutChangeEvent,
-} from 'react-native';
+import { Image, Pressable, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -32,94 +25,33 @@ import type { DashboardPeriod } from './kpis';
 import { PeriodTabs } from './period-tabs';
 
 const HERO_IMAGE = require('../../../assets/images/hero-dashboard.jpg');
-// Version éclaircie du logo, sur fond transparent : lisible directement sur le mauve profond (sans pastille).
+// Version éclaircie du logo, sur fond transparent : lisible directement sur le fond sombre (sans pastille).
 const MARK = require('../../../assets/images/logo-m3ak-ribbon-light.png');
-/** Proportions du fichier (640 × 373). */
+/** Proportions du logo (640 × 373) et de la photo (1000 × 1094). */
 const MARK_RATIO = 640 / 373;
-
-// Proportions de la photo (1000 × 1094) et position verticale du bas de la voiture dans l'image (≈ 67 %).
 const HERO_RATIO = 1094 / 1000;
+/** Position verticale du bas de la voiture dans la photo (≈ 67 %). */
 const CAR_BOTTOM = 0.67;
-const HERO_SCALE = 1.1;
-/** Zone de fondu en bas du hero, vers la couleur de la page : le hero se fond dans le reste de l'écran (pas de bord net). */
-const FADE_HEIGHT = 40;
-/** Sélecteur de période posé sur le bas du hero : sa hauteur, et l'espace entre la voiture et lui. */
+/** Largeur de la photo par rapport à l'écran : la voiture occupe la moitié droite, le texte reste à gauche. */
+const HERO_WIDTH = 0.76;
+
+const DARK = '#171321';
+/** Fondu du bas du hero vers la couleur de la page : pas de bord net. */
+const FADE_HEIGHT = 26;
 const TABS_HEIGHT = 48;
-const TABS_GAP = 14;
-/** Espace libre sous la voiture : sélecteur + fondu. */
+const TABS_GAP = 16;
+/** Espace sous la voiture : sélecteur + fondu. */
 const BELOW_CAR = TABS_HEIGHT + TABS_GAP + FADE_HEIGHT;
-
-type DashboardHeaderProps = {
-  /** Prénom du profil (peut manquer). */
-  prenom?: string | null;
-  /** Nom complet, utilisé si le prénom manque. */
-  fullName?: string | null;
-  agencyName?: string | null;
-  agencyCity?: string | null;
-  avatarPath?: string | null;
-  /** Période choisie (Aujourd'hui / 7 jours / 30 jours) et son changement : le sélecteur est posé sur le hero. */
-  period: DashboardPeriod;
-  onPeriodChange: (period: DashboardPeriod) => void;
-  /** Position de défilement de la page (valeur partagée mise à jour par la liste) : pilote le repli du hero. */
-  scrollY: SharedValue<number>;
-  /** Hauteur du hero déployé (pour réserver la place au-dessus du contenu). */
-  onFullHeight?: (height: number) => void;
-  /** Actualisation en cours : un petit indicateur remplace celui de la liste, masqué sous l'en-tête. */
-  refreshing?: boolean;
-};
-
-/** Hauteur de la petite barre repliée, sous la zone de sécurité. */
+/** Hauteur de la petite barre fixe (sous la zone de sécurité). */
 const COMPACT_BAR = 56;
-/** Hauteur supposée du hero tant qu'il n'est pas mesuré (évite un saut au premier affichage). */
-const FALLBACK_HEIGHT = 330;
 
-/**
- * Photo du hero : voiture calée en bas à droite (côté « fin » du texte, donc à gauche en arabe), sans déformation.
- * Un voile sombre dégradé garantit la lisibilité du texte à gauche et des boutons en haut.
- */
-function HeroBackdrop({ width, height }: { width: number; height: number }) {
-  // Photo légèrement plus large que l'écran, calée à droite : toute la voiture reste visible.
-  const imageWidth = width * HERO_SCALE;
-  const imageHeight = imageWidth * HERO_RATIO;
-  const top = Math.min(0, height - BELOW_CAR - CAR_BOTTOM * imageHeight);
-  return (
-    <View
-      pointerEvents="none"
-      style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}
-    >
-      <Image
-        source={HERO_IMAGE}
-        resizeMode="cover"
-        style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
-        accessible={false}
-      />
-      <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
-        <Defs>
-          <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
-            <Stop offset="0" stopColor="#171321" stopOpacity="0.9" />
-            <Stop offset="0.55" stopColor="#171321" stopOpacity="0.5" />
-            <Stop offset="1" stopColor="#171321" stopOpacity="0.05" />
-          </LinearGradient>
-          <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0" stopColor="#171321" stopOpacity="0.55" />
-            <Stop offset="0.5" stopColor="#171321" stopOpacity="0" />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill="url(#kh-side)" />
-        <Rect width="100%" height="100%" fill="url(#kh-top)" />
-      </Svg>
-    </View>
-  );
-}
-
-/** Logo sur fond transparent, à la hauteur demandée. */
 function LogoMark({ height }: { height: number }) {
   return (
     <Image source={MARK} resizeMode="contain" style={{ width: height * MARK_RATIO, height }} />
   );
 }
 
-/** Rond de profil (photo ou initiales) : ouvre le profil. Même bouton dans le hero et dans la petite barre repliée. */
+/** Rond de profil (photo ou initiales) à contour lavande : ouvre le profil. Même bouton dans le hero et dans la petite barre. */
 function ProfileButton({ path, initials }: { path: string | null | undefined; initials: string }) {
   const { t } = useLanguage();
   return (
@@ -134,7 +66,7 @@ function ProfileButton({ path, initials }: { path: string | null | undefined; in
   );
 }
 
-/** Bouton rond de 44 × 44 : même disque translucide et même trait fin pour toutes les actions. */
+/** Bouton rond de 44 × 44 : disque translucide et trait fin. */
 function HeaderIconButton({
   icon,
   label,
@@ -157,36 +89,101 @@ function HeaderIconButton({
 }
 
 /**
- * En-tête « hero » du tableau de bord, qui se replie quand on fait défiler la page : le grand hero (photo, salutation,
- * agence, accroche) rétrécit en douceur, puis laisse place à une petite barre avec le logo M3ak et les notifications.
- * Tout est piloté par `scrollY` sur le fil d'interface (Reanimated) : pas de saccade. Rien n'a de largeur fixe : le texte
- * se réduit ou se coupe proprement jusqu'à 320 dp, et la photo s'adapte à la largeur de l'écran.
+ * Photo du hero : la voiture est calée en bas à droite, à côté du texte (qui reste à gauche), sans déformation. Des voiles
+ * aubergine dégradés (gauche, haut, bas) fondent la photo dans le fond et garantissent la lisibilité.
+ */
+function HeroBackdrop({ width, height }: { width: number; height: number }) {
+  let imageWidth = width * HERO_WIDTH;
+  let imageHeight = imageWidth * HERO_RATIO;
+  // La photo doit toujours couvrir toute la hauteur du hero (petits écrans) : on l'agrandit au besoin.
+  if (imageHeight < height) {
+    imageWidth *= height / imageHeight;
+    imageHeight = height;
+  }
+  const top = Math.min(0, height - BELOW_CAR - CAR_BOTTOM * imageHeight);
+  return (
+    <View
+      pointerEvents="none"
+      style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }}
+    >
+      <Image
+        source={HERO_IMAGE}
+        resizeMode="cover"
+        style={{ position: 'absolute', end: 0, top, width: imageWidth, height: imageHeight }}
+        accessible={false}
+      />
+      <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
+        <Defs>
+          <LinearGradient id="kh-side" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor={DARK} stopOpacity="1" />
+            <Stop offset="0.2" stopColor={DARK} stopOpacity="0.96" />
+            <Stop offset="0.5" stopColor={DARK} stopOpacity="0.45" />
+            <Stop offset="0.8" stopColor={DARK} stopOpacity="0.08" />
+            <Stop offset="1" stopColor={DARK} stopOpacity="0" />
+          </LinearGradient>
+          <LinearGradient id="kh-top" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={DARK} stopOpacity="0.7" />
+            <Stop offset="0.45" stopColor={DARK} stopOpacity="0" />
+          </LinearGradient>
+          <LinearGradient id="kh-bottom" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0.55" stopColor={DARK} stopOpacity="0" />
+            <Stop offset="1" stopColor={DARK} stopOpacity="0.55" />
+          </LinearGradient>
+          <LinearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={M3akPalette.background} stopOpacity="0" />
+            <Stop offset="1" stopColor={M3akPalette.background} stopOpacity="1" />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill="url(#kh-side)" />
+        <Rect width="100%" height="100%" fill="url(#kh-top)" />
+        <Rect width="100%" height="100%" fill="url(#kh-bottom)" />
+        <Rect
+          y={Math.max(height - FADE_HEIGHT, 0)}
+          width="100%"
+          height={FADE_HEIGHT}
+          fill="url(#kh-fade)"
+        />
+      </Svg>
+    </View>
+  );
+}
+
+type DashboardHeaderProps = {
+  /** Prénom du profil (peut manquer). */
+  prenom?: string | null;
+  /** Nom complet, utilisé si le prénom manque. */
+  fullName?: string | null;
+  agencyName?: string | null;
+  avatarPath?: string | null;
+  /** Période choisie (Aujourd'hui / 7 jours / 30 jours) et son changement : le sélecteur est posé sur le bas du hero. */
+  period: DashboardPeriod;
+  onPeriodChange: (period: DashboardPeriod) => void;
+  /** Hauteur mesurée du hero (pour que la petite barre sache quand apparaître). */
+  onHeight?: (height: number) => void;
+};
+
+/**
+ * Hero du tableau de bord : photo, logo M3ak et actions (question à M3ak, notifications, profil), salutation, accroche et
+ * sélecteur de période. Il fait partie du contenu de la page et défile normalement avec elle (il ne reste pas collé en haut).
+ * Aucune largeur fixe : tout se réduit ou se coupe proprement jusqu'à 320 dp.
  */
 export function DashboardHeader({
   prenom,
   fullName,
   agencyName,
-  agencyCity,
   avatarPath,
   period,
   onPeriodChange,
-  scrollY,
-  onFullHeight,
-  refreshing = false,
+  onHeight,
 }: DashboardHeaderProps) {
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const focused = useIsFocused();
-  const arabic = language === 'ar';
   const { width: screenWidth } = useWindowDimensions();
-  // Logo grand, mais réduit sur les petits écrans pour laisser la place aux trois boutons ; le nom s'efface sous 340 dp.
-  const logoHeight = screenWidth < 340 ? 52 : 62;
-  const showName = screenWidth >= 340;
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-
-  const fullHeight = size?.height ?? FALLBACK_HEIGHT + insets.top;
-  const compactHeight = insets.top + COMPACT_BAR;
-  const range = Math.max(fullHeight - compactHeight, 1);
+  const logoHeight = screenWidth < 340 ? 44 : 52;
+  const showName = screenWidth >= 340;
+  const showAgency = screenWidth >= 375 && !!agencyName?.trim();
 
   const onLayout = (event: LayoutChangeEvent) => {
     const { width, height } = event.nativeEvent.layout;
@@ -197,110 +194,32 @@ export function DashboardHeader({
         Math.abs(previous.height - height) < 1
       )
         return previous;
-      onFullHeight?.(height);
+      onHeight?.(height);
       return { width, height };
     });
   };
-
-  // Le conteneur rétrécit de la hauteur du hero à celle de la petite barre.
-  const containerStyle = useAnimatedStyle(() => {
-    const y = scrollY.value;
-    return {
-      height: interpolate(y, [0, range], [fullHeight, compactHeight], Extrapolation.CLAMP),
-    };
-  });
-  // Photo : s'efface avant la fin du repli, la petite barre repose sur le mauve profond uni.
-  const backdropStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, range * 0.8], [1, 0], Extrapolation.CLAMP),
-  }));
-  // Fondu du bas : visible hero déployé, il s'efface dès le début du repli (la petite barre est unie).
-  const fadeStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, range * 0.5], [1, 0], Extrapolation.CLAMP),
-  }));
-  // Hero : s'estompe et remonte, sortant du cadre (les boutons cachés ne sont plus touchables, car rognés).
-  const heroStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [0, range * 0.55], [1, 0], Extrapolation.CLAMP),
-    transform: [
-      {
-        translateY: interpolate(scrollY.value, [0, range], [0, -range * 0.6], Extrapolation.CLAMP),
-      },
-    ],
-  }));
-  // Petite barre : apparaît en fin de repli ; tant qu'elle est invisible elle ne reçoit aucun toucher.
-  const compactStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(scrollY.value, [range * 0.55, range * 0.95], [0, 1], Extrapolation.CLAMP),
-  }));
-  const compactProps = useAnimatedProps(() => ({
-    pointerEvents: scrollY.value > range * 0.7 ? ('auto' as const) : ('none' as const),
-  }));
 
   const firstName = headerFirstName(prenom, fullName);
   const initials = getInitials(fullName ?? firstName);
   const greeting = firstName
     ? t('accueil.header.greeting', { name: firstName })
     : t('accueil.header.greetingNoName');
-  const agencyLine = [agencyName?.trim(), agencyCity?.trim()].filter(Boolean).join(' · ');
 
   return (
-    <Animated.View
-      style={[
-        {
-          backgroundColor: '#171321',
-          overflow: 'hidden',
-        },
-        { height: fullHeight },
-        containerStyle,
-      ]}
-    >
+    <View onLayout={onLayout} style={{ backgroundColor: DARK, overflow: 'hidden' }}>
       {/* Les onglets restent montés : on ne règle la barre d'état (icônes claires) que lorsque l'Accueil est affiché. */}
       {focused ? <StatusBar style="light" /> : null}
+      {size ? <HeroBackdrop width={size.width} height={size.height} /> : null}
 
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          { position: 'absolute', top: 0, start: 0, end: 0, height: fullHeight },
-          backdropStyle,
-        ]}
+      <View
+        style={{
+          paddingTop: insets.top + 6,
+          paddingBottom: FADE_HEIGHT,
+          paddingStart: insets.left + 20,
+          paddingEnd: insets.right + 20,
+        }}
       >
-        {size ? <HeroBackdrop width={size.width} height={size.height} /> : null}
-      </Animated.View>
-
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          { position: 'absolute', bottom: 0, start: 0, end: 0, height: FADE_HEIGHT },
-          fadeStyle,
-        ]}
-      >
-        <Svg width="100%" height="100%" preserveAspectRatio="none">
-          <Defs>
-            <LinearGradient id="kh-fade" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={M3akPalette.background} stopOpacity="0" />
-              <Stop offset="0.5" stopColor={M3akPalette.background} stopOpacity="0.4" />
-              <Stop offset="1" stopColor={M3akPalette.background} stopOpacity="1" />
-            </LinearGradient>
-          </Defs>
-          <Rect width="100%" height="100%" fill="url(#kh-fade)" />
-        </Svg>
-      </Animated.View>
-
-      <Animated.View
-        onLayout={onLayout}
-        style={[
-          {
-            position: 'absolute',
-            top: 0,
-            start: 0,
-            end: 0,
-            paddingTop: insets.top + 4,
-            paddingBottom: FADE_HEIGHT,
-            paddingStart: insets.left + 20,
-            paddingEnd: insets.right + 20,
-          },
-          heroStyle,
-        ]}
-      >
-        <View className="flex-row items-center justify-between" style={{ minHeight: 44, gap: 12 }}>
+        <View className="flex-row items-center justify-between" style={{ minHeight: 48, gap: 12 }}>
           <View
             accessible
             accessibilityRole="image"
@@ -325,6 +244,19 @@ export function DashboardHeader({
                 >
                   M3ak
                 </ThemedText>
+                {showAgency ? (
+                  <ThemedText
+                    numberOfLines={1}
+                    style={{
+                      color: 'rgba(255,255,255,0.7)',
+                      fontSize: 11,
+                      lineHeight: 14,
+                      fontFamily: fontFamilyFor(language, 'medium'),
+                    }}
+                  >
+                    {agencyName?.trim()}
+                  </ThemedText>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -339,44 +271,28 @@ export function DashboardHeader({
           </View>
         </View>
 
-        <View style={{ marginTop: 18, maxWidth: '78%' }}>
-          {agencyLine ? (
-            <ThemedText
-              numberOfLines={1}
-              style={{
-                color: 'rgba(255,255,255,0.7)',
-                fontSize: 12,
-                lineHeight: 16,
-                letterSpacing: arabic ? 0 : 0.5,
-                textTransform: arabic ? 'none' : 'uppercase',
-                fontFamily: fontFamilyFor(language, 'semibold'),
-              }}
-            >
-              {agencyLine}
-            </ThemedText>
-          ) : null}
+        <View style={{ marginTop: 14, maxWidth: '62%' }}>
           <ThemedText
             numberOfLines={1}
             adjustsFontSizeToFit
             minimumFontScale={0.75}
             accessibilityRole="header"
             style={{
-              marginTop: 2,
               color: '#FFFFFF',
-              fontSize: 25,
-              lineHeight: 33,
+              fontSize: 24,
+              lineHeight: 31,
               fontFamily: fontFamilyFor(language, 'bold'),
             }}
           >
             {greeting}
           </ThemedText>
           <ThemedText
-            numberOfLines={2}
+            numberOfLines={3}
             style={{
               marginTop: 4,
               color: 'rgba(255,255,255,0.86)',
-              fontSize: 13.5,
-              lineHeight: 19,
+              fontSize: 12.5,
+              lineHeight: 17,
               fontFamily: fontFamilyFor(language, 'medium'),
             }}
           >
@@ -393,67 +309,100 @@ export function DashboardHeader({
           />
         </View>
 
-        {/* Sélecteur de période sur le bas du hero ; l'espace au-dessus laisse voir la voiture de la photo. */}
-        <View style={{ marginTop: 104 }}>
+        <View style={{ marginTop: TABS_GAP + 6 }}>
           <PeriodTabs value={period} onChange={onPeriodChange} />
         </View>
-      </Animated.View>
+      </View>
+    </View>
+  );
+}
 
-      {/* Petite barre repliée : logo M3ak à gauche, notifications à droite. */}
-      <Animated.View
-        animatedProps={compactProps}
-        style={[
-          {
-            position: 'absolute',
-            top: insets.top,
-            start: 0,
-            end: 0,
-            height: COMPACT_BAR,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: 12,
-            paddingStart: insets.left + 20,
-            paddingEnd: insets.right + 20,
-          },
-          compactStyle,
-        ]}
+/**
+ * Petite barre fixe en haut (logo M3ak, notifications, profil) : invisible tant que le hero est à l'écran, elle apparaît en
+ * fondu dès que le hero a défilé et reste alors collée en haut. `scrollY` vient de la liste (fil d'interface, sans saccade).
+ */
+export function CompactTopBar({
+  scrollY,
+  heroHeight,
+  prenom,
+  fullName,
+  avatarPath,
+}: {
+  scrollY: SharedValue<number>;
+  heroHeight: number;
+  prenom?: string | null;
+  fullName?: string | null;
+  avatarPath?: string | null;
+}) {
+  const insets = useSafeAreaInsets();
+  const barHeight = insets.top + COMPACT_BAR;
+  // Elle apparaît quand les boutons du hero (en haut) sortent de l'écran, bien avant la fin du hero.
+  const from = Math.max(insets.top + 40, Math.min(heroHeight - barHeight - 40, 120));
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [from, from + 50], [0, 1], Extrapolation.CLAMP),
+    transform: [
+      { translateY: interpolate(scrollY.value, [from, from + 50], [-10, 0], Extrapolation.CLAMP) },
+    ],
+  }));
+  const props = useAnimatedProps(() => ({
+    pointerEvents: scrollY.value > from + 20 ? ('auto' as const) : ('none' as const),
+  }));
+  const initials = getInitials(fullName ?? headerFirstName(prenom, fullName));
+
+  return (
+    <Animated.View
+      animatedProps={props}
+      style={[
+        {
+          position: 'absolute',
+          top: 0,
+          start: 0,
+          end: 0,
+          height: barHeight,
+          paddingTop: insets.top,
+          paddingStart: insets.left + 20,
+          paddingEnd: insets.right + 20,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          backgroundColor: DARK,
+          borderBottomWidth: 1,
+          borderBottomColor: 'rgba(255,255,255,0.08)',
+          shadowColor: '#000000',
+          shadowOpacity: 0.25,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: 4 },
+          elevation: 6,
+        },
+        style,
+      ]}
+    >
+      <View
+        accessible
+        accessibilityRole="image"
+        accessibilityLabel="M3ak"
+        className="shrink flex-row items-center"
+        style={{ gap: 8 }}
       >
-        <View
-          accessible
-          accessibilityRole="image"
-          accessibilityLabel="M3ak"
-          className="shrink flex-row items-center"
-          style={{ gap: 10 }}
+        <LogoMark height={40} />
+        <ThemedText
+          numberOfLines={1}
+          style={{
+            color: '#FFFFFF',
+            fontSize: 20,
+            lineHeight: 24,
+            letterSpacing: -0.3,
+            fontFamily: fontFamilyFor('fr', 'extrabold'),
+          }}
         >
-          <LogoMark height={40} />
-          <ThemedText
-            numberOfLines={1}
-            style={{
-              color: '#FFFFFF',
-              fontSize: 20,
-              lineHeight: 24,
-              letterSpacing: -0.3,
-              fontFamily: fontFamilyFor('fr', 'extrabold'),
-            }}
-          >
-            M3ak
-          </ThemedText>
-        </View>
-        <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
-          <NotificationBell tone="onForest" />
-          <ProfileButton path={avatarPath} initials={initials} />
-        </View>
-      </Animated.View>
-
-      {refreshing ? (
-        <View
-          pointerEvents="none"
-          style={{ position: 'absolute', bottom: 8, start: 0, end: 0, alignItems: 'center' }}
-        >
-          <ActivityIndicator size="small" color="#FFFFFF" />
-        </View>
-      ) : null}
+          M3ak
+        </ThemedText>
+      </View>
+      <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
+        <NotificationBell tone="onForest" />
+        <ProfileButton path={avatarPath} initials={initials} />
+      </View>
     </Animated.View>
   );
 }

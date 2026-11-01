@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, View } from 'react-native';
+import { Pressable, useWindowDimensions, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
@@ -28,6 +28,8 @@ export function PeriodTabs({
   onChange: (period: DashboardPeriod) => void;
 }) {
   const { t, language } = useLanguage();
+  // Sous 340 dp de large, les icônes sont retirées pour que les trois libellés tiennent en entier.
+  const showIcons = useWindowDimensions().width >= 340;
   return (
     <View
       accessibilityRole="tablist"
@@ -96,7 +98,7 @@ export function PeriodTabs({
                 <Rect width="100%" height="100%" fill="url(#kp-shine)" />
               </Svg>
             ) : null}
-            <Ionicons name="calendar-outline" size={17} color="#FFFFFF" />
+            {showIcons ? <Ionicons name="calendar-outline" size={17} color="#FFFFFF" /> : null}
             <ThemedText
               numberOfLines={1}
               adjustsFontSizeToFit

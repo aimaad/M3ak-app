@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { View } from 'react-native';
 
@@ -6,26 +5,16 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { M3akPalette } from '@/constants/theme';
-import { countByStatus, type StatusFilter } from '@/features/vehicles/filters';
+import { countByStatus } from '@/features/vehicles/filters';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
 
+import { FleetDonut } from './fleet-donut';
 import { KpiCard, KpiGrid, SectionTitle } from './kpi-card';
 import type { DashboardMetrics, VehiclePerformance } from './kpis';
 import { UNDERUSED_THRESHOLD_PCT } from './kpis';
 
 const mad = (value: number) => `${Math.round(value).toLocaleString('fr-FR')} MAD`;
-
-const FLEET_TILES: {
-  statut: StatusFilter;
-  labelKey: string;
-  icon: keyof typeof Ionicons.glyphMap;
-}[] = [
-  { statut: 'disponible', labelKey: 'flotte.status.disponible', icon: 'checkmark-circle-outline' },
-  { statut: 'en_location', labelKey: 'flotte.status.en_location', icon: 'key-outline' },
-  { statut: 'maintenance', labelKey: 'flotte.status.maintenance', icon: 'construct-outline' },
-  { statut: 'a_inspecter', labelKey: 'flotte.status.a_inspecter', icon: 'camera-outline' },
-];
 
 const goRentals = () => router.push('/locations');
 
@@ -86,24 +75,9 @@ export function FleetSection({
   const counts = countByStatus(vehicles);
   return (
     <View className="gap-3">
-      <View>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('accueil.fleetTotal')}
-        </ThemedText>
-        <ThemedText type="title">
-          {t('accueil.fleetTotalCount', { count: metrics.fleetTotal })}
-        </ThemedText>
-      </View>
+      <SectionTitle>{t('accueil.fleet.title')}</SectionTitle>
+      <FleetDonut vehicles={vehicles} />
       <KpiGrid>
-        {FLEET_TILES.map((tile) => (
-          <KpiCard
-            key={tile.statut}
-            icon={tile.icon}
-            label={t(tile.labelKey)}
-            value={String(counts[tile.statut])}
-            onPress={() => router.push({ pathname: '/flotte', params: { statut: tile.statut } })}
-          />
-        ))}
         <KpiCard
           icon="speedometer-outline"
           label={t('accueil.fleet.utilizationNow')}

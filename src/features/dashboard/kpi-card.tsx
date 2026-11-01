@@ -64,7 +64,10 @@ export function KpiCard({
       <View className="gap-0.5">
         <ThemedText
           type="subtitle"
-          style={{ fontSize: 26, lineHeight: 32, color: TONE_TEXT[tone] }}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          style={{ fontSize: 22, lineHeight: 28, color: TONE_TEXT[tone] }}
         >
           {value}
         </ThemedText>

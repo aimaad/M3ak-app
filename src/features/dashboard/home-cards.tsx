@@ -9,7 +9,7 @@ import { fontFamilyFor, M3akPalette } from '@/constants/theme';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
-import { buildAreaPaths } from './chart-path';
+import { buildAreaPaths, hasTrend } from './chart-path';
 import type { DashboardMetrics, MetricsPeriod } from './kpis';
 
 const mad = (value: number) => `${Math.round(value).toLocaleString('fr-FR')} MAD`;
@@ -20,7 +20,7 @@ const periodKey = (period: MetricsPeriod) =>
  * Carte « verre » claire : dégradé blanc vers lavande très pâle, liseré blanc, ombre mauve diffuse. Appuyable si `onPress`.
  * `highlighted` : variante mauve clair à liseré mauve (l'action principale d'une rangée).
  */
-function GlassCard({
+export function GlassCard({
   children,
   onPress,
   highlighted = false,
@@ -35,7 +35,7 @@ function GlassCard({
 }) {
   const content = (
     <View
-      className={`overflow-hidden rounded-[20px] ${className ?? ''}`}
+      className={`overflow-hidden rounded-[22px] ${className ?? ''}`}
       style={{
         borderWidth: 1,
         borderColor: highlighted ? 'rgba(104,67,148,0.45)' : 'rgba(255,255,255,0.95)',
@@ -54,7 +54,7 @@ function GlassCard({
     </View>
   );
   const shadow = {
-    borderRadius: 20,
+    borderRadius: 22,
     shadowColor: '#684394',
     shadowOpacity: highlighted ? 0.28 : 0.14,
     shadowRadius: 16,
@@ -74,7 +74,7 @@ function GlassCard({
   );
 }
 
-function IconTile({ icon, size = 36 }: { icon: keyof typeof Ionicons.glyphMap; size?: number }) {
+function IconTile({ icon, size = 32 }: { icon: keyof typeof Ionicons.glyphMap; size?: number }) {
   return (
     <View
       className="items-center justify-center"
@@ -127,7 +127,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
       {items.map((item) => (
         <View key={item.key} className="flex-1">
           <GlassCard onPress={goRentals} label={`${item.label} : ${item.value}`}>
-            <View className="gap-2 p-3" style={{ minHeight: 132 }}>
+            <View className="p-3" style={{ minHeight: 112, gap: 6 }}>
               <IconTile icon={item.icon} />
               <ThemedText
                 numberOfLines={2}
@@ -173,12 +173,9 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
 
   const chartWidth = Math.round(width * 0.6);
   const chartHeight = 84;
-  const { line, area, end } = buildAreaPaths(
-    metrics.revenueTrend.map((point) => point.total),
-    chartWidth,
-    chartHeight,
-    8
-  );
+  const values = metrics.revenueTrend.map((point) => point.total);
+  const trend = hasTrend(values);
+  const { line, area, end } = buildAreaPaths(values, chartWidth, chartHeight, 8);
 
   const badge =
     change === null
@@ -221,7 +218,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
           <Rect width="100%" height="100%" fill="url(#rc-bg)" />
         </Svg>
 
-        {chartWidth > 0 && line ? (
+        {chartWidth > 0 && trend && line ? (
           <View
             pointerEvents="none"
             style={{
@@ -259,6 +256,42 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                 />
               ) : null}
             </Svg>
+          </View>
+        ) : null}
+
+        {chartWidth > 0 && !trend ? (
+          <View
+            pointerEvents="none"
+            className="items-center justify-center gap-2"
+            style={{ position: 'absolute', bottom: 14, end: 18, width: chartWidth * 0.62 }}
+          >
+            <Svg width="100%" height={34} viewBox="0 0 120 34" preserveAspectRatio="xMidYMid meet">
+              {[6, 20, 34, 48, 62, 76, 90, 104].map((x, index) => (
+                <Rect
+                  key={x}
+                  x={x}
+                  y={30 - [6, 10, 7, 14, 9, 16, 11, 18][index]}
+                  width={7}
+                  height={[6, 10, 7, 14, 9, 16, 11, 18][index]}
+                  rx={3}
+                  fill="#B69ACF"
+                  fillOpacity={0.22}
+                />
+              ))}
+              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill="#B69ACF" fillOpacity={0.4} />
+            </Svg>
+            <ThemedText
+              numberOfLines={3}
+              style={{
+                color: '#CBB8E0',
+                fontSize: 11.5,
+                lineHeight: 15,
+                textAlign: 'center',
+                fontFamily: fontFamilyFor(language, 'medium'),
+              }}
+            >
+              {t('accueil.period.noTrend')}
+            </ThemedText>
           </View>
         ) : null}
 
@@ -396,8 +429,8 @@ function QuickTile({ tile, highlighted = false }: { tile: Tile; highlighted?: bo
             numberOfLines={2}
             style={{
               color: M3akPalette.ink,
-              fontSize: 12,
-              lineHeight: 15,
+              fontSize: 11,
+              lineHeight: 14,
               textAlign: 'center',
               fontFamily: fontFamilyFor(language, highlighted ? 'bold' : 'semibold'),
             }}

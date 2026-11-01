@@ -48,3 +48,39 @@ export function buildAreaPaths(values: number[], width: number, height: number, 
   const area = `${line} L ${round(last.x)} ${height} L ${round(first.x)} ${height} Z`;
   return { line, area, end: { x: round(last.x), y: round(last.y) } };
 }
+
+/**
+ * Une tendance n'a de sens qu'avec au moins deux jours (ou mois) d'encaissements non nuls : sinon la courbe serait une
+ * ligne plate ou un pic isolé, et l'écran affiche un état vide explicite à la place.
+ */
+export function hasTrend(values: number[]): boolean {
+  return values.filter((value) => value !== 0).length >= 2;
+}
+
+export type DonutSegment = {
+  key: string;
+  /** Longueur de l'arc et du vide qui suit (pour `strokeDasharray`), et début de l'arc (pour `strokeDashoffset`, négatif). */
+  dash: number;
+  rest: number;
+  offset: number;
+};
+
+/**
+ * Arcs d'un anneau de rayon `radius` : un par entrée à valeur positive, séparés par un petit vide (`gap`, en px d'arc).
+ * Aucune entrée positive : liste vide (l'écran dessine alors un anneau neutre). Un seul arc occupe tout l'anneau, sans vide.
+ */
+export function donutSegments(entries: { key: string; value: number }[], radius: number, gap = 3): DonutSegment[] {
+  const positive = entries.filter((entry) => entry.value > 0);
+  const total = positive.reduce((sum, entry) => sum + entry.value, 0);
+  if (total === 0) return [];
+  const circumference = 2 * Math.PI * radius;
+  const spacing = positive.length > 1 ? gap : 0;
+  let cursor = 0;
+  return positive.map((entry) => {
+    const share = (entry.value / total) * circumference;
+    const dash = Math.max(share - spacing, 0.5);
+    const segment = { key: entry.key, dash, rest: circumference - dash, offset: -cursor };
+    cursor += share;
+    return segment;
+  });
+}

@@ -1658,7 +1658,7 @@
   "accueil": {
     "header": {
       "tagline": "Gérez votre agence de location de manière intelligente et efficace.",
-      "greeting": "Bonjour, {{name}} 👋",
+      "greeting": "Bonjour {{name}} 👋",
       "greetingNoName": "Bonjour 👋",
       "search": "Poser une question à M3ak",
       "profile": "Mon profil",
@@ -1695,7 +1695,10 @@
     "fleet": {
       "utilizationNow": "En location maintenant",
       "occupancyMonth": "Taux d'occupation",
-      "occupancyHint": "Jours loués sur jours disponibles"
+      "occupancyHint": "Jours loués sur jours disponibles",
+      "title": "État du parc",
+      "vehicles": "véhicules",
+      "empty": "Aucun véhicule pour l'instant"
     },
     "operations": {
       "title": "Activité des locations",
@@ -1803,12 +1806,13 @@
         "days7": "vs. 7 jours préc.",
         "days30": "vs. 30 jours préc."
       },
-      "noCompare": "Pas de comparaison"
+      "noCompare": "Pas de comparaison",
+      "noTrend": "Pas assez d'encaissements pour afficher une tendance"
     },
     "quick": {
       "seeAll": "Tout voir",
       "seeLess": "Réduire",
-      "bookings": "Réservations",
+      "bookings": "Réservation",
       "fleet": "Parc véhicules"
     }
   },

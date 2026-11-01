@@ -17,7 +17,7 @@ import {
   useMyProfile,
 } from '@/features/agency/hooks';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
-import { DashboardHeader } from '@/features/dashboard/dashboard-header';
+import { CompactTopBar, DashboardHeader } from '@/features/dashboard/dashboard-header';
 import { QuickAccessTiles, RevenueCard, StatTrio } from '@/features/dashboard/home-cards';
 import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
@@ -83,7 +83,7 @@ export default function AccueilScreen() {
 
   // Période des chiffres « sur une durée » (revenus, occupation, résultat…) ; les compteurs du jour et de l'état de la flotte n'en dépendent pas.
   const [period, setPeriod] = useState<DashboardPeriod>('today');
-  // Le hero se replie en petite barre quand on défile : `scrollY` pilote l'animation sur le fil d'interface.
+  // `scrollY` (fil d'interface) fait apparaître la petite barre fixe une fois le hero sorti de l'écran.
   const scrollY = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -180,220 +180,219 @@ export default function AccueilScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="w-full flex-1" edges={['left', 'right']}>
-        {/* Le hero est posé par-dessus la liste (qui réserve sa place en haut) : en se repliant il ne déplace donc pas le contenu. */}
+        {/* Le hero fait partie du contenu et défile normalement ; une petite barre fixe prend le relais quand il est sorti de l'écran. */}
         <View className="flex-1">
-          {isLoading ? (
-            <View className="flex-1 items-center justify-center" style={{ paddingTop: heroHeight }}>
-              <ActivityIndicator color={M3akPalette.mauve} />
-            </View>
-          ) : (
-            <Animated.ScrollView
-              onScroll={onScroll}
-              scrollEventThrottle={16}
-              contentContainerStyle={{
-                gap: 24,
-                paddingHorizontal: 24,
-                paddingBottom: 40,
-                paddingTop: heroHeight + 8,
-              }}
-              refreshControl={
-                <RefreshControl
-                  refreshing={isRefreshing}
-                  onRefresh={refetchAll}
-                  tintColor={M3akPalette.mauve}
-                  progressViewOffset={heroHeight}
-                />
-              }
-            >
-              {trialDays !== null ? (
-                <View className="gap-1 rounded-2xl bg-[#FBF1DE] px-4 py-3">
-                  <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
-                    {t('access.trialBannerTitle')}
-                  </ThemedText>
-                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
-                    {trialDays <= 1
-                      ? t('access.trialLastDay')
-                      : t('access.trialDays', { days: trialDays })}
-                  </ThemedText>
-                </View>
-              ) : null}
-
-              <GettingStartedCard
-                steps={gettingStarted}
-                userId={session?.user.id}
-                agencyId={agencyQuery.data?.agencyId}
-                ready={startReady}
+          <Animated.ScrollView
+            onScroll={onScroll}
+            scrollEventThrottle={16}
+            contentContainerStyle={{ paddingBottom: 40 }}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={refetchAll}
+                tintColor="#FFFFFF"
+                colors={[M3akPalette.mauve]}
               />
-
-              {logoMissing && !startVisible ? (
-                <Pressable
-                  onPress={() => router.push('/entreprise')}
-                  className="gap-1 rounded-2xl bg-[#F8E6E9] px-4 py-3"
-                >
-                  <ThemedText type="smallBold" style={{ color: M3akPalette.dangerText }}>
-                    {t('entreprise.logo.homeNoticeTitle')}
-                  </ThemedText>
-                  <ThemedText type="small" style={{ color: M3akPalette.dangerText }}>
-                    {t('entreprise.logo.homeNotice')}
-                  </ThemedText>
-                </Pressable>
-              ) : null}
-
-              <StatTrio metrics={metrics} />
-
-              {canSeeMoney(role) ? <RevenueCard metrics={metrics} /> : null}
-
-              <QuickAccessTiles role={role} />
-
-              <Pressable
-                onPress={() => router.push('/chat')}
-                className="flex-row items-center gap-3 rounded-2xl border border-line bg-white p-4"
-                style={Shadows.card}
-                accessibilityRole="button"
-              >
-                <View
-                  className="h-12 w-12 items-center justify-center rounded-full"
-                  style={{
-                    backgroundColor: M3akPalette.primary,
-                    ...Shadows.button,
-                    shadowOpacity: 0.25,
-                  }}
-                >
-                  <Ionicons name="sparkles" size={22} color={M3akPalette.onPrimary} />
-                </View>
-                <View className="flex-1 gap-0.5">
-                  <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('accueil.askM3ak.hint')}
-                  </ThemedText>
-                </View>
-              </Pressable>
-
-              <ThemedText type="small" themeColor="textSecondary">
-                {t(`accueil.roleView.${role ?? 'employee'}`)}
-              </ThemedText>
-
-              {sections.map((section) => {
-                switch (section) {
-                  case 'financial':
-                    return <FinancialSection key={section} metrics={metrics} />;
-                  case 'fleet':
-                    return <FleetSection key={section} metrics={metrics} vehicles={vehicles} />;
-                  case 'upcoming':
-                    return (
-                      <UpcomingRentalsSection
-                        key={section}
-                        rentals={rentalsQuery.data ?? []}
-                        customers={customers}
-                        vehicles={vehicles}
-                      />
-                    );
-                  case 'operations':
-                    return <OperationsSection key={section} metrics={metrics} />;
-                  case 'counter':
-                    return <CounterSection key={section} metrics={metrics} />;
-                  case 'performance':
-                    return (
-                      <PerformanceSection
-                        key={section}
-                        metrics={metrics}
-                        showMoney={canSeeMoney(role)}
-                      />
-                    );
-                  case 'ai':
-                    return (
-                      <AiInsightsSection
-                        key={section}
-                        availability={insightsAvailability}
-                        isLoading={insights.isFetching}
-                        error={insights.error}
-                        data={insights.data}
-                        onRefresh={insights.refresh}
-                      />
-                    );
-                  case 'alerts':
-                    return documentAlerts.length > 0 ? (
-                      <View key={section} className="gap-3">
-                        <ThemedText type="smallBold">
-                          {t('accueil.documentAlertsSection')}
-                        </ThemedText>
-                        <View className="gap-2">
-                          {documentAlerts.map((alert) => (
-                            <PressableCard
-                              key={alert.key}
-                              onPress={() => router.push(alert.href)}
-                              className="flex-row items-center justify-between"
-                            >
-                              <ThemedText type="small">{alert.name}</ThemedText>
-                              <ThemedText
-                                type="small"
-                                style={{ color: URGENCY_COLOR[alert.urgency] }}
-                              >
-                                {formatShortDate(alert.expiresAt)}
-                              </ThemedText>
-                            </PressableCard>
-                          ))}
-                        </View>
-                      </View>
-                    ) : null;
-                  case 'maintenance':
-                    return (
-                      <View key={section} className="gap-3">
-                        <View className="flex-row items-center justify-between">
-                          <ThemedText type="smallBold">
-                            {t('accueil.maintenanceSection')}
-                          </ThemedText>
-                          <Pressable onPress={() => router.push('/maintenance')}>
-                            <ThemedText type="small" themeColor="primary">
-                              {t('accueil.seeAll')}
-                            </ThemedText>
-                          </Pressable>
-                        </View>
-                        <MaintenanceSummaryRow metrics={metrics} />
-                        {urgentMaintenance.length === 0 ? (
-                          <ThemedText type="small" themeColor="textSecondary">
-                            {t('accueil.maintenanceEmpty')}
-                          </ThemedText>
-                        ) : (
-                          <View className="gap-2">
-                            {urgentMaintenance.map((item) => {
-                              const vehicle = vehicles.find((v) => v.id === item.vehicleId);
-                              return (
-                                <MaintenanceRow
-                                  key={item.id}
-                                  item={item}
-                                  vehicleLabel={
-                                    vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined
-                                  }
-                                  currentKm={vehicle?.kilometrage ?? null}
-                                />
-                              );
-                            })}
-                          </View>
-                        )}
-                      </View>
-                    );
-                  default:
-                    return null;
-                }
-              })}
-            </Animated.ScrollView>
-          )}
-
-          <View style={{ position: 'absolute', top: 0, start: 0, end: 0 }}>
+            }
+          >
             <DashboardHeader
               prenom={profileQuery.data?.prenom}
               fullName={profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName}
               agencyName={agencyQuery.data?.agencyName}
-              agencyCity={agencyQuery.data?.agencyCity}
               avatarPath={profileQuery.data?.photoPath}
               period={period}
               onPeriodChange={setPeriod}
-              scrollY={scrollY}
-              onFullHeight={setHeroHeight}
-              refreshing={isRefreshing && !isLoading}
+              onHeight={setHeroHeight}
             />
-          </View>
+            {isLoading ? (
+              <View className="items-center justify-center" style={{ paddingVertical: 48 }}>
+                <ActivityIndicator color={M3akPalette.mauve} />
+              </View>
+            ) : (
+              <View style={{ gap: 24, paddingHorizontal: 24, paddingTop: 8 }}>
+                {trialDays !== null ? (
+                  <View className="gap-1 rounded-2xl bg-[#FBF1DE] px-4 py-3">
+                    <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
+                      {t('access.trialBannerTitle')}
+                    </ThemedText>
+                    <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                      {trialDays <= 1
+                        ? t('access.trialLastDay')
+                        : t('access.trialDays', { days: trialDays })}
+                    </ThemedText>
+                  </View>
+                ) : null}
+
+                <GettingStartedCard
+                  steps={gettingStarted}
+                  userId={session?.user.id}
+                  agencyId={agencyQuery.data?.agencyId}
+                  ready={startReady}
+                />
+
+                {logoMissing && !startVisible ? (
+                  <Pressable
+                    onPress={() => router.push('/entreprise')}
+                    className="gap-1 rounded-2xl bg-[#F8E6E9] px-4 py-3"
+                  >
+                    <ThemedText type="smallBold" style={{ color: M3akPalette.dangerText }}>
+                      {t('entreprise.logo.homeNoticeTitle')}
+                    </ThemedText>
+                    <ThemedText type="small" style={{ color: M3akPalette.dangerText }}>
+                      {t('entreprise.logo.homeNotice')}
+                    </ThemedText>
+                  </Pressable>
+                ) : null}
+
+                <StatTrio metrics={metrics} />
+
+                {canSeeMoney(role) ? <RevenueCard metrics={metrics} /> : null}
+
+                <QuickAccessTiles role={role} />
+
+                <Pressable
+                  onPress={() => router.push('/chat')}
+                  className="flex-row items-center gap-3 rounded-2xl border border-line bg-white p-4"
+                  style={Shadows.card}
+                  accessibilityRole="button"
+                >
+                  <View
+                    className="h-12 w-12 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: M3akPalette.primary,
+                      ...Shadows.button,
+                      shadowOpacity: 0.25,
+                    }}
+                  >
+                    <Ionicons name="sparkles" size={22} color={M3akPalette.onPrimary} />
+                  </View>
+                  <View className="flex-1 gap-0.5">
+                    <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>
+                    <ThemedText type="small" themeColor="textSecondary">
+                      {t('accueil.askM3ak.hint')}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t(`accueil.roleView.${role ?? 'employee'}`)}
+                </ThemedText>
+
+                {sections.map((section) => {
+                  switch (section) {
+                    case 'financial':
+                      return <FinancialSection key={section} metrics={metrics} />;
+                    case 'fleet':
+                      return <FleetSection key={section} metrics={metrics} vehicles={vehicles} />;
+                    case 'upcoming':
+                      return (
+                        <UpcomingRentalsSection
+                          key={section}
+                          rentals={rentalsQuery.data ?? []}
+                          customers={customers}
+                          vehicles={vehicles}
+                        />
+                      );
+                    case 'operations':
+                      return <OperationsSection key={section} metrics={metrics} />;
+                    case 'counter':
+                      return <CounterSection key={section} metrics={metrics} />;
+                    case 'performance':
+                      return (
+                        <PerformanceSection
+                          key={section}
+                          metrics={metrics}
+                          showMoney={canSeeMoney(role)}
+                        />
+                      );
+                    case 'ai':
+                      return (
+                        <AiInsightsSection
+                          key={section}
+                          availability={insightsAvailability}
+                          isLoading={insights.isFetching}
+                          error={insights.error}
+                          data={insights.data}
+                          onRefresh={insights.refresh}
+                        />
+                      );
+                    case 'alerts':
+                      return documentAlerts.length > 0 ? (
+                        <View key={section} className="gap-3">
+                          <ThemedText type="smallBold">
+                            {t('accueil.documentAlertsSection')}
+                          </ThemedText>
+                          <View className="gap-2">
+                            {documentAlerts.map((alert) => (
+                              <PressableCard
+                                key={alert.key}
+                                onPress={() => router.push(alert.href)}
+                                className="flex-row items-center justify-between"
+                              >
+                                <ThemedText type="small">{alert.name}</ThemedText>
+                                <ThemedText
+                                  type="small"
+                                  style={{ color: URGENCY_COLOR[alert.urgency] }}
+                                >
+                                  {formatShortDate(alert.expiresAt)}
+                                </ThemedText>
+                              </PressableCard>
+                            ))}
+                          </View>
+                        </View>
+                      ) : null;
+                    case 'maintenance':
+                      return (
+                        <View key={section} className="gap-3">
+                          <View className="flex-row items-center justify-between">
+                            <ThemedText type="smallBold">
+                              {t('accueil.maintenanceSection')}
+                            </ThemedText>
+                            <Pressable onPress={() => router.push('/maintenance')}>
+                              <ThemedText type="small" themeColor="primary">
+                                {t('accueil.seeAll')}
+                              </ThemedText>
+                            </Pressable>
+                          </View>
+                          <MaintenanceSummaryRow metrics={metrics} />
+                          {urgentMaintenance.length === 0 ? (
+                            <ThemedText type="small" themeColor="textSecondary">
+                              {t('accueil.maintenanceEmpty')}
+                            </ThemedText>
+                          ) : (
+                            <View className="gap-2">
+                              {urgentMaintenance.map((item) => {
+                                const vehicle = vehicles.find((v) => v.id === item.vehicleId);
+                                return (
+                                  <MaintenanceRow
+                                    key={item.id}
+                                    item={item}
+                                    vehicleLabel={
+                                      vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined
+                                    }
+                                    currentKm={vehicle?.kilometrage ?? null}
+                                  />
+                                );
+                              })}
+                            </View>
+                          )}
+                        </View>
+                      );
+                    default:
+                      return null;
+                  }
+                })}
+              </View>
+            )}
+          </Animated.ScrollView>
+
+          <CompactTopBar
+            scrollY={scrollY}
+            heroHeight={heroHeight}
+            prenom={profileQuery.data?.prenom}
+            fullName={profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName}
+            avatarPath={profileQuery.data?.photoPath}
+          />
         </View>
       </SafeAreaView>
     </ThemedView>

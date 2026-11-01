@@ -1,4 +1,4 @@
-import { buildAreaPaths } from '../chart-path';
+import { buildAreaPaths, donutSegments, hasTrend } from '../chart-path';
 
 describe('buildAreaPaths', () => {
   it('ne trace rien sans données ou sans taille', () => {
@@ -41,5 +41,52 @@ describe('buildAreaPaths', () => {
     const ys = [...line.matchAll(/(-?\d+\.?\d*) (-?\d+\.?\d*)/g)].map((m) => Number(m[2]));
     expect(Math.min(...ys)).toBeGreaterThanOrEqual(6);
     expect(Math.max(...ys)).toBeLessThanOrEqual(94);
+  });
+});
+
+describe('hasTrend', () => {
+  it('exige au moins deux valeurs non nulles', () => {
+    expect(hasTrend([])).toBe(false);
+    expect(hasTrend([0, 0, 0])).toBe(false);
+    expect(hasTrend([0, 0, 120])).toBe(false);
+    expect(hasTrend([0, 50, 120])).toBe(true);
+    expect(hasTrend([-40, 0, 120])).toBe(true);
+  });
+});
+
+describe('donutSegments', () => {
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+
+  it('aucune valeur positive : aucun arc', () => {
+    expect(donutSegments([], radius)).toEqual([]);
+    expect(donutSegments([{ key: 'a', value: 0 }], radius)).toEqual([]);
+  });
+
+  it("un seul statut : l'anneau complet, sans vide", () => {
+    const [segment] = donutSegments([{ key: 'a', value: 5 }], radius);
+    expect(segment.dash).toBeCloseTo(circumference);
+    expect(segment.offset).toBeCloseTo(0);
+  });
+
+  it('proportionnel aux valeurs, arcs bout à bout, séparés par le vide demandé', () => {
+    const [a, b] = donutSegments(
+      [
+        { key: 'a', value: 3 },
+        { key: 'b', value: 1 },
+        { key: 'zero', value: 0 },
+      ],
+      radius,
+      4
+    );
+    expect(a.dash).toBeCloseTo(circumference * 0.75 - 4);
+    expect(b.dash).toBeCloseTo(circumference * 0.25 - 4);
+    expect(b.offset).toBeCloseTo(-circumference * 0.75);
+    expect(a.dash + a.rest).toBeCloseTo(circumference);
+  });
+
+  it('un très petit arc reste visible', () => {
+    const segments = donutSegments([{ key: 'a', value: 1000 }, { key: 'b', value: 1 }], radius, 3);
+    expect(segments[1].dash).toBeGreaterThan(0);
   });
 });
