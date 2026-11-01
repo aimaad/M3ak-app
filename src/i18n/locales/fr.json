@@ -1658,7 +1658,6 @@
   "accueil": {
     "header": {
       "tagline": "Gérez votre agence de location de manière intelligente et efficace.",
-      "product": "Car Rental ERP",
       "greeting": "Bonjour, {{name}} 👋",
       "greetingNoName": "Bonjour 👋",
       "search": "Poser une question à M3ak",

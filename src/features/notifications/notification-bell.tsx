@@ -19,7 +19,6 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
   const count = data?.length ?? 0;
   const onForest = tone === 'onForest';
   const label = badgeLabel(count);
-  const hasUrgent = (data ?? []).some((item) => item.severity === 'urgent');
 
   return (
     <Pressable
@@ -27,7 +26,9 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={
-        count > 0 ? `${t('notifications.title')}, ${t('accueil.header.unread', { count })}` : t('notifications.title')
+        count > 0
+          ? `${t('notifications.title')}, ${t('accueil.header.unread', { count })}`
+          : t('notifications.title')
       }
       className={
         onForest
@@ -44,15 +45,18 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
         <View
           className="absolute min-w-5 items-center justify-center rounded-full px-1"
           style={{
-            backgroundColor: hasUrgent ? '#C55461' : '#D99835',
+            backgroundColor: M3akPalette.primary,
             top: onForest ? -2 : -4,
             end: onForest ? -2 : -4,
             height: 20,
-            borderWidth: onForest ? 2 : 0,
-            borderColor: onForest ? '#171321' : M3akPalette.mauveDeep,
+            borderWidth: 1.5,
+            borderColor: onForest ? M3akPalette.lavender : '#FFFFFF',
           }}
         >
-          <ThemedText type="small" style={{ color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '700' }}>
+          <ThemedText
+            type="small"
+            style={{ color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '700' }}
+          >
             {label}
           </ThemedText>
         </View>

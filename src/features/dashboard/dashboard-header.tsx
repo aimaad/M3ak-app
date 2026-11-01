@@ -115,7 +115,7 @@ function ProfileButton({ path, initials }: { path: string | null | undefined; in
       onPress={() => router.push('/profil')}
       accessibilityRole="button"
       accessibilityLabel={t('accueil.header.profile')}
-      className="h-11 w-11 items-center justify-center rounded-full border-2 border-white/30 active:border-primary"
+      className="h-11 w-11 items-center justify-center rounded-full border-2 border-lavender active:border-white"
     >
       <Avatar path={path} size={40} initials={initials} />
     </Pressable>
@@ -168,7 +168,6 @@ export function DashboardHeader({
   // Logo grand, mais réduit sur les petits écrans pour laisser la place aux trois boutons ; le nom s'efface sous 340 dp.
   const logoHeight = screenWidth < 340 ? 52 : 62;
   const showName = screenWidth >= 340;
-  const showProduct = screenWidth >= 390;
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
 
   const fullHeight = size?.height ?? FALLBACK_HEIGHT + insets.top;
@@ -293,20 +292,6 @@ export function DashboardHeader({
                 >
                   M3ak
                 </ThemedText>
-                {showProduct ? (
-                  <ThemedText
-                    numberOfLines={1}
-                    style={{
-                      color: 'rgba(255,255,255,0.7)',
-                      fontSize: 10.5,
-                      lineHeight: 13,
-                      letterSpacing: arabic ? 0 : 0.2,
-                      fontFamily: fontFamilyFor(language, 'medium'),
-                    }}
-                  >
-                    {t('accueil.header.product')}
-                  </ThemedText>
-                ) : null}
               </View>
             ) : null}
           </View>
