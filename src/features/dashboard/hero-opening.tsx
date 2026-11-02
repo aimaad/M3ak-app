@@ -4,6 +4,7 @@ import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { openingTime } from '@/features/opening/opening-store';
 import { carCurves, FIRST, type OpeningMode } from '@/features/opening/opening-timeline';
 
+import { BLEND } from './car-lights';
 import { HERO_FADE_HEIGHT } from './hero-scene';
 
 const NIGHT = '#100B19';
@@ -63,7 +64,7 @@ export function LogoGlow({ mode }: { mode: OpeningMode }) {
           right: -26,
           top: -26,
           bottom: -26,
-          mixBlendMode: 'screen',
+          mixBlendMode: BLEND,
         },
         style,
       ]}

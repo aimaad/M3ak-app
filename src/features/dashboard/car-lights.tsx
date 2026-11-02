@@ -15,6 +15,9 @@ export const CAR_UNLIT = require('../../../assets/images/ignition/car-unlit.webp
 export const CAR_LIT = require('../../../assets/images/ignition/car-lit.webp');
 
 const NIGHT = '#100B19';
+/** Mode de fusion des lumières (désactivable pour le diagnostic : EXPO_PUBLIC_OPENING_NO_BLEND=1). */
+export const BLEND =
+  process.env.EXPO_PUBLIC_OPENING_NO_BLEND === '1' ? undefined : ('screen' as const);
 
 type Props = {
   width: number;
@@ -112,7 +115,7 @@ function CarWithEffects({
           : null}
         <LightBand width={width} height={height} curves={curves} />
         <Animated.View
-          style={[fill(width, height), { mixBlendMode: 'screen' }, pulse]}
+          style={[fill(width, height), { mixBlendMode: BLEND }, pulse]}
           pointerEvents="none"
         >
           <Image
@@ -245,7 +248,7 @@ function BandSlice({
           width: sliceWidth,
           height,
           overflow: 'hidden',
-          mixBlendMode: 'screen',
+          mixBlendMode: BLEND,
         },
         outer,
       ]}
@@ -300,7 +303,7 @@ function HeadlightGlow({
           top: y - size / 2,
           width: size,
           height: size,
-          mixBlendMode: 'screen',
+          mixBlendMode: BLEND,
         },
         style,
       ]}
@@ -343,7 +346,7 @@ function FloorPulse({
           top: height * 0.72,
           width: w,
           height: h,
-          mixBlendMode: 'screen',
+          mixBlendMode: BLEND,
         },
         style,
       ]}

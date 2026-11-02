@@ -18,6 +18,8 @@ let releaseTimer: ReturnType<typeof setTimeout> | null = null;
  */
 export async function prepareEngineSound(): Promise<void> {
   try {
+    // Interrupteur de diagnostic : EXPO_PUBLIC_DISABLE_OPENING_SOUND=1 coupe le son (animation seule).
+    if (process.env.EXPO_PUBLIC_DISABLE_OPENING_SOUND === '1') return;
     if (!(await readSoundEnabled())) return;
     // Chargé à la demande : si le module audio natif manque ou est incompatible, l'app démarre quand même (en silence).
     const { createAudioPlayer, setAudioModeAsync } =
