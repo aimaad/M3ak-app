@@ -20,18 +20,18 @@ import { fontFamilyFor, M3akPalette } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import {
   endOpening,
-  openingTime,
+  getOpeningMode,
   startOpening,
+  useAssetsReady,
   useOpeningStatus,
 } from '@/features/opening/opening-store';
-import { OPENING_PHASES as P } from '@/features/opening/opening-timeline';
 import { Reveal, useReveal } from '@/features/opening/reveal';
 import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
 import { headerFirstName } from './header-format';
-import { HeroOpening, type MarkTarget } from './hero-opening';
-import { HERO_DARK, HERO_FADE_HEIGHT, HeroScene } from './hero-scene';
+import { HeroVeil, LogoGlow } from './hero-opening';
+import { HERO_DARK, HERO_FADE_HEIGHT, HeroCar, HeroScene } from './hero-scene';
 import type { DashboardPeriod } from './kpis';
 import { PeriodTabs } from './period-tabs';
 
@@ -129,34 +129,18 @@ export function DashboardHeader({
   const { width: screenWidth } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
   // Ouverture : chaque élément du hero apparaît à son heure sur l'horloge unique (voir features/opening). Hors ouverture,
-  // l'horloge est à la fin et tout est simplement visible.
+  // l'horloge est « terminée » et tout est simplement visible.
   const opening = useOpeningStatus();
-  const [imageReady, setImageReady] = useState(false);
-  const [wrapperBox, setWrapperBox] = useState<{ x: number; y: number } | null>(null);
-  const [markBox, setMarkBox] = useState<{ x: number; y: number; w: number; h: number } | null>(
-    null
-  );
-  const markTarget: MarkTarget | null =
-    wrapperBox && markBox
-      ? {
-          x: wrapperBox.x + markBox.x,
-          y: wrapperBox.y + markBox.y,
-          width: markBox.w,
-          height: markBox.h,
-        }
-      : null;
-  // Le vrai logo prend la place du logo volant à l'instant exact de son arrivée.
-  const markVisible = useAnimatedStyle(() => ({
-    opacity: openingTime.value >= P.flightEnd ? 1 : 0,
-  }));
-  const nameReveal = useReveal(P.awakeningStart + 100, P.awakeningStart + 600);
-  const greetingReveal = useReveal(P.awakeningStart + 250, P.awakeningStart + 750, 10);
+  const mode = getOpeningMode();
+  const assetsReady = useAssetsReady();
+  const logoReveal = useReveal('logo');
+  const nameReveal = useReveal('name');
+  const greetingReveal = useReveal('greeting', 10);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  // Dès que la photo est affichée et que le logo est mesuré, on lance la chronologie ; sinon on abandonne proprement.
-  const ready = !!size && imageReady && !!markTarget;
+  // Dès que le hero est mesuré et que ses images sont chargées, on lance la chronologie.
   useEffect(() => {
-    if (opening === 'armed' && ready && size) startOpening(size.height);
-  }, [opening, ready, size]);
+    if (opening === 'armed' && assetsReady && size) startOpening(size.height);
+  }, [opening, assetsReady, size]);
   const logoHeight = screenWidth < 340 ? 40 : screenWidth < 375 ? 46 : 52;
   const showName = screenWidth >= 340;
   const showAgency = screenWidth >= 375 && !!agencyName?.trim();
@@ -192,17 +176,24 @@ export function DashboardHeader({
       {/* Les onglets restent montés : on ne règle la barre d'état (icônes claires) que lorsque l'Accueil est affiché. */}
       {focused ? <StatusBar style="light" /> : null}
       {size ? (
-        <HeroScene
-          width={size.width}
-          height={size.height}
-          scrollY={scrollY}
-          reduceMotion={reduceMotion}
-          onReady={() => setImageReady(true)}
-          onError={endOpening}
-        />
-      ) : null}
-      {size && opening !== 'idle' ? (
-        <HeroOpening width={size.width} height={size.height} markTarget={markTarget} />
+        <>
+          <HeroScene
+            width={size.width}
+            height={size.height}
+            scrollY={scrollY}
+            reduceMotion={reduceMotion}
+            onError={() => endOpening('aborted')}
+          />
+          {opening !== 'idle' ? <HeroVeil mode={mode} /> : null}
+          <HeroCar
+            width={size.width}
+            height={size.height}
+            scrollY={scrollY}
+            reduceMotion={reduceMotion}
+            mode={mode}
+            animating={opening !== 'idle'}
+          />
+        </>
       ) : null}
 
       <View
@@ -218,30 +209,11 @@ export function DashboardHeader({
             accessible
             accessibilityRole="image"
             accessibilityLabel="M3ak"
-            onLayout={(event) => {
-              const { x, y } = event.nativeEvent.layout;
-              setWrapperBox((previous) =>
-                previous && previous.x === x && previous.y === y ? previous : { x, y }
-              );
-            }}
             // Mise en page en style (et non en classe) : les classes ne s'appliquent pas au conteneur animé.
             style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}
           >
-            <Animated.View
-              onLayout={(event) => {
-                const { x, y, width, height } = event.nativeEvent.layout;
-                setMarkBox((previous) =>
-                  previous &&
-                  previous.x === x &&
-                  previous.y === y &&
-                  previous.w === width &&
-                  previous.h === height
-                    ? previous
-                    : { x, y, w: width, h: height }
-                );
-              }}
-              style={markVisible}
-            >
+            <Animated.View style={logoReveal}>
+              {opening !== 'idle' ? <LogoGlow mode={mode} /> : null}
               <LogoMark height={logoHeight} />
             </Animated.View>
             {showName ? (
@@ -291,17 +263,17 @@ export function DashboardHeader({
             ) : null}
           </View>
           <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
-            <Reveal from={P.awakeningStart + 150} to={P.awakeningStart + 600}>
+            <Reveal slot="icon0">
               <HeaderIconButton
                 icon="search-outline"
                 label={t('accueil.header.search')}
                 onPress={() => router.push('/chat')}
               />
             </Reveal>
-            <Reveal from={P.awakeningStart + 230} to={P.awakeningStart + 680}>
+            <Reveal slot="icon1">
               <NotificationBell tone="onForest" />
             </Reveal>
-            <Reveal from={P.awakeningStart + 310} to={P.awakeningStart + 760}>
+            <Reveal slot="icon2">
               <ProfileButton path={avatarPath} initials={initials} />
             </Reveal>
           </View>
@@ -368,7 +340,7 @@ export function DashboardHeader({
         </Animated.View>
 
         <View style={{ marginTop: TABS_GAP + 6 }}>
-          <Reveal from={P.awakeningStart + 450} to={P.end}>
+          <Reveal slot="tabs">
             <PeriodTabs value={period} onChange={onPeriodChange} />
           </Reveal>
         </View>

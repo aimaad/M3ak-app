@@ -1,39 +1,45 @@
-import { CAR_IN_IMAGE, heroImageLayout, HERO_IMAGE_SIZE, imagePointToHero } from '../hero-layout';
+import { carRect, carStartRect, CAR_IMAGE_SIZE, rectCenter, showroomLayout } from '../hero-layout';
 
-describe('heroImageLayout', () => {
-  it('la voiture occupe la fraction demandée de la largeur, calée à droite', () => {
-    const layout = heroImageLayout(390, 313);
-    const carWidth = (CAR_IN_IMAGE.right - CAR_IN_IMAGE.left) * layout.scale;
-    expect(carWidth).toBeCloseTo(0.58 * 390);
-    expect(layout.left + CAR_IN_IMAGE.right * layout.scale).toBeCloseTo(390 - 10);
-  });
+const SIZES = [
+  { width: 320, height: 300 },
+  { width: 390, height: 330 },
+  { width: 430, height: 340 },
+  { width: 768, height: 360 },
+];
 
-  it('le bas des roues est au-dessus du bas du hero (place du sélecteur)', () => {
-    const layout = heroImageLayout(390, 313);
-    expect(layout.top + CAR_IN_IMAGE.wheelsBottom * layout.scale).toBeCloseTo(313 - 96);
-  });
-
-  it('garde les proportions de l’image sur tous les écrans', () => {
-    for (const width of [320, 360, 390, 430, 768]) {
-      const layout = heroImageLayout(width, 300);
-      expect(layout.width / layout.height).toBeCloseTo(
-        HERO_IMAGE_SIZE.width / HERO_IMAGE_SIZE.height
-      );
+describe('hero-layout', () => {
+  it('le showroom couvre toujours tout le hero', () => {
+    for (const { width, height } of SIZES) {
+      const r = showroomLayout(width, height);
+      expect(r.left).toBeLessThanOrEqual(0);
+      expect(r.left + r.width).toBeGreaterThanOrEqual(width - 0.01);
+      expect(r.top).toBeLessThanOrEqual(0.01);
+      expect(r.top + r.height).toBeGreaterThanOrEqual(height - 0.01);
     }
   });
 
-  it('un petit écran garde la voiture entière dans le hero', () => {
-    const layout = heroImageLayout(320, 290);
-    expect(layout.left + CAR_IN_IMAGE.left * layout.scale).toBeGreaterThan(0);
-    expect(layout.left + CAR_IN_IMAGE.right * layout.scale).toBeLessThanOrEqual(320);
+  it('la voiture garde ses proportions et reste dans le hero, à droite', () => {
+    for (const { width, height } of SIZES) {
+      const r = carRect(width, height);
+      expect(r.width / r.height).toBeCloseTo(CAR_IMAGE_SIZE.width / CAR_IMAGE_SIZE.height, 5);
+      expect(r.left).toBeGreaterThan(width * 0.3);
+      expect(r.left + r.width).toBeLessThanOrEqual(width);
+      expect(r.top).toBeGreaterThanOrEqual(0);
+      expect(r.top + r.height).toBeLessThanOrEqual(height);
+    }
   });
-});
 
-describe('imagePointToHero', () => {
-  it('convertit un point de l’image en point du hero', () => {
-    const layout = heroImageLayout(390, 313);
-    const point = imagePointToHero(layout, 455, 326);
-    expect(point.x).toBeCloseTo(layout.left + 455 * layout.scale);
-    expect(point.y).toBeCloseTo(layout.top + 326 * layout.scale);
+  it('la voiture ne devient jamais gigantesque sur tablette', () => {
+    expect(carRect(768, 360).width).toBeLessThanOrEqual(300);
+    expect(carRect(1024, 400).width).toBeLessThanOrEqual(300);
+  });
+
+  it('le départ du premier lancement est centré à l’écran et plus grand que la place finale', () => {
+    const start = carStartRect(390, 844);
+    const center = rectCenter(start);
+    expect(center.x).toBeCloseTo(195);
+    expect(center.y).toBeCloseTo(422);
+    expect(start.width).toBeGreaterThan(carRect(390, 330).width);
+    expect(start.width).toBeLessThanOrEqual(390);
   });
 });

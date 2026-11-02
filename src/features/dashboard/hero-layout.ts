@@ -1,46 +1,50 @@
-/** Dimensions de l'image du hero (`assets/images/hero-m3ak.jpg`), en pixels. */
-export const HERO_IMAGE_SIZE = { width: 1040, height: 655 } as const;
+/** Dimensions des images du hero (voiture détourée et showroom). */
+export const CAR_IMAGE_SIZE = { width: 1100, height: 512 } as const;
+export const SHOWROOM_IMAGE_SIZE = { width: 1672, height: 941 } as const;
+
+/** Position des phares dans l'image de la voiture (fractions de sa largeur / hauteur). */
+export const CAR_LAMPS = {
+  near: { x: 0.481, y: 0.497 },
+  far: { x: 0.061, y: 0.51 },
+} as const;
+
+export type Rect = { left: number; top: number; width: number; height: number };
 
 /**
- * Voiture dans l'image, en pixels (mesurés sur l'image finale, déjà retournée : la voiture regarde vers la gauche) : bord gauche
- * (pare-chocs avant), bord droit (arrière) et bas des roues.
+ * Showroom : couvre tout le hero, aligné à gauche (le trait de lumière en diagonale passe derrière le message de bienvenue)
+ * et en bas (le sol reste visible).
  */
-export const CAR_IN_IMAGE = { left: 259, right: 753, wheelsBottom: 450 } as const;
+export function showroomLayout(width: number, height: number): Rect {
+  const scale = Math.max(width / SHOWROOM_IMAGE_SIZE.width, height / SHOWROOM_IMAGE_SIZE.height);
+  const w = SHOWROOM_IMAGE_SIZE.width * scale;
+  const h = SHOWROOM_IMAGE_SIZE.height * scale;
+  return { left: 0, top: height - h, width: w, height: h };
+}
 
-export type HeroImageLayout = {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-  scale: number;
-};
-
-/**
- * Place l'image dans le hero : la voiture occupe `carWidthFraction` de la largeur, son arrière est à `rightMargin` du bord droit
- * et le bas de ses roues à `wheelsBottomInset` du bas du hero (au-dessus du sélecteur de période). La partie gauche de l'image
- * (cloison sombre) passe derrière le texte ; ce qui dépasse à droite ou en haut est rogné par le hero.
- */
-export function heroImageLayout(
+/** Position définitive de la voiture dans le hero : à droite, posée au-dessus du sélecteur de période. */
+export function carRect(
   width: number,
   height: number,
-  options: { carWidthFraction?: number; rightMargin?: number; wheelsBottomInset?: number } = {}
-): HeroImageLayout {
-  const { carWidthFraction = 0.58, rightMargin = 10, wheelsBottomInset = 96 } = options;
-  const scale = (carWidthFraction * width) / (CAR_IN_IMAGE.right - CAR_IN_IMAGE.left);
+  { widthFraction = 0.6, maxWidth = 300, rightMargin = 6, bottomInset = 88 } = {}
+): Rect {
+  // Sur tablette, la voiture garde une taille raisonnable (elle ne passe pas sous les boutons du haut).
+  const w = Math.min(width * widthFraction, maxWidth);
+  const h = (w * CAR_IMAGE_SIZE.height) / CAR_IMAGE_SIZE.width;
   return {
-    scale,
-    width: HERO_IMAGE_SIZE.width * scale,
-    height: HERO_IMAGE_SIZE.height * scale,
-    left: width - rightMargin - CAR_IN_IMAGE.right * scale,
-    top: height - wheelsBottomInset - CAR_IN_IMAGE.wheelsBottom * scale,
+    left: width - rightMargin - w,
+    top: Math.max(0, height - bottomInset - h),
+    width: w,
+    height: h,
   };
 }
 
-/** Convertit un point de l'image (pixels) en point du hero (dp), pour y poser lueurs et logo au bon endroit. */
-export function imagePointToHero(
-  layout: HeroImageLayout,
-  x: number,
-  y: number
-): { x: number; y: number } {
-  return { x: layout.left + x * layout.scale, y: layout.top + y * layout.scale };
+/** Position de départ du premier lancement : voiture centrée à l'écran, plus grande que sa place finale. */
+export function carStartRect(screenWidth: number, screenHeight: number): Rect {
+  const w = Math.min(screenWidth * 0.9, 560);
+  const h = (w * CAR_IMAGE_SIZE.height) / CAR_IMAGE_SIZE.width;
+  return { left: (screenWidth - w) / 2, top: (screenHeight - h) / 2, width: w, height: h };
+}
+
+export function rectCenter(rect: Rect): { x: number; y: number } {
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
 }

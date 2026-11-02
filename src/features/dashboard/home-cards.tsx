@@ -12,7 +12,6 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
-import { OPENING_PHASES } from '@/features/opening/opening-timeline';
 import { Reveal } from '@/features/opening/reveal';
 import { ThemedText } from '@/components/themed-text';
 import { fontFamilyFor, M3akPalette } from '@/constants/theme';
@@ -137,8 +136,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
       {items.map((item, index) => (
         <Reveal
           key={item.key}
-          from={OPENING_PHASES.awakeningStart + 200 + index * 130}
-          to={OPENING_PHASES.awakeningStart + 650 + index * 130}
+          slot={(['card0', 'card1', 'card2'] as const)[index]}
           style={{ flex: 1 }}
         >
           <GlassCard onPress={goRentals} label={`${item.label} : ${item.value}`}>

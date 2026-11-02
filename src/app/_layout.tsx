@@ -26,7 +26,7 @@ import { UndoProvider } from '@/components/undo-toast';
 import { useAgencyAccess } from '@/features/agency/hooks';
 import { SessionProvider, useSession } from '@/features/auth/session-context';
 import { OpeningGate } from '@/features/opening/opening-gate';
-import { armOpening } from '@/features/opening/opening-store';
+import { prepareOpening } from '@/features/opening/opening-store';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { NotificationsBootstrap } from '@/features/notifications/notifications-bootstrap';
 
@@ -87,21 +87,24 @@ export default function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
-  // Ouverture cinématographique : armée une seule fois, avant le premier affichage (sauf animations réduites / écran bureau).
+  // Ouverture : on lit la mémoire (première ouverture ou non) avant le premier affichage, le temps que l'écran de démarrage reste
+  // en place (jamais plus de ~0,8 s). Ignorée si animations réduites ou écran « bureau ».
   const reduceMotion = useReducedMotion();
   const desktop = useDesktopLayout();
-  useState(() => {
-    armOpening({ reduceMotion, disabled: desktop });
-    return null;
-  });
+  const [openingReady, setOpeningReady] = useState(false);
+  useEffect(() => {
+    void prepareOpening({ reduceMotion, disabled: desktop }).finally(() => setOpeningReady(true));
+    // Une seule fois au lancement à froid.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded && openingReady) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, openingReady]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !openingReady) {
     return null;
   }
 
