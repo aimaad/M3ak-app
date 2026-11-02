@@ -1,4 +1,4 @@
-import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-audio';
+import type { AudioPlayer } from 'expo-audio';
 
 import { readSoundEnabled } from './opening-storage';
 
@@ -19,6 +19,10 @@ let releaseTimer: ReturnType<typeof setTimeout> | null = null;
 export async function prepareEngineSound(): Promise<void> {
   try {
     if (!(await readSoundEnabled())) return;
+    // Chargé à la demande : si le module audio natif manque ou est incompatible, l'app démarre quand même (en silence).
+    const { createAudioPlayer, setAudioModeAsync } =
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      require('expo-audio') as typeof import('expo-audio');
     await setAudioModeAsync({
       playsInSilentMode: false,
       interruptionMode: 'mixWithOthers',

@@ -78,7 +78,9 @@ export function useOpeningStatus(): OpeningStatus {
  * scénario et pose le rideau. Ne bloque jamais plus de ~0,8 s (la mémoire illisible donne la version courte).
  */
 export async function prepareOpening(options: { reduceMotion: boolean; disabled: boolean }) {
-  if (consumed || options.reduceMotion || options.disabled) {
+  // Interrupteur de secours (diagnostic) : EXPO_PUBLIC_DISABLE_OPENING=1 désactive toute l'ouverture.
+  const forcedOff = process.env.EXPO_PUBLIC_DISABLE_OPENING === '1';
+  if (consumed || forcedOff || options.reduceMotion || options.disabled) {
     consumed = true;
     return;
   }
