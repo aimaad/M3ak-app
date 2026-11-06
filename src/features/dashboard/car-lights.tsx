@@ -230,7 +230,11 @@ function BandSlice({
   const rank = index - (BAND_SLICES - 1) / 2;
   const spread = rank / (BAND_SLICES / 3.6);
   const weight = Math.exp(-spread * spread);
-  const x = (edge: number) => Math.round(edge * width) + Math.round(rank * sliceWidth);
+  // Appelée depuis les animations (fil d'interface) : doit être un « worklet », sinon l'app native plante.
+  const x = (edge: number) => {
+    'worklet';
+    return Math.round(edge * width) + Math.round(rank * sliceWidth);
+  };
   const outer = useAnimatedStyle(() => ({
     opacity: curves.value.band * weight,
     transform: [{ translateX: x(curves.value.edge) }],
