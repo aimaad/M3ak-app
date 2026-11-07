@@ -1243,7 +1243,15 @@
       "warning": "Cette location chevauche une autre location de la même voiture. Annulez ou déplacez l'une des deux pour éviter une double réservation."
     },
     "confirmConflict": "Cette voiture est déjà promise à un autre client sur ce créneau. Annulez ou déplacez l'une des deux locations, puis confirmez de nouveau.",
-    "emptyNone": "Aucune location pour l'instant. Touchez « + Nouvelle location » pour créer la première."
+    "emptyNone": "Aucune location pour l'instant. Touchez « + Nouvelle location » pour créer la première.",
+    "focus": {
+      "active": "Locations actives",
+      "departures": "Départs",
+      "returns": "Retours",
+      "upcoming": "À venir · 7 jours",
+      "pending": "À confirmer",
+      "clear": "Retirer le filtre"
+    }
   },
   "contract": {
     "section": "Contrat",
@@ -1772,10 +1780,6 @@
         "failed": "L'analyse n'a pas fonctionné. Réessayez dans un instant."
       }
     },
-    "askM3ak": {
-      "title": "Demander à BIBIP",
-      "hint": "Qui a pris la voiture ? Quelles voitures reviennent cette semaine ?"
-    },
     "upcoming": {
       "title": "Locations à venir",
       "empty": "Aucune location à venir pour le moment."
@@ -1818,6 +1822,144 @@
       "bookings": "Réservation",
       "fleet": "Parc véhicules",
       "newRentalHint": "Nouvelle location"
+    },
+    "home": {
+      "greeting": {
+        "morning": "Bonjour, {{name}}",
+        "evening": "Bonsoir, {{name}}",
+        "morningNoName": "Bonjour",
+        "eveningNoName": "Bonsoir"
+      },
+      "available_one": "{{count}} véhicule disponible",
+      "available_other": "{{count}} véhicules disponibles",
+      "noneAvailable": "Aucun véhicule disponible",
+      "periodLabel": "Période",
+      "stats": {
+        "active": "Actives",
+        "departures": "Départs",
+        "returns": "Retours",
+        "today": "Aujourd'hui",
+        "7d": "sur 7 jours",
+        "30d": "sur 30 jours",
+        "a11y": "{{label}} {{suffix}} : {{value}}"
+      },
+      "money": {
+        "collected": "Encaissé",
+        "remaining": "Reste à encaisser",
+        "currency": "MAD",
+        "none": "Aucun encaissement",
+        "vsPrevious": "{{pct}} % vs période précédente",
+        "noComparison": "Pas de comparaison",
+        "unpaid_one": "{{count}} location non soldée",
+        "unpaid_other": "{{count}} locations non soldées"
+      },
+      "reports": "Voir tous les rapports",
+      "ask": {
+        "title": "Demander à BIBIP",
+        "hint": "Posez une question sur votre agence",
+        "mic": "Dicter une question à BIBIP",
+        "late": "Qui est en retard ?",
+        "unpaid": "Impayés du mois",
+        "tomorrow": "Dispo demain"
+      },
+      "priorities": {
+        "title": "Priorités",
+        "analysis": "Analyse",
+        "aiTime": "IA · {{time}}",
+        "allClear": "Tout est sous contrôle",
+        "allClearLabel": "TOUT VA BIEN",
+        "allClearHint": "Rien d'anormal aujourd'hui.",
+        "late": {
+          "label": "URGENT",
+          "desc_one": "retour en retard",
+          "desc_other": "retours en retard",
+          "action": "Appeler les clients"
+        },
+        "unpaid": {
+          "label": "TRÉSORERIE",
+          "desc_one": "dossier impayé · {{amount}} MAD",
+          "desc_other": "dossiers impayés · {{amount}} MAD",
+          "action": "Relancer"
+        },
+        "documents": {
+          "label": "DOCUMENTS",
+          "desc_one": "document expiré",
+          "desc_other": "documents expirés",
+          "action": "Mettre à jour"
+        },
+        "maintenance": {
+          "label": "MAINTENANCE",
+          "desc_one": "entretien en retard",
+          "desc_other": "entretiens en retard",
+          "action": "Planifier"
+        },
+        "stopped": {
+          "label": "FLOTTE",
+          "desc_one": "véhicule à l'arrêt",
+          "desc_other": "véhicules à l'arrêt",
+          "action": "Mettre en avant"
+        },
+        "a11y_one": "{{count}} {{label}}",
+        "a11y_other": "{{count}} {{label}}"
+      },
+      "parc": {
+        "title": "Parc",
+        "count_one": "{{count}} véhicule",
+        "count_other": "{{count}} véhicules",
+        "see": "Voir",
+        "occupancy": "occupation",
+        "gauge": "Jauge d'occupation : {{pct}} %",
+        "available": "Disponibles",
+        "rented": "En location",
+        "toInspect": "À inspecter"
+      },
+      "agenda": {
+        "title": "Agenda",
+        "planning": "Planning",
+        "toConfirm": "À confirmer",
+        "upcoming": "À venir · 7 j",
+        "emptyWeek": "Aucune location à venir cette semaine",
+        "book": "Réserver",
+        "next": "Prochaines locations"
+      },
+      "notice": {
+        "dismiss": "Fermer",
+        "start": "Premiers pas : {{done}} sur {{total}} étapes faites",
+        "trial_one": "Période d'essai : {{count}} jour restant",
+        "trial_other": "Période d'essai : {{count}} jours restants"
+      },
+      "loading": "Chargement…",
+      "lists": {
+        "late": {
+          "title": "Retours en retard",
+          "empty": "Aucun retour en retard.",
+          "call": "Appeler",
+          "bill": "Facturer les jours en plus",
+          "by_one": "{{count}} jour de retard",
+          "by_other": "{{count}} jours de retard",
+          "noPhone": "Pas de numéro"
+        },
+        "unpaid": {
+          "title": "Locations non soldées",
+          "empty": "Aucune location non soldée.",
+          "remaining": "Reste {{amount}} MAD"
+        },
+        "stopped": {
+          "title": "Véhicules à l'arrêt",
+          "subtitle": "Aucune location sur la période",
+          "empty": "Aucun véhicule à l'arrêt."
+        },
+        "documents": {
+          "title": "Documents à mettre à jour",
+          "empty": "Aucun document à mettre à jour.",
+          "expired": "Expiré le {{date}}",
+          "soon": "Expire le {{date}}"
+        }
+      }
+    },
+    "askBibip": {
+      "title": "Demander à BIBIP",
+      "hint": "Qui a pris la voiture ? Quelles voitures reviennent cette semaine ?"
     }
   },
   "maintenance": {

@@ -6,6 +6,11 @@ import type { Vehicle } from '@/features/vehicles/types';
 import {
   balancesToCollectToday,
   computeDashboardMetrics,
+  filterRentalsByFocus,
+  lateDays,
+  lateRentals,
+  outstandingRentals,
+  periodActivity,
   periodRange,
   revenueLastDays,
   maintenanceSummary,
@@ -258,5 +263,44 @@ describe('périodes (aujourd\'hui, 7 jours, 30 jours)', () => {
     expect(computeDashboardMetrics({ ...base, period: 'today' }).availableNow).toBe(
       computeDashboardMetrics({ ...base, period: '30d' }).availableNow
     );
+  });
+});
+
+describe('activité de la période (en-tête de l’accueil)', () => {
+  const rentals = [
+    rental('a', { statut: 'en_cours', dateDepartReel: iso(2026, 10, 15), dateDebutPrevue: iso(2026, 10, 15), dateFinPrevue: iso(2026, 10, 17, 18) }),
+    rental('b', { statut: 'terminee', dateDepartReel: iso(2026, 10, 12), dateDebutPrevue: iso(2026, 10, 12), dateFinPrevue: iso(2026, 10, 14), dateRetourReel: iso(2026, 10, 14) }),
+    rental('c', { statut: 'terminee', dateDepartReel: iso(2026, 9, 1), dateDebutPrevue: iso(2026, 9, 1), dateFinPrevue: iso(2026, 9, 3), dateRetourReel: iso(2026, 9, 3) }),
+    rental('d', { statut: 'annulee', dateDebutPrevue: iso(2026, 10, 17), dateFinPrevue: iso(2026, 10, 19) }),
+    rental('e', { statut: 'confirmee', dateDebutPrevue: iso(2026, 10, 17, 15), dateFinPrevue: iso(2026, 10, 20) }),
+  ];
+
+  it('aujourd’hui : en cours maintenant, départs et retours du jour (hors annulées)', () => {
+    const range = periodRange('today', NOW);
+    expect(periodActivity(rentals, NOW, range, 'today')).toEqual({ active: 1, departures: 1, returns: 1 });
+  });
+
+  it('sur 7 jours : locations actives qui chevauchent la période', () => {
+    const range = periodRange('7d', NOW);
+    // a (en cours) et b (terminée le 14) chevauchent ; c (septembre) non.
+    expect(periodActivity(rentals, NOW, range, '7d').active).toBe(2);
+    expect(periodActivity(rentals, NOW, range, '7d').departures).toBe(3);
+  });
+
+  it('les filtres de l’accueil reprennent les mêmes règles', () => {
+    expect(filterRentalsByFocus(rentals, 'active', '7d', NOW).map((r) => r.id)).toEqual(['a', 'b']);
+    expect(filterRentalsByFocus(rentals, 'departures', 'today', NOW).map((r) => r.id)).toEqual(['e']);
+    expect(filterRentalsByFocus(rentals, 'upcoming', 'today', NOW).map((r) => r.id)).toEqual(['e']);
+  });
+
+  it('retards, impayés et véhicules à l’arrêt', () => {
+    const evening = new Date(2026, 9, 17, 20, 0, 0);
+    expect(lateRentals(rentals, NOW)).toEqual([]);
+    expect(lateRentals(rentals, evening).map((r) => r.id)).toEqual(['a']);
+    expect(lateDays(rentals[0], evening)).toBe(1);
+    const unpaid = outstandingRentals(rentals, [payment('p', 'a', 200, iso(2026, 10, 16))]);
+    expect(unpaid.map((u) => [u.rental.id, u.balance])).toEqual([['b', 1000], ['c', 1000], ['a', 800]]);
+    const metrics = computeDashboardMetrics({ vehicles: [vehicle('v1'), vehicle('v2')], rentals, payments: [], maintenance: [], customers: [], now: NOW, period: 'today' });
+    expect(metrics.stopped.map((p) => p.vehicleId)).toEqual(['v2']);
   });
 });

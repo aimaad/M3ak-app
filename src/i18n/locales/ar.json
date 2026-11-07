@@ -1267,7 +1267,15 @@
     "subtitle_zero": "{{count}} ديال الكراءات",
     "subtitle_two": "{{count}} ديال الكراءات",
     "subtitle_few": "{{count}} ديال الكراءات",
-    "subtitle_many": "{{count}} ديال الكراءات"
+    "subtitle_many": "{{count}} ديال الكراءات",
+    "focus": {
+      "active": "الكراءات الجارية",
+      "departures": "الانطلاقات",
+      "returns": "الإرجاعات",
+      "upcoming": "قادمة · 7 أيام",
+      "pending": "للتأكيد",
+      "clear": "إزالة التصفية"
+    }
   },
   "contract": {
     "section": "العقد",
@@ -1812,10 +1820,6 @@
         "failed": "التحليل ما خدمش. عاود حاول من بعد شوية."
       }
     },
-    "askM3ak": {
-      "title": "اسأل BIBIP",
-      "hint": "من أخذ السيارة؟ أي سيارات سترجع هذا الأسبوع؟"
-    },
     "fleetTotalCount_zero": "{{count}} ديال السيارات مسجلة",
     "fleetTotalCount_two": "{{count}} ديال السيارات مسجلة",
     "fleetTotalCount_few": "{{count}} ديال السيارات مسجلة",
@@ -1862,6 +1866,188 @@
       "bookings": "الحجوزات",
       "fleet": "الأسطول",
       "newRentalHint": "كراء جديد"
+    },
+    "home": {
+      "greeting": {
+        "morning": "صباح الخير، {{name}}",
+        "evening": "مساء الخير، {{name}}",
+        "morningNoName": "صباح الخير",
+        "eveningNoName": "مساء الخير"
+      },
+      "available_zero": "{{count}} سيارات متاحة",
+      "available_one": "{{count}} سيارة متاحة",
+      "available_two": "{{count}} سيارات متاحة",
+      "available_few": "{{count}} سيارات متاحة",
+      "available_many": "{{count}} سيارات متاحة",
+      "available_other": "{{count}} سيارات متاحة",
+      "noneAvailable": "لا توجد سيارة متاحة",
+      "periodLabel": "الفترة",
+      "stats": {
+        "active": "جارية",
+        "departures": "الانطلاقات",
+        "returns": "الإرجاعات",
+        "today": "اليوم",
+        "7d": "خلال 7 أيام",
+        "30d": "خلال 30 يوماً",
+        "a11y": "{{label}} {{suffix}} : {{value}}"
+      },
+      "money": {
+        "collected": "المبلغ المحصَّل",
+        "remaining": "المتبقي للتحصيل",
+        "currency": "درهم",
+        "none": "لا يوجد تحصيل",
+        "vsPrevious": "{{pct}} % مقارنة بالفترة السابقة",
+        "noComparison": "لا توجد مقارنة",
+        "unpaid_zero": "{{count}} كراءات غير مسدَّدة",
+        "unpaid_one": "{{count}} كراء غير مسدَّد",
+        "unpaid_two": "{{count}} كراءات غير مسدَّدة",
+        "unpaid_few": "{{count}} كراءات غير مسدَّدة",
+        "unpaid_many": "{{count}} كراءات غير مسدَّدة",
+        "unpaid_other": "{{count}} كراءات غير مسدَّدة"
+      },
+      "reports": "عرض كل التقارير",
+      "ask": {
+        "title": "اسأل BIBIP",
+        "hint": "اطرح سؤالاً عن وكالتك",
+        "mic": "أملِ سؤالاً على BIBIP",
+        "late": "من هو المتأخر؟",
+        "unpaid": "غير المسدَّد هذا الشهر",
+        "tomorrow": "المتاح غداً"
+      },
+      "priorities": {
+        "title": "الأولويات",
+        "analysis": "التحليل",
+        "aiTime": "الذكاء الاصطناعي · {{time}}",
+        "allClear": "كل شيء تحت السيطرة",
+        "allClearLabel": "كل شيء على ما يرام",
+        "allClearHint": "لا شيء غير عادي اليوم.",
+        "late": {
+          "label": "عاجل",
+          "desc_zero": "إرجاعات متأخرة",
+          "desc_one": "إرجاع متأخر",
+          "desc_two": "إرجاعات متأخرة",
+          "desc_few": "إرجاعات متأخرة",
+          "desc_many": "إرجاعات متأخرة",
+          "desc_other": "إرجاعات متأخرة",
+          "action": "اتصل بالعملاء"
+        },
+        "unpaid": {
+          "label": "الخزينة",
+          "desc_zero": "ملفات غير مسدَّدة · {{amount}} درهم",
+          "desc_one": "ملف غير مسدَّد · {{amount}} درهم",
+          "desc_two": "ملفات غير مسدَّدة · {{amount}} درهم",
+          "desc_few": "ملفات غير مسدَّدة · {{amount}} درهم",
+          "desc_many": "ملفات غير مسدَّدة · {{amount}} درهم",
+          "desc_other": "ملفات غير مسدَّدة · {{amount}} درهم",
+          "action": "ذكِّر العملاء"
+        },
+        "documents": {
+          "label": "الوثائق",
+          "desc_zero": "وثائق منتهية",
+          "desc_one": "وثيقة منتهية",
+          "desc_two": "وثائق منتهية",
+          "desc_few": "وثائق منتهية",
+          "desc_many": "وثائق منتهية",
+          "desc_other": "وثائق منتهية",
+          "action": "حدِّث"
+        },
+        "maintenance": {
+          "label": "الصيانة",
+          "desc_zero": "صيانات متأخرة",
+          "desc_one": "صيانة متأخرة",
+          "desc_two": "صيانات متأخرة",
+          "desc_few": "صيانات متأخرة",
+          "desc_many": "صيانات متأخرة",
+          "desc_other": "صيانات متأخرة",
+          "action": "خطِّط"
+        },
+        "stopped": {
+          "label": "الأسطول",
+          "desc_zero": "سيارات متوقفة",
+          "desc_one": "سيارة متوقفة",
+          "desc_two": "سيارات متوقفة",
+          "desc_few": "سيارات متوقفة",
+          "desc_many": "سيارات متوقفة",
+          "desc_other": "سيارات متوقفة",
+          "action": "أبرِزها"
+        },
+        "a11y_zero": "{{count}} {{label}}",
+        "a11y_one": "{{count}} {{label}}",
+        "a11y_two": "{{count}} {{label}}",
+        "a11y_few": "{{count}} {{label}}",
+        "a11y_many": "{{count}} {{label}}",
+        "a11y_other": "{{count}} {{label}}"
+      },
+      "parc": {
+        "title": "الأسطول",
+        "count_zero": "{{count}} سيارات",
+        "count_one": "سيارة واحدة",
+        "count_two": "{{count}} سيارات",
+        "count_few": "{{count}} سيارات",
+        "count_many": "{{count}} سيارات",
+        "count_other": "{{count}} سيارات",
+        "see": "عرض",
+        "occupancy": "نسبة الإشغال",
+        "gauge": "مؤشر الإشغال : {{pct}} %",
+        "available": "متاحة",
+        "rented": "في الكراء",
+        "toInspect": "للفحص"
+      },
+      "agenda": {
+        "title": "الأجندة",
+        "planning": "التخطيط",
+        "toConfirm": "للتأكيد",
+        "upcoming": "قادمة · 7 أيام",
+        "emptyWeek": "لا يوجد كراء قادم هذا الأسبوع",
+        "book": "احجز",
+        "next": "الكراءات القادمة"
+      },
+      "notice": {
+        "dismiss": "إغلاق",
+        "start": "الخطوات الأولى : {{done}} من {{total}}",
+        "trial_zero": "الفترة التجريبية : {{count}} أيام متبقية",
+        "trial_one": "الفترة التجريبية : يوم واحد متبقٍّ",
+        "trial_two": "الفترة التجريبية : {{count}} أيام متبقية",
+        "trial_few": "الفترة التجريبية : {{count}} أيام متبقية",
+        "trial_many": "الفترة التجريبية : {{count}} أيام متبقية",
+        "trial_other": "الفترة التجريبية : {{count}} أيام متبقية"
+      },
+      "loading": "جارٍ التحميل…",
+      "lists": {
+        "late": {
+          "title": "الإرجاعات المتأخرة",
+          "empty": "لا يوجد إرجاع متأخر.",
+          "call": "اتصل",
+          "bill": "احتسب الأيام الإضافية",
+          "by_zero": "{{count}} أيام تأخير",
+          "by_one": "يوم تأخير",
+          "by_two": "{{count}} أيام تأخير",
+          "by_few": "{{count}} أيام تأخير",
+          "by_many": "{{count}} أيام تأخير",
+          "by_other": "{{count}} أيام تأخير",
+          "noPhone": "لا يوجد رقم"
+        },
+        "unpaid": {
+          "title": "الكراءات غير المسدَّدة",
+          "empty": "لا يوجد كراء غير مسدَّد.",
+          "remaining": "المتبقي {{amount}} درهم"
+        },
+        "stopped": {
+          "title": "السيارات المتوقفة",
+          "subtitle": "بدون أي كراء خلال الفترة",
+          "empty": "لا توجد سيارة متوقفة."
+        },
+        "documents": {
+          "title": "الوثائق التي تحتاج تحديثاً",
+          "empty": "لا توجد وثائق تحتاج تحديثاً.",
+          "expired": "انتهت في {{date}}",
+          "soon": "تنتهي في {{date}}"
+        }
+      }
+    },
+    "askBibip": {
+      "title": "اسأل BIBIP",
+      "hint": "من أخذ السيارة؟ أي سيارات سترجع هذا الأسبوع؟"
     }
   },
   "maintenance": {

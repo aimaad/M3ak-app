@@ -1,116 +1,82 @@
-import { Ionicons } from '@expo/vector-icons';
 import { Redirect, router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, View } from 'react-native';
-import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useEffect, useMemo } from 'react';
+import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Shadows, Palette, Brand } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import { daysLeft, shouldShowTrialBanner } from '@/features/agency/access';
-import {
-  useAgencyAccess,
-  useAgencyDetails,
-  useMyAgency,
-  useMyProfile,
-} from '@/features/agency/hooks';
+import { useAgencyAccess, useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import { useSession } from '@/features/auth/session-context';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
-import { CompactTopBar, DashboardHeader } from '@/features/dashboard/dashboard-header';
-import { QuickAccessTiles, RevenueCard, StatTrio } from '@/features/dashboard/home-cards';
-import { UpcomingRentalsSection } from '@/features/dashboard/upcoming-section';
-import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
+import { AgendaSection } from '@/features/dashboard/agenda-section';
+import { AskBibip } from '@/features/dashboard/ask-bibip';
+import { HomeHeader } from '@/features/dashboard/home-header';
+import { HomeNotice, pickNotice, type NoticeKind } from '@/features/dashboard/home-notice';
+import { Skeleton } from '@/features/dashboard/home-ui';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
-import type { DashboardPeriod } from '@/features/dashboard/kpis';
-import { dashboardSections, canSeeMoney } from '@/features/dashboard/role-layout';
-import {
-  CounterSection,
-  FinancialSection,
-  FleetSection,
-  MaintenanceSummaryRow,
-  OperationsSection,
-  PerformanceSection,
-} from '@/features/dashboard/sections';
+import type { RentalFocus } from '@/features/dashboard/kpis';
+import { ParcSection } from '@/features/dashboard/parc-section';
+import { buildPriorities } from '@/features/dashboard/priorities';
+import { PrioritiesSection } from '@/features/dashboard/priorities-carousel';
+import { canSeeMoney } from '@/features/dashboard/role-layout';
+import { usePersistedPeriod } from '@/features/dashboard/use-persisted-period';
+import { headerFirstName } from '@/features/dashboard/header-format';
+import { buildGettingStarted, dismissKey, progressOf, shouldShowGettingStarted } from '@/features/onboarding/getting-started';
 import { useStoredFlag } from '@/features/onboarding/use-stored-flag';
 import { shouldAutoOpenWelcome, welcomeSeenKey } from '@/features/onboarding/welcome-flow';
-import { GettingStartedCard } from '@/features/onboarding/getting-started-card';
-import {
-  buildGettingStarted,
-  shouldShowGettingStarted,
-} from '@/features/onboarding/getting-started';
-import { useSession } from '@/features/auth/session-context';
-import { useRentals } from '@/features/rentals/hooks';
 import { useOcrSettings } from '@/features/ocr/hooks';
-import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
+import { useRentals } from '@/features/rentals/hooks';
 import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
-import type { ExpiryUrgency } from '@/lib/expiry';
+import { getInitials } from '@/lib/initials';
 import { useLanguage } from '@/i18n/use-language';
-
-type DocumentAlertItem = {
-  key: string;
-  name: string;
-  expiresAt: string;
-  urgency: Exclude<ExpiryUrgency, 'ok'>;
-  href: `/clients/${string}` | `/flotte/${string}`;
-};
-
-const URGENCY_COLOR: Record<Exclude<ExpiryUrgency, 'ok'>, string> = {
-  bientot: Palette.warning,
-  expire: Palette.error,
-};
-
-function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 export default function AccueilScreen() {
   const { t, language } = useLanguage();
+  const insets = useSafeAreaInsets();
   const agencyQuery = useMyAgency();
-  const profileQuery = useMyProfile(agencyQuery.data?.agencyId);
+  const agencyId = agencyQuery.data?.agencyId;
+  const profileQuery = useMyProfile(agencyId);
   const role = agencyQuery.data?.role;
-  const agencyDetails = useAgencyDetails(role === 'owner' ? agencyQuery.data?.agencyId : undefined);
-  const logoMissing = role === 'owner' && !!agencyDetails.data && !agencyDetails.data.logoUrl;
+  const showMoney = canSeeMoney(role);
+  const agencyDetails = useAgencyDetails(role === 'owner' ? agencyId : undefined);
   const accessQuery = useAgencyAccess();
-  const trialDays = shouldShowTrialBanner(accessQuery.data ?? null)
-    ? daysLeft(accessQuery.data?.accessUntil ?? null)
-    : null;
-  const sections = dashboardSections(role);
+  const trialDays = shouldShowTrialBanner(accessQuery.data ?? null) ? daysLeft(accessQuery.data?.accessUntil ?? null) : null;
 
-  // Période des chiffres « sur une durée » (revenus, occupation, résultat…) ; les compteurs du jour et de l'état de la flotte n'en dépendent pas.
-  const [period, setPeriod] = useState<DashboardPeriod>('today');
-  // `scrollY` (fil d'interface) fait apparaître la petite barre fixe une fois le hero sorti de l'écran.
-  const scrollY = useSharedValue(0);
-  const onScroll = useAnimatedScrollHandler((event) => {
-    scrollY.value = event.contentOffset.y;
-  });
-  const [heroHeight, setHeroHeight] = useState(0);
-  const {
-    metrics,
-    insightsMetrics,
-    vehicles,
-    maintenanceItems,
-    customers,
-    isLoading,
-    isComplete,
-    isRefreshing,
-    refetchAll,
-  } = useDashboardMetrics(period);
-  const { agencyId, insightsAvailability } = useOcrSettings();
+  const [period, setPeriod] = usePersistedPeriod();
+  const { metrics, insightsMetrics, vehicles, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics(period);
+  const { agencyId: ocrAgencyId, insightsAvailability, chatAvailability } = useOcrSettings();
   const insights = useAiInsights({
     enabled: insightsAvailability === 'active' && isComplete,
-    agencyId,
+    agencyId: ocrAgencyId,
     role,
     language: language === 'ar' ? 'ar' : 'fr',
     metrics: insightsMetrics,
   });
-
-  const { session } = useSession();
   const rentalsQuery = useRentals();
+  const { session } = useSession();
+
+  // Documents expirés (clients et véhicules) : un document « à renouveler bientôt » n'est pas une priorité.
+  const expiredDocuments = useMemo(
+    () =>
+      [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles)].filter((alert) => alert.urgency === 'expire').length,
+    [customers, vehicles]
+  );
+  const priorities = useMemo(
+    () =>
+      buildPriorities({
+        showMoney,
+        lateReturns: metrics.activity.lateReturns,
+        unpaid: metrics.outstanding,
+        expiredDocuments,
+        overdueMaintenance: metrics.maintenance.overdue,
+        stoppedVehicles: metrics.stopped.length,
+      }),
+    [showMoney, metrics, expiredDocuments]
+  );
+
+  // Premiers pas et bandeaux.
   const gettingStarted = buildGettingStarted({
     role,
     hasLogo: !!agencyDetails.data?.logoUrl,
@@ -118,13 +84,34 @@ export default function AccueilScreen() {
     customerCount: customers.length,
     rentalCount: rentalsQuery.data?.length ?? 0,
   });
-  // On attend les données (et le logo pour le propriétaire) avant de proposer des étapes « à faire ».
-  const startReady =
-    isComplete && rentalsQuery.isSuccess && (role !== 'owner' || agencyDetails.isSuccess);
-  const startVisible = startReady && shouldShowGettingStarted(gettingStarted, false);
+  const startReady = isComplete && rentalsQuery.isSuccess && (role !== 'owner' || agencyDetails.isSuccess);
+  const [startDismissed, dismissStart] = useStoredFlag(dismissKey(session?.user.id, agencyId));
+  const [logoDismissed, dismissLogo] = useStoredFlag(agencyId ? `bibip.notice.logo.v1:${agencyId}` : null);
+  const [trialDismissed, dismissTrial] = useStoredFlag(agencyId ? `bibip.notice.trial.v1:${agencyId}` : null);
+  const logoMissing = role === 'owner' && !!agencyDetails.data && !agencyDetails.data.logoUrl;
+  const notice = pickNotice([
+    { kind: 'logo', eligible: logoMissing, dismissed: logoDismissed },
+    { kind: 'start', eligible: startReady && startDismissed !== null && shouldShowGettingStarted(gettingStarted, startDismissed), dismissed: startDismissed },
+    { kind: 'trial', eligible: trialDays !== null, dismissed: trialDismissed },
+  ]);
+  const nextStep = gettingStarted?.find((step) => !step.done && step.href);
+  const noticeText = (kind: NoticeKind): string => {
+    if (kind === 'logo') return t('entreprise.logo.homeNoticeTitle');
+    if (kind === 'start') {
+      const { done, total } = progressOf(gettingStarted ?? []);
+      return t('accueil.home.notice.start', { done, total });
+    }
+    return trialDays !== null && trialDays <= 1 ? t('access.trialLastDay') : t('accueil.home.notice.trial', { count: trialDays ?? 0 });
+  };
+  const noticeAction: Record<NoticeKind, () => void> = {
+    logo: () => router.push('/entreprise'),
+    start: () => router.push(nextStep?.href ?? '/bienvenue'),
+    trial: () => router.push('/profil'),
+  };
+  const noticeDismiss: Record<NoticeKind, () => Promise<void>> = { logo: dismissLogo, start: dismissStart, trial: dismissTrial };
 
   // Toute première arrivée dans une agence encore vide : parcours de bienvenue plein écran (une seule fois).
-  const [welcomeSeen] = useStoredFlag(welcomeSeenKey(session?.user.id, agencyQuery.data?.agencyId));
+  const [welcomeSeen] = useStoredFlag(welcomeSeenKey(session?.user.id, agencyId));
   const openWelcome =
     startReady &&
     shouldAutoOpenWelcome({
@@ -138,30 +125,6 @@ export default function AccueilScreen() {
     if (openWelcome) router.replace('/bienvenue');
   }, [openWelcome]);
 
-  const urgentMaintenance = maintenanceItems
-    .filter((item) => item.statut !== 'effectuee')
-    .slice(0, 4);
-
-  const documentAlerts: DocumentAlertItem[] = useMemo(() => {
-    const fromCustomers: DocumentAlertItem[] = customerDocumentAlerts(customers).map((a) => ({
-      key: `c-${a.customerId}-${a.type}`,
-      name: a.customerName,
-      expiresAt: a.expiresAt,
-      urgency: a.urgency,
-      href: `/clients/${a.customerId}`,
-    }));
-    const fromVehicles: DocumentAlertItem[] = vehicleDocumentAlerts(vehicles).map((a) => ({
-      key: `v-${a.vehicleId}-${a.type}`,
-      name: a.vehicleLabel,
-      expiresAt: a.expiresAt,
-      urgency: a.urgency,
-      href: `/flotte/${a.vehicleId}`,
-    }));
-    return [...fromCustomers, ...fromVehicles]
-      .sort((a, b) => a.expiresAt.localeCompare(b.expiresAt))
-      .slice(0, 4);
-  }, [customers, vehicles]);
-
   if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
@@ -172,230 +135,68 @@ export default function AccueilScreen() {
       </ThemedView>
     );
   }
+  if (!agencyQuery.data) return <Redirect href="/onboarding" />;
 
-  if (!agencyQuery.data) {
-    return <Redirect href="/onboarding" />;
-  }
+  const fullName = profileQuery.data?.nomComplet ?? agencyQuery.data.memberName;
+  const prenom = headerFirstName(profileQuery.data?.prenom, fullName);
+  const aiTime =
+    insights.data?.at != null
+      ? new Date(insights.data.at).toLocaleTimeString(language === 'ar' ? 'ar-MA' : 'fr-FR', { hour: '2-digit', minute: '2-digit' })
+      : null;
+  const openFocus = (focus: RentalFocus) => router.push({ pathname: '/locations', params: { focus, period } });
 
   return (
     <ThemedView className="flex-1">
-      <SafeAreaView className="w-full flex-1" edges={['left', 'right']}>
-        {/* Le hero fait partie du contenu et défile normalement ; une petite barre fixe prend le relais quand il est sorti de l'écran. */}
-        <View className="flex-1">
-          <Animated.ScrollView
-            onScroll={onScroll}
-            scrollEventThrottle={16}
-            contentContainerStyle={{ paddingBottom: 40 }}
-            refreshControl={
-              <RefreshControl
-                refreshing={isRefreshing}
-                onRefresh={refetchAll}
-                tintColor={Brand.white}
-                colors={[Palette.primary]}
-              />
-            }
-          >
-            <DashboardHeader
-              prenom={profileQuery.data?.prenom}
-              fullName={profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName}
-              agencyName={agencyQuery.data?.agencyName}
-              avatarPath={profileQuery.data?.photoPath}
-              period={period}
-              onPeriodChange={setPeriod}
-              onHeight={setHeroHeight}
-              scrollY={scrollY}
+      {/* Fond graphite derrière la barre d'état : ses icônes claires restent lisibles même quand l'en-tête a défilé. */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, start: 0, end: 0, height: insets.top, backgroundColor: Brand.graphite, zIndex: 10 }} />
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetchAll} tintColor={Brand.white} colors={[Palette.primary]} progressViewOffset={insets.top} />}
+      >
+        <HomeHeader
+          prenom={prenom}
+          initials={getInitials(fullName ?? prenom)}
+          agencyName={agencyQuery.data.agencyName}
+          avatarPath={profileQuery.data?.photoPath}
+          availableNow={metrics.availableNow}
+          period={period}
+          onPeriodChange={setPeriod}
+          metrics={metrics}
+          showMoney={showMoney}
+          loading={isLoading}
+          onOpenProfile={() => router.push('/profil')}
+          onOpenFocus={openFocus}
+        />
+
+        <AskBibip chatActive={chatAvailability === 'active'} />
+
+        {notice ? (
+          <View style={{ marginTop: 12 }}>
+            <HomeNotice text={noticeText(notice)} onPress={noticeAction[notice]} onDismiss={() => void noticeDismiss[notice]()} />
+          </View>
+        ) : null}
+
+        {isLoading ? (
+          <View style={{ marginTop: 30, paddingHorizontal: 20, gap: 30 }}>
+            <Skeleton height={168} radius={22} />
+            <Skeleton height={116} radius={22} />
+            <Skeleton height={68} radius={18} />
+          </View>
+        ) : (
+          <View style={{ marginTop: 30, gap: 30 }}>
+            <PrioritiesSection priorities={priorities} aiTime={aiTime} />
+            <ParcSection vehicles={vehicles} occupancyPct={metrics.occupancyPct} />
+            <AgendaSection
+              rentals={rentalsQuery.data ?? []}
+              customers={customers}
+              vehicles={vehicles}
+              pendingConfirmation={metrics.activity.pendingConfirmation}
+              upcoming7Days={metrics.activity.upcoming7Days}
+              onOpenFocus={openFocus}
             />
-            {isLoading ? (
-              <View className="items-center justify-center" style={{ paddingVertical: 48 }}>
-                <ActivityIndicator color={Palette.primary} />
-              </View>
-            ) : (
-              <View style={{ gap: 24, paddingHorizontal: 24, paddingTop: 8 }}>
-                {trialDays !== null ? (
-                  <View className="gap-1 rounded-2xl bg-warning-soft px-4 py-3">
-                    <ThemedText type="smallBold" style={{ color: Palette.warning }}>
-                      {t('access.trialBannerTitle')}
-                    </ThemedText>
-                    <ThemedText type="small" style={{ color: Palette.warning }}>
-                      {trialDays <= 1
-                        ? t('access.trialLastDay')
-                        : t('access.trialDays', { days: trialDays })}
-                    </ThemedText>
-                  </View>
-                ) : null}
-
-                <GettingStartedCard
-                  steps={gettingStarted}
-                  userId={session?.user.id}
-                  agencyId={agencyQuery.data?.agencyId}
-                  ready={startReady}
-                />
-
-                {logoMissing && !startVisible ? (
-                  <Pressable
-                    onPress={() => router.push('/entreprise')}
-                    className="gap-1 rounded-2xl bg-error-soft px-4 py-3"
-                  >
-                    <ThemedText type="smallBold" style={{ color: Palette.error }}>
-                      {t('entreprise.logo.homeNoticeTitle')}
-                    </ThemedText>
-                    <ThemedText type="small" style={{ color: Palette.error }}>
-                      {t('entreprise.logo.homeNotice')}
-                    </ThemedText>
-                  </Pressable>
-                ) : null}
-
-                <StatTrio metrics={metrics} />
-
-                {canSeeMoney(role) ? <RevenueCard metrics={metrics} /> : null}
-
-                <QuickAccessTiles role={role} />
-
-                <Pressable
-                  onPress={() => router.push('/chat')}
-                  className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-4"
-                  style={Shadows.card}
-                  accessibilityRole="button"
-                >
-                  <View
-                    className="h-12 w-12 items-center justify-center rounded-full"
-                    style={{
-                      backgroundColor: Palette.primary,
-                      ...Shadows.button,
-                      shadowOpacity: 0.25,
-                    }}
-                  >
-                    <Ionicons name="sparkles" size={22} color={Palette.onPrimary} />
-                  </View>
-                  <View className="flex-1 gap-0.5">
-                    <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>
-                    <ThemedText type="small" themeColor="textSecondary">
-                      {t('accueil.askM3ak.hint')}
-                    </ThemedText>
-                  </View>
-                </Pressable>
-
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t(`accueil.roleView.${role ?? 'employee'}`)}
-                </ThemedText>
-
-                {sections.map((section) => {
-                  switch (section) {
-                    case 'financial':
-                      return <FinancialSection key={section} metrics={metrics} />;
-                    case 'fleet':
-                      return <FleetSection key={section} metrics={metrics} vehicles={vehicles} />;
-                    case 'upcoming':
-                      return (
-                        <UpcomingRentalsSection
-                          key={section}
-                          rentals={rentalsQuery.data ?? []}
-                          customers={customers}
-                          vehicles={vehicles}
-                        />
-                      );
-                    case 'operations':
-                      return <OperationsSection key={section} metrics={metrics} />;
-                    case 'counter':
-                      return <CounterSection key={section} metrics={metrics} />;
-                    case 'performance':
-                      return (
-                        <PerformanceSection
-                          key={section}
-                          metrics={metrics}
-                          showMoney={canSeeMoney(role)}
-                        />
-                      );
-                    case 'ai':
-                      return (
-                        <AiInsightsSection
-                          key={section}
-                          availability={insightsAvailability}
-                          isLoading={insights.isFetching}
-                          error={insights.error}
-                          data={insights.data}
-                          onRefresh={insights.refresh}
-                        />
-                      );
-                    case 'alerts':
-                      return documentAlerts.length > 0 ? (
-                        <View key={section} className="gap-3">
-                          <ThemedText type="smallBold">
-                            {t('accueil.documentAlertsSection')}
-                          </ThemedText>
-                          <View className="gap-2">
-                            {documentAlerts.map((alert) => (
-                              <PressableCard
-                                key={alert.key}
-                                onPress={() => router.push(alert.href)}
-                                className="flex-row items-center justify-between"
-                              >
-                                <ThemedText type="small">{alert.name}</ThemedText>
-                                <ThemedText
-                                  type="small"
-                                  style={{ color: URGENCY_COLOR[alert.urgency] }}
-                                >
-                                  {formatShortDate(alert.expiresAt)}
-                                </ThemedText>
-                              </PressableCard>
-                            ))}
-                          </View>
-                        </View>
-                      ) : null;
-                    case 'maintenance':
-                      return (
-                        <View key={section} className="gap-3">
-                          <View className="flex-row items-center justify-between">
-                            <ThemedText type="smallBold">
-                              {t('accueil.maintenanceSection')}
-                            </ThemedText>
-                            <Pressable onPress={() => router.push('/maintenance')}>
-                              <ThemedText type="small" themeColor="primary">
-                                {t('accueil.seeAll')}
-                              </ThemedText>
-                            </Pressable>
-                          </View>
-                          <MaintenanceSummaryRow metrics={metrics} />
-                          {urgentMaintenance.length === 0 ? (
-                            <ThemedText type="small" themeColor="textSecondary">
-                              {t('accueil.maintenanceEmpty')}
-                            </ThemedText>
-                          ) : (
-                            <View className="gap-2">
-                              {urgentMaintenance.map((item) => {
-                                const vehicle = vehicles.find((v) => v.id === item.vehicleId);
-                                return (
-                                  <MaintenanceRow
-                                    key={item.id}
-                                    item={item}
-                                    vehicleLabel={
-                                      vehicle ? `${vehicle.marque} ${vehicle.modele}` : undefined
-                                    }
-                                    currentKm={vehicle?.kilometrage ?? null}
-                                  />
-                                );
-                              })}
-                            </View>
-                          )}
-                        </View>
-                      );
-                    default:
-                      return null;
-                  }
-                })}
-              </View>
-            )}
-          </Animated.ScrollView>
-
-          <CompactTopBar
-            scrollY={scrollY}
-            heroHeight={heroHeight}
-            prenom={profileQuery.data?.prenom}
-            fullName={profileQuery.data?.nomComplet ?? agencyQuery.data?.memberName}
-            avatarPath={profileQuery.data?.photoPath}
-          />
-        </View>
-      </SafeAreaView>
+          </View>
+        )}
+      </ScrollView>
     </ThemedView>
   );
 }

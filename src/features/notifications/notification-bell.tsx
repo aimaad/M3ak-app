@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette, Themes } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -37,7 +37,7 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
       }
       style={({ pressed }) =>
         onForest
-          ? { backgroundColor: pressed ? Themes.dark.surfaceAlt : Themes.dark.surface, borderColor: Themes.dark.border }
+          ? { backgroundColor: pressed ? Brand.surfaceOnDark : 'transparent', borderColor: Brand.strokeOnDark }
           : undefined
       }
     >
@@ -51,16 +51,16 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
           className="absolute min-w-5 items-center justify-center rounded-full px-1"
           style={{
             backgroundColor: Palette.primary,
-            top: onForest ? -2 : -4,
-            end: onForest ? -2 : -4,
-            height: 20,
-            borderWidth: 1.5,
-            borderColor: onForest ? Themes.dark.surface : Palette.card,
+            top: onForest ? -3 : -4,
+            end: onForest ? -5 : -4,
+            height: onForest ? 18 : 20,
+            borderWidth: onForest ? 2 : 1.5,
+            borderColor: onForest ? Brand.graphite : Palette.card,
           }}
         >
           <ThemedText
             type="small"
-            style={{ color: Brand.white, fontSize: 11, lineHeight: 14, fontWeight: '700' }}
+            style={{ color: Brand.white, fontSize: onForest ? 10 : 11, lineHeight: 14, fontWeight: '700' }}
           >
             {label}
           </ThemedText>

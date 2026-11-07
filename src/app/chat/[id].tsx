@@ -23,7 +23,7 @@ const SUGGESTIONS: { key: string; icon: keyof typeof Ionicons.glyphMap }[] = [
 ];
 
 export default function ChatConversationScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, question, dictate } = useLocalSearchParams<{ id: string; question?: string; dictate?: string }>();
   const { t, language } = useLanguage();
   const [conversationId, setConversationId] = useState<string | null>(id && id !== 'nouveau' ? id : null);
   const [text, setText] = useState('');
@@ -76,12 +76,21 @@ export default function ChatConversationScreen() {
     );
   }
 
+  // Question venue de l'accueil (pastille de suggestion) : envoyée une seule fois, dès l'ouverture d'une nouvelle conversation.
+  const autoSent = useRef(false);
+  useEffect(() => {
+    if (autoSent.current || !question || conversationId) return;
+    autoSent.current = true;
+    send(question);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question]);
+
   const empty = messages.length === 0 && !pendingQuestion;
 
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right', 'bottom']}>
-        {/* En-tête : pastille M3ak, nom et état */}
+        {/* En-tête : pastille BIBIP, nom et état */}
         <View className="flex-row items-center gap-3 border-b border-border bg-card px-4 pb-3 pt-2" style={Shadows.card}>
           <Pressable
             onPress={() => router.back()}
@@ -176,6 +185,8 @@ export default function ChatConversationScreen() {
                 className="max-h-28 min-h-11 flex-1 py-2 text-base"
                 style={{ fontFamily: 'Cairo_500Medium', color: Palette.textPrimary, textAlignVertical: 'center' }}
                 editable={!ask.isPending}
+                // Micro de l'accueil : la saisie est déjà active, le clavier du téléphone propose sa dictée.
+                autoFocus={dictate === '1'}
                 returnKeyType="default"
               />
               <Pressable

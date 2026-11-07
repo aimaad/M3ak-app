@@ -42,23 +42,27 @@ type LogoProps = {
   symbolOnly?: boolean;
   /** `light` : pour un fond sombre (blanc) ; `dark` : pour un fond clair (graphite) ; `auto` : selon le thème. */
   tone?: Tone;
+  /** Taille du texte « bibip » (par défaut la moitié du symbole). */
+  wordSize?: number;
+  /** Espace entre le symbole et le texte (par défaut 16 % du symbole). */
+  gap?: number;
 };
 
 /**
  * Logo BIBIP : le symbole « b » avec ses deux ondes orange, suivi du texte « bibip » en minuscules (Montserrat SemiBold 600),
  * graphite sur fond clair, blanc sur fond sombre. Prop `symbolOnly` pour le symbole seul.
  */
-export function Logo({ size = 'md', symbolOnly = false, tone = 'auto' }: LogoProps) {
+export function Logo({ size = 'md', symbolOnly = false, tone = 'auto', wordSize: wordSizeProp, gap }: LogoProps) {
   const symbol = size === 'lg' ? 96 : size === 'md' ? 52 : size;
   const color = useStroke(tone);
-  const wordSize = Math.round(symbol * 0.5);
+  const wordSize = wordSizeProp ?? Math.round(symbol * 0.5);
   return (
     <View
       accessible
       accessibilityRole="image"
       accessibilityLabel={BRAND_NAME}
       className="flex-row items-center"
-      style={{ gap: Math.round(symbol * 0.16) }}
+      style={{ gap: gap ?? Math.round(symbol * 0.16) }}
     >
       <BibipSymbol size={symbol} tone={tone} />
       {symbolOnly ? null : (

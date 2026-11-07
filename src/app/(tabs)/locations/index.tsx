@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -24,6 +24,8 @@ import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 import { Palette } from '@/constants/theme';
+import { DASHBOARD_PERIODS, filterRentalsByFocus, RENTAL_FOCUSES, type DashboardPeriod, type RentalFocus } from '@/features/dashboard/kpis';
+import { Ionicons } from '@expo/vector-icons';
 
 const EMPTY_RENTALS: Rental[] = [];
 
@@ -35,11 +37,18 @@ export default function LocationsScreen() {
   const vehiclesQuery = useVehicles();
   const customersQuery = useCustomers();
   const [statusFilter, setStatusFilter] = useState<RentalStatusFilter>('tous');
+  // Filtre venu de l'accueil (touche sur un chiffre) : ex. ?focus=departures&period=7d. Retirable d'un geste.
+  const params = useLocalSearchParams<{ focus?: string; period?: string }>();
+  const [focusCleared, setFocusCleared] = useState<string | null>(null);
+  const focusKey = `${params.focus ?? ''}|${params.period ?? ''}`;
+  const focus = RENTAL_FOCUSES.includes(params.focus as RentalFocus) && focusCleared !== focusKey ? (params.focus as RentalFocus) : null;
+  const focusPeriod: DashboardPeriod = DASHBOARD_PERIODS.includes(params.period as DashboardPeriod) ? (params.period as DashboardPeriod) : 'today';
 
   const rentals = rentalsQuery.data ?? EMPTY_RENTALS;
-  const counts = useMemo(() => countRentalsByStatus(rentals), [rentals]);
+  const focused = useMemo(() => (focus ? filterRentalsByFocus(rentals, focus, focusPeriod) : rentals), [rentals, focus, focusPeriod]);
+  const counts = useMemo(() => countRentalsByStatus(focused), [focused]);
   const overlapping = useMemo(() => overlappingRentalIds(rentals), [rentals]);
-  const filtered = useMemo(() => filterRentalsByStatus(rentals, statusFilter), [rentals, statusFilter]);
+  const filtered = useMemo(() => filterRentalsByStatus(focused, statusFilter), [focused, statusFilter]);
   const pagination = usePagination(filtered, statusFilter);
 
   const vehiclesById = useMemo(() => {
@@ -116,6 +125,23 @@ export default function LocationsScreen() {
             </View>
           }
         />
+
+        {focus ? (
+          <Pressable
+            onPress={() => setFocusCleared(focusKey)}
+            accessibilityRole="button"
+            accessibilityLabel={t('locations.focus.clear')}
+            className="mx-6 mb-3 min-h-11 flex-row items-center justify-between self-start rounded-full border border-border bg-surface ps-4 pe-3"
+            style={{ gap: 8 }}
+          >
+            <ThemedText type="small">
+              {focus === 'active' || focus === 'departures' || focus === 'returns'
+                ? `${t(`locations.focus.${focus}`)} · ${t(`accueil.home.stats.${focusPeriod}`)}`
+                : t(`locations.focus.${focus}`)}
+            </ThemedText>
+            <Ionicons name="close" size={16} color={Palette.textSecondary} />
+          </Pressable>
+        ) : null}
 
         {/* width 0 + minWidth 100 % : la rangée de pastilles défile sans jamais élargir l'écran (web). */}
         <View className="pb-4" style={{ width: 0, minWidth: '100%' }}>

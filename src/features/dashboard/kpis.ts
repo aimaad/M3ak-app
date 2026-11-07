@@ -398,6 +398,101 @@ export function newCustomersInRange(
     .length;
 }
 
+// ---------------------------------------------------------------- activité de la période (en-tête de l'accueil)
+
+export type PeriodActivity = { active: number; departures: number; returns: number };
+
+const departureTime = (r: Rental) => r.dateDepartReel ?? r.dateDebutPrevue;
+const returnTime = (r: Rental) => r.dateRetourReel ?? r.dateFinPrevue;
+
+/** Louée (en cours ou terminée) pendant une partie de la période. */
+function overlapsPeriod(rental: Rental, range: PeriodRange, now: Date): boolean {
+  const interval = rentalInterval(rental, now);
+  return !!interval && interval.start < range.to.getTime() && interval.end > range.from.getTime();
+}
+
+/**
+ * Les trois chiffres de l'en-tête. « Aujourd'hui » : locations en cours maintenant ; sur 7 ou 30 jours : locations actives
+ * qui chevauchent la période. Départs et retours : locations non annulées dont le départ (ou le retour) réel, sinon prévu,
+ * tombe dans la période.
+ */
+export function periodActivity(
+  rentals: Rental[],
+  now: Date,
+  range: PeriodRange,
+  period: MetricsPeriod
+): PeriodActivity {
+  const kept = rentals.filter((r) => r.statut !== 'annulee');
+  return {
+    active:
+      period === 'today'
+        ? rentals.filter((r) => r.statut === 'en_cours').length
+        : rentals.filter((r) => overlapsPeriod(r, range, now)).length,
+    departures: kept.filter((r) => inRange(departureTime(r), range.from, range.to)).length,
+    returns: kept.filter((r) => inRange(returnTime(r), range.from, range.to)).length,
+  };
+}
+
+/** Ce que l'utilisateur veut voir en touchant un chiffre de l'accueil (écran Locations filtré). */
+export type RentalFocus = 'active' | 'departures' | 'returns' | 'upcoming' | 'pending';
+export const RENTAL_FOCUSES: RentalFocus[] = ['active', 'departures', 'returns', 'upcoming', 'pending'];
+
+/** Locations correspondant à un chiffre de l'accueil, pour la période choisie (les mêmes règles que les compteurs). */
+export function filterRentalsByFocus(
+  rentals: Rental[],
+  focus: RentalFocus,
+  period: DashboardPeriod,
+  now: Date = new Date()
+): Rental[] {
+  const range = periodRange(period, now);
+  switch (focus) {
+    case 'active':
+      return period === 'today'
+        ? rentals.filter((r) => r.statut === 'en_cours')
+        : rentals.filter((r) => overlapsPeriod(r, range, now));
+    case 'departures':
+      return rentals.filter(
+        (r) => r.statut !== 'annulee' && inRange(departureTime(r), range.from, range.to)
+      );
+    case 'returns':
+      return rentals.filter(
+        (r) => r.statut !== 'annulee' && inRange(returnTime(r), range.from, range.to)
+      );
+    case 'upcoming': {
+      const today = startOfDay(now);
+      return rentals.filter(
+        (r) => isNotStarted(r) && inRange(r.dateDebutPrevue, today, addDays(today, 8))
+      );
+    }
+    case 'pending':
+      return rentals.filter((r) => r.statut === 'en_attente_confirmation');
+  }
+}
+
+/** Retours en retard : locations en cours dont le retour prévu est passé, la plus en retard d'abord. */
+export function lateRentals(rentals: Rental[], now: Date): Rental[] {
+  return rentals
+    .filter((r) => r.statut === 'en_cours' && new Date(r.dateFinPrevue).getTime() < now.getTime())
+    .sort((a, b) => a.dateFinPrevue.localeCompare(b.dateFinPrevue));
+}
+
+/** Retard en jours entamés (au moins 1). */
+export function lateDays(rental: Rental, now: Date): number {
+  return Math.max(1, Math.ceil((now.getTime() - new Date(rental.dateFinPrevue).getTime()) / DAY_MS));
+}
+
+export type OutstandingRental = { rental: Rental; balance: number };
+
+/** Locations non soldées avec leur reste à payer, le plus gros d'abord. */
+export function outstandingRentals(rentals: Rental[], payments: Payment[]): OutstandingRental[] {
+  const collected = collectedByRental(payments);
+  return rentals
+    .filter((r) => r.statut === 'en_cours' || r.statut === 'terminee')
+    .map((rental) => ({ rental, balance: rentalBalance(rental, collected) }))
+    .filter((item) => item.balance > 0)
+    .sort((a, b) => b.balance - a.balance);
+}
+
 // ---------------------------------------------------------------- tout en un
 
 export type DashboardMetrics = {
@@ -417,6 +512,10 @@ export type DashboardMetrics = {
   toCollectToday: { count: number; total: number };
   maintenance: MaintenanceSummary;
   newCustomers: number;
+  /** Les trois chiffres de l'en-tête de l'accueil, pour la période choisie. */
+  periodActivity: PeriodActivity;
+  /** Véhicules sans aucune location sur la période (0 % d'occupation). */
+  stopped: VehiclePerformance[];
 };
 
 export function computeDashboardMetrics(input: {
@@ -465,5 +564,7 @@ export function computeDashboardMetrics(input: {
     toCollectToday: balancesToCollectToday(input.rentals, input.payments, now),
     maintenance: maintenanceSummary(input.maintenance, now, range),
     newCustomers: newCustomersInRange(input.customers, range),
+    periodActivity: periodActivity(input.rentals, now, range, period),
+    stopped: performance.filter((p) => p.occupancyPct === 0),
   };
 }

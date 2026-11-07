@@ -52,9 +52,9 @@ describe('logo BIBIP (symbole « b » + deux ondes orange)', () => {
     expect(fs.existsSync(path.join(root, 'assets/video/bibip-intro-vertical-court.mp4'))).toBe(true);
     expect(fs.existsSync(path.join(root, 'assets/images/ignition'))).toBe(false);
     expect(fs.existsSync(path.join(root, 'assets/audio'))).toBe(false);
-    for (const file of ['signature/showroom.webp', 'signature/three-quarter.webp']) {
-      expect(fs.existsSync(path.join(root, 'assets/images', file))).toBe(true);
-    }
+    // Accueil : la voiture de la vidéo d'ouverture remplace l'ancien décor showroom (photo de Mercedes avec son logo de marque).
+    expect(fs.existsSync(path.join(root, 'assets/images/home-hero-car.jpg'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'assets/images/signature'))).toBe(false);
   });
 
   it("le nom affiché de l'application est BIBIP (identifiants techniques inchangés)", () => {
