@@ -10,9 +10,16 @@
 
 import { Platform } from 'react-native';
 
-import { BRAND } from './brand';
+import { BRAND, brand as BrandColors, dark as DarkTokens, light as LightTokens } from './brand';
 
 export const BibipPalette = BRAND;
+
+/** Couleurs de marque (graphite, orange, orange clair, blanc). */
+export const Brand = BrandColors;
+/** Thèmes sémantiques (voir `brand.js`). L'app est en mode clair forcé ; le thème sombre est prêt mais pas encore branché. */
+export const Themes = { light: LightTokens, dark: DarkTokens } as const;
+/** Palette courante de l'app (thème clair forcé). */
+export const Palette = LightTokens;
 
 /** Ombres légères teintées d'émeraude profond (jamais un gris ou un noir pur) : bordures et espaces d'abord. */
 export const Shadows = {
