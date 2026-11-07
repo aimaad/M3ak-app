@@ -3,11 +3,14 @@
  *
  *   0,0 – 0,9 s   l'écran est noir ; la silhouette de la voiture émerge à peine (fondu d'entrée très doux)
  *   0,9 – 2,1 s   la voiture s'allume progressivement (fondu continu entre les deux photos : phares, reflets sur le sol)
- *   2,1 s         le moteur démarre (son fourni) une fois la voiture allumée
+ *   2,1 s         le moteur démarre (son fourni, rogné de son bruit d'amorce) une fois la voiture allumée, avec une vibration douce
  *   3,0 – 3,7 s   le noir se retire en douceur sur l'application
  *
  * Une seule horloge (`openingTime`) pilote tout. Fonctions pures, utilisables dans les animations (« worklet »).
  */
+/** Délai de sortie audio du téléphone (ms) : la vibration est décalée d'autant pour être ressentie avec le son. À ajuster à l'oreille. */
+export const SOUND_LATENCY = 60;
+
 export const IGN = {
   /** Fin du fondu d'entrée de la silhouette. */
   darkInEnd: 600,
