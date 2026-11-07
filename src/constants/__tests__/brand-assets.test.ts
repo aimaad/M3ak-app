@@ -70,6 +70,8 @@ describe('logo BIBIP (symbole « b » + deux ondes orange)', () => {
     expect(
       app.plugins.find((p: unknown) => Array.isArray(p) && p[0] === 'expo-splash-screen')[1]
         .backgroundColor
-    ).toBe('#FAF8F1');
+    ).toBe('#000000');
+    expect(app.android.adaptiveIcon.backgroundColor).toBe('#202527');
+    expect(app.userInterfaceStyle).toBe('light');
   });
 });

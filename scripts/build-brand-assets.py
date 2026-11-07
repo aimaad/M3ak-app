@@ -56,7 +56,8 @@ def draw_symbol(canvas: int, width_fraction: float, body, waves, background) -> 
     d.ellipse((px - r_in * k, py - r_in * k, px + r_in * k, py + r_in * k), fill=background)
     # Deux ondes : arcs de ±40° autour du centre du cercle, bouts ronds.
     for radius in (46, 62):
-        box = (*p(CX - radius, CY - radius), *p(CX + radius, CY + radius))
+        outer = radius + 4  # le trait d'un arc PIL est tracé vers l'intérieur de sa boîte
+        box = (*p(CX - outer, CY - outer), *p(CX + outer, CY + outer))
         d.arc(box, -40, 40, fill=waves, width=round(8 * k))
         for sign in (-1, 1):
             a = math.radians(40 * sign)
@@ -66,9 +67,9 @@ def draw_symbol(canvas: int, width_fraction: float, body, waves, background) -> 
 
 def main() -> None:
     draw_symbol(1024, 0.60, WHITE, ORANGE, GRAPHITE).convert('RGB').save(OUT / 'icon.png', optimize=True)
-    draw_symbol(1024, 0.40, WHITE, ORANGE, CLEAR).save(OUT / 'android-icon-foreground.png', optimize=True)
+    draw_symbol(1024, 0.46, WHITE, ORANGE, CLEAR).save(OUT / 'android-icon-foreground.png', optimize=True)
     Image.new('RGB', (1024, 1024), GRAPHITE[:3]).save(OUT / 'android-icon-background.png', optimize=True)
-    draw_symbol(432, 0.40, WHITE, WHITE, CLEAR).save(OUT / 'android-icon-monochrome.png', optimize=True)
+    draw_symbol(432, 0.46, WHITE, WHITE, CLEAR).save(OUT / 'android-icon-monochrome.png', optimize=True)
     draw_symbol(1024, 0.80, WHITE, ORANGE, CLEAR).save(OUT / 'splash-icon.png', optimize=True)
     draw_symbol(192, 0.80, WHITE, ORANGE, GRAPHITE).convert('RGB').save(OUT / 'favicon.png', optimize=True)
     print('Icônes écrites dans', OUT)
