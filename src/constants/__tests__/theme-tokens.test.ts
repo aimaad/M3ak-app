@@ -15,12 +15,36 @@ const contrast = (a: string, b: string) => {
 
 describe('identité BIBIP graphite + orange : valeurs officielles', () => {
   it('couleurs de marque', () => {
-    expect(brand).toEqual({
+    expect(brand).toMatchObject({
       graphite: '#202527',
       orange: '#CA531D',
       orangeLight: '#EC7A45',
       white: '#FFFFFF',
     });
+  });
+
+  it("jetons de l'accueil (surfaces graphite)", () => {
+    expect(brand).toMatchObject({
+      borderOnDark: '#343B3E',
+      surfaceOnDark: '#2A3033',
+      strokeOnDark: '#40484B',
+      orangeDeep: '#3A2A22',
+      mutedOnDark: '#B4BABC',
+      textOnDark: '#F4F5F5',
+      successOnDark: '#4CC38A',
+      warningOnDark: '#F2C94C',
+      errorOnDark: '#F0657F',
+      gaugeTrack: '#EDEEEE',
+      parcInspect: '#E0B000',
+    });
+  });
+
+  it('textes lisibles sur les surfaces graphite (≥ 4,5:1)', () => {
+    for (const fg of [brand.mutedOnDark, brand.textOnDark, brand.orangeLight, brand.successOnDark, brand.warningOnDark, brand.errorOnDark]) {
+      expect(contrast(fg, brand.graphite)).toBeGreaterThanOrEqual(4.5);
+    }
+    expect(contrast(brand.orangeLight, brand.orangeDeep)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(brand.textOnDark, brand.orangeDeep)).toBeGreaterThanOrEqual(4.5);
   });
 
   it('thème clair', () => {

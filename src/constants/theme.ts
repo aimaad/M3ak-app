@@ -79,6 +79,24 @@ export const Fonts = Platform.select({
 /** Police du texte « bibip » dans le logo (Montserrat SemiBold 600), chargée au démarrage (`_layout.tsx`). */
 export const BRAND_FONT = 'Montserrat_600SemiBold';
 
+/**
+ * Polices de l'accueil : Montserrat (prénom, nom « bibip », gros chiffres) et Inter (tout le reste) ; Cairo en arabe (ni l'une ni
+ * l'autre n'a de glyphes arabes). `display` = Montserrat, `text` = Inter. Un fichier par graisse.
+ */
+export const HomeFonts = {
+  display: { regular: 'Montserrat_500Medium', semibold: 'Montserrat_600SemiBold', bold: 'Montserrat_700Bold' },
+  text: { regular: 'Inter_400Regular', medium: 'Inter_500Medium', semibold: 'Inter_600SemiBold' },
+  arabic: { regular: 'Cairo_500Medium', medium: 'Cairo_500Medium', semibold: 'Cairo_600SemiBold', bold: 'Cairo_700Bold' },
+} as const;
+
+export function homeDisplayFont(language: string | undefined, weight: 'regular' | 'semibold' | 'bold'): string {
+  return language === 'ar' ? HomeFonts.arabic[weight] : HomeFonts.display[weight];
+}
+
+export function homeTextFont(language: string | undefined, weight: 'regular' | 'medium' | 'semibold'): string {
+  return language === 'ar' ? HomeFonts.arabic[weight === 'semibold' ? 'semibold' : 'medium'] : HomeFonts.text[weight];
+}
+
 export type FontWeightName = 'medium' | 'semibold' | 'bold' | 'extrabold';
 
 /**

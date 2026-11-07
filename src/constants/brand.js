@@ -18,6 +18,26 @@ const brand = {
   /** Orange pour texte et icônes sur fond sombre. */
   orangeLight: '#EC7A45',
   white: '#FFFFFF',
+  // --- Accueil : tokens des surfaces graphite (en-tête, cartes de priorités, barre flottante) ---
+  /** Filets et bordures sur fond graphite. */
+  borderOnDark: '#343B3E',
+  /** Surface (avatar, pastilles) sur fond graphite. */
+  surfaceOnDark: '#2A3033',
+  /** Contours de boutons sur fond graphite. */
+  strokeOnDark: '#40484B',
+  /** Fond de la carte « Reste à encaisser » (orange très sombre). */
+  orangeDeep: '#3A2A22',
+  /** Texte secondaire et texte clair sur fond graphite. */
+  mutedOnDark: '#B4BABC',
+  textOnDark: '#F4F5F5',
+  /** Couleurs fonctionnelles sur fond graphite. */
+  successOnDark: '#4CC38A',
+  warningOnDark: '#F2C94C',
+  errorOnDark: '#F0657F',
+  /** Fond de la jauge du parc. */
+  gaugeTrack: '#EDEEEE',
+  /** « À inspecter » dans le parc. */
+  parcInspect: '#E0B000',
 };
 
 const light = {

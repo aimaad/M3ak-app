@@ -1,4 +1,20 @@
-export declare const brand: { readonly graphite: string; readonly orange: string; readonly orangeLight: string; readonly white: string };
+export declare const brand: {
+  readonly graphite: string;
+  readonly orange: string;
+  readonly orangeLight: string;
+  readonly white: string;
+  readonly borderOnDark: string;
+  readonly surfaceOnDark: string;
+  readonly strokeOnDark: string;
+  readonly orangeDeep: string;
+  readonly mutedOnDark: string;
+  readonly textOnDark: string;
+  readonly successOnDark: string;
+  readonly warningOnDark: string;
+  readonly errorOnDark: string;
+  readonly gaugeTrack: string;
+  readonly parcInspect: string;
+};
 
 export type ThemeTokens = {
   readonly background: string;

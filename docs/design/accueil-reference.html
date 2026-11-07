@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>BIBIP accueil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 1540px; background: #FFFFFF; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+
+<div style="background: #202527; padding: 58px 20px 58px 20px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div style="display: flex; align-items: center; gap: 8px">
+<svg width="32" height="32" viewBox="-0.25 -7.3 124 124" role="img" aria-label="BIBIP">
+<line x1="18" y1="8" x2="18" y2="92" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"></line>
+<circle cx="46" cy="64" r="26" fill="none" stroke="#FFFFFF" stroke-width="13"></circle>
+<path d="M81.2 34.4 A46 46 0 0 1 81.2 93.6" fill="none" stroke="{{accent}}" stroke-width="8" stroke-linecap="round"></path>
+<path d="M93.5 24.1 A62 62 0 0 1 93.5 103.9" fill="none" stroke="{{accent}}" stroke-width="8" stroke-linecap="round"></path>
+</svg>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; color: #FFFFFF; letter-spacing: 0.01em">bibip</span>
+</div>
+<div style="display: flex; align-items: center; gap: 10px">
+<button aria-label="Notifications, 33 non lues" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #40484B; background: transparent; display: flex; align-items: center; justify-content: center; padding: 0; position: relative">
+<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10 20a2 2 0 0 0 4 0"></path></svg>
+<span style="position: absolute; top: -3px; right: -5px; min-width: 20px; height: 18px; border-radius: 9px; background: {{accent}}; color: #FFFFFF; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; padding: 0 5px; box-sizing: border-box; border: 2px solid #202527">33</span>
+</button>
+<button aria-label="Mon profil et réglages" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #CA531D; background: #2A3033; color: #FFFFFF; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; padding: 0">IA</button>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #B4BABC">LOCATION TEST · SAM. 7 NOV.</div>
+<div style="font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 500; color: #FFFFFF; letter-spacing: -0.01em">Bonsoir, <span style="font-weight: 700">Imad</span></div>
+</div>
+
+<div style="margin: -6px -20px -6px -20px; height: 150px; position: relative">
+<img src="/_blob/ab3bbb69b29dbeaa471de020a7a96ea9" alt="Voiture aux phares allumés" style="width: 390px; height: 150px; object-fit: cover; display: block">
+<div style="position: absolute; left: 20px; bottom: 10px; display: flex; align-items: center; gap: 8px; background: rgba(32,37,39,0.9); border: 1px solid #40484B; border-radius: 20px; padding: 6px 12px 6px 10px">
+<span style="width: 7px; height: 7px; border-radius: 4px; background: #4CC38A"></span>
+<span style="font-size: 12px; color: #F4F5F5; font-weight: 500">2 véhicules disponibles</span>
+</div>
+</div>
+
+<div style="display: flex; gap: 24px; border-bottom: 1px solid #343B3E">
+<sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+<button onClick="{{p.pick}}" aria-pressed="{{p.pressed}}" style="{{p.style}}">{{p.label}}</button>
+</sc-for>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="border: 1px solid #343B3E; border-radius: 18px; padding: 16px 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: #B4BABC">ENCAISSÉ</div>
+<div style="font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 600; color: #FFFFFF; line-height: 1; letter-spacing: -0.02em">{{enc}}<span style="font-size: 13px; font-weight: 500; color: #B4BABC; margin-left: 4px">MAD</span></div>
+<div style="font-size: 12px; color: #B4BABC">{{encNote}}</div>
+</div>
+<div style="border: 1px solid {{accent}}; background: #3A2A22; border-radius: 18px; padding: 16px 14px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 10px; font-weight: 600; letter-spacing: 0.14em; color: #EC7A45">RESTE À ENCAISSER</div>
+<div style="font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 600; color: #FFFFFF; line-height: 1; letter-spacing: -0.02em">30 500<span style="font-size: 13px; font-weight: 500; color: #EC7A45; margin-left: 4px">MAD</span></div>
+<div style="font-size: 12px; color: #F4F5F5">8 locations non soldées</div>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr))">
+<a href="#" style="padding: 4px 12px 4px 0; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid #343B3E">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 600; color: #FFFFFF; line-height: 1">{{actives}}</span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC; line-height: 1.4">ACTIVES<br>{{suffix}}</span>
+</a>
+<a href="#" style="padding: 4px 12px; display: flex; flex-direction: column; gap: 6px; border-right: 1px solid #343B3E">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 600; color: #FFFFFF; line-height: 1; display: flex; align-items: center; gap: 6px">{{departs}}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#EC7A45" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"></path><path d="M8 7h9v9"></path></svg></span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC; line-height: 1.4">DÉPARTS<br>{{suffix}}</span>
+</a>
+<a href="#" style="padding: 4px 0 4px 12px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 600; color: #FFFFFF; line-height: 1; display: flex; align-items: center; gap: 6px">{{retours}}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4CC38A" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 7L7 17"></path><path d="M16 17H7V8"></path></svg></span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC; line-height: 1.4">RETOURS<br>{{suffix}}</span>
+</a>
+</div>
+
+<a href="#" style="align-self: flex-start; font-size: 13px; font-weight: 600; color: #FFFFFF; display: flex; align-items: center; gap: 8px; min-height: 24px; letter-spacing: 0.02em">Voir tous les rapports <span style="color: #EC7A45">→</span></a>
+</div>
+
+<div style="padding: 0 20px; margin-top: -32px; position: relative; display: flex; flex-direction: column; gap: 12px">
+<button style="width: 100%; min-height: 64px; background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 20px; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; text-align: left; box-shadow: 0 12px 32px rgba(32,37,39,0.12)">
+<span style="width: 44px; height: 44px; border-radius: 14px; background: #202527; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"></path></svg>
+</span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0">
+<span style="font-size: 15px; font-weight: 600; color: #202527">Demander à BIBIP</span>
+<span style="font-size: 13px; color: #5E6466">Posez une question sur votre agence</span>
+</span>
+<span style="width: 36px; height: 36px; border-radius: 18px; border: 1px solid #E2E4E5; display: flex; align-items: center; justify-content: center">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line></svg>
+</span>
+</button>
+<div style="display: flex; gap: 8px; overflow: hidden; margin-right: -20px">
+<button style="flex-shrink: 0; height: 36px; border-radius: 18px; border: 1px solid #E2E4E5; background: #FFFFFF; color: #202527; font-size: 13px; font-weight: 500; padding: 0 14px">Qui est en retard ?</button>
+<button style="flex-shrink: 0; height: 36px; border-radius: 18px; border: 1px solid #E2E4E5; background: #FFFFFF; color: #202527; font-size: 13px; font-weight: 500; padding: 0 14px">Impayés du mois</button>
+<button style="flex-shrink: 0; height: 36px; border-radius: 18px; border: 1px solid #E2E4E5; background: #FFFFFF; color: #202527; font-size: 13px; font-weight: 500; padding: 0 14px">Dispo demain</button>
+</div>
+</div>
+
+<div style="padding: 30px 0 0 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center; padding-right: 20px">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #202527">PRIORITÉS</span>
+<span style="font-size: 11px; font-weight: 600; color: #FFFFFF; background: #202527; border-radius: 10px; padding: 2px 8px">3</span>
+<span style="font-size: 12px; color: #5E6466">IA · 17:13</span>
+</div>
+<a href="#" style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Analyse <span style="color: #CA531D">→</span></a>
+</div>
+<div style="display: flex; gap: 12px; overflow: hidden">
+<a href="#" style="flex-shrink: 0; width: 236px; height: 168px; box-sizing: border-box; background: #202527; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; color: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 4px; background: #F0657F"></span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: #F0657F">URGENT</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 40px; font-weight: 600; line-height: 1; color: #FFFFFF; letter-spacing: -0.02em">2</span>
+<span style="font-size: 14px; color: #B4BABC">retours en retard</span>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: #FFFFFF; display: flex; gap: 6px">Appeler les clients <span style="color: #EC7A45">→</span></span>
+</a>
+<a href="#" style="flex-shrink: 0; width: 236px; height: 168px; box-sizing: border-box; background: #202527; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; color: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 4px; background: #F2C94C"></span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: #F2C94C">TRÉSORERIE</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 40px; font-weight: 600; line-height: 1; color: #FFFFFF; letter-spacing: -0.02em">8</span>
+<span style="font-size: 14px; color: #B4BABC">dossiers impayés · 30 500 MAD</span>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: #FFFFFF; display: flex; gap: 6px">Relancer <span style="color: #EC7A45">→</span></span>
+</a>
+<a href="#" style="flex-shrink: 0; width: 236px; height: 168px; box-sizing: border-box; background: #202527; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; color: #FFFFFF">
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="width: 8px; height: 8px; border-radius: 4px; background: #B4BABC"></span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: #B4BABC">FLOTTE</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 40px; font-weight: 600; line-height: 1; color: #FFFFFF; letter-spacing: -0.02em">2</span>
+<span style="font-size: 14px; color: #B4BABC">véhicules à l'arrêt</span>
+</div>
+<span style="font-size: 13px; font-weight: 600; color: #FFFFFF; display: flex; gap: 6px">Mettre en avant <span style="color: #EC7A45">→</span></span>
+</a>
+</div>
+</div>
+
+<div style="padding: 30px 20px 0 20px; display: flex; flex-direction: column; gap: 30px">
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em">PARC</span>
+<span style="font-size: 12px; color: #5E6466">5 véhicules</span>
+</div>
+<a href="#" style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Voir <span style="color: #CA531D">→</span></a>
+</div>
+<div style="border: 1px solid #E2E4E5; border-radius: 22px; padding: 18px 16px; display: flex; align-items: center; gap: 16px">
+<svg width="132" height="80" viewBox="0 0 132 80" role="img" aria-label="Jauge d'occupation : 40 %" style="flex-shrink: 0">
+<path d="M10 70 A56 56 0 0 1 122 70" fill="none" stroke="#EDEEEE" stroke-width="8" stroke-linecap="round"></path>
+<path d="M10 70 A56 56 0 0 1 122 70" fill="none" stroke="{{accent}}" stroke-width="8" stroke-linecap="round" stroke-dasharray="70.4 176"></path>
+<g stroke="#B4BABC" stroke-width="1.5" stroke-linecap="round">
+<line x1="24" y1="70" x2="19" y2="70"></line>
+<line x1="26.06" y1="57.02" x2="21.3" y2="55.48"></line>
+<line x1="32.02" y1="45.3" x2="27.98" y2="42.36"></line>
+<line x1="41.3" y1="36.02" x2="38.36" y2="31.98"></line>
+<line x1="53.02" y1="30.06" x2="51.48" y2="25.3"></line>
+<line x1="66" y1="28" x2="66" y2="23"></line>
+<line x1="78.98" y1="30.06" x2="80.52" y2="25.3"></line>
+<line x1="90.7" y1="36.02" x2="93.64" y2="31.98"></line>
+<line x1="99.98" y1="45.3" x2="104.02" y2="42.36"></line>
+<line x1="105.94" y1="57.02" x2="110.7" y2="55.48"></line>
+<line x1="108" y1="70" x2="113" y2="70"></line>
+</g>
+<line x1="66" y1="70" x2="54.26" y2="33.86" stroke="#202527" stroke-width="3" stroke-linecap="round"></line>
+<circle cx="66" cy="70" r="6" fill="#202527"></circle>
+<circle cx="66" cy="70" r="2.5" fill="{{accent}}"></circle>
+</svg>
+<div style="flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0">
+<div style="display: flex; align-items: baseline; gap: 6px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 600; line-height: 1; letter-spacing: -0.02em">40 %</span>
+<span style="font-size: 12px; color: #5E6466">occupation</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1A7F53"></span>Disponibles</span><span style="font-size: 14px; font-weight: 600">2</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #202527"></span>En location</span><span style="font-size: 14px; font-weight: 600">1</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #E0B000"></span>À inspecter</span><span style="font-size: 14px; font-weight: 600">2</span></div>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em">AGENDA</span>
+<a href="#" style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Planning <span style="color: #CA531D">→</span></a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<div style="border: 1px solid #E2E4E5; border-radius: 18px; padding: 14px; display: flex; align-items: center; gap: 12px">
+<span style="width: 40px; height: 40px; border-radius: 12px; background: #F6F6F5; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3h10"></path><path d="M7 21h10"></path><path d="M8 3c0 5 8 5 8 9s-8 4-8 9"></path><path d="M16 3c0 5-8 5-8 9s8 4 8 9"></path></svg>
+</span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; line-height: 1">0</span><span style="font-size: 12px; color: #5E6466">À confirmer</span></span>
+</div>
+<div style="border: 1px solid #E2E4E5; border-radius: 18px; padding: 14px; display: flex; align-items: center; gap: 12px">
+<span style="width: 40px; height: 40px; border-radius: 12px; background: #F6F6F5; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18"></path><path d="M8 3v4"></path><path d="M16 3v4"></path></svg>
+</span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 600; line-height: 1">0</span><span style="font-size: 12px; color: #5E6466">À venir · 7 j</span></span>
+</div>
+</div>
+<a href="#" style="border: 1px dashed #B4BABC; border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="font-size: 13px; color: #5E6466">Aucune location à venir cette semaine</span>
+<span style="font-size: 13px; font-weight: 600; white-space: nowrap">Réserver <span style="color: #CA531D">→</span></span>
+</a>
+</div>
+
+</div>
+
+<nav style="position: absolute; left: 16px; right: 16px; bottom: 26px; height: 68px; background: #202527; border-radius: 34px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); align-items: center; box-shadow: 0 12px 32px rgba(32,37,39,0.28)">
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px; color: #FFFFFF">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>
+<span style="font-size: 10px; font-weight: 600; color: #FFFFFF">Accueil</span>
+</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4BABC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16l1.5-5a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 16"></path><rect x="3" y="16" width="18" height="4" rx="1"></rect><circle cx="7" cy="20" r="1"></circle><circle cx="17" cy="20" r="1"></circle></svg>
+<span style="font-size: 10px; font-weight: 500; color: #B4BABC">Flotte</span>
+</a>
+<div style="display: flex; justify-content: center">
+<button aria-label="Nouvelle location" style="width: 52px; height: 52px; border-radius: 26px; border: none; background: {{accent}}; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+</button>
+</div>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4BABC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M11 12l9-9"></path><path d="M17 6l3 3"></path></svg>
+<span style="font-size: 10px; font-weight: 500; color: #B4BABC">Locations</span>
+</a>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 3px">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4BABC" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M18 14a6 6 0 0 1 3.5 6"></path></svg>
+<span style="font-size: 10px; font-weight: 500; color: #B4BABC">Clients</span>
+</a>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#CA531D","options":["#CA531D","#E46A32","#D4AF6A"]},"$preview":{"width":390,"height":1540}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { period: 'today' };
+}
+renderVals() {
+const data = {
+today: { label: "Aujourd'hui", suffix: "AUJOURD'HUI", enc: '0', encNote: 'Aucun encaissement', actives: '2', departs: '0', retours: '0' },
+d7: { label: '7 jours', suffix: 'SUR 7 JOURS', enc: '—', encNote: 'Donnée à brancher', actives: '—', departs: '0', retours: '—' },
+d30: { label: '30 jours', suffix: 'SUR 30 JOURS', enc: '—', encNote: 'Donnée à brancher', actives: '—', departs: '—', retours: '—' }
+};
+const cur = data[this.state.period];
+const on = 'height: 40px; border: none; border-bottom: 2px solid #CA531D; margin-bottom: -1px; background: transparent; color: #FFFFFF; font-size: 14px; font-weight: 600; padding: 0';
+const off = 'height: 40px; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; background: transparent; color: #B4BABC; font-size: 14px; font-weight: 500; padding: 0';
+const periods = ['today', 'd7', 'd30'].map((k) => ({
+label: data[k].label,
+pressed: this.state.period === k ? 'true' : 'false',
+style: this.state.period === k ? on : off,
+pick: () => this.setState({ period: k })
+}));
+return {
+accent: this.props.accent ?? '#CA531D',
+periods,
+suffix: cur.suffix,
+enc: cur.enc,
+encNote: cur.encNote,
+actives: cur.actives,
+departs: cur.departs,
+retours: cur.retours
+};
+}
+}
+</script>
+</body>
+</html>
