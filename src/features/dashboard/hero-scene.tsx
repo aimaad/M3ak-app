@@ -7,7 +7,6 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Brand } from '@/constants/theme';
-import { markAssetReady } from '@/features/opening/opening-store';
 
 import { carRect, showroomLayout } from './hero-layout';
 
@@ -93,7 +92,6 @@ export function HeroScene({
             height: layout.height,
           }}
           accessible={false}
-          onLoad={() => markAssetReady('showroom')}
           onError={onError}
         />
       </Animated.View>
@@ -140,7 +138,6 @@ export function HeroCar({
           resizeMode="stretch"
           fadeDuration={0}
           style={{ width: rect.width, height: rect.height }}
-          onLoad={() => markAssetReady('three-quarter')}
           accessible={false}
         />
       </View>

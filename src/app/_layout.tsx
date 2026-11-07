@@ -89,8 +89,8 @@ export default function RootLayout() {
     Montserrat_600SemiBold,
   });
 
-  // Ouverture « Signature Ignition » : armée à chaque lancement à froid, avant le premier affichage (sauf animations
-  // réduites / écran « bureau »). Elle ne démarre qu'une fois la session prête et le hero affiché.
+  // Vidéo d'ouverture : armée à chaque lancement à froid, avant le premier affichage (sauf animations réduites / écran
+  // « bureau »). Un rideau noir plein écran prend le relais du splash, puis la vidéo se joue.
   const reduceMotion = useReducedMotion();
   const desktop = useDesktopLayout();
   useState(() => {

@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   Pressable,
   useWindowDimensions,
@@ -23,12 +23,6 @@ import { BRAND_NAME, LogoMark } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, BRAND_FONT, fontFamilyFor, Palette, Themes } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
-import {
-  endOpening,
-  startOpening,
-  useAssetsReady,
-  useOpeningStatus,
-} from '@/features/opening/opening-store';
 import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
@@ -120,14 +114,7 @@ export function DashboardHeader({
   const focused = useIsFocused();
   const { width: screenWidth } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
-  // Ouverture (noir → voiture qui s'allume → moteur) : voir features/opening. Elle se pose par-dessus l'application.
-  const opening = useOpeningStatus();
-  const assetsReady = useAssetsReady();
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  // Dès que le hero est mesuré et que les images de l'ouverture sont chargées, on lance la chronologie.
-  useEffect(() => {
-    if (opening === 'armed' && assetsReady && size) startOpening();
-  }, [opening, assetsReady, size]);
   const logoHeight = screenWidth < 340 ? 40 : screenWidth < 375 ? 46 : 52;
   const showName = screenWidth >= 340;
   const showAgency = screenWidth >= 375 && !!agencyName?.trim();
@@ -169,7 +156,6 @@ export function DashboardHeader({
             height={size.height}
             scrollY={scrollY}
             reduceMotion={reduceMotion}
-            onError={() => endOpening('aborted')}
           />
           <HeroCar
             width={size.width}

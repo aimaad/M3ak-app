@@ -48,17 +48,12 @@ describe('logo BIBIP (symbole « b » + deux ondes orange)', () => {
     expect(images.filter((name: string) => /m3ak|tutut|kriha/i.test(name))).toEqual([]);
   });
 
-  it("les images de l'ouverture fournies sont présentes (et l'ancien décor d'animation a disparu)", () => {
-    for (const file of [
-      'ignition/dark.webp',
-      'ignition/lit.webp',
-      'signature/showroom.webp',
-      'signature/three-quarter.webp',
-    ]) {
+  it("la vidéo d'ouverture est présente et l'ancienne ouverture (photos, son) a disparu", () => {
+    expect(fs.existsSync(path.join(root, 'assets/video/bibip-intro-vertical-court.mp4'))).toBe(true);
+    expect(fs.existsSync(path.join(root, 'assets/images/ignition'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'assets/audio'))).toBe(false);
+    for (const file of ['signature/showroom.webp', 'signature/three-quarter.webp']) {
       expect(fs.existsSync(path.join(root, 'assets/images', file))).toBe(true);
-    }
-    for (const file of ['signature/front-lit.webp', 'signature/front-unlit.webp']) {
-      expect(fs.existsSync(path.join(root, 'assets/images', file))).toBe(false);
     }
   });
 
