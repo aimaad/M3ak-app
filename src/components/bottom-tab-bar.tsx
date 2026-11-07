@@ -5,15 +5,15 @@ import { Pressable, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { Brand, Palette } from '@/constants/theme';
+import { Brand, homeTextFont, Palette } from '@/constants/theme';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { useLanguage } from '@/i18n/use-language';
 
-export type SectionKey = 'accueil' | 'flotte' | 'clients' | 'locations' | 'equipe';
+export type SectionKey = 'accueil' | 'flotte' | 'clients' | 'locations';
 
 const SECTIONS: {
   key: SectionKey;
-  href: '/accueil' | '/flotte' | '/clients' | '/locations' | '/equipe';
+  href: '/accueil' | '/flotte' | '/clients' | '/locations';
   labelKey: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconActive: keyof typeof Ionicons.glyphMap;
@@ -46,31 +46,16 @@ const SECTIONS: {
     icon: 'key-outline',
     iconActive: 'key',
   },
-  {
-    key: 'equipe',
-    href: '/equipe',
-    labelKey: 'equipe.title',
-    icon: 'briefcase-outline',
-    iconActive: 'briefcase',
-  },
 ];
 
-const INACTIVE_COLOR = Palette.textMuted;
-const PLUS_SIZE = 58;
+const PLUS_SIZE = 52;
 
-/** Ordre dans la barre : trois onglets, le « + » central, deux onglets. Les cinq destinations sont celles d'avant. */
-const ITEMS: ((typeof SECTIONS)[number] | 'plus')[] = [
-  SECTIONS[0],
-  SECTIONS[1],
-  SECTIONS[2],
-  'plus',
-  SECTIONS[3],
-  SECTIONS[4],
-];
+/** Ordre dans la barre : Accueil, Flotte, le « + » central, Locations, Clients. Équipe vit dans le menu du profil (avatar). */
+const ITEMS: ((typeof SECTIONS)[number] | 'plus')[] = [SECTIONS[0], SECTIONS[1], 'plus', SECTIONS[3], SECTIONS[2]];
 
 /** Barre d'onglets du bas (mobile). Chaque onglet garde sa propre pile d'écrans et sa position de défilement. */
 export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const isDesktop = useDesktopLayout();
 
@@ -87,58 +72,52 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
   const currentName = pathParts[0] === '(tabs)' ? pathParts[1] : state.routes[state.index]?.name;
 
   return (
-    // Barre flottante : un bloc de la couleur de la page (il prend sa place dans la mise en page, rien n'est recouvert) qui porte
-    // une grande gélule blanche aux coins très arrondis, simplement cernée d'une bordure (aucune ombre colorée). Le bouton « + »
-    // central (création d'une location) dépasse légèrement de la barre ; les cinq onglets sont répartis de part et d'autre.
+    // Barre flottante : un bloc de la couleur de la page (il prend sa place dans la mise en page, rien n'est recouvert) qui
+    // porte une pilule graphite (rayon 34, hauteur 68, à 16 px des bords). Cinq emplacements égaux : Accueil, Flotte, le « + »
+    // orange central (nouvelle location), Locations, Clients. Actif : blanc ; inactif : gris clair. Seule ombre : grise, légère.
     <View
       style={{
         backgroundColor: Palette.background,
-        paddingTop: 22,
-        paddingBottom: Math.max(insets.bottom, 12),
-        paddingStart: Math.max(insets.left, 0) + 14,
-        paddingEnd: Math.max(insets.right, 0) + 14,
+        paddingTop: 8,
+        paddingBottom: Math.max(insets.bottom, 8) + 18,
+        paddingStart: Math.max(insets.left, 0) + 16,
+        paddingEnd: Math.max(insets.right, 0) + 16,
       }}
     >
       <View
-        className="flex-row items-center"
+        accessibilityRole="tablist"
         style={{
-          borderRadius: 32,
-          paddingHorizontal: 6,
-          backgroundColor: Palette.card,
-          borderWidth: 1,
-          borderColor: Palette.border,
+          height: 68,
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderRadius: 34,
+          backgroundColor: Brand.graphite,
+          shadowColor: Palette.shadow,
+          shadowOpacity: 0.28,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: 12 },
+          elevation: 8,
         }}
       >
         {ITEMS.map((item) => {
           if (item === 'plus') {
             return (
-              <View
-                key="plus"
-                className="items-center"
-                style={{ width: PLUS_SIZE + 12, marginTop: -26 }}
-              >
+              <View key="plus" style={{ flex: 1, alignItems: 'center' }}>
                 <Pressable
                   onPress={() => router.push('/locations/nouveau')}
                   accessibilityRole="button"
                   accessibilityLabel={t('locations.addRental')}
+                  hitSlop={6}
                   style={({ pressed }) => ({
                     width: PLUS_SIZE,
                     height: PLUS_SIZE,
                     borderRadius: PLUS_SIZE / 2,
                     alignItems: 'center',
                     justifyContent: 'center',
-                    // Orange uni (orange foncé appuyé), cerné de blanc ; seule ombre autorisée : grise, très légère (élément flottant).
                     backgroundColor: pressed ? Palette.primaryPressed : Palette.primary,
-                    borderWidth: 3,
-                    borderColor: Palette.background,
-                    shadowColor: Palette.shadow,
-                    shadowOpacity: 0.16,
-                    shadowRadius: 10,
-                    shadowOffset: { width: 0, height: 4 },
-                    elevation: 4,
                   })}
                 >
-                  <Ionicons name="add" size={32} color={Brand.white} />
+                  <Ionicons name="add" size={26} color={Brand.white} />
                 </Pressable>
               </View>
             );
@@ -151,51 +130,32 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
               key={section.key}
               onPress={() => {
                 if (!route) return;
-                const event = emitter.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
+                const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
                 // On compare à l'onglet réellement affiché par le navigateur (et non à l'adresse) : sinon un clic est
                 // ignoré quand les deux ne concordent plus.
                 const focused = state.routes[state.index]?.key === route.key;
                 if (!focused && !event.defaultPrevented) navigateToTab(route.key);
               }}
-              className="min-h-16 flex-1 items-center justify-center"
+              style={{ flex: 1, minHeight: 56, alignItems: 'center', justifyContent: 'center', gap: 3 }}
               accessibilityRole="tab"
               accessibilityState={{ selected }}
               accessibilityLabel={t(section.labelKey)}
             >
-              <View
-                className="items-center justify-center"
+              <Ionicons name={selected ? section.iconActive : section.icon} size={22} color={selected ? Brand.white : Brand.mutedOnDark} />
+              <ThemedText
+                type="small"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.8}
                 style={{
-                  gap: 3,
-                  minWidth: 52,
-                  paddingHorizontal: 6,
-                  paddingVertical: 7,
-                  borderRadius: 20,
-                  // Onglet actif en graphite, contenu blanc.
-                  backgroundColor: selected ? Brand.graphite : 'transparent',
+                  color: selected ? Brand.white : Brand.mutedOnDark,
+                  fontSize: 10,
+                  lineHeight: 13,
+                  fontFamily: homeTextFont(language, selected ? 'semibold' : 'medium'),
                 }}
               >
-                <Ionicons
-                  name={selected ? section.iconActive : section.icon}
-                  size={22}
-                  color={selected ? Brand.white : INACTIVE_COLOR}
-                />
-                <ThemedText
-                  type="small"
-                  numberOfLines={1}
-                  style={{
-                    color: selected ? Brand.white : Palette.textSecondary,
-                    fontSize: 10.5,
-                    lineHeight: 13,
-                    fontWeight: selected ? '700' : '500',
-                  }}
-                >
-                  {t(section.labelKey)}
-                </ThemedText>
-              </View>
+                {t(section.labelKey)}
+              </ThemedText>
             </Pressable>
           );
         })}

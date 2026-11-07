@@ -1,5 +1,5 @@
 import { Redirect, router } from 'expo-router';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -19,6 +19,7 @@ import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
 import type { RentalFocus } from '@/features/dashboard/kpis';
 import { ParcSection } from '@/features/dashboard/parc-section';
 import { buildPriorities } from '@/features/dashboard/priorities';
+import { ProfileSheet } from '@/features/dashboard/profile-sheet';
 import { PrioritiesSection } from '@/features/dashboard/priorities-carousel';
 import { canSeeMoney } from '@/features/dashboard/role-layout';
 import { usePersistedPeriod } from '@/features/dashboard/use-persisted-period';
@@ -44,6 +45,7 @@ export default function AccueilScreen() {
   const accessQuery = useAgencyAccess();
   const trialDays = shouldShowTrialBanner(accessQuery.data ?? null) ? daysLeft(accessQuery.data?.accessUntil ?? null) : null;
 
+  const [menuOpen, setMenuOpen] = useState(false);
   const [period, setPeriod] = usePersistedPeriod();
   const { metrics, insightsMetrics, vehicles, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics(period);
   const { agencyId: ocrAgencyId, insightsAvailability, chatAvailability } = useOcrSettings();
@@ -164,7 +166,7 @@ export default function AccueilScreen() {
           metrics={metrics}
           showMoney={showMoney}
           loading={isLoading}
-          onOpenProfile={() => router.push('/profil')}
+          onOpenProfile={() => setMenuOpen(true)}
           onOpenFocus={openFocus}
         />
 
@@ -197,6 +199,7 @@ export default function AccueilScreen() {
           </View>
         )}
       </ScrollView>
+      <ProfileSheet visible={menuOpen} onClose={() => setMenuOpen(false)} name={fullName ?? prenom} agencyName={agencyQuery.data.agencyName} />
     </ThemedView>
   );
 }

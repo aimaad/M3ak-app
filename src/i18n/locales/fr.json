@@ -1955,6 +1955,15 @@
           "expired": "Expiré le {{date}}",
           "soon": "Expire le {{date}}"
         }
+      },
+      "menu": {
+        "title": "Mon compte",
+        "profile": "Mon profil",
+        "agency": "Mon agence",
+        "team": "Équipe",
+        "signOutTitle": "Se déconnecter ?",
+        "signOutBody": "Vous devrez vous reconnecter pour accéder à votre agence.",
+        "close": "Fermer le menu"
       }
     },
     "askBibip": {
