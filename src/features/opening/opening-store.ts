@@ -14,7 +14,7 @@ import {
   releaseEngineSound,
   stopEngineSound,
 } from './opening-sound';
-import { DONE_TIME, REAL_DURATION, SIG } from './opening-timeline';
+import { DONE_TIME, IGN } from './opening-timeline';
 
 /**
  * Horloge unique de l'ouverture (ms). Par défaut elle est « terminée » : sans ouverture, tout est déjà à son état final
@@ -23,15 +23,11 @@ import { DONE_TIME, REAL_DURATION, SIG } from './opening-timeline';
 export const openingTime = makeMutable<number>(DONE_TIME);
 
 /** Images nécessaires avant de lancer la chronologie (aucun scintillement de chargement). */
-const REQUIRED_ASSETS = ['showroom', 'front-lit', 'front-unlit', 'three-quarter'] as const;
-export type OpeningAsset = (typeof REQUIRED_ASSETS)[number];
-
-export type LogoTarget = { x: number; y: number; width: number; height: number };
+const REQUIRED_ASSETS = ['ignition-dark', 'ignition-lit'] as const;
+export type OpeningAsset = (typeof REQUIRED_ASSETS)[number] | 'showroom' | 'three-quarter';
 
 let status: OpeningStatus = 'idle';
 let consumed = false;
-let heroHeight = 0;
-let logoTarget: LogoTarget | null = null;
 let endTimer: ReturnType<typeof setTimeout> | null = null;
 const ready = new Set<OpeningAsset>();
 const listeners = new Set<() => void>();
@@ -57,28 +53,6 @@ export function getOpeningStatus(): OpeningStatus {
 
 export function useOpeningStatus(): OpeningStatus {
   return useSyncExternalStore(subscribe, getOpeningStatus, getOpeningStatus);
-}
-
-export function getHeroHeight(): number {
-  return heroHeight;
-}
-
-export function useHeroHeight(): number {
-  return useSyncExternalStore(subscribe, getHeroHeight, getHeroHeight);
-}
-
-/** Emplacement exact (coordonnées de l'écran) de la pastille du logo dans le hero : arrivée du logo volant. */
-export function setLogoTarget(target: LogoTarget) {
-  logoTarget = target;
-  emit();
-}
-
-export function getLogoTarget(): LogoTarget | null {
-  return logoTarget;
-}
-
-export function useLogoTarget(): LogoTarget | null {
-  return useSyncExternalStore(subscribe, getLogoTarget, getLogoTarget);
 }
 
 /**
@@ -112,13 +86,12 @@ export function useAssetsReady(): boolean {
   return useSyncExternalStore(subscribe, allAssetsReady, allAssetsReady);
 }
 
-/** Lance la chronologie (le hero est affiché ; `height` = hauteur du hero à l'écran). */
-export function startOpening(height: number) {
+/** Lance la chronologie (le hero est affiché et les images de l'ouverture sont chargées). */
+export function startOpening() {
   if (nextStatusOnStart(status) !== 'playing') return;
-  heroHeight = height;
-  openingTime.value = withTiming(SIG.end, { duration: REAL_DURATION, easing: Easing.linear });
+  openingTime.value = withTiming(IGN.end, { duration: IGN.end, easing: Easing.linear });
   setStatus('playing');
-  endTimer = setTimeout(() => endOpening('completed'), REAL_DURATION + 80);
+  endTimer = setTimeout(() => endOpening('completed'), IGN.end + 80);
 }
 
 /** Déclenche le moteur (appelé à l'instant précis du démarrage) : sans effet si l'ouverture est déjà terminée. */

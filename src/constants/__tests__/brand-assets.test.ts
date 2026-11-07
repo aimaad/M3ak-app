@@ -37,16 +37,18 @@ describe('logo officiel BIBIP', () => {
     expect(images.filter((name: string) => /m3ak|tutut|kriha/i.test(name))).toEqual([]);
   });
 
-  it("les images du scénario d'ouverture fournies sont présentes", () => {
+  it("les images de l'ouverture fournies sont présentes (et l'ancien décor d'animation a disparu)", () => {
     for (const file of [
-      'front-lit.webp',
-      'front-unlit.webp',
-      'three-quarter.webp',
-      'showroom.webp',
+      'ignition/dark.webp',
+      'ignition/lit.webp',
+      'signature/showroom.webp',
+      'signature/three-quarter.webp',
     ]) {
-      expect(fs.existsSync(path.join(root, 'assets/images/signature', file))).toBe(true);
+      expect(fs.existsSync(path.join(root, 'assets/images', file))).toBe(true);
     }
-    expect(fs.existsSync(path.join(root, 'assets/images/ignition'))).toBe(false);
+    for (const file of ['signature/front-lit.webp', 'signature/front-unlit.webp']) {
+      expect(fs.existsSync(path.join(root, 'assets/images', file))).toBe(false);
+    }
   });
 
   it("le nom affiché de l'application est BIBIP (identifiants techniques inchangés)", () => {

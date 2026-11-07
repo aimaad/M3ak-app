@@ -12,7 +12,6 @@ import Svg, {
   Stop,
 } from 'react-native-svg';
 
-import { Reveal } from '@/features/opening/reveal';
 import { ThemedText } from '@/components/themed-text';
 import { fontFamilyFor, BibipPalette } from '@/constants/theme';
 import { isRTL } from '@/i18n';
@@ -133,12 +132,8 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
   ];
   return (
     <View className="flex-row" style={{ gap: 12 }}>
-      {items.map((item, index) => (
-        <Reveal
-          key={item.key}
-          slot={(['card0', 'card1', 'card2'] as const)[index]}
-          style={{ flex: 1 }}
-        >
+      {items.map((item) => (
+        <View key={item.key} className="flex-1">
           <GlassCard onPress={goRentals} label={`${item.label} : ${item.value}`}>
             <View style={{ padding: 11, gap: 5 }}>
               <IconTile icon={item.icon} />
@@ -167,7 +162,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
               </View>
             </View>
           </GlassCard>
-        </Reveal>
+        </View>
       ))}
     </View>
   );
@@ -506,7 +501,11 @@ export function QuickAccessTiles({ role }: { role: string | null | undefined }) 
             >
               {expanded ? t('accueil.quick.seeLess') : t('accueil.quick.seeAll')}
             </ThemedText>
-            <Ionicons name={expanded ? 'chevron-up' : arrow} size={16} color={BibipPalette.primary} />
+            <Ionicons
+              name={expanded ? 'chevron-up' : arrow}
+              size={16}
+              color={BibipPalette.primary}
+            />
           </Pressable>
         ) : null}
       </View>

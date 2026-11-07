@@ -8,8 +8,7 @@ import Animated, {
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { BibipPalette } from '@/constants/theme';
-import { markAssetReady, openingTime } from '@/features/opening/opening-store';
-import { SIG } from '@/features/opening/opening-timeline';
+import { markAssetReady } from '@/features/opening/opening-store';
 
 import { carRect, showroomLayout } from './hero-layout';
 
@@ -137,46 +136,34 @@ export function HeroScene({
   );
 }
 
-/**
- * La voiture dans le hero, à sa place définitive. Pendant l'introduction elle n'apparaît qu'à l'arrivée de la voiture de
- * l'animation (même image, même position : aucun saut).
- */
+/** La voiture (Mercedes noire en trois-quarts) dans le hero, à sa place définitive, à droite du texte. */
 export function HeroCar({
   width,
   height,
   scrollY,
   reduceMotion = false,
-  animating,
 }: {
   width: number;
   height: number;
   scrollY?: SharedValue<number>;
   reduceMotion?: boolean;
-  /** Une ouverture est en cours. */
-  animating: boolean;
 }) {
   const rect = carRect(width, height);
   const parallax = useParallax(scrollY, reduceMotion);
-  const visibility = useAnimatedStyle(() => ({
-    opacity: animating && openingTime.value < SIG.placeEnd ? 0 : 1,
-  }));
   return (
     <Animated.View
       pointerEvents="none"
       style={[{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0 }, parallax]}
     >
-      <Animated.View
+      <View
         pointerEvents="none"
-        style={[
-          {
-            position: 'absolute',
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height,
-          },
-          visibility,
-        ]}
+        style={{
+          position: 'absolute',
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+        }}
       >
         <Image
           source={THREE_QUARTER}
@@ -186,7 +173,7 @@ export function HeroCar({
           onLoad={() => markAssetReady('three-quarter')}
           accessible={false}
         />
-      </Animated.View>
+      </View>
     </Animated.View>
   );
 }

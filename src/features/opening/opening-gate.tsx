@@ -5,8 +5,8 @@ import { runOnJS, useAnimatedReaction } from 'react-native-reanimated';
 
 import { touchSkips } from './opening-state';
 import { endOpening, openingTime, triggerEngineSound, useOpeningStatus } from './opening-store';
-import { SIG } from './opening-timeline';
-import { SignatureStage } from './signature-stage';
+import { IGN } from './opening-timeline';
+import { IgnitionStage } from './ignition-stage';
 
 /** Si le hero n'est pas prêt après ce délai (réseau lent, erreur, image absente), on abandonne l'ouverture. */
 const WAIT_LIMIT_MS = 4000;
@@ -39,7 +39,7 @@ export function OpeningGate({ children }: { children: ReactNode }) {
 
   // Le moteur démarre à l'instant précis (sur l'horloge de l'animation) prévu par le scénario.
   useAnimatedReaction(
-    () => openingTime.value >= SIG.soundAt,
+    () => openingTime.value >= IGN.soundAt,
     (now, previous) => {
       if (now && previous === false) runOnJS(triggerEngineSound)();
     }
@@ -51,7 +51,7 @@ export function OpeningGate({ children }: { children: ReactNode }) {
       onTouchStart={touchSkips(status) ? () => endOpening('skipped') : undefined}
     >
       {children}
-      {status !== 'idle' && !onPublicScreen ? <SignatureStage /> : null}
+      {status !== 'idle' && !onPublicScreen ? <IgnitionStage /> : null}
     </View>
   );
 }

@@ -1,13 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Pressable,
   useWindowDimensions,
   View,
   type LayoutChangeEvent,
-  type LayoutRectangle,
 } from 'react-native';
 import Animated, {
   Extrapolation,
@@ -27,12 +26,10 @@ import { fontFamilyFor, BibipPalette } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import {
   endOpening,
-  setLogoTarget,
   startOpening,
   useAssetsReady,
   useOpeningStatus,
 } from '@/features/opening/opening-store';
-import { Reveal, useReveal } from '@/features/opening/reveal';
 import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
@@ -123,33 +120,13 @@ export function DashboardHeader({
   const focused = useIsFocused();
   const { width: screenWidth } = useWindowDimensions();
   const reduceMotion = useReducedMotion();
-  // Ouverture : chaque élément du hero apparaît à son heure sur l'horloge unique (voir features/opening). Hors ouverture,
-  // l'horloge est « terminée » et tout est simplement visible.
+  // Ouverture (noir → voiture qui s'allume → moteur) : voir features/opening. Elle se pose par-dessus l'application.
   const opening = useOpeningStatus();
   const assetsReady = useAssetsReady();
-  const logoReveal = useReveal('logo');
-  // Emplacement exact de la pastille du logo (coordonnées de l'écran) : le logo de l'introduction vient s'y poser.
-  const boxes = useRef<{
-    row?: LayoutRectangle;
-    wrapper?: LayoutRectangle;
-    tile?: LayoutRectangle;
-  }>({});
-  const reportLogoTarget = () => {
-    const { row, wrapper, tile } = boxes.current;
-    if (!row || !wrapper || !tile) return;
-    setLogoTarget({
-      x: row.x + wrapper.x + tile.x,
-      y: row.y + wrapper.y + tile.y,
-      width: tile.width,
-      height: tile.height,
-    });
-  };
-  const nameReveal = useReveal('name');
-  const greetingReveal = useReveal('greeting', 10);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
-  // Dès que le hero est mesuré et que ses images sont chargées, on lance la chronologie.
+  // Dès que le hero est mesuré et que les images de l'ouverture sont chargées, on lance la chronologie.
   useEffect(() => {
-    if (opening === 'armed' && assetsReady && size) startOpening(size.height);
+    if (opening === 'armed' && assetsReady && size) startOpening();
   }, [opening, assetsReady, size]);
   const logoHeight = screenWidth < 340 ? 40 : screenWidth < 375 ? 46 : 52;
   const showName = screenWidth >= 340;
@@ -199,7 +176,6 @@ export function DashboardHeader({
             height={size.height}
             scrollY={scrollY}
             reduceMotion={reduceMotion}
-            animating={opening !== 'idle'}
           />
         </>
       ) : null}
@@ -212,41 +188,16 @@ export function DashboardHeader({
           paddingEnd: insets.right + 20,
         }}
       >
-        <View
-          className="flex-row items-center justify-between"
-          style={{ minHeight: 48, gap: 12 }}
-          onLayout={(event) => {
-            boxes.current.row = event.nativeEvent.layout;
-            reportLogoTarget();
-          }}
-        >
+        <View className="flex-row items-center justify-between" style={{ minHeight: 48, gap: 12 }}>
           <View
             accessible
             accessibilityRole="image"
             accessibilityLabel={BRAND_NAME}
-            onLayout={(event) => {
-              boxes.current.wrapper = event.nativeEvent.layout;
-              reportLogoTarget();
-            }}
-            // Mise en page en style (et non en classe) : les classes ne s'appliquent pas au conteneur animé.
             style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}
           >
-            <Animated.View
-              style={logoReveal}
-              onLayout={(event) => {
-                boxes.current.tile = event.nativeEvent.layout;
-                reportLogoTarget();
-              }}
-            >
-              <LogoMark height={logoHeight} onDark />
-            </Animated.View>
+            <LogoMark height={logoHeight} onDark />
             {showName ? (
-              <Animated.View
-                style={[
-                  { flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
-                  nameReveal,
-                ]}
-              >
+              <View style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <View
                   style={{
                     width: 1,
@@ -283,27 +234,21 @@ export function DashboardHeader({
                     </ThemedText>
                   ) : null}
                 </View>
-              </Animated.View>
+              </View>
             ) : null}
           </View>
           <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>
-            <Reveal slot="icon0">
-              <HeaderIconButton
-                icon="search-outline"
-                label={t('accueil.header.search')}
-                onPress={() => router.push('/chat')}
-              />
-            </Reveal>
-            <Reveal slot="icon1">
-              <NotificationBell tone="onForest" />
-            </Reveal>
-            <Reveal slot="icon2">
-              <ProfileButton path={avatarPath} initials={initials} />
-            </Reveal>
+            <HeaderIconButton
+              icon="search-outline"
+              label={t('accueil.header.search')}
+              onPress={() => router.push('/chat')}
+            />
+            <NotificationBell tone="onForest" />
+            <ProfileButton path={avatarPath} initials={initials} />
           </View>
         </View>
 
-        <Animated.View style={[{ marginTop: 18, maxWidth: '62%' }, greetingReveal]}>
+        <View style={{ marginTop: 18, maxWidth: '62%' }}>
           <ThemedText
             numberOfLines={1}
             adjustsFontSizeToFit
@@ -361,12 +306,10 @@ export function DashboardHeader({
               <Rect width="100%" height="100%" fill="url(#kh-accent)" />
             </Svg>
           </View>
-        </Animated.View>
+        </View>
 
         <View style={{ marginTop: TABS_GAP + 6 }}>
-          <Reveal slot="tabs">
-            <PeriodTabs value={period} onChange={onPeriodChange} />
-          </Reveal>
+          <PeriodTabs value={period} onChange={onPeriodChange} />
         </View>
       </View>
     </View>
