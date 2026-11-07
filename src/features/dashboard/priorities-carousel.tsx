@@ -5,7 +5,7 @@ import { Brand, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { Priority, PriorityKind } from './priorities';
-import { visiblePriorities } from './priorities';
+import { PRIORITY_ROUTE, visiblePriorities } from './priorities';
 import { ArrowIcon, ArrowLink, formatAmount, HText, MicroLabel } from './home-ui';
 
 const CARD_WIDTH = 236;
@@ -19,13 +19,6 @@ const COLOR: Record<PriorityKind, string> = {
   stopped: Brand.mutedOnDark,
 };
 
-const ROUTE: Record<PriorityKind, string> = {
-  late: '/accueil/retards',
-  unpaid: '/accueil/impayes',
-  documents: '/accueil/documents',
-  maintenance: '/maintenance',
-  stopped: '/accueil/vehicules-a-l-arret',
-};
 
 /**
  * « Priorités » : ce qui est anormal aujourd'hui, en cartes graphite qui défilent. 3 cartes au maximum ; le compteur donne le
@@ -150,7 +143,7 @@ function PriorityCard({ priority }: { priority: Priority }) {
   });
   return (
     <Pressable
-      onPress={() => router.push(ROUTE[priority.kind] as never)}
+      onPress={() => router.push(PRIORITY_ROUTE[priority.kind] as never)}
       accessibilityRole="button"
       accessibilityLabel={`${priority.count} ${desc}. ${t(`${base}.action`)}`}
       style={cardStyle}

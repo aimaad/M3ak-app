@@ -41,3 +41,12 @@ export function buildPriorities(input: PriorityInput): Priority[] {
 export function visiblePriorities(priorities: Priority[]): { cards: Priority[]; total: number } {
   return { cards: priorities.slice(0, MAX_PRIORITY_CARDS), total: priorities.length };
 }
+
+/** Écran ouvert par chaque priorité (liste des éléments concernés). */
+export const PRIORITY_ROUTE: Record<PriorityKind, string> = {
+  late: '/accueil/retards',
+  unpaid: '/accueil/impayes',
+  documents: '/accueil/documents',
+  maintenance: '/maintenance',
+  stopped: '/accueil/vehicules-a-l-arret',
+};

@@ -2610,5 +2610,19 @@
     "vehicleArchived": "Voiture archivée.",
     "notificationsCleared": "Notifications supprimées.",
     "failed": "Impossible d'annuler. Retrouvez l'élément dans les archives."
+  },
+  "rapports": {
+    "title": "Rapports",
+    "tabs": {
+      "finances": "Finances",
+      "activity": "Activité",
+      "fleet": "Flotte",
+      "ai": "Analyse IA"
+    },
+    "tabsLabel": "Rubriques des rapports",
+    "priorities": "Priorités du jour",
+    "stopped": "Véhicules à l'arrêt",
+    "late": "Retours en retard",
+    "openLate": "Voir les retours en retard"
   }
 }

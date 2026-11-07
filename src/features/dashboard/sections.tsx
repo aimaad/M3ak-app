@@ -52,13 +52,6 @@ export function FinancialSection({ metrics }: { metrics: DashboardMetrics }) {
           label={t('accueil.financial.averageBasket')}
           value={activity.averageBasket === null ? '—' : mad(activity.averageBasket)}
         />
-        <KpiCard
-          icon="close-circle-outline"
-          label={t('accueil.financial.cancellationRate')}
-          value={`${activity.cancellationRatePct} %`}
-          hint={t('accueil.period.cancelledHint', { count: activity.cancelled })}
-          tone={activity.cancellationRatePct >= 20 ? 'warning' : 'default'}
-        />
       </KpiGrid>
     </View>
   );
@@ -166,6 +159,13 @@ export function OperationsSection({ metrics }: { metrics: DashboardMetrics }) {
           icon="person-add-outline"
           label={t('accueil.operations.newCustomers')}
           value={String(metrics.newCustomers)}
+        />
+        <KpiCard
+          icon="close-circle-outline"
+          label={t('accueil.financial.cancellationRate')}
+          value={`${activity.cancellationRatePct} %`}
+          hint={t('accueil.period.cancelledHint', { count: activity.cancelled })}
+          tone={activity.cancellationRatePct >= 20 ? 'warning' : 'default'}
         />
       </KpiGrid>
     </View>
