@@ -13,7 +13,7 @@ import { DamageEditor, parseCost, type DamageDraft } from './damage-editor';
 import { confidencePercent, effectiveCost, needsCheck, type Damage } from './damages';
 import { usePhotoSignedUrl } from './hooks';
 
-const SEVERITY_COLOR = { leger: Palette.warning, modere: '#C2410C', grave: Palette.error } as const;
+const SEVERITY_COLOR = { leger: Palette.warning, modere: Palette.onPrimarySoft, grave: Palette.error } as const;
 
 type Props = {
   damage: Damage;
@@ -46,7 +46,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
   const percent = confidencePercent(damage);
   const check = needsCheck(damage);
   const rejected = damage.statut === 'rejete';
-  const color = damage.nouveau ? Palette.error : '#D97706';
+  const color = damage.nouveau ? Palette.error : Palette.warning;
 
   async function run(patch: DamagePatch) {
     setSaving(true);
@@ -88,10 +88,10 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
         <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? Palette.errorSoft : Palette.warningSoft} />
         <Badge
           text={t(`inspection.analysis.damages.status.${damage.statut}`)}
-          color={damage.statut === 'confirme' ? Palette.success : damage.statut === 'rejete' ? '#6B7280' : Brand.graphite}
+          color={damage.statut === 'confirme' ? Palette.success : damage.statut === 'rejete' ? Palette.textSecondary : Brand.graphite}
           bg={damage.statut === 'confirme' ? Palette.successSoft : damage.statut === 'rejete' ? Palette.surfaceAlt : Palette.primarySoft}
         />
-        {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color={Palette.info} bg={Palette.infoSoft} /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
+        {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color={Palette.info} bg={Palette.infoSoft} /> : <Badge text={t('inspection.analysis.damages.manual')} color={Palette.textSecondary} bg={Palette.surfaceAlt} />}
         {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color={Palette.warning} bg={Palette.warningSoft} /> : null}
       </View>
 
