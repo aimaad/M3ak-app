@@ -12,19 +12,26 @@ describe('vibration du moteur', () => {
     expect([...offsets].sort((a, b) => a - b)).toEqual(offsets);
     expect(Math.max(...offsets)).toBeLessThanOrEqual(1040);
     // Autour du pic du son (≈ 280 ms) : au moins 6 impulsions à intervalles courts.
-    const nearPeak = offsets.filter((o) => o >= 140 && o <= 330);
+    const nearPeak = offsets.filter((o) => o >= 130 && o <= 330);
     expect(nearPeak.length).toBeGreaterThanOrEqual(6);
   });
 
-  it('reste toujours doux : aucune impulsion plus forte que « léger »', () => {
-    for (const [, intensity] of ENGINE_HAPTICS) expect(['soft', 'light']).toContain(intensity);
+  it('reste modérée : jamais plus fort que « moyen »', () => {
+    for (const [, intensity] of ENGINE_HAPTICS)
+      expect(['soft', 'light', 'medium']).toContain(intensity);
   });
 
-  it('le plus fort (léger) est réservé à la montée et au pic du son', () => {
-    const light = ENGINE_HAPTICS.filter(([, intensity]) => intensity === 'light').map(
+  it('démarre par un coup franc à l’instant du son, et le plus fort est réservé à la montée et au pic', () => {
+    expect(ENGINE_HAPTICS[0]).toEqual([0, 'medium']);
+    const medium = ENGINE_HAPTICS.filter(([, intensity]) => intensity === 'medium').map(
       ([offset]) => offset
     );
-    expect(Math.min(...light)).toBeGreaterThanOrEqual(120);
-    expect(Math.max(...light)).toBeLessThanOrEqual(340);
+    expect(Math.max(...medium)).toBeLessThanOrEqual(340);
+    // La fin (ralenti) reste discrète.
+    expect(
+      ENGINE_HAPTICS.filter(([offset]) => offset >= 500).every(
+        ([, intensity]) => intensity === 'soft'
+      )
+    ).toBe(true);
   });
 });

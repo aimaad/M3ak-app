@@ -1,28 +1,27 @@
 import { readHapticsEnabled } from './opening-storage';
 
 /**
- * Vibration qui accompagne le moteur : de petites impulsions douces qui suivent l'enveloppe du son (`m3ak-engine-start.mp3`,
- * 1,04 s) : démarrage doux, montée jusqu'au pic (≈ 0,28 s), retombée, puis ralenti discret. Jamais plus fort que « léger » :
- * l'effet doit se sentir sans jamais gêner. [décalage en ms depuis le début du son, intensité]
+ * Vibration qui accompagne le moteur : des impulsions qui suivent l'enveloppe du son (`m3ak-engine-start.mp3`, 1,04 s) :
+ * un coup franc au démarrage (l'éclat de lumière), une montée jusqu'au pic (≈ 0,28 s), la retombée, puis un ralenti discret.
+ * Jamais plus fort que « moyen » : on la sent nettement sans qu'elle gêne. [décalage en ms depuis le début du son, intensité]
  */
 export const ENGINE_HAPTICS = [
-  [0, 'soft'],
-  [40, 'soft'],
-  [80, 'soft'],
-  [110, 'soft'],
-  [140, 'light'],
-  [170, 'light'],
-  [200, 'light'],
-  [230, 'light'],
-  [260, 'light'],
-  [290, 'light'],
-  [330, 'light'],
-  [370, 'soft'],
-  [410, 'soft'],
-  [460, 'soft'],
-  [530, 'soft'],
-  [610, 'soft'],
-  [700, 'soft'],
+  [0, 'medium'],
+  [45, 'medium'],
+  [90, 'light'],
+  [130, 'light'],
+  [170, 'medium'],
+  [205, 'medium'],
+  [240, 'medium'],
+  [275, 'medium'],
+  [310, 'medium'],
+  [350, 'light'],
+  [395, 'light'],
+  [445, 'light'],
+  [500, 'soft'],
+  [560, 'soft'],
+  [630, 'soft'],
+  [710, 'soft'],
   [800, 'soft'],
 ] as const;
 
@@ -55,13 +54,22 @@ export async function prepareEngineHaptics(): Promise<void> {
  */
 export function playEngineHaptics(delayMs = 0): void {
   const module = haptics;
-  if (!module || played) return;
+  if (!module) {
+    // Visible dans le terminal d'Expo (développement) : permet de comprendre pourquoi on ne sent rien.
+    if (__DEV__)
+      console.warn('[BIBIP] vibration : module non prêt (coupée, ou expo-haptics non installé)');
+    return;
+  }
+  if (played) return;
   played = true;
+  if (__DEV__) console.log('[BIBIP] vibration du moteur lancée');
   timers = ENGINE_HAPTICS.map(([offset, intensity]) =>
     setTimeout(() => {
       const style =
         intensity === 'light' ? module.ImpactFeedbackStyle.Light : module.ImpactFeedbackStyle.Soft;
-      module.impactAsync(style).catch(() => {});
+      module.impactAsync(style).catch((error) => {
+        if (__DEV__) console.warn('[BIBIP] vibration refusée :', error);
+      });
     }, delayMs + offset)
   );
 }
