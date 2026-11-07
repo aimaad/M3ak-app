@@ -125,6 +125,7 @@ export default function EquipeScreen() {
         <ScreenHeader
           title={t('equipe.title')}
           subtitle={t('equipe.subtitle')}
+          showBack
           right={
             <View className="flex-row items-center gap-3">
               {canManage ? (

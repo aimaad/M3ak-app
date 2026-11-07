@@ -13,7 +13,6 @@ export default function TabsLayout() {
       <Tabs.Screen name="flotte" />
       <Tabs.Screen name="clients" />
       <Tabs.Screen name="locations" />
-      <Tabs.Screen name="equipe" />
     </Tabs>
   );
 }

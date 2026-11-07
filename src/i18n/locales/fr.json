@@ -411,7 +411,8 @@
       "prixJour": "Prix / jour",
       "kilometrage": "Kilométrage"
     },
-    "emptyNone": "Aucune voiture pour l'instant. Touchez « + Ajouter véhicule » pour créer la première."
+    "emptyNone": "Aucune voiture pour l'instant. Touchez « + Ajouter véhicule » pour créer la première.",
+    "addVehicleA11y": "Ajouter un véhicule"
   },
   "vehicle": {
     "detailsTitle": "Fiche véhicule",
@@ -604,7 +605,8 @@
       "archived": "Archivés",
       "docsExpirant": "Docs bientôt expirés"
     },
-    "emptyNone": "Aucun client pour l'instant. Touchez « + Ajouter client » pour créer le premier."
+    "emptyNone": "Aucun client pour l'instant. Touchez « + Ajouter client » pour créer le premier.",
+    "addClientA11y": "Ajouter un client"
   },
   "customer": {
     "detailsTitle": "Fiche client",
@@ -1857,7 +1859,6 @@
       "ask": {
         "title": "Demander à BIBIP",
         "hint": "Posez une question sur votre agence",
-        "mic": "Dicter une question à BIBIP",
         "late": "Qui est en retard ?",
         "unpaid": "Impayés du mois",
         "tomorrow": "Dispo demain"

@@ -5,7 +5,7 @@ import { Platform, Pressable, ScrollView, View } from 'react-native';
 import { Brand, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
-import { HText } from './home-ui';
+import { ArrowIcon, HText } from './home-ui';
 
 const SUGGESTIONS = ['late', 'unpaid', 'tomorrow'] as const;
 
@@ -22,7 +22,7 @@ const FLOAT_SHADOW = Platform.select({
 
 /**
  * « Demander à BIBIP » : carte posée à cheval sur l'en-tête, avec des questions suggérées. Un toucher ouvre l'assistant (si l'IA
- * est active) ; une suggestion lui envoie la question tout de suite ; le micro ouvre la saisie prête à dicter.
+ * est active) ; une suggestion lui envoie la question tout de suite.
  */
 export function AskBibip({ chatActive }: { chatActive: boolean }) {
   const { t } = useLanguage();
@@ -74,33 +74,19 @@ export function AskBibip({ chatActive }: { chatActive: boolean }) {
               {t('accueil.home.ask.hint')}
             </HText>
           </View>
-          <Pressable
-            onPress={() =>
-              router.push(
-                chatActive
-                  ? { pathname: '/chat/[id]', params: { id: 'nouveau', dictate: '1' } }
-                  : '/chat'
-              )
-            }
-            hitSlop={8}
-            accessibilityRole="button"
-            accessibilityLabel={t('accueil.home.ask.mic')}
-            style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}
+          <View
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: Palette.border,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            <View
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: Palette.border,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Ionicons name="mic-outline" size={17} color={Palette.textPrimary} />
-            </View>
-          </Pressable>
+            <ArrowIcon color={Palette.textPrimary} size={17} />
+          </View>
         </Pressable>
       </View>
 

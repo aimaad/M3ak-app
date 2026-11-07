@@ -4,6 +4,7 @@ import { Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Palette, Brand } from '@/constants/theme';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { UndoController, type ActiveUndo, type UndoRequest } from '@/lib/undo';
 
@@ -20,6 +21,7 @@ export function UndoProvider({ children }: { children: ReactNode }) {
   const [active, setActive] = useState<ActiveUndo | null>(null);
   const [controller] = useState(() => new UndoController(setActive));
   const isDesktop = useDesktopLayout();
+  const tabInset = useTabBarInset();
 
   useEffect(() => () => controller.dismiss(), [controller]);
 
@@ -29,7 +31,7 @@ export function UndoProvider({ children }: { children: ReactNode }) {
     <UndoContext.Provider value={value}>
       {children}
       {active ? (
-        <View pointerEvents="box-none" style={{ position: 'absolute', left: 16, right: 16, bottom: isDesktop ? 24 : 92, alignItems: 'center', zIndex: 50 }}>
+        <View pointerEvents="box-none" style={{ position: 'absolute', left: 16, right: 16, bottom: isDesktop ? 24 : tabInset - 8, alignItems: 'center', zIndex: 50 }}>
           <View
             accessibilityLiveRegion="polite"
             className="w-full flex-row items-center justify-between gap-3 rounded-2xl px-4 py-3"

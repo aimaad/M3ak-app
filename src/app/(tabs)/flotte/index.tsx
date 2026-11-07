@@ -3,7 +3,9 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderAddButton } from '@/components/header-add-button';
 import { ScreenHeader } from '@/components/screen-header';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { Pager } from '@/components/pager';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
@@ -28,7 +30,6 @@ import {
 import { useVehicles } from '@/features/vehicles/hooks';
 import { StatusFilterChips } from '@/features/vehicles/status-filter-chips';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
-import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 import type { Vehicle } from '@/features/vehicles/types';
@@ -55,9 +56,9 @@ function KpiTile({ label, value, onPress }: { label: string; value: number; onPr
 }
 
 export default function FlotteScreen() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const isDesktop = useDesktopLayout();
-  const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
+  const tabInset = useTabBarInset();
   const agencyQuery = useMyAgency();
   const vehiclesQuery = useVehicles();
   const { statut: initialStatut } = useLocalSearchParams<{ statut?: string }>();
@@ -126,7 +127,7 @@ export default function FlotteScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t('flotte.title')} subtitle={t('flotte.subtitle', { count: counts.tous })} />
+        <ScreenHeader title={t('flotte.title')} subtitle={t('flotte.subtitle', { count: counts.tous })} right={<HeaderAddButton label={t('flotte.addVehicleA11y')} onPress={() => router.push('/flotte/nouveau')} />} />
 
         <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
           <KpiTile label={t('flotte.kpi.total')} value={counts.tous} />
@@ -258,7 +259,7 @@ export default function FlotteScreen() {
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-3 px-6 pb-24"
+            contentContainerClassName="gap-3 px-6" contentContainerStyle={{ paddingBottom: tabInset }}
             refreshControl={
               <RefreshControl
                 refreshing={vehiclesQuery.isFetching}
@@ -281,14 +282,6 @@ export default function FlotteScreen() {
           )
         )}
 
-        <Pressable
-          onPress={() => router.push('/flotte/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
-        >
-          <ThemedText type="smallBold" style={{ color: Palette.onPrimary, fontSize: 16, lineHeight: 22 }}>
-            {`+ ${t('flotte.addVehicle')}`}
-          </ThemedText>
-        </Pressable>
       </SafeAreaView>
     </ThemedView>
   );

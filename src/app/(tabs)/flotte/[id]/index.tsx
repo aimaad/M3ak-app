@@ -253,14 +253,17 @@ export default function VehicleDetailScreen() {
             </View>
 
             <View className="gap-2">
-              <View className="flex-row items-center justify-between">
-                <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
-                {totalMaintenanceCost > 0 ? (
+              <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
+              {totalMaintenanceCost > 0 ? (
+                <View className="flex-row items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">
                   <ThemedText type="small" themeColor="textSecondary">
-                    {t('maintenance.totalCost')} : {totalMaintenanceCost.toLocaleString('fr-FR')} MAD
+                    {t('maintenance.totalCost')}
                   </ThemedText>
-                ) : null}
-              </View>
+                  <ThemedText type="smallBold" style={{ fontSize: 18, lineHeight: 24 }}>
+                    {totalMaintenanceCost.toLocaleString('fr-FR')} MAD
+                  </ThemedText>
+                </View>
+              ) : null}
               {maintenanceItems.length === 0 ? (
                 <View className="gap-1 rounded-3xl border border-dashed border-border bg-card p-4">
                   <ThemedText type="small" themeColor="textSecondary">
@@ -279,19 +282,19 @@ export default function VehicleDetailScreen() {
                       <View className="flex-1 gap-0.5">
                         <ThemedText type="small">{t(`maintenance.types.${item.type}`)}</ThemedText>
                         <ThemedText type="small" themeColor="textSecondary">
-                          {item.dateIntervention ?? item.echeanceDate ?? '—'}
-                          {item.cout != null ? ` · ${item.cout.toLocaleString('fr-FR')} MAD` : ''}
+                          {(item.dateIntervention ?? item.echeanceDate)
+                            ? new Date((item.dateIntervention ?? item.echeanceDate) as string).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                            : '—'}
+                          {' · '}
+                          {item.statut === 'effectuee'
+                            ? t('maintenance.done')
+                            : item.statut === 'en_cours'
+                              ? t('maintenance.status.en_cours')
+                              : t(`maintenance.urgency.${item.statut}`)}
                         </ThemedText>
                       </View>
-                      <ThemedText
-                        type="small"
-                        style={{ color: item.statut === 'effectuee' ? Palette.success : item.statut === 'en_cours' ? Palette.info : Palette.textSecondary }}
-                      >
-                        {item.statut === 'effectuee'
-                          ? t('maintenance.done')
-                          : item.statut === 'en_cours'
-                            ? t('maintenance.status.en_cours')
-                            : t(`maintenance.urgency.${item.statut}`)}
+                      <ThemedText type="smallBold">
+                        {item.cout != null ? `${item.cout.toLocaleString('fr-FR')} MAD` : '—'}
                       </ThemedText>
                     </PressableCard>
                   ))}

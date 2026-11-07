@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, Vie
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { Pager } from '@/components/pager';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
@@ -20,7 +21,6 @@ import { RentalStatusFilterChips } from '@/features/rentals/status-filter-chips'
 import type { Rental } from '@/features/rentals/types';
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
-import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 import { Palette } from '@/constants/theme';
@@ -30,9 +30,9 @@ import { Ionicons } from '@expo/vector-icons';
 const EMPTY_RENTALS: Rental[] = [];
 
 export default function LocationsScreen() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const isDesktop = useDesktopLayout();
-  const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
+  const tabInset = useTabBarInset();
   const rentalsQuery = useRentals();
   const vehiclesQuery = useVehicles();
   const customersQuery = useCustomers();
@@ -178,7 +178,7 @@ export default function LocationsScreen() {
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-3 px-6 pb-24"
+            contentContainerClassName="gap-3 px-6" contentContainerStyle={{ paddingBottom: tabInset }}
             refreshControl={
               <RefreshControl
                 refreshing={rentalsQuery.isFetching}
@@ -207,14 +207,6 @@ export default function LocationsScreen() {
           )
         )}
 
-        <Pressable
-          onPress={() => router.push('/locations/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
-        >
-          <ThemedText type="smallBold" style={{ color: Palette.onPrimary, fontSize: 16, lineHeight: 22 }}>
-            {`+ ${t('locations.addRental')}`}
-          </ThemedText>
-        </Pressable>
       </SafeAreaView>
     </ThemedView>
   );

@@ -415,7 +415,8 @@
     "subtitle_zero": "دبر {{count}} ديال السيارات",
     "subtitle_two": "دبر {{count}} ديال السيارات",
     "subtitle_few": "دبر {{count}} ديال السيارات",
-    "subtitle_many": "دبر {{count}} ديال السيارات"
+    "subtitle_many": "دبر {{count}} ديال السيارات",
+    "addVehicleA11y": "إضافة سيارة"
   },
   "vehicle": {
     "detailsTitle": "بطاقة السيارة",
@@ -612,7 +613,8 @@
     "subtitle_zero": "عندك {{count}} ديال الزبناء",
     "subtitle_two": "عندك {{count}} ديال الزبناء",
     "subtitle_few": "عندك {{count}} ديال الزبناء",
-    "subtitle_many": "عندك {{count}} ديال الزبناء"
+    "subtitle_many": "عندك {{count}} ديال الزبناء",
+    "addClientA11y": "إضافة زبون"
   },
   "customer": {
     "detailsTitle": "بطاقة الزبون",
@@ -1909,7 +1911,6 @@
       "ask": {
         "title": "اسأل BIBIP",
         "hint": "اطرح سؤالاً عن وكالتك",
-        "mic": "أملِ سؤالاً على BIBIP",
         "late": "من هو المتأخر؟",
         "unpaid": "غير المسدَّد هذا الشهر",
         "tomorrow": "المتاح غداً"

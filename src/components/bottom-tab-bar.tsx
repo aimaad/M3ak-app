@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, homeTextFont, Palette } from '@/constants/theme';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
+import { TAB_BAR_BOTTOM_GAP, TAB_BAR_HEIGHT, TAB_BAR_SIDE_GAP } from '@/hooks/use-tab-bar-inset';
 import { useLanguage } from '@/i18n/use-language';
 
 export type SectionKey = 'accueil' | 'flotte' | 'clients' | 'locations';
@@ -72,22 +73,22 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
   const currentName = pathParts[0] === '(tabs)' ? pathParts[1] : state.routes[state.index]?.name;
 
   return (
-    // Barre flottante : un bloc de la couleur de la page (il prend sa place dans la mise en page, rien n'est recouvert) qui
-    // porte une pilule graphite (rayon 34, hauteur 68, à 16 px des bords). Cinq emplacements égaux : Accueil, Flotte, le « + »
+    // Barre flottante (position absolue : 16 px des bords, 26 px du bas + zone de sécurité) : une pilule graphite (rayon 34,
+    // hauteur 68). Les écrans à onglets laissent `useTabBarInset()` en bas de leur contenu pour que rien ne soit caché. Cinq emplacements égaux : Accueil, Flotte, le « + »
     // orange central (nouvelle location), Locations, Clients. Actif : blanc ; inactif : gris clair. Seule ombre : grise, légère.
     <View
+      pointerEvents="box-none"
       style={{
-        backgroundColor: Palette.background,
-        paddingTop: 8,
-        paddingBottom: Math.max(insets.bottom, 8) + 18,
-        paddingStart: Math.max(insets.left, 0) + 16,
-        paddingEnd: Math.max(insets.right, 0) + 16,
+        position: 'absolute',
+        bottom: TAB_BAR_BOTTOM_GAP + insets.bottom,
+        start: Math.max(insets.left, 0) + TAB_BAR_SIDE_GAP,
+        end: Math.max(insets.right, 0) + TAB_BAR_SIDE_GAP,
       }}
     >
       <View
         accessibilityRole="tablist"
         style={{
-          height: 68,
+          height: TAB_BAR_HEIGHT,
           flexDirection: 'row',
           alignItems: 'center',
           borderRadius: 34,

@@ -3,7 +3,9 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { HeaderAddButton } from '@/components/header-add-button';
 import { ScreenHeader } from '@/components/screen-header';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { TextField } from '@/components/text-field';
 import { Pager } from '@/components/pager';
 import { ThemedText } from '@/components/themed-text';
@@ -22,7 +24,6 @@ import { CUSTOMER_TYPES } from '@/features/customers/types';
 import type { Customer, CustomerType } from '@/features/customers/types';
 import { DataTable, type DataTableColumn } from '@/components/data-table';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
-import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 import { Palette, Brand } from '@/constants/theme';
@@ -43,9 +44,9 @@ function KpiTile({ label, value }: { label: string; value: number }) {
 }
 
 export default function ClientsScreen() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const isDesktop = useDesktopLayout();
-  const fabSideClass = isRTL(language) ? 'left-6' : 'right-6';
+  const tabInset = useTabBarInset();
   const customersQuery = useCustomers();
   const [filters, setFilters] = useState<CustomerFilters>(DEFAULT_CUSTOMER_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
@@ -96,7 +97,7 @@ export default function ClientsScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t('clients.title')} subtitle={t('clients.subtitle', { count: active })} />
+        <ScreenHeader title={t('clients.title')} subtitle={t('clients.subtitle', { count: active })} right={<HeaderAddButton label={t('clients.addClientA11y')} onPress={() => router.push('/clients/nouveau')} />} />
 
         <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-6 pb-3">
           <KpiTile label={t('clients.kpi.active')} value={active} />
@@ -188,7 +189,7 @@ export default function ClientsScreen() {
           <FlatList
             data={pagination.items}
             keyExtractor={(item) => item.id}
-            contentContainerClassName="gap-3 px-6 pb-24"
+            contentContainerClassName="gap-3 px-6" contentContainerStyle={{ paddingBottom: tabInset }}
             refreshControl={
               <RefreshControl
                 refreshing={customersQuery.isFetching}
@@ -211,14 +212,6 @@ export default function ClientsScreen() {
           )
         )}
 
-        <Pressable
-          onPress={() => router.push('/clients/nouveau')}
-          className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
-        >
-          <ThemedText type="smallBold" style={{ color: Palette.onPrimary, fontSize: 16, lineHeight: 22 }}>
-            {`+ ${t('clients.addClient')}`}
-          </ThemedText>
-        </Pressable>
       </SafeAreaView>
     </ThemedView>
   );
