@@ -8,9 +8,9 @@ import { useLanguage } from '@/i18n/use-language';
 export function OverlapBadge() {
   const { t } = useLanguage();
   return (
-    <View className="flex-row items-center gap-1 self-start rounded-full bg-[#F8E6E9] px-3 py-1">
-      <Ionicons name="warning" size={13} color="#A83C4B" />
-      <ThemedText type="small" style={{ color: '#A83C4B', fontSize: 12, fontWeight: '700' }}>
+    <View className="flex-row items-center gap-1 self-start rounded-full bg-[#FBE8E6] px-3 py-1">
+      <Ionicons name="warning" size={13} color="#A8322B" />
+      <ThemedText type="small" style={{ color: '#A8322B', fontSize: 12, fontWeight: '700' }}>
         {t('locations.overlap.badge')}
       </ThemedText>
     </View>

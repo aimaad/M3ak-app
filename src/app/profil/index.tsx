@@ -11,7 +11,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency, useMyProfile, useUpdateMyProfile, useUploadMemberAvatar } from '@/features/agency/hooks';
 import type { MemberProfile } from '@/features/agency/types';
 import { signOut, updateMyPassword } from '@/features/auth/api';
@@ -53,7 +53,7 @@ export default function ProfilScreen() {
 
         {profileQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : !profileQuery.data ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -150,7 +150,7 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
             <ThemedText type="small">{t('common.gallery')}</ThemedText>
           </Pressable>
         </View>
-        {uploadAvatar.isPending ? <ActivityIndicator color={M3akPalette.mauve} /> : null}
+        {uploadAvatar.isPending ? <ActivityIndicator color={BibipPalette.primary} /> : null}
       </View>
 
       <Card padded={false} className="px-4">
@@ -191,12 +191,12 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           error={profileTouched && !nom.trim() ? t('profil.errors.required') : undefined}
         />
         {profileError ? (
-          <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
             {profileError}
           </ThemedText>
         ) : null}
         {profileSuccess ? (
-          <ThemedText type="small" style={{ color: M3akPalette.success }}>
+          <ThemedText type="small" style={{ color: BibipPalette.success }}>
             {t('profil.updateSuccess')}
           </ThemedText>
         ) : null}
@@ -214,7 +214,7 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           {profile.signaturePath && signatureQuery.data ? (
             <SignatureView signature={signatureQuery.data} />
           ) : profile.signaturePath && signatureQuery.isLoading ? (
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           ) : (
             <ThemedText type="small" themeColor="textSecondary" className="text-center">
               {t('profil.signature.none')}
@@ -254,12 +254,12 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           autoCapitalize="none"
         />
         {passwordError ? (
-          <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
             {passwordError}
           </ThemedText>
         ) : null}
         {passwordSuccess ? (
-          <ThemedText type="small" style={{ color: M3akPalette.success }}>
+          <ThemedText type="small" style={{ color: BibipPalette.success }}>
             {t('profil.passwordSuccess')}
           </ThemedText>
         ) : null}

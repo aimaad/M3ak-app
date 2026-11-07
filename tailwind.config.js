@@ -1,19 +1,22 @@
 /** @type {import('tailwindcss').Config} */
+const { BRAND } = require('./src/constants/brand');
+
 module.exports = {
   content: ['./src/**/*.{js,jsx,ts,tsx}'],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
       colors: {
-        // Jetons M3ak : mêmes valeurs que src/constants/theme.ts (M3akPalette).
-        brand: { DEFAULT: '#9438D8', deep: '#321943', light: '#F3E7FC', soft: '#F7EEFD' },
-        primary: { DEFAULT: '#9438D8', pressed: '#7E2BBE' },
-        'on-primary': '#FFFFFF',
-        lavender: '#CB83F5',
-        line: { DEFAULT: '#EADCF5', soft: '#F3E9FA' },
-        canvas: '#F8F3FC',
-        ink: '#171126',
-        subtle: '#9686AE',
+        // Jetons BIBIP : mêmes valeurs que src/constants/brand.js (source de vérité unique).
+        brand: { DEFAULT: BRAND.primary, deep: BRAND.primaryDeep, light: BRAND.primaryLight, soft: BRAND.primarySoft },
+        primary: { DEFAULT: BRAND.primary, pressed: BRAND.primaryPressed },
+        'on-primary': BRAND.onPrimary,
+        mint: BRAND.mint,
+        lime: BRAND.lime,
+        line: { DEFAULT: BRAND.border, soft: BRAND.borderSoft },
+        canvas: BRAND.background,
+        ink: BRAND.ink,
+        subtle: BRAND.subtle,
       },
       fontFamily: {
         cairo: ['Cairo_400Regular'],

@@ -27,7 +27,7 @@ import { AgencyStampSettings } from '@/features/agency/stamp-settings';
 import type { AgencyDetails } from '@/features/agency/types';
 import { useUnsavedChangesGuard } from '@/hooks/use-unsaved-changes-guard';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 function valuesFromDetails(details: AgencyDetails): AgencyDetailsFormValues {
   return {
@@ -72,7 +72,7 @@ export default function EntrepriseScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : isError || !agencyId || !detailsQuery.data ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -334,7 +334,7 @@ function EntrepriseForm({
           />
 
           {feedback ? (
-            <ThemedText type="small" style={{ color: feedback.type === 'success' ? '#116B54' : '#C55461' }}>
+            <ThemedText type="small" style={{ color: feedback.type === 'success' ? '#1E6B3A' : '#C8443B' }}>
               {feedback.message}
             </ThemedText>
           ) : null}

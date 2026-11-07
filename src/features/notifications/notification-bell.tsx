@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -39,18 +39,18 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
       <Ionicons
         name={count > 0 && !onForest ? 'notifications' : 'notifications-outline'}
         size={onForest ? 21 : 22}
-        color={onForest ? '#FFFFFF' : M3akPalette.mauve}
+        color={onForest ? '#FFFFFF' : BibipPalette.primary}
       />
       {label ? (
         <View
           className="absolute min-w-5 items-center justify-center rounded-full px-1"
           style={{
-            backgroundColor: M3akPalette.primary,
+            backgroundColor: BibipPalette.primary,
             top: onForest ? -2 : -4,
             end: onForest ? -2 : -4,
             height: 20,
             borderWidth: 1.5,
-            borderColor: onForest ? M3akPalette.lavender : '#FFFFFF',
+            borderColor: onForest ? BibipPalette.mint : '#FFFFFF',
           }}
         >
           <ThemedText

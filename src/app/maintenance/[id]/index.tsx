@@ -12,7 +12,7 @@ import { TextField } from '@/components/text-field';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { MAINTENANCE_DOCUMENTS_BUCKET, uploadMaintenanceInvoice } from '@/features/maintenance/api';
 import {
@@ -70,7 +70,7 @@ export default function MaintenanceDetailScreen() {
           <ScreenHeader title={t('maintenance.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color={M3akPalette.mauve} />
+              <ActivityIndicator color={BibipPalette.primary} />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('maintenance.loadError') : t('maintenance.notFound')}
@@ -136,7 +136,7 @@ export default function MaintenanceDetailScreen() {
                 onPick={setFactureLocalUri}
               />
               {submitError ? (
-                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                   {submitError}
                 </ThemedText>
               ) : null}

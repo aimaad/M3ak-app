@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { buildCsv, downloadTextFile } from '@/lib/csv';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export type DataTableColumn<T> = {
   key: string;
@@ -96,7 +96,7 @@ export function DataTable<T>({
                 onHoverOut={() => setHovered((current) => (current === key ? null : current))}
                 accessibilityRole={onRowPress ? 'link' : undefined}
                 className="min-h-14 flex-row items-center border-b border-line-soft px-5 py-3"
-                style={{ backgroundColor: hovered === key ? M3akPalette.background : '#FFFFFF' }}
+                style={{ backgroundColor: hovered === key ? BibipPalette.background : '#FFFFFF' }}
               >
                 {columns.map((column) => (
                   <View

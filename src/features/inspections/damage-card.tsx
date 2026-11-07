@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ZoomableImage } from '@/components/zoomable-image';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { DamagePatch } from './api';
@@ -13,7 +13,7 @@ import { DamageEditor, parseCost, type DamageDraft } from './damage-editor';
 import { confidencePercent, effectiveCost, needsCheck, type Damage } from './damages';
 import { usePhotoSignedUrl } from './hooks';
 
-const SEVERITY_COLOR = { leger: '#8A5A0B', modere: '#C2410C', grave: '#A83C4B' } as const;
+const SEVERITY_COLOR = { leger: '#8A5A0B', modere: '#C2410C', grave: '#A8322B' } as const;
 
 type Props = {
   damage: Damage;
@@ -46,7 +46,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
   const percent = confidencePercent(damage);
   const check = needsCheck(damage);
   const rejected = damage.statut === 'rejete';
-  const color = damage.nouveau ? '#C55461' : '#D97706';
+  const color = damage.nouveau ? '#C8443B' : '#D97706';
 
   async function run(patch: DamagePatch) {
     setSaving(true);
@@ -85,11 +85,11 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       </View>
 
       <View className="flex-row flex-wrap gap-1.5">
-        <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? '#F8E6E9' : '#FBF1DE'} />
+        <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? '#FBE8E6' : '#FBF1DE'} />
         <Badge
           text={t(`inspection.analysis.damages.status.${damage.statut}`)}
-          color={damage.statut === 'confirme' ? '#116B54' : damage.statut === 'rejete' ? '#6B7280' : M3akPalette.mauveDeep}
-          bg={damage.statut === 'confirme' ? '#E3F3EE' : damage.statut === 'rejete' ? '#F3F4F6' : M3akPalette.mauveLight}
+          color={damage.statut === 'confirme' ? '#1E6B3A' : damage.statut === 'rejete' ? '#6B7280' : BibipPalette.primaryDeep}
+          bg={damage.statut === 'confirme' ? '#E3F3E8' : damage.statut === 'rejete' ? '#F0EEE5' : BibipPalette.primaryLight}
         />
         {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color="#3F62AD" bg="#E8EEF9" /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
         {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color="#8A5A0B" bg="#FBF1DE" /> : null}
@@ -125,7 +125,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
           accessibilityRole="switch"
           accessibilityState={{ checked: damage.dansContrat }}
         >
-          <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: M3akPalette.mauve, backgroundColor: damage.dansContrat ? M3akPalette.mauve : '#fff' }}>
+          <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: BibipPalette.primary, backgroundColor: damage.dansContrat ? BibipPalette.primary : '#fff' }}>
             {damage.dansContrat ? <ThemedText type="smallBold" style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
           </View>
           <ThemedText type="small" style={{ flex: 1 }}>
@@ -156,7 +156,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       ) : (
         <>
           {error ? (
-            <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
               {error}
             </ThemedText>
           ) : null}

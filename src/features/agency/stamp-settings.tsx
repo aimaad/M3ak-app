@@ -16,7 +16,7 @@ import { AGENCY_ASSETS_BUCKET } from './api';
 import { useRemoveAgencyStamp, useSaveAgencyStampConfig, useUploadAgencyStamp } from './hooks';
 import { defaultStampConfig, parseStampConfig, stampSvg, STAMP_COLORS, STAMP_LIMITS, STAMP_SHAPES, type StampColor, type StampConfig, type StampShape } from './stamp';
 import type { AgencyDetails } from './types';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const sameConfig = (a: StampConfig | null, b: StampConfig | null) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -87,7 +87,7 @@ export function AgencyStampSettings({ agencyId, isOwner, details }: { agencyId: 
             </ThemedText>
           </View>
         ) : (
-          <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: M3akPalette.border }}>
+          <View className="items-center gap-1 rounded-2xl bg-white py-3" style={{ borderWidth: 1, borderColor: BibipPalette.border }}>
             {/* Aperçu dessiné par le même moteur que le PDF du contrat : ce qu'on voit ici est exactement ce qui s'imprime. */}
             {Platform.OS === 'web' ? (
               <HtmlFrame html={previewHtml} style={{ width: 170, height: previewHeight, pointerEvents: 'none' }} />

@@ -5,7 +5,7 @@ import { WebView } from 'react-native-webview';
 
 import { HtmlFrame } from '@/components/html-frame';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { PAGE } from './template-render';
@@ -15,7 +15,7 @@ import { PAGE } from './template-render';
  * pour agrandir, et chaque feuille est présentée comme une page posée sur un fond gris.
  */
 export function viewerHtml(contractHtml: string): string {
-  const head = `<meta name="viewport" content="width=${PAGE.width}, minimum-scale=0.1, maximum-scale=5, user-scalable=yes" /><style>html,body{background:#EADCF5}.sheet{background:#fff;margin:0 auto 14px;box-shadow:0 1px 5px rgba(0,0,0,.25);page-break-after:auto}</style>`;
+  const head = `<meta name="viewport" content="width=${PAGE.width}, minimum-scale=0.1, maximum-scale=5, user-scalable=yes" /><style>html,body{background:#E7E3D4}.sheet{background:#fff;margin:0 auto 14px;box-shadow:0 1px 5px rgba(0,0,0,.25);page-break-after:auto}</style>`;
   return contractHtml.includes('<head>') ? contractHtml.replace('<head>', `<head>${head}`) : `<head>${head}</head>${contractHtml}`;
 }
 
@@ -40,15 +40,15 @@ export function ContractViewer({ visible, html, reachedEnd, onReachEnd, onClose 
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={{ flex: 1, backgroundColor: '#EADCF5', paddingTop: topInset, paddingBottom: bottomInset }}>
+      <View style={{ flex: 1, backgroundColor: '#E7E3D4', paddingTop: topInset, paddingBottom: bottomInset }}>
         <View className="flex-row items-center justify-between bg-white px-5 pb-3 pt-1">
           <View className="flex-1 pr-3">
             <ThemedText type="smallBold">{t('contract.sign.viewerTitle')}</ThemedText>
-            <ThemedText type="small" style={{ color: reachedEnd ? '#116B54' : '#8A5A0B' }}>
+            <ThemedText type="small" style={{ color: reachedEnd ? '#1E6B3A' : '#8A5A0B' }}>
               {reachedEnd ? t('contract.sign.viewerDone') : t('contract.sign.viewerHint')}
             </ThemedText>
           </View>
-          <Pressable onPress={onClose} className="rounded-full px-4 py-2" style={{ backgroundColor: M3akPalette.mauve }} accessibilityRole="button">
+          <Pressable onPress={onClose} className="rounded-full px-4 py-2" style={{ backgroundColor: BibipPalette.primary }} accessibilityRole="button">
             <ThemedText type="smallBold" style={{ color: '#fff' }}>
               {t('common.close')}
             </ThemedText>
@@ -68,14 +68,14 @@ export function ContractViewer({ visible, html, reachedEnd, onReachEnd, onClose 
             startInLoadingState
             renderLoading={() => (
               <View style={{ position: 'absolute', inset: 0, alignItems: 'center', justifyContent: 'center' }}>
-                <ActivityIndicator color={M3akPalette.mauve} />
+                <ActivityIndicator color={BibipPalette.primary} />
               </View>
             )}
-            style={{ flex: 1, backgroundColor: '#EADCF5' }}
+            style={{ flex: 1, backgroundColor: '#E7E3D4' }}
           />
         ) : (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         )}
       </View>

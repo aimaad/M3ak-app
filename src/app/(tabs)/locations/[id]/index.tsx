@@ -27,7 +27,7 @@ import { RentalJourney } from '@/features/rentals/rental-journey';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -93,7 +93,7 @@ export default function LocationDetailScreen() {
           <ScreenHeader title={t('locations.detailsTitle')} showBack />
           <View className="flex-1 items-center justify-center px-8">
             {isLoading ? (
-              <ActivityIndicator color={M3akPalette.mauve} />
+              <ActivityIndicator color={BibipPalette.primary} />
             ) : (
               <ThemedText type="default" themeColor="textSecondary" className="text-center">
                 {isError ? t('locations.loadError') : t('locations.notFound')}
@@ -115,9 +115,9 @@ export default function LocationDetailScreen() {
 
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
           {overlappingRentalIds(vehicleRentalsQuery.data ?? []).has(rental.id) ? (
-            <View className="gap-1 rounded-2xl border border-[#EFC9CE] bg-[#F8E6E9] p-4">
+            <View className="gap-1 rounded-2xl border border-[#F0C9C5] bg-[#FBE8E6] p-4">
               <OverlapBadge />
-              <ThemedText type="small" style={{ color: '#A83C4B' }}>
+              <ThemedText type="small" style={{ color: '#A8322B' }}>
                 {t('locations.overlap.warning')}
               </ThemedText>
             </View>

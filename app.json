@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "M3ak",
+    "name": "BIBIP",
     "slug": "m3ak",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#773DBA",
+        "backgroundColor": "#FAF8F1",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -35,7 +35,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#773DBA",
+          "backgroundColor": "#FAF8F1",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200
         }
@@ -43,21 +43,21 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "M3ak a besoin d'accéder à vos photos pour ajouter les documents client (CIN, permis).",
-          "cameraPermission": "M3ak a besoin de la caméra pour photographier les documents client (CIN, permis)."
+          "photosPermission": "BIBIP a besoin d'accéder à vos photos pour ajouter les documents client (CIN, permis).",
+          "cameraPermission": "BIBIP a besoin de la caméra pour photographier les documents client (CIN, permis)."
         }
       ],
       [
         "expo-camera",
         {
-          "cameraPermission": "M3ak a besoin de la caméra pour l'inspection photo des véhicules."
+          "cameraPermission": "BIBIP a besoin de la caméra pour l'inspection photo des véhicules."
         }
       ],
       "expo-sharing",
       [
         "expo-notifications",
         {
-          "color": "#7C3AED",
+          "color": "#087F70",
           "defaultChannel": "default"
         }
       ]

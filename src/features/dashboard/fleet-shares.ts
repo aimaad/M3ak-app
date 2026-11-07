@@ -2,12 +2,12 @@ import type { VehicleStatus } from '@/features/vehicles/types';
 
 /** Les quatre statuts principaux, chacun dans une nuance de violet de la palette ; tout le reste est regroupé dans « Autres ». */
 const MAIN: { status: VehicleStatus; color: string }[] = [
-  { status: 'disponible', color: '#9438D8' },
-  { status: 'en_location', color: '#CB83F5' },
-  { status: 'maintenance', color: '#54216F' },
-  { status: 'a_inspecter', color: '#E2C3F8' },
+  { status: 'disponible', color: '#087F70' },
+  { status: 'en_location', color: '#7DDCC8' },
+  { status: 'maintenance', color: '#0A3A34' },
+  { status: 'a_inspecter', color: '#BFE6DE' },
 ];
-export const OTHERS_COLOR = '#A89CBA';
+export const OTHERS_COLOR = '#A9B3B0';
 
 export type FleetShare = { key: string; value: number; color: string };
 

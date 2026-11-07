@@ -18,7 +18,7 @@ import { validateOdometerForm } from '@/features/rentals/validation';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export default function RetourScreen() {
   const { id, vehicleId } = useLocalSearchParams<{ id: string; vehicleId: string }>();
@@ -97,7 +97,7 @@ export default function RetourScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.retour.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -154,7 +154,7 @@ export default function RetourScreen() {
                     onPress={() => setEtatRetour(condition)}
                     className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -162,7 +162,7 @@ export default function RetourScreen() {
               })}
             </View>
             {touched && contractErrors.etatRetour ? (
-              <ThemedText type="small" style={{ color: '#A83C4B' }}>
+              <ThemedText type="small" style={{ color: '#A8322B' }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -179,9 +179,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#C55461] bg-[#F8E6E9]' : 'border-line bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#C8443B] bg-[#FBE8E6]' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#C55461' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? '#C8443B' : BibipPalette.ink }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -229,7 +229,7 @@ export default function RetourScreen() {
           ) : null}
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#A83C4B' }}>
+            <ThemedText type="small" style={{ color: '#A8322B' }}>
               {error}
             </ThemedText>
           ) : null}

@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 import type { DailyRevenuePoint } from './metrics';
 
@@ -30,7 +30,7 @@ export function RevenueChart({ points }: { points: DailyRevenuePoint[] }) {
                 className="w-full rounded-t-md"
                 style={{
                   height: barHeight,
-                  backgroundColor: point.total > 0 ? M3akPalette.mauve : M3akPalette.border,
+                  backgroundColor: point.total > 0 ? BibipPalette.primary : BibipPalette.border,
                 }}
               />
             </View>

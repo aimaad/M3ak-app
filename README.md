@@ -1,4 +1,4 @@
-# M3ak (معاك)
+# BIBIP (anciennement M3ak)
 
 Application mobile tout-en-un pour les agences de location de voitures au Maroc.
 Voir `docs/PRODUIT.md`, `docs/ARCHITECTURE.md` et `docs/ROADMAP.md` pour le contexte complet.

@@ -25,7 +25,7 @@ import { InviteResultCard } from '@/features/agency/invite-result-card';
 import { canRemoveMember } from '@/features/agency/permissions';
 import type { AgencyInvite, AgencyMember, AgencyRole, InviteResult } from '@/features/agency/types';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export default function EquipeScreen() {
   const { t } = useLanguage();
@@ -152,7 +152,7 @@ export default function EquipeScreen() {
                 membersQuery.refetch();
                 invitesQuery.refetch();
               }}
-              tintColor={M3akPalette.mauve}
+              tintColor={BibipPalette.primary}
             />
           }
         >

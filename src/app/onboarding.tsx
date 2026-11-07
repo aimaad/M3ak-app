@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { saveMyNames, signOut } from '@/features/auth/api';
 import { buildFullName, readNamesFromMetadata, validatePersonName } from '@/features/auth/names';
 import { useSession } from '@/features/auth/session-context';
@@ -125,7 +125,7 @@ export default function OnboardingScreen() {
             </ThemedText>
 
             {error ? (
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {error}
               </ThemedText>
             ) : null}

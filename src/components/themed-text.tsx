@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
-import { fontFamilyFor, Fonts, M3akPalette, ThemeColor, type FontWeightName } from '@/constants/theme';
+import { fontFamilyFor, Fonts, BibipPalette, ThemeColor, type FontWeightName } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 import { useTheme } from '@/hooks/use-theme';
 import { normalizeText } from '@/lib/normalize-text';
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   linkPrimary: {
     lineHeight: 30,
     fontSize: 14,
-    color: M3akPalette.mauve,
+    color: BibipPalette.primary,
   },
   code: {
     fontFamily: Fonts.mono,

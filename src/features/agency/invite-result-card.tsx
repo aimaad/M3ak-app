@@ -4,7 +4,7 @@ import { Linking, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { formatInviteCode } from './invite-code';
@@ -46,7 +46,7 @@ export function InviteResultCard({ result, onDone }: { result: InviteResult; onD
         {t('equipe.invite.createdFor', { name: `${result.prenom} ${result.nom}`.trim() })}
       </ThemedText>
 
-      <ThemedText type="small" style={{ color: result.emailSent ? M3akPalette.mauve : M3akPalette.danger }}>
+      <ThemedText type="small" style={{ color: result.emailSent ? BibipPalette.primary : BibipPalette.danger }}>
         {emailLine}
       </ThemedText>
 
@@ -54,7 +54,7 @@ export function InviteResultCard({ result, onDone }: { result: InviteResult; onD
         <ThemedText type="small" themeColor="textSecondary">
           {t('equipe.invite.codeLabel')}
         </ThemedText>
-        <ThemedText type="subtitle" style={{ letterSpacing: 2, color: M3akPalette.mauveDeep }} selectable>
+        <ThemedText type="subtitle" style={{ letterSpacing: 2, color: BibipPalette.primaryDeep }} selectable>
           {code}
         </ThemedText>
       </View>

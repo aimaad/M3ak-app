@@ -6,7 +6,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ZoomableImage } from '@/components/zoomable-image';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -41,10 +41,10 @@ type Props = {
 };
 
 const STATUS_COLOR = {
-  expired: M3akPalette.danger,
-  expiring_soon: M3akPalette.warning,
-  ok: M3akPalette.muted,
-  no_date: M3akPalette.muted,
+  expired: BibipPalette.danger,
+  expiring_soon: BibipPalette.warning,
+  ok: BibipPalette.muted,
+  no_date: BibipPalette.muted,
 } as const;
 
 function formatDate(iso: string): string {
@@ -69,7 +69,7 @@ function DocumentThumbnail({ path, label }: { path: string; label?: string }) {
   if (isLoading || !url) {
     return (
       <View className="h-28 flex-1 items-center justify-center rounded-2xl bg-canvas">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       </View>
     );
   }
@@ -163,7 +163,7 @@ function DocumentCard({
             </ThemedText>
           ) : null}
         </View>
-        <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#F3F0FA' }}>
+        <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#F0EEE5' }}>
           <ThemedText type="small" style={{ color: STATUS_COLOR[status], fontSize: 11 }}>
             {status === 'no_date'
               ? t('customer.documentsManager.status.no_date')
@@ -243,7 +243,7 @@ function DocumentCard({
           </Pressable>
           {canDelete ? (
             <Pressable onPress={handleDelete} hitSlop={6} disabled={deleteDocument.isPending}>
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {t('customer.documentsManager.delete')}
               </ThemedText>
             </Pressable>
@@ -298,9 +298,9 @@ export function CustomerDocumentsSection({ agencyId, owner, canDelete, title }: 
       <ThemedText type="smallBold">{title ?? t('customer.documentsSection')}</ThemedText>
 
       {documentsQuery.isLoading ? (
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       ) : documentsQuery.isError ? (
-        <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
           {t('customer.documentsManager.loadError')}
         </ThemedText>
       ) : documents.length === 0 ? (
@@ -326,7 +326,7 @@ export function CustomerDocumentsSection({ agencyId, owner, canDelete, title }: 
             onPickFile={setLocalUri}
           />
           {error ? (
-            <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
               {error}
             </ThemedText>
           ) : null}

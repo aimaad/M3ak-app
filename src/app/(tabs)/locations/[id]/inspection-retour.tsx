@@ -4,7 +4,7 @@ import { ActivityIndicator } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { InspectionCaptureScreen } from '@/features/inspections/inspection-capture-screen';
 import { useRental } from '@/features/rentals/hooks';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export default function InspectionRetourScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -13,7 +13,7 @@ export default function InspectionRetourScreen() {
   if (!rental) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       </ThemedView>
     );
   }

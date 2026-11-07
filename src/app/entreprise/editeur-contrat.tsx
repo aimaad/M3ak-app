@@ -11,7 +11,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
 import {
@@ -44,7 +44,7 @@ function SwitchRow({ label, help, value, onChange }: { label: string; help?: str
           </ThemedText>
         ) : null}
       </View>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: M3akPalette.mauve, false: '#D9D2E6' }} />
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: BibipPalette.primary, false: '#D8D6CB' }} />
     </View>
   );
 }
@@ -85,7 +85,7 @@ export default function ReglagesContratScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contractTemplate.simple.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -274,7 +274,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
               ] as const
             ).map(([key, value]) => (
               <View key={key} className="flex-row items-center gap-2">
-                <Ionicons name={value ? 'checkmark-circle' : 'alert-circle'} size={18} color={value ? M3akPalette.success : M3akPalette.warning} />
+                <Ionicons name={value ? 'checkmark-circle' : 'alert-circle'} size={18} color={value ? BibipPalette.success : BibipPalette.warning} />
                 <ThemedText type="small" style={{ flex: 1 }}>
                   {t(`contractTemplate.simple.agencyFields.${key}`)} : {value ? value : t('contractTemplate.simple.agencyMissing')}
                 </ThemedText>
@@ -294,7 +294,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
                   {item.label} : {item.value}
                 </ThemedText>
                 <Pressable accessibilityLabel={t('contractTemplate.simple.remove')} hitSlop={8} onPress={() => change((o) => ({ ...o, legal: { ...o.legal, extra: o.legal.extra.filter((_, i) => i !== index) } }))}>
-                  <Ionicons name="trash-outline" size={20} color={M3akPalette.danger} />
+                  <Ionicons name="trash-outline" size={20} color={BibipPalette.danger} />
                 </Pressable>
               </View>
             ))}
@@ -317,7 +317,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
                 {key === 'franchise' && options.sections.franchise ? (
                   <View className="gap-2 pb-2">
                     <Pressable onPress={() => setShowFranchise((open) => !open)} className="flex-row items-center gap-2">
-                      <Ionicons name="create-outline" size={16} color={M3akPalette.mauve} />
+                      <Ionicons name="create-outline" size={16} color={BibipPalette.primary} />
                       <ThemedText type="small" themeColor="primary">
                         {showFranchise ? t('contractTemplate.simple.hideText') : t('contractTemplate.simple.editText')}
                       </ThemedText>
@@ -336,7 +336,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
                   {name}
                 </ThemedText>
                 <Pressable accessibilityLabel={t('contractTemplate.simple.remove')} hitSlop={8} onPress={() => change((o) => ({ ...o, extraFields: o.extraFields.filter((_, i) => i !== index) }))}>
-                  <Ionicons name="trash-outline" size={20} color={M3akPalette.danger} />
+                  <Ionicons name="trash-outline" size={20} color={BibipPalette.danger} />
                 </Pressable>
               </View>
             ))}
@@ -354,7 +354,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
                       <ThemedText type="smallBold" style={{ flex: 1 }} numberOfLines={1}>
                         {`${index + 1}. ${condition.titleFr || condition.titleAr || t('contractTemplate.simple.newCondition')}`}
                       </ThemedText>
-                      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={M3akPalette.muted} />
+                      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={BibipPalette.muted} />
                     </Pressable>
                     {open ? (
                       <View className="gap-3 border-t border-line px-4 py-4">
@@ -378,11 +378,11 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
 
         <View className="gap-2 border-t border-line bg-white px-6 py-3">
           {error ? (
-            <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
               {error}
             </ThemedText>
           ) : dirty ? (
-            <ThemedText type="small" style={{ color: M3akPalette.warning }}>
+            <ThemedText type="small" style={{ color: BibipPalette.warning }}>
               {t('contractTemplate.simple.unsaved')}
             </ThemedText>
           ) : null}

@@ -3,7 +3,7 @@ import { Pressable, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { fontFamilyFor, M3akPalette } from '@/constants/theme';
+import { fontFamilyFor, BibipPalette } from '@/constants/theme';
 import { countByStatus } from '@/features/vehicles/filters';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -53,7 +53,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
               cx={SIZE / 2}
               cy={SIZE / 2}
               r={RADIUS}
-              stroke="#F0DDFB"
+              stroke="#DDF1EC"
               strokeWidth={STROKE}
               fill="none"
             />
@@ -78,7 +78,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
           >
             <ThemedText
               style={{
-                color: M3akPalette.ink,
+                color: BibipPalette.ink,
                 fontSize: 30,
                 lineHeight: 34,
                 fontFamily: fontFamilyFor(language, 'extrabold'),
@@ -88,7 +88,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
             </ThemedText>
             <ThemedText
               style={{
-                color: M3akPalette.muted,
+                color: BibipPalette.muted,
                 fontSize: 11.5,
                 lineHeight: 15,
                 fontFamily: fontFamilyFor(language, 'semibold'),
@@ -103,7 +103,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
           {rows.length === 0 ? (
             <ThemedText
               style={{
-                color: M3akPalette.muted,
+                color: BibipPalette.muted,
                 fontSize: 13,
                 lineHeight: 18,
                 fontFamily: fontFamilyFor(language, 'medium'),
@@ -133,7 +133,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
                   numberOfLines={1}
                   className="flex-1"
                   style={{
-                    color: M3akPalette.ink,
+                    color: BibipPalette.ink,
                     fontSize: 13,
                     lineHeight: 18,
                     fontFamily: fontFamilyFor(language, 'medium'),
@@ -143,7 +143,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
                 </ThemedText>
                 <ThemedText
                   style={{
-                    color: M3akPalette.ink,
+                    color: BibipPalette.ink,
                     fontSize: 14,
                     lineHeight: 18,
                     fontFamily: fontFamilyFor(language, 'extrabold'),
@@ -153,7 +153,7 @@ export function FleetDonut({ vehicles }: { vehicles: Vehicle[] }) {
                 </ThemedText>
                 <ThemedText
                   style={{
-                    color: M3akPalette.muted,
+                    color: BibipPalette.muted,
                     fontSize: 11.5,
                     lineHeight: 18,
                     minWidth: 34,

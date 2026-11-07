@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import type { AgencyRole } from '@/features/agency/types';
 import { documentExpiryStatus } from '@/features/customers/documents';
 import { useLanguage } from '@/i18n/use-language';
@@ -22,10 +22,10 @@ import {
 import { useConfirmDepartureCheck, useDepartureCheck } from './hooks';
 
 const SUMMARY_COLORS: Record<CheckSummary, { bg: string; fg: string }> = {
-  blocked: { bg: M3akPalette.dangerLight, fg: M3akPalette.danger },
-  confirmation_needed: { bg: M3akPalette.warningLight, fg: M3akPalette.warning },
-  ready_with_warnings: { bg: M3akPalette.warningLight, fg: M3akPalette.warning },
-  ready: { bg: M3akPalette.successLight, fg: M3akPalette.success },
+  blocked: { bg: BibipPalette.dangerLight, fg: BibipPalette.danger },
+  confirmation_needed: { bg: BibipPalette.warningLight, fg: BibipPalette.warning },
+  ready_with_warnings: { bg: BibipPalette.warningLight, fg: BibipPalette.warning },
+  ready: { bg: BibipPalette.successLight, fg: BibipPalette.success },
 };
 
 function formatDate(iso: string): string {
@@ -56,7 +56,7 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
         party.documents.map((doc) => {
           const status = documentExpiryStatus({ expiresAt: doc.expiresAt });
           const color =
-            status === 'expired' ? M3akPalette.danger : status === 'expiring_soon' ? M3akPalette.warning : M3akPalette.muted;
+            status === 'expired' ? BibipPalette.danger : status === 'expiring_soon' ? BibipPalette.warning : BibipPalette.muted;
           return (
             <ThemedText key={doc.id} type="small" style={{ color }}>
               {`${t(`customer.documentTypes.${doc.type}`)} · ${
@@ -69,19 +69,19 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
 
       {party.issues.map((issue) => (
         <View key={issue.code} className="flex-row items-start gap-2">
-          <ThemedText type="small" style={{ color: issue.severity === 'blocking' ? M3akPalette.danger : M3akPalette.warning }}>
+          <ThemedText type="small" style={{ color: issue.severity === 'blocking' ? BibipPalette.danger : BibipPalette.warning }}>
             {issue.severity === 'blocking' ? '●' : '▲'}
           </ThemedText>
           <ThemedText
             type="small"
-            style={{ flex: 1, color: issue.severity === 'blocking' ? M3akPalette.danger : M3akPalette.warning }}
+            style={{ flex: 1, color: issue.severity === 'blocking' ? BibipPalette.danger : BibipPalette.warning }}
           >
             {t(issueMessageKey(issue))}
           </ThemedText>
         </View>
       ))}
       {party.issues.length === 0 ? (
-        <ThemedText type="small" style={{ color: M3akPalette.success }}>
+        <ThemedText type="small" style={{ color: BibipPalette.success }}>
           {t('locations.departureCheck.nothingToReport')}
         </ThemedText>
       ) : null}
@@ -117,7 +117,7 @@ export function DepartureChecklist({
   if (checkQuery.isLoading) {
     return (
       <View className="items-center py-4">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       </View>
     );
   }
@@ -178,7 +178,7 @@ export function DepartureChecklist({
               loading={confirm.isPending}
             />
           ) : check.blockingCount > 0 ? (
-            <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
               {t('locations.departureCheck.fixBlockingFirst')}
             </ThemedText>
           ) : check.policy.confirmationRole === 'manager' && role === 'employee' && state !== 'confirmed' ? (

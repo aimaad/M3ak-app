@@ -6,12 +6,12 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { computeMaintenanceUrgency, type MaintenanceUrgency } from './urgency';
 import type { MaintenanceItem } from './types';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const URGENCY_STYLE: Record<MaintenanceUrgency, { background: string; text: string }> = {
-  a_venir: { background: '#F1EEF7', text: M3akPalette.muted },
+  a_venir: { background: '#F0EEE5', text: BibipPalette.muted },
   due: { background: '#FBF1DE', text: '#8A5A0B' },
-  en_retard: { background: '#F8E6E9', text: '#C55461' },
+  en_retard: { background: '#FBE8E6', text: '#C8443B' },
 };
 
 export function MaintenanceRow({
@@ -31,7 +31,7 @@ export function MaintenanceRow({
   const urgency = computeMaintenanceUrgency(item, currentKm);
   const style = URGENCY_STYLE[urgency];
   const badge = isDone
-    ? { background: '#E3F3EE', text: '#116B54', label: t('maintenance.done') }
+    ? { background: '#E3F3E8', text: '#1E6B3A', label: t('maintenance.done') }
     : isInProgress
       ? { background: '#E8EEF9', text: '#3F62AD', label: t('maintenance.status.en_cours') }
       : { background: style.background, text: style.text, label: t(`maintenance.urgency.${urgency}`) };

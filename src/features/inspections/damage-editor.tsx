@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { ChipGroup } from '@/components/chip-group';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { DAMAGE_SEVERITIES, DAMAGE_TYPES, DAMAGE_ZONES, type DamageSeverity, type DamageType, type DamageZone } from './damages';
@@ -79,7 +79,7 @@ export function DamageEditor({ initial, canChooseNew, saving, error, saveLabel, 
       </View>
       {canChooseNew ? (
         <Pressable onPress={() => setDraft((prev) => ({ ...prev, nouveau: !prev.nouveau }))} className="flex-row items-center gap-2" accessibilityRole="switch" accessibilityState={{ checked: draft.nouveau }}>
-          <View className="h-6 w-6 items-center justify-center rounded-md border" style={{ borderColor: M3akPalette.mauve, backgroundColor: draft.nouveau ? M3akPalette.mauve : '#fff' }}>
+          <View className="h-6 w-6 items-center justify-center rounded-md border" style={{ borderColor: BibipPalette.primary, backgroundColor: draft.nouveau ? BibipPalette.primary : '#fff' }}>
             {draft.nouveau ? <ThemedText type="smallBold" style={{ color: '#fff' }}>✓</ThemedText> : null}
           </View>
           <ThemedText type="small">{t('inspection.analysis.damages.isNew')}</ThemedText>
@@ -101,7 +101,7 @@ export function DamageEditor({ initial, canChooseNew, saving, error, saveLabel, 
         maxLength={300}
       />
       {error ? (
-        <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
           {error}
         </ThemedText>
       ) : null}

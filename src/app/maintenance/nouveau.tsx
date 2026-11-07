@@ -21,7 +21,7 @@ import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/fil
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const EMPTY_VALUES: MaintenanceFormValues = {
   vehicleId: '',
@@ -109,7 +109,7 @@ export default function NouvelleMaintenanceScreen() {
                       selected ? 'border-brand bg-brand' : 'border-line bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
                       {t(`maintenance.types.${type}`)}
                     </ThemedText>
                   </Pressable>
@@ -143,7 +143,7 @@ export default function NouvelleMaintenanceScreen() {
           />
 
           {submitError ? (
-            <ThemedText type="small" style={{ color: '#A83C4B' }}>
+            <ThemedText type="small" style={{ color: '#A8322B' }}>
               {submitError}
             </ThemedText>
           ) : null}

@@ -1,44 +1,26 @@
 /**
- * Chronologies de l'ouverture (millisecondes). Une seule horloge (`openingTime`) pilote tous les effets : chaque calque ne fait
- * que lire « où en est l'ouverture » et en déduit son opacité / sa position. Fonctions pures, utilisables dans les animations.
+ * Chronologie du scénario d'ouverture « Signature Ignition » (millisecondes, 2,0 s au total).
+ * Une seule horloge (`openingTime`) pilote tous les éléments : chacun ne fait que lire « où en est l'ouverture » et en déduit
+ * son opacité / sa position / sa progression de tracé. Fonctions pures, utilisables dans les animations (« worklet »).
+ *
+ *   1  Impulsion          0,0 – 0,3 s   la ligne émeraude se dessine du centre vers les extrémités
+ *   2  Réveil du véhicule 0,3 – 0,7 s   la Mercedes apparaît de face, les phares s'allument, le moteur démarre
+ *   3  Signature BIBIP    0,7 – 1,1 s   la lumière dessine le B du logo, une traînée prolonge vers le sol
+ *   4  Mise en place      1,1 – 1,5 s   le logo se forme et rejoint le coin, la voiture passe en trois-quarts à droite
+ *   5  Dashboard          1,5 – 2,0 s   le showroom apparaît, le message et les cartes arrivent
  */
-export type OpeningMode = 'first' | 'instant';
-
-/** THE FIRST IGNITION : 3,8 s, une seule fois après l'installation. */
-export const FIRST = {
-  darknessEnd: 600,
-  revealStart: 600,
-  revealEnd: 1400,
-  ignitionStart: 1400,
-  ignitionEnd: 2100,
-  arrivalStart: 2100,
-  arrivalEnd: 3000,
-  awakeningStart: 3000,
-  end: 3800,
-  /** Le moteur démarre exactement à l'allumage des phares. */
-  soundAt: 1400,
-} as const;
-
-/** INSTANT IGNITION : 1,65 s à chaque lancement à froid suivant. */
-export const INSTANT = {
-  contactEnd: 250,
-  ignitionStart: 250,
-  ignitionEnd: 650,
-  powerOnEnd: 1250,
-  end: 1650,
+export const SIG = {
+  impulseEnd: 300,
+  wakeEnd: 700,
+  signatureEnd: 1100,
+  placeEnd: 1500,
+  end: 2000,
+  /** Le moteur démarre un peu avant les phares : son pic (≈ 0,55 s après son début) tombe à leur pleine intensité. */
   soundAt: 250,
 } as const;
 
-/** Valeur de l'horloge quand il n'y a (plus) rien à jouer : au-delà de toutes les fenêtres, donc tout est à son état final. */
+/** Valeur de l'horloge quand il n'y a (plus) rien à jouer : au-delà de toutes les fenêtres, tout est à son état final. */
 export const DONE_TIME = 10_000;
-
-export function durationOf(mode: OpeningMode): number {
-  return mode === 'first' ? FIRST.end : INSTANT.end;
-}
-
-export function soundTimeOf(mode: OpeningMode): number {
-  return mode === 'first' ? FIRST.soundAt : INSTANT.soundAt;
-}
 
 /** Avancement 0 → 1 d'une fenêtre [from, to] (borné). */
 export function windowProgress(time: number, from: number, to: number): number {
@@ -80,186 +62,148 @@ export function keys(time: number, points: readonly (readonly [number, number])[
   return points[points.length - 1][1];
 }
 
-export type CarCurves = {
-  /** Assombrissement (0 = voiture visible, 1 = noire) de la zone déjà balayée / de toute la voiture. */
-  dim: number;
-  /** Assombrissement de la zone pas encore balayée (premier lancement uniquement). */
-  dimAhead: number;
-  /** Position horizontale (0 → 1, de la droite vers la gauche) du front de lumière ; hors [0,1] = hors de la voiture. */
-  edge: number;
-  /** Intensité de la bande de lumière violette au front. */
-  band: number;
-  /** Opacité de l'image « phares allumés ». */
+export type StageCurves = {
+  /** Scène 1 : avancement du tracé de la ligne (0 → 1, du centre vers les extrémités) et son opacité. */
+  line: number;
+  lineOpacity: number;
+  /** Scène 2 : opacité de la voiture de face, fondu vers les phares allumés, reflet sur le sol. */
+  front: number;
   lit: number;
-  /** Halo lavande autour des phares. */
-  glow: number;
-  /** Reflet violet qui renforce brièvement la carrosserie. */
-  pulse: number;
-  /** Impulsion violette sur le sol. */
   floor: number;
-  /** Voile aubergine sur le showroom (0 = aucun). */
-  veil: number;
-  /** Lueur discrète autour du logo M3ak (Instant Ignition). */
-  logoGlow: number;
+  /** Scène 3 : tracé du B (contour extérieur, puis courbe), sa lueur, son remplissage léger, la traînée. */
+  trace1: number;
+  trace2: number;
+  bGlow: number;
+  bFill: number;
+  trail: number;
+  trailOpacity: number;
+  /** Scène 4 : logo (opacité, vol vers le coin, pastille), nom, passage de face → trois-quarts. */
+  logo: number;
+  logoFly: number;
+  tile: number;
+  wordmark: number;
+  threeQuarter: number;
+  threeQuarterMove: number;
+  /** Fond sombre de l'introduction : sur le hero (le décor apparaît dès 1,35 s) et sous le hero (le dashboard, dès 1,5 s). */
+  background: number;
+  backgroundBelow: number;
 };
 
-/** Toutes les courbes d'effet de la voiture et du décor pour un instant donné. */
-export function carCurves(mode: OpeningMode, t: number): CarCurves {
+/** Toutes les courbes de la scène d'introduction pour un instant donné. */
+export function stageCurves(t: number): StageCurves {
   'worklet';
-  if (mode === 'first') {
-    const sweep = easeInOut(windowProgress(t, FIRST.revealStart, FIRST.revealEnd));
-    return {
-      // Zone déjà balayée par la lumière : assez visible (45 %), puis pleinement éclairée à mesure que le showroom s'allume.
-      dim: keys(t, [
-        [FIRST.revealEnd, 0.45],
-        [FIRST.ignitionEnd, 0.28],
-        [FIRST.arrivalEnd, 0],
-      ]),
-      // Zone pas encore balayée : presque noire.
-      dimAhead: 0.93,
-      edge: 1.15 - 1.35 * sweep,
-      band: keys(t, [
-        [FIRST.revealStart, 0],
-        [FIRST.revealStart + 180, 1],
-        [FIRST.revealEnd - 220, 1],
-        [FIRST.revealEnd, 0],
-      ]),
-      lit: keys(t, [
-        [FIRST.ignitionStart, 0],
-        [FIRST.ignitionStart + 150, 0.12],
-        [1950, 1],
-        [FIRST.ignitionEnd, 1],
-      ]),
-      // Pic au moment du grondement (le son atteint son maximum ≈ 0,55 s après son début).
-      glow: keys(t, [
-        [FIRST.ignitionStart, 0],
-        [1950, 1],
-        [FIRST.ignitionEnd + 150, 0.55],
-        [FIRST.arrivalEnd, 0],
-      ]),
-      pulse: keys(t, [
-        [FIRST.ignitionStart, 0],
-        [1850, 0.22],
-        [FIRST.ignitionEnd + 250, 0],
-      ]),
-      floor: keys(t, [
-        [FIRST.ignitionStart, 0],
-        [1900, 0.55],
-        [FIRST.ignitionEnd + 450, 0],
-      ]),
-      veil: keys(t, [
-        [0, 1],
-        [FIRST.arrivalStart, 1],
-        [FIRST.arrivalEnd, 0],
-      ]),
-      logoGlow: 0,
-    };
-  }
-  const sweep = easeInOut(windowProgress(t, INSTANT.ignitionStart, INSTANT.ignitionEnd));
+  const lit = keys(t, [
+    [380, 0],
+    [700, 1],
+  ]);
+  const frontFade = keys(t, [
+    [1100, 1],
+    [1400, 0],
+  ]);
   return {
-    dim: keys(t, [
-      [0, 0.5],
-      [INSTANT.contactEnd, 0.5],
-      [INSTANT.ignitionEnd, 0.3],
-      [INSTANT.powerOnEnd, 0],
+    line: easeOut(windowProgress(t, 0, SIG.impulseEnd)),
+    lineOpacity: keys(t, [
+      [0, 0],
+      [200, 1],
+      [1300, 0.9],
+      [1600, 0],
     ]),
-    dimAhead: 0,
-    edge: 1.15 - 1.35 * sweep,
-    band:
-      t < INSTANT.ignitionStart || t > INSTANT.ignitionEnd
+    // La voiture reste dans l'obscurité à son apparition (≈ 70 %), puis prend sa pleine présence derrière le B.
+    front: keys(t, [
+      [300, 0],
+      [560, 0.7],
+      [700, 0.85],
+      [1000, 1],
+      [1100, 1],
+      [1400, 0],
+    ]),
+    lit,
+    floor: lit * 0.55 * frontFade,
+    trace1: easeInOut(windowProgress(t, 700, 1000)),
+    trace2: easeInOut(windowProgress(t, 760, 1100)),
+    bGlow: keys(t, [
+      [700, 0],
+      [900, 1],
+      [1100, 1],
+      [1400, 0],
+    ]),
+    bFill: keys(t, [
+      [800, 0],
+      [1100, 0.6],
+      [1350, 0],
+    ]),
+    trail: easeInOut(windowProgress(t, 700, 1100)),
+    trailOpacity: keys(t, [
+      [700, 0],
+      [800, 1],
+      [1300, 0.85],
+      [1600, 0],
+    ]),
+    logo:
+      t >= SIG.placeEnd
         ? 0
         : keys(t, [
-            [INSTANT.ignitionStart, 0],
-            [INSTANT.ignitionStart + 80, 1],
-            [INSTANT.ignitionEnd - 100, 1],
-            [INSTANT.ignitionEnd, 0],
+            [1000, 0],
+            [1250, 1],
           ]),
-    lit: keys(t, [
-      [INSTANT.ignitionStart, 0],
-      [INSTANT.ignitionStart + 60, 0.12],
-      [INSTANT.ignitionEnd + 150, 1],
+    logoFly: easeInOut(windowProgress(t, 1100, SIG.placeEnd)),
+    tile: keys(t, [
+      [1350, 0],
+      [1490, 1],
     ]),
-    // Pic à ≈ 0,55 s après le début du son, puis retour à l'intensité normale avant la fin.
-    glow: keys(t, [
-      [INSTANT.ignitionStart, 0],
-      [800, 1],
-      [INSTANT.powerOnEnd, 0.45],
-      [INSTANT.end, 0],
+    wordmark: keys(t, [
+      [1100, 0],
+      [1250, 1],
+      [1400, 0],
     ]),
-    pulse: keys(t, [
-      [INSTANT.ignitionStart, 0],
-      [550, 0.18],
-      [900, 0],
+    threeQuarter: keys(t, [
+      [1100, 0],
+      [1350, 1],
     ]),
-    floor: keys(t, [
-      [INSTANT.ignitionStart, 0],
-      [650, 0.4],
-      [INSTANT.powerOnEnd, 0],
+    threeQuarterMove: easeInOut(windowProgress(t, 1100, SIG.placeEnd)),
+    background: keys(t, [
+      [0, 1],
+      [1350, 1],
+      [1800, 0],
     ]),
-    veil: keys(t, [
-      [0, 0.5],
-      [INSTANT.contactEnd, 0.5],
-      [INSTANT.ignitionEnd, 0.3],
-      [INSTANT.powerOnEnd, 0],
-    ]),
-    logoGlow: keys(t, [
-      [INSTANT.ignitionStart, 0],
-      [550, 1],
-      [1000, 0],
+    backgroundBelow: keys(t, [
+      [0, 1],
+      [1500, 1],
+      [1850, 0],
     ]),
   };
 }
 
-/** Fenêtres d'apparition des éléments du dashboard, selon le scénario ; `start` = opacité de départ. */
+/** Fenêtres d'apparition des éléments du dashboard (tous après l'arrivée du logo et de la voiture, 1,5 s). */
 export type RevealSlot =
   'logo' | 'name' | 'icon0' | 'icon1' | 'icon2' | 'greeting' | 'tabs' | 'card0' | 'card1' | 'card2';
 
 export type RevealWindow = { from: number; to: number; start: number };
 
-export function revealWindow(mode: OpeningMode, slot: RevealSlot): RevealWindow {
+export function revealWindow(slot: RevealSlot): RevealWindow {
   'worklet';
-  if (mode === 'first') {
-    const a = FIRST.awakeningStart;
-    switch (slot) {
-      case 'logo':
-        return { from: a, to: a + 380, start: 0 };
-      case 'name':
-        return { from: a + 80, to: a + 460, start: 0 };
-      case 'icon0':
-        return { from: a + 140, to: a + 520, start: 0 };
-      case 'icon1':
-        return { from: a + 200, to: a + 580, start: 0 };
-      case 'icon2':
-        return { from: a + 260, to: a + 640, start: 0 };
-      case 'greeting':
-        return { from: a + 260, to: a + 680, start: 0 };
-      case 'tabs':
-        return { from: a + 380, to: FIRST.end, start: 0 };
-      case 'card0':
-        return { from: a + 420, to: FIRST.end - 120, start: 0 };
-      case 'card1':
-        return { from: a + 480, to: FIRST.end - 60, start: 0 };
-      case 'card2':
-        return { from: a + 540, to: FIRST.end, start: 0 };
-    }
-  }
+  const a = SIG.placeEnd;
   switch (slot) {
-    // Logo, nom et icônes sont déjà là : l'ouverture ne fait que les éclairer.
+    // Le vrai logo prend la place du logo volant à l'instant exact de son arrivée.
     case 'logo':
+      return { from: a, to: a + 30, start: 0 };
     case 'name':
+      return { from: a, to: a + 250, start: 0 };
     case 'icon0':
+      return { from: a, to: a + 300, start: 0 };
     case 'icon1':
+      return { from: a + 50, to: a + 350, start: 0 };
     case 'icon2':
-      return { from: 0, to: 1, start: 1 };
+      return { from: a + 100, to: a + 400, start: 0 };
     case 'greeting':
-      return { from: 300, to: 950, start: 0.35 };
+      return { from: a + 50, to: a + 350, start: 0 };
     case 'tabs':
-      return { from: 450, to: INSTANT.powerOnEnd, start: 0.35 };
+      return { from: a + 150, to: SIG.end, start: 0 };
     case 'card0':
-      return { from: 1000, to: INSTANT.end - 80, start: 0.55 };
+      return { from: a + 100, to: a + 450, start: 0 };
     case 'card1':
-      return { from: 1060, to: INSTANT.end - 40, start: 0.55 };
+      return { from: a + 150, to: a + 480, start: 0 };
     case 'card2':
-      return { from: 1120, to: INSTANT.end, start: 0.55 };
+      return { from: a + 200, to: SIG.end, start: 0 };
   }
 }

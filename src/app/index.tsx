@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-context';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -33,7 +33,7 @@ export default function Index() {
     return (
       <ThemedView className="flex-1">
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator color={M3akPalette.mauve} />
+          <ActivityIndicator color={BibipPalette.primary} />
         </View>
       </ThemedView>
     );

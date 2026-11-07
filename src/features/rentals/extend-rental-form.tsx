@@ -7,7 +7,7 @@ import { BOOKED_DAY_MARK, CALENDAR_THEME } from './calendar-theme';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { bookedDates } from './availability';
@@ -73,7 +73,7 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
     markedDates[date] = { ...BOOKED_DAY_MARK };
   }
   if (selectedDay) {
-    markedDates[selectedDay] = { startingDay: true, endingDay: true, color: M3akPalette.mauve, textColor: '#FFFFFF' };
+    markedDates[selectedDay] = { startingDay: true, endingDay: true, color: BibipPalette.primary, textColor: '#FFFFFF' };
   }
 
   return (
@@ -95,7 +95,7 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
         style={{ borderRadius: 24, overflow: 'hidden' }}
       />
       {error ? (
-        <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
           {error}
         </ThemedText>
       ) : null}

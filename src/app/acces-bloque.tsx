@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useAgencyAccess } from '@/features/agency/hooks';
 import { signOut } from '@/features/auth/api';
 import { useLanguage } from '@/i18n/use-language';
@@ -41,7 +41,7 @@ export default function AccesBloqueScreen() {
             {t('access.blockedHint')}
           </ThemedText>
           {stillBlocked ? (
-            <ThemedText type="small" style={{ color: M3akPalette.danger, textAlign: 'center' }}>
+            <ThemedText type="small" style={{ color: BibipPalette.danger, textAlign: 'center' }}>
               {t('access.stillBlocked')}
             </ThemedText>
           ) : null}

@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/themed-view';
 import { InspectionAnalysisScreen } from '@/features/inspections/inspection-analysis-screen';
 import type { InspectionType } from '@/features/inspections/types';
 import { useRental } from '@/features/rentals/hooks';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export default function InspectionAnalyseScreen() {
   const { id, type } = useLocalSearchParams<{ id: string; type?: string }>();
@@ -15,7 +15,7 @@ export default function InspectionAnalyseScreen() {
   if (!rental) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       </ThemedView>
     );
   }

@@ -4,7 +4,7 @@ import { Pressable, View } from 'react-native';
 
 import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import type { Customer } from '@/features/customers/types';
 import { RentalStatusBadge } from '@/features/rentals/rental-status-badge';
 import type { Rental } from '@/features/rentals/types';
@@ -41,7 +41,7 @@ export function UpcomingRentalsSection({
           accessibilityRole="link"
           className="min-h-11 justify-center"
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.mauve }}>
+          <ThemedText type="smallBold" style={{ color: BibipPalette.primary }}>
             {t('accueil.seeAll')}
           </ThemedText>
         </Pressable>
@@ -66,9 +66,9 @@ export function UpcomingRentalsSection({
               >
                 <View
                   className="h-11 w-11 items-center justify-center rounded-full"
-                  style={{ backgroundColor: M3akPalette.mauveLight }}
+                  style={{ backgroundColor: BibipPalette.primaryLight }}
                 >
-                  <Ionicons name="car-sport-outline" size={22} color={M3akPalette.mauve} />
+                  <Ionicons name="car-sport-outline" size={22} color={BibipPalette.primary} />
                 </View>
                 <View className="flex-1 gap-0.5">
                   <ThemedText type="smallBold" numberOfLines={1}>

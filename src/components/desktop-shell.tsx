@@ -5,7 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { signOut } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
@@ -63,7 +63,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const items = NAV.filter((item) => (!item.ownerOnly || role === 'owner') && (!item.managersOnly || canManage));
 
   return (
-    <View className="flex-1 flex-row" style={{ backgroundColor: M3akPalette.background }}>
+    <View className="flex-1 flex-row" style={{ backgroundColor: BibipPalette.background }}>
       <View className="w-64 bg-brand-deep">
         <View className="px-6 pb-4 pt-6">
           <Logo tone="light" />
@@ -83,10 +83,10 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 accessibilityRole="link"
                 accessibilityState={{ selected }}
                 className="min-h-11 flex-row items-center gap-3 rounded-xl px-3"
-                style={{ backgroundColor: selected ? M3akPalette.primary : 'transparent' }}
+                style={{ backgroundColor: selected ? BibipPalette.primary : 'transparent' }}
               >
-                <Ionicons name={item.icon} size={20} color={selected ? M3akPalette.onPrimary : '#E2C3F8'} />
-                <ThemedText type="smallBold" style={{ color: selected ? M3akPalette.onPrimary : '#E4DCF5' }}>
+                <Ionicons name={item.icon} size={20} color={selected ? BibipPalette.onPrimary : '#D2EEE8'} />
+                <ThemedText type="smallBold" style={{ color: selected ? BibipPalette.onPrimary : '#E2F3EF' }}>
                   {t(item.labelKey)}
                 </ThemedText>
               </Pressable>
@@ -95,8 +95,8 @@ export function DesktopShell({ children }: { children: ReactNode }) {
         </ScrollView>
         <View className="gap-1 border-t px-3 py-3" style={{ borderColor: 'rgba(255,255,255,0.14)' }}>
           <Pressable onPress={() => signOut()} className="min-h-11 flex-row items-center gap-3 rounded-xl px-3">
-            <Ionicons name="log-out-outline" size={20} color="#E2C3F8" />
-            <ThemedText type="smallBold" style={{ color: '#E4DCF5' }}>{t('auth.signOut')}</ThemedText>
+            <Ionicons name="log-out-outline" size={20} color="#BFE6DE" />
+            <ThemedText type="smallBold" style={{ color: '#E2F3EF' }}>{t('auth.signOut')}</ThemedText>
           </Pressable>
         </View>
       </View>

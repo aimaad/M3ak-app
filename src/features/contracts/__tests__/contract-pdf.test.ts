@@ -242,7 +242,7 @@ describe('jauge de carburant automatique', () => {
   it("dessine l'aiguille au bon endroit (50 % = verticale, 100 % = à droite)", () => {
     expect(gaugeSvg(50)).toContain('x2="80.0" y2="12.0"');
     expect(gaugeSvg(100)).toContain('x2="138.0" y2="70.0"');
-    expect(gaugeSvg(null)).not.toContain('#A83C4B');
+    expect(gaugeSvg(null)).not.toContain('#A8322B');
   });
   it('apparaît dans le contrat quand le carburant de départ est connu', () => {
     const base = sampleContract();

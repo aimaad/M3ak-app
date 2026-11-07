@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -56,7 +56,7 @@ const SECTIONS: {
   },
 ];
 
-const INACTIVE_COLOR = M3akPalette.subtle;
+const INACTIVE_COLOR = BibipPalette.subtle;
 const PLUS_SIZE = 58;
 
 /** Ordre dans la barre : trois onglets, le « + » central, deux onglets. Les cinq destinations sont celles d'avant. */
@@ -93,7 +93,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
     // (création d'une location) dépasse légèrement de la barre ; les cinq onglets sont répartis de part et d'autre.
     <View
       style={{
-        backgroundColor: M3akPalette.background,
+        backgroundColor: BibipPalette.background,
         paddingTop: 22,
         paddingBottom: Math.max(insets.bottom, 12),
         paddingStart: Math.max(insets.left, 0) + 14,
@@ -108,7 +108,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
           backgroundColor: 'rgba(251,247,255,0.95)',
           borderWidth: 1,
           borderColor: 'rgba(255,255,255,0.95)',
-          shadowColor: '#9438D8',
+          shadowColor: '#087F70',
           shadowOpacity: 0.28,
           shadowRadius: 24,
           shadowOffset: { width: 0, height: 12 },
@@ -135,8 +135,8 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderWidth: 3,
-                    borderColor: M3akPalette.background,
-                    shadowColor: '#9438D8',
+                    borderColor: BibipPalette.background,
+                    shadowColor: '#087F70',
                     shadowOpacity: 0.55,
                     shadowRadius: 14,
                     shadowOffset: { width: 0, height: 8 },
@@ -152,8 +152,8 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                   >
                     <Defs>
                       <LinearGradient id="tab-plus" x1="0" y1="0" x2="1" y2="1">
-                        <Stop offset="0" stopColor="#B25CE8" />
-                        <Stop offset="1" stopColor="#8433CF" />
+                        <Stop offset="0" stopColor="#12A18C" />
+                        <Stop offset="1" stopColor="#066B5F" />
                       </LinearGradient>
                     </Defs>
                     <Rect width="100%" height="100%" fill="url(#tab-plus)" />
@@ -194,7 +194,7 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                   paddingHorizontal: 6,
                   paddingVertical: 7,
                   borderRadius: 20,
-                  backgroundColor: selected ? '#EBD3FB' : 'transparent',
+                  backgroundColor: selected ? '#D2EEE8' : 'transparent',
                   borderWidth: 1,
                   borderColor: selected ? 'rgba(141,49,204,0.18)' : 'transparent',
                 }}
@@ -202,13 +202,13 @@ export function AppTabBar({ state, emitter, navigateToTab }: BottomTabBarProps) 
                 <Ionicons
                   name={selected ? section.iconActive : section.icon}
                   size={22}
-                  color={selected ? M3akPalette.mauve : INACTIVE_COLOR}
+                  color={selected ? BibipPalette.primary : INACTIVE_COLOR}
                 />
                 <ThemedText
                   type="small"
                   numberOfLines={1}
                   style={{
-                    color: selected ? M3akPalette.mauve : M3akPalette.muted,
+                    color: selected ? BibipPalette.primary : BibipPalette.muted,
                     fontSize: 10.5,
                     lineHeight: 13,
                     fontWeight: selected ? '700' : '500',

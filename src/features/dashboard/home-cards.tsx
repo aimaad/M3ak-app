@@ -14,7 +14,7 @@ import Svg, {
 
 import { Reveal } from '@/features/opening/reveal';
 import { ThemedText } from '@/components/themed-text';
-import { fontFamilyFor, M3akPalette } from '@/constants/theme';
+import { fontFamilyFor, BibipPalette } from '@/constants/theme';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -53,8 +53,8 @@ export function GlassCard({
       <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
         <Defs>
           <LinearGradient id={highlighted ? 'gc-hi' : 'gc-lo'} x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={highlighted ? '#F6E8FE' : '#FFFFFF'} />
-            <Stop offset="1" stopColor={highlighted ? '#D9B0F6' : '#F1E3FB'} />
+            <Stop offset="0" stopColor={highlighted ? '#EEF7F4' : '#FFFFFF'} />
+            <Stop offset="1" stopColor={highlighted ? '#A9DDD1' : '#DDF1EC'} />
           </LinearGradient>
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#${highlighted ? 'gc-hi' : 'gc-lo'})`} />
@@ -64,7 +64,7 @@ export function GlassCard({
   );
   const shadow = {
     borderRadius: 22,
-    shadowColor: '#9438D8',
+    shadowColor: '#087F70',
     shadowOpacity: highlighted ? 0.34 : 0.2,
     shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 },
@@ -91,10 +91,10 @@ function IconTile({ icon, size = 30 }: { icon: keyof typeof Ionicons.glyphMap; s
         width: size,
         height: size,
         borderRadius: size * 0.33,
-        backgroundColor: M3akPalette.mauveLight,
+        backgroundColor: BibipPalette.primaryLight,
       }}
     >
-      <Ionicons name={icon} size={size * 0.55} color={M3akPalette.mauve} />
+      <Ionicons name={icon} size={size * 0.55} color={BibipPalette.primary} />
     </View>
   );
 }
@@ -145,7 +145,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
               <ThemedText
                 numberOfLines={2}
                 style={{
-                  color: M3akPalette.muted,
+                  color: BibipPalette.muted,
                   fontSize: 12.5,
                   lineHeight: 16,
                   fontFamily: fontFamilyFor(language, 'semibold'),
@@ -156,7 +156,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
               <View className="flex-1 justify-end">
                 <ThemedText
                   style={{
-                    color: M3akPalette.ink,
+                    color: BibipPalette.ink,
                     fontSize: 28,
                     lineHeight: 34,
                     fontFamily: fontFamilyFor(language, 'extrabold'),
@@ -200,7 +200,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
         }
       : {
           bg: negative ? 'rgba(197,84,97,0.30)' : 'rgba(45,212,191,0.2)',
-          fg: negative ? '#F6B8C0' : '#5EEAD4',
+          fg: negative ? '#F5B5AF' : '#5EEAD4',
           text: `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.vs.${key}`)}`,
           icon: (negative ? 'arrow-down' : 'arrow-up') as 'arrow-down' | 'arrow-up',
         };
@@ -210,7 +210,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
       onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}
       className="overflow-hidden rounded-[22px]"
       style={{
-        shadowColor: '#321943',
+        shadowColor: '#0A3A34',
         shadowOpacity: 0.3,
         shadowRadius: 18,
         shadowOffset: { width: 0, height: 10 },
@@ -224,13 +224,13 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
         <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
           <Defs>
             <LinearGradient id="rc-bg" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#2A1340" />
-              <Stop offset="0.5" stopColor="#43205F" />
-              <Stop offset="1" stopColor="#6A2A93" />
+              <Stop offset="0" stopColor="#06211D" />
+              <Stop offset="0.5" stopColor="#0A3A34" />
+              <Stop offset="1" stopColor="#0D5E52" />
             </LinearGradient>
             <RadialGradient id="rc-glow" cx="0.9" cy="0.95" rx="0.7" ry="0.9" fx="0.9" fy="0.95">
-              <Stop offset="0" stopColor="#CB83F5" stopOpacity="0.32" />
-              <Stop offset="1" stopColor="#CB83F5" stopOpacity="0" />
+              <Stop offset="0" stopColor="#7DDCC8" stopOpacity="0.32" />
+              <Stop offset="1" stopColor="#7DDCC8" stopOpacity="0" />
             </RadialGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#rc-bg)" />
@@ -251,15 +251,15 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
             <Svg width={chartWidth} height={chartHeight}>
               <Defs>
                 <LinearGradient id="rc-area" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#B25CE8" stopOpacity="0.6" />
-                  <Stop offset="1" stopColor="#9438D8" stopOpacity="0" />
+                  <Stop offset="0" stopColor="#12A18C" stopOpacity="0.6" />
+                  <Stop offset="1" stopColor="#087F70" stopOpacity="0" />
                 </LinearGradient>
               </Defs>
               <Path d={area} fill="url(#rc-area)" />
               <Path
                 d={line}
                 fill="none"
-                stroke="#CB83F5"
+                stroke="#7DDCC8"
                 strokeOpacity={0.35}
                 strokeWidth={8}
                 strokeLinecap="round"
@@ -268,7 +268,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
               <Path
                 d={line}
                 fill="none"
-                stroke="#E8D2FA"
+                stroke="#BFE6DE"
                 strokeWidth={2.5}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -279,7 +279,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                   cy={end.y}
                   r={4.5}
                   fill="#FFFFFF"
-                  stroke="#CB83F5"
+                  stroke="#7DDCC8"
                   strokeWidth={2}
                 />
               ) : null}
@@ -302,16 +302,16 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                   width={7}
                   height={[6, 10, 7, 14, 9, 16, 11, 18][index]}
                   rx={3}
-                  fill="#CB83F5"
+                  fill="#7DDCC8"
                   fillOpacity={0.22}
                 />
               ))}
-              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill="#CB83F5" fillOpacity={0.4} />
+              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill="#7DDCC8" fillOpacity={0.4} />
             </Svg>
             <ThemedText
               numberOfLines={3}
               style={{
-                color: '#E2C3F8',
+                color: '#BFE6DE',
                 fontSize: 11.5,
                 lineHeight: 15,
                 textAlign: 'center',
@@ -334,7 +334,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
             <ThemedText
               numberOfLines={1}
               style={{
-                color: '#E2C3F8',
+                color: '#BFE6DE',
                 fontSize: 13,
                 lineHeight: 18,
                 fontFamily: fontFamilyFor(language, 'semibold'),
@@ -451,12 +451,12 @@ function QuickTile({ tile, highlighted = false }: { tile: Tile; highlighted?: bo
           <Ionicons
             name={tile.icon}
             size={26}
-            color={highlighted ? M3akPalette.mauve : M3akPalette.mauveDeep}
+            color={highlighted ? BibipPalette.primary : BibipPalette.primaryDeep}
           />
           <ThemedText
             numberOfLines={2}
             style={{
-              color: M3akPalette.ink,
+              color: BibipPalette.ink,
               fontSize: 11,
               lineHeight: 14,
               textAlign: 'center',
@@ -498,7 +498,7 @@ export function QuickAccessTiles({ role }: { role: string | null | undefined }) 
           >
             <ThemedText
               style={{
-                color: M3akPalette.mauve,
+                color: BibipPalette.primary,
                 fontSize: 14,
                 lineHeight: 20,
                 fontFamily: fontFamilyFor(language, 'bold'),
@@ -506,7 +506,7 @@ export function QuickAccessTiles({ role }: { role: string | null | undefined }) 
             >
               {expanded ? t('accueil.quick.seeLess') : t('accueil.quick.seeAll')}
             </ThemedText>
-            <Ionicons name={expanded ? 'chevron-up' : arrow} size={16} color={M3akPalette.mauve} />
+            <Ionicons name={expanded ? 'chevron-up' : arrow} size={16} color={BibipPalette.primary} />
           </Pressable>
         ) : null}
       </View>

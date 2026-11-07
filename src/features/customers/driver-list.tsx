@@ -10,7 +10,7 @@ import { CustomerDocumentsSection } from './customer-documents-section';
 
 import { useCreateDriver, useDrivers, useRemoveDriver } from './hooks';
 import { isDriverFormValid, toDriverInput, validateDriverForm, type DriverFormValues } from './driver-validation';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const EMPTY_VALUES: DriverFormValues = {
   prenom: '',
@@ -77,7 +77,7 @@ export function DriverList({
   return (
     <View className="gap-3">
       {driversQuery.isLoading ? (
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       ) : (driversQuery.data ?? []).length === 0 ? (
         <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-line bg-white">
           <ThemedText type="small" themeColor="textSecondary">
@@ -105,7 +105,7 @@ export function DriverList({
                 </Pressable>
                 {canRemove ? (
                   <Pressable onPress={() => handleRemove(driver.id)} hitSlop={8}>
-                    <ThemedText type="small" style={{ color: '#A83C4B' }}>
+                    <ThemedText type="small" style={{ color: '#A8322B' }}>
                       {t('customer.removeDriver')}
                     </ThemedText>
                   </Pressable>

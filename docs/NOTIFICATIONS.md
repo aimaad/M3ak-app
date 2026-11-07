@@ -2,7 +2,7 @@
 
 ## Ce que voit l'utilisateur
 - **Cloche** sur l'accueil (compteur ; rouge s'il y a une urgence) → page **Notifications**.
-- Chaque notification : icône par catégorie, couleur selon l'urgence (violet = information, orange = à surveiller, rouge = urgent), texte clair, **nom de la filiale** si l'agence en a, ancienneté, et un bouton **Appeler** quand elle contient le numéro d'un client.
+- Chaque notification : icône par catégorie, couleur selon l'urgence (émeraude = information, orange = à surveiller, rouge = urgent), texte clair, **nom de la filiale** si l'agence en a, ancienneté, et un bouton **Appeler** quand elle contient le numéro d'un client.
 - Toucher une notification l'ouvre (location, contrat, véhicule…) **et la fait disparaître de la liste**. La croix la supprime sans l'ouvrir. « Tout supprimer » vide la liste.
 - Supprimer ne concerne **que soi** : chaque destinataire a sa propre ligne (table `notifications`, une ligne par personne).
 - **Profil → Notifications** : interrupteur général, interrupteur « sur ce téléphone » (push) et un interrupteur par catégorie (locations, rappels, paiements, contrats, inspections, maintenance, équipe, clients).

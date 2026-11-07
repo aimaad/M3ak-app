@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
 import { useSession } from '@/features/auth/session-context';
 import { useCustomers } from '@/features/customers/hooks';
@@ -64,7 +64,7 @@ export default function BienvenueScreen() {
   const screen = ready ? currentWelcomeScreen(steps, started, skipped) : null;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: M3akPalette.mauveDeep }}>
+    <View className="flex-1" style={{ backgroundColor: BibipPalette.primaryDeep }}>
       <SafeAreaView className="w-full flex-1">
         <View className="flex-1 px-6">
         <View className="min-h-11 flex-row items-center justify-between">
@@ -130,7 +130,7 @@ export default function BienvenueScreen() {
                 accessibilityRole="button"
                 className="min-h-14 items-center justify-center rounded-2xl bg-white px-4"
               >
-                <ThemedText type="smallBold" style={{ color: M3akPalette.mauveDeep }}>
+                <ThemedText type="smallBold" style={{ color: BibipPalette.primaryDeep }}>
                   {screen.kind === 'intro'
                     ? t('onboarding.welcome.start')
                     : screen.kind === 'step'

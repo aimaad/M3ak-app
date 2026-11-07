@@ -8,7 +8,7 @@ import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { buildContractHtml } from '@/features/contracts/contract-pdf';
 import { ContractViewer } from '@/features/contracts/contract-viewer';
@@ -76,7 +76,7 @@ export default function SignerContratScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.sign.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            {isLoading || storedTemplate.isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
+            {isLoading || storedTemplate.isLoading ? <ActivityIndicator color={BibipPalette.primary} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -192,7 +192,7 @@ export default function SignerContratScreen() {
                   loading={preparing}
                   style={{ alignSelf: 'stretch' }}
                 />
-                <ThemedText type="smallBold" style={{ color: reachedEnd ? '#116B54' : '#8A5A0B' }}>
+                <ThemedText type="smallBold" style={{ color: reachedEnd ? '#1E6B3A' : '#8A5A0B' }}>
                   {reachedEnd ? t('contract.sign.readDone') : t('contract.sign.readPending')}
                 </ThemedText>
               </Card>
@@ -241,24 +241,24 @@ export default function SignerContratScreen() {
                   <SignatureView signature={staffSignature} height={56} />
                 ) : staffMissing ? (
                   <>
-                    <ThemedText type="small" style={{ color: M3akPalette.warning }} className="text-center">
+                    <ThemedText type="small" style={{ color: BibipPalette.warning }} className="text-center">
                       {t('contract.sign.staffMissing')}
                     </ThemedText>
                     <Button label={t('profil.signature.add')} variant="secondary" size="sm" onPress={() => router.push('/profil/signature')} />
                   </>
                 ) : (
-                  <ActivityIndicator color={M3akPalette.mauve} />
+                  <ActivityIndicator color={BibipPalette.primary} />
                 )}
               </Card>
             </View>
 
             {stampMissing ? (
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.stampMissingOwner' : 'contract.sign.stampMissing')}
               </ThemedText>
             ) : null}
             {logoMissing ? (
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.logoMissingOwner' : 'contract.sign.logoMissing')}
               </ThemedText>
             ) : null}
@@ -269,7 +269,7 @@ export default function SignerContratScreen() {
               <Button label={t('entreprise.stamp.add')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />
             ) : null}
             {error ? (
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {error}
               </ThemedText>
             ) : null}

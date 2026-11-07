@@ -25,7 +25,7 @@ import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const EMPTY_CUSTOMERS: Customer[] = [];
 
@@ -137,7 +137,7 @@ export default function ClientsScreen() {
                   filters.typeClient === 'tous' ? 'border-ink bg-ink' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : M3akPalette.ink }}>
+                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : BibipPalette.ink }}>
                   {t('flotte.status.tous')}
                 </ThemedText>
               </Pressable>
@@ -149,7 +149,7 @@ export default function ClientsScreen() {
                     filters.typeClient === type ? 'border-ink bg-ink' : 'border-line bg-white'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : M3akPalette.ink }}>
+                  <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : BibipPalette.ink }}>
                     {t(`customer.type.${type}`)}
                   </ThemedText>
                 </Pressable>
@@ -160,7 +160,7 @@ export default function ClientsScreen() {
 
         {customersQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('clients.loading')}
             </ThemedText>
@@ -193,7 +193,7 @@ export default function ClientsScreen() {
               <RefreshControl
                 refreshing={customersQuery.isFetching}
                 onRefresh={() => void customersQuery.refetch()}
-                tintColor={M3akPalette.mauve}
+                tintColor={BibipPalette.primary}
               />
             }
             renderItem={({ item }) => (
@@ -215,7 +215,7 @@ export default function ClientsScreen() {
           onPress={() => router.push('/clients/nouveau')}
           className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.onPrimary }}>
+          <ThemedText type="smallBold" style={{ color: BibipPalette.onPrimary }}>
             {`+ ${t('clients.addClient')}`}
           </ThemedText>
         </Pressable>

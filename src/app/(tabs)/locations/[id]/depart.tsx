@@ -21,7 +21,7 @@ import { useInspectionForRental } from '@/features/inspections/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export default function DepartScreen() {
   const { id, vehicleId } = useLocalSearchParams<{ id: string; vehicleId: string }>();
@@ -108,7 +108,7 @@ export default function DepartScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.depart.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -189,7 +189,7 @@ export default function DepartScreen() {
                     onPress={() => setEtatDepart(condition)}
                     className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -197,7 +197,7 @@ export default function DepartScreen() {
               })}
             </View>
             {touched && contractErrors.etatDepart ? (
-              <ThemedText type="small" style={{ color: '#A83C4B' }}>
+              <ThemedText type="small" style={{ color: '#A8322B' }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -216,7 +216,7 @@ export default function DepartScreen() {
                     onPress={() => toggleAccessoire(key)}
                     className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -235,7 +235,7 @@ export default function DepartScreen() {
           />
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#A83C4B' }}>
+            <ThemedText type="small" style={{ color: '#A8322B' }}>
               {error}
             </ThemedText>
           ) : null}

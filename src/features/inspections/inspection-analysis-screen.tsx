@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { ZoomableImage } from '@/components/zoomable-image';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useInspectionPermissions } from '@/features/inspections/permissions';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -47,7 +47,7 @@ function PairPhoto({ path, label }: { path?: string; label: string }) {
           <ZoomableImage uri={url} label={label} style={{ borderRadius: 12 }} />
         ) : (
           <View className="flex-1 items-center justify-center rounded-xl bg-canvas">
-            {path ? <ActivityIndicator color={M3akPalette.mauve} /> : <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11, textAlign: 'center' }}>{t('inspection.analysis.compare.noDepart')}</ThemedText>}
+            {path ? <ActivityIndicator color={BibipPalette.primary} /> : <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11, textAlign: 'center' }}>{t('inspection.analysis.compare.noDepart')}</ThemedText>}
           </View>
         )}
       </View>
@@ -156,7 +156,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t(`inspection.analysis.title.${type}`)} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-12" keyboardShouldPersistTaps="handled">
-          {!inspection || photosQuery.isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : null}
+          {!inspection || photosQuery.isLoading ? <ActivityIndicator color={BibipPalette.primary} /> : null}
 
           {skipped && inspection ? (
             <Card className="gap-3">
@@ -193,7 +193,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
 
           {running ? (
             <Card className="items-center gap-3 py-8">
-              <ActivityIndicator color={M3akPalette.mauve} size="large" />
+              <ActivityIndicator color={BibipPalette.primary} size="large" />
               <ThemedText type="smallBold">{t('inspection.analysis.running')}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary" className="text-center">
                 {t('inspection.analysis.runningHint')}
@@ -229,7 +229,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
 
               {analyzed ? (
                 <Card className="gap-3">
-                  <ThemedText type="subtitle" style={{ color: type === 'retour' && counts.nouveaux > 0 ? '#A83C4B' : '#116B54' }}>
+                  <ThemedText type="subtitle" style={{ color: type === 'retour' && counts.nouveaux > 0 ? '#A8322B' : '#1E6B3A' }}>
                     {type === 'retour'
                       ? counts.nouveaux > 0
                         ? t('inspection.analysis.summary.new', { count: counts.nouveaux })
@@ -281,7 +281,7 @@ export function InspectionAnalysisScreen({ rentalId, agencyId, type }: Props) {
 
               <View className="gap-3">
                 <ThemedText type="smallBold">{`${t('inspection.analysis.damages.title')} (${counts.total})`}</ThemedText>
-                {damagesQuery.isLoading ? <ActivityIndicator color={M3akPalette.mauve} /> : null}
+                {damagesQuery.isLoading ? <ActivityIndicator color={BibipPalette.primary} /> : null}
                 {!damagesQuery.isLoading && ordered.length === 0 ? (
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('inspection.analysis.damages.empty')}

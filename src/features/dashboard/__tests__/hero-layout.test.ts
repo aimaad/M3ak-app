@@ -1,4 +1,4 @@
-import { carRect, carStartRect, CAR_IMAGE_SIZE, rectCenter, showroomLayout } from '../hero-layout';
+import { carRect, CAR_IMAGE_SIZE, showroomLayout, SHOWROOM_IMAGE_SIZE } from '../hero-layout';
 
 const SIZES = [
   { width: 320, height: 300 },
@@ -8,13 +8,14 @@ const SIZES = [
 ];
 
 describe('hero-layout', () => {
-  it('le showroom couvre toujours tout le hero', () => {
+  it('le showroom couvre toujours tout le hero, sans déformation', () => {
     for (const { width, height } of SIZES) {
       const r = showroomLayout(width, height);
-      expect(r.left).toBeLessThanOrEqual(0);
+      expect(r.left).toBeLessThanOrEqual(0.01);
       expect(r.left + r.width).toBeGreaterThanOrEqual(width - 0.01);
       expect(r.top).toBeLessThanOrEqual(0.01);
       expect(r.top + r.height).toBeGreaterThanOrEqual(height - 0.01);
+      expect(r.width / r.height).toBeCloseTo(SHOWROOM_IMAGE_SIZE.width / SHOWROOM_IMAGE_SIZE.height, 5);
     }
   });
 
@@ -32,14 +33,5 @@ describe('hero-layout', () => {
   it('la voiture ne devient jamais gigantesque sur tablette', () => {
     expect(carRect(768, 360).width).toBeLessThanOrEqual(300);
     expect(carRect(1024, 400).width).toBeLessThanOrEqual(300);
-  });
-
-  it('le départ du premier lancement est centré à l’écran et plus grand que la place finale', () => {
-    const start = carStartRect(390, 844);
-    const center = rectCenter(start);
-    expect(center.x).toBeCloseTo(195);
-    expect(center.y).toBeCloseTo(422);
-    expect(start.width).toBeGreaterThan(carRect(390, 330).width);
-    expect(start.width).toBeLessThanOrEqual(390);
   });
 });

@@ -7,7 +7,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { useCreatePayment } from './hooks';
 import { PAYMENT_METHODS, type PaymentMethod } from './types';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; rentalId: string }) {
   const { t } = useLanguage();
@@ -63,7 +63,7 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
                   selected ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+                <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
                   {t(`locations.paymentMethods.${method}`)}
                 </ThemedText>
               </Pressable>

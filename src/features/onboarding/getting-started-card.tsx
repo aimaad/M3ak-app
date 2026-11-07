@@ -4,7 +4,7 @@ import { Pressable, View } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { useStoredFlag } from './use-stored-flag';
@@ -57,12 +57,12 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
             <Ionicons
               name={step.done ? 'checkmark-circle' : 'ellipse-outline'}
               size={24}
-              color={step.done ? '#116B54' : M3akPalette.mauve}
+              color={step.done ? '#1E6B3A' : BibipPalette.primary}
             />
             <View className="flex-1">
               <ThemedText
                 type="smallBold"
-                style={{ color: step.done ? M3akPalette.subtle : M3akPalette.ink, textDecorationLine: step.done ? 'line-through' : 'none' }}
+                style={{ color: step.done ? BibipPalette.subtle : BibipPalette.ink, textDecorationLine: step.done ? 'line-through' : 'none' }}
               >
                 {t(`onboarding.start.steps.${step.key}.title`)}
               </ThemedText>
@@ -72,7 +72,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
                 </ThemedText>
               ) : null}
             </View>
-            {!step.done ? <Ionicons name="chevron-forward" size={18} color={M3akPalette.subtle} /> : null}
+            {!step.done ? <Ionicons name="chevron-forward" size={18} color={BibipPalette.subtle} /> : null}
           </Pressable>
         ))}
       </View>

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette, Shadows } from '@/constants/theme';
+import { BibipPalette, Shadows } from '@/constants/theme';
 import { chatErrorMessageKey } from '@/features/chat/api';
 import { ChatAvatar, ChatBubble, TypingBubble } from '@/features/chat/chat-bubble';
 import { useAskChat, useChatMessages } from '@/features/chat/hooks';
@@ -89,7 +89,7 @@ export default function ChatConversationScreen() {
             accessibilityLabel={t('common.back')}
             className="h-11 w-11 items-center justify-center rounded-full bg-brand-soft"
           >
-            <Ionicons name={rtl ? 'chevron-forward' : 'chevron-back'} size={22} color={M3akPalette.mauveDeep} />
+            <Ionicons name={rtl ? 'chevron-forward' : 'chevron-back'} size={22} color={BibipPalette.primaryDeep} />
           </Pressable>
           <ChatAvatar size={40} />
           <View className="flex-1">
@@ -97,8 +97,8 @@ export default function ChatConversationScreen() {
               {t('chat.title')}
             </ThemedText>
             <View className="flex-row items-center gap-1.5">
-              <View className="h-2 w-2 rounded-full bg-[#17856A]" />
-              <ThemedText type="small" style={{ color: M3akPalette.muted, fontSize: 12 }}>
+              <View className="h-2 w-2 rounded-full bg-[#2E8B57]" />
+              <ThemedText type="small" style={{ color: BibipPalette.muted, fontSize: 12 }}>
                 {t('chat.online')}
               </ThemedText>
             </View>
@@ -114,12 +114,12 @@ export default function ChatConversationScreen() {
                   <ThemedText type="smallBold" style={{ fontSize: 20, lineHeight: 28, textAlign: 'center' }}>
                     {t('chat.welcomeTitle')}
                   </ThemedText>
-                  <ThemedText type="default" style={{ color: M3akPalette.muted, textAlign: 'center' }}>
+                  <ThemedText type="default" style={{ color: BibipPalette.muted, textAlign: 'center' }}>
                     {t('chat.intro')}
                   </ThemedText>
                 </View>
                 <View className="gap-2">
-                  <ThemedText type="small" style={{ color: M3akPalette.muted }}>
+                  <ThemedText type="small" style={{ color: BibipPalette.muted }}>
                     {t('chat.tryAsking')}
                   </ThemedText>
                   {SUGGESTIONS.map((suggestion) => (
@@ -131,9 +131,9 @@ export default function ChatConversationScreen() {
                       style={Shadows.card}
                     >
                       <View className="h-9 w-9 items-center justify-center rounded-full bg-brand-soft">
-                        <Ionicons name={suggestion.icon} size={18} color={M3akPalette.mauve} />
+                        <Ionicons name={suggestion.icon} size={18} color={BibipPalette.primary} />
                       </View>
-                      <ThemedText type="small" style={{ flex: 1, color: M3akPalette.ink, fontWeight: '600' }}>
+                      <ThemedText type="small" style={{ flex: 1, color: BibipPalette.ink, fontWeight: '600' }}>
                         {t(`chat.suggestions.${suggestion.key}`)}
                       </ThemedText>
                     </Pressable>
@@ -154,9 +154,9 @@ export default function ChatConversationScreen() {
             ) : null}
 
             {error ? (
-              <View className="flex-row items-start gap-2 rounded-2xl border border-[#EFC9CE] bg-[#F8E6E9] p-3">
-                <Ionicons name="alert-circle" size={18} color="#A83C4B" />
-                <ThemedText type="small" style={{ flex: 1, color: '#A83C4B' }}>
+              <View className="flex-row items-start gap-2 rounded-2xl border border-[#F0C9C5] bg-[#FBE8E6] p-3">
+                <Ionicons name="alert-circle" size={18} color="#A8322B" />
+                <ThemedText type="small" style={{ flex: 1, color: '#A8322B' }}>
                   {error}
                 </ThemedText>
               </View>
@@ -170,11 +170,11 @@ export default function ChatConversationScreen() {
                 value={text}
                 onChangeText={setText}
                 placeholder={t('chat.placeholder')}
-                placeholderTextColor={M3akPalette.subtle}
+                placeholderTextColor={BibipPalette.subtle}
                 multiline
                 maxLength={600}
                 className="max-h-28 min-h-11 flex-1 py-2 text-base"
-                style={{ fontFamily: 'Cairo_500Medium', color: M3akPalette.ink, textAlignVertical: 'center' }}
+                style={{ fontFamily: 'Cairo_500Medium', color: BibipPalette.ink, textAlignVertical: 'center' }}
                 editable={!ask.isPending}
                 returnKeyType="default"
               />
@@ -184,7 +184,7 @@ export default function ChatConversationScreen() {
                 accessibilityRole="button"
                 accessibilityLabel={t('chat.send')}
                 className="h-11 w-11 items-center justify-center rounded-full"
-                style={[{ backgroundColor: canSend ? M3akPalette.mauve : '#C9BEE6' }, canSend ? Shadows.button : null]}
+                style={[{ backgroundColor: canSend ? BibipPalette.primary : '#A9CFC8' }, canSend ? Shadows.button : null]}
               >
                 <Ionicons name="arrow-up" size={22} color="#FFFFFF" />
               </Pressable>

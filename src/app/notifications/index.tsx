@@ -8,7 +8,7 @@ import { Pager } from '@/components/pager';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useDismissAllNotifications, useDismissNotification, useNotifications, useRestoreNotifications } from '@/features/notifications/hooks';
 import { useUndo } from '@/components/undo-toast';
@@ -60,7 +60,7 @@ export default function NotificationsScreen() {
           right={
             items.length > 0 ? (
               <Pressable onPress={clearAll} hitSlop={8}>
-                <ThemedText type="small" style={{ color: '#A83C4B' }}>
+                <ThemedText type="small" style={{ color: '#A8322B' }}>
                   {t('notifications.clearAll')}
                 </ThemedText>
               </Pressable>
@@ -70,7 +70,7 @@ export default function NotificationsScreen() {
 
         {query.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : query.isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -83,7 +83,7 @@ export default function NotificationsScreen() {
             data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-10"
-            refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={() => void query.refetch()} tintColor={M3akPalette.mauve} />}
+            refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={() => void query.refetch()} tintColor={BibipPalette.primary} />}
             renderItem={({ item }) => {
               const view = notificationView(item, t, language);
               const colors = SEVERITY_COLORS[item.severity];
@@ -107,7 +107,7 @@ export default function NotificationsScreen() {
                         accessibilityRole="button"
                         accessibilityLabel={t('notifications.dismiss')}
                       >
-                        <Ionicons name="close" size={18} color={M3akPalette.mauve} />
+                        <Ionicons name="close" size={18} color={BibipPalette.primary} />
                       </Pressable>
                     </View>
                     <ThemedText type="small">{view.body}</ThemedText>
@@ -127,7 +127,7 @@ export default function NotificationsScreen() {
                           onPress={() => Linking.openURL(`tel:${view.phone}`)}
                           hitSlop={8}
                           className="flex-row items-center gap-1 rounded-full px-3 py-1"
-                          style={{ backgroundColor: M3akPalette.mauve }}
+                          style={{ backgroundColor: BibipPalette.primary }}
                         >
                           <Ionicons name="call" size={13} color="#fff" />
                           <ThemedText type="small" style={{ color: '#fff', fontSize: 12 }}>
@@ -143,7 +143,7 @@ export default function NotificationsScreen() {
             ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}
             ListEmptyComponent={
               <View className="items-center gap-3 px-6 pt-16">
-                <Ionicons name="notifications-off-outline" size={44} color={M3akPalette.mauve} />
+                <Ionicons name="notifications-off-outline" size={44} color={BibipPalette.primary} />
                 <ThemedText type="default" themeColor="textSecondary" className="text-center">
                   {t('notifications.empty')}
                 </ThemedText>

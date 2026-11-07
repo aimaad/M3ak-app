@@ -3,7 +3,7 @@ import { TextInput, View, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 type TextFieldProps = TextInputProps & {
   label?: string;
@@ -28,11 +28,11 @@ export function TextField({ label, optional, error, warning, className, containe
         </ThemedText>
       ) : null}
       <TextInput
-        placeholderTextColor={M3akPalette.subtle}
+        placeholderTextColor={BibipPalette.subtle}
         accessibilityLabel={rest.accessibilityLabel ?? shownLabel}
         aria-invalid={error ? true : undefined}
         className={`rounded-2xl border px-4 py-3 text-base text-ink ${
-          error ? 'border-[#C55461]' : warning ? 'border-[#D99835]' : focused ? 'border-brand' : 'border-line'
+          error ? 'border-[#C8443B]' : warning ? 'border-[#D99835]' : focused ? 'border-brand' : 'border-line'
         } bg-white ${className ?? ''}`}
         onFocus={(event) => {
           setFocused(true);
@@ -45,7 +45,7 @@ export function TextField({ label, optional, error, warning, className, containe
         {...rest}
       />
       {error ? (
-        <ThemedText type="small" accessibilityRole="alert" style={{ color: '#A83C4B' }}>
+        <ThemedText type="small" accessibilityRole="alert" style={{ color: '#A8322B' }}>
           {error}
         </ThemedText>
       ) : warning ? (

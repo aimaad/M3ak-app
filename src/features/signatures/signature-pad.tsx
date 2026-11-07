@@ -3,7 +3,7 @@ import { PanResponder, Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 import { strokeToPath, type HandwrittenSignature, type Point } from './signature';
 
@@ -84,7 +84,7 @@ export function SignaturePad({ height, clearLabel, placeholder, onChange, onDraw
         ) : null}
       </View>
       <Pressable onPress={() => setStrokes([])} disabled={strokes.length === 0} className="self-end rounded-full border border-line bg-white px-4 py-2">
-        <ThemedText type="small" style={{ color: strokes.length === 0 ? M3akPalette.mauve : M3akPalette.ink, opacity: strokes.length === 0 ? 0.4 : 1 }}>
+        <ThemedText type="small" style={{ color: strokes.length === 0 ? BibipPalette.primary : BibipPalette.ink, opacity: strokes.length === 0 ? 0.4 : 1 }}>
           {clearLabel}
         </ThemedText>
       </Pressable>

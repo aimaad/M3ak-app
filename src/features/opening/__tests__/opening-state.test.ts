@@ -1,23 +1,9 @@
-import {
-  chooseMode,
-  nextStatusOnArm,
-  nextStatusOnEnd,
-  nextStatusOnStart,
-  shouldRememberFirst,
-  touchSkips,
-} from '../opening-state';
+import { nextStatusOnArm, nextStatusOnEnd, nextStatusOnStart, touchSkips } from '../opening-state';
 
 const normal = { reduceMotion: false, disabled: false };
 
 describe('opening-state', () => {
-  it('première ouverture seulement si elle n’a jamais été vue', () => {
-    expect(chooseMode(false)).toBe('first');
-    expect(chooseMode(true)).toBe('instant');
-    // Mémoire illisible : jamais la version spectaculaire à chaque lancement.
-    expect(chooseMode(null)).toBe('instant');
-  });
-
-  it('s’arme au premier lancement et ne se rejoue pas une fois consommée', () => {
+  it('s’arme à chaque lancement à froid et ne se rejoue pas ensuite', () => {
     expect(nextStatusOnArm('idle', false, normal)).toEqual({ status: 'armed', consumed: true });
     expect(nextStatusOnArm('idle', true, normal)).toEqual({ status: 'idle', consumed: true });
     expect(nextStatusOnArm('playing', true, normal).status).toBe('playing');
@@ -39,17 +25,9 @@ describe('opening-state', () => {
     expect(nextStatusOnEnd()).toBe('idle');
   });
 
-  it('mémorise la première ouverture seulement si elle a été vue ou passée volontairement', () => {
-    expect(shouldRememberFirst('first', 'completed')).toBe(true);
-    expect(shouldRememberFirst('first', 'skipped')).toBe(true);
-    expect(shouldRememberFirst('first', 'aborted')).toBe(false);
-    expect(shouldRememberFirst('instant', 'completed')).toBe(false);
-  });
-
-  it('un toucher ne passe que la première introduction', () => {
-    expect(touchSkips('first', 'playing')).toBe(true);
-    expect(touchSkips('first', 'armed')).toBe(true);
-    expect(touchSkips('first', 'idle')).toBe(false);
-    expect(touchSkips('instant', 'playing')).toBe(false);
+  it('un toucher passe l’introduction tant qu’elle est en cours', () => {
+    expect(touchSkips('armed')).toBe(true);
+    expect(touchSkips('playing')).toBe(true);
+    expect(touchSkips('idle')).toBe(false);
   });
 });

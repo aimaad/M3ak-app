@@ -7,7 +7,7 @@ import { Button } from '@/components/button';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { useSaveMySignature } from '@/features/signatures/hooks';
 import { buildSignature, isSignatureDrawn } from '@/features/signatures/signature';
@@ -62,7 +62,7 @@ export default function MaSignatureScreen() {
         <ScreenHeader title={t('profil.signature.title')} showBack />
         {profileQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : (
           <View className="flex-1 gap-4 px-6 pb-6">
@@ -76,12 +76,12 @@ export default function MaSignatureScreen() {
               onDrawingChange={handleDrawing}
             />
             {paths.length > 0 && !canSave ? (
-              <ThemedText type="small" style={{ color: M3akPalette.warning }}>
+              <ThemedText type="small" style={{ color: BibipPalette.warning }}>
                 {t('profil.signature.tooShort')}
               </ThemedText>
             ) : null}
             {error ? (
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {error}
               </ThemedText>
             ) : null}

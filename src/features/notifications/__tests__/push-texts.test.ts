@@ -26,8 +26,8 @@ describe('textes des notifications push', () => {
   });
   it('chaque type existe en français ET en arabe', () => {
     for (const kind of PUSH_KINDS) {
-      expect(renderPush(kind, params, 'fr').title).not.toBe('M3ak');
-      expect(renderPush(kind, params, 'ar').title).not.toBe('M3ak');
+      expect(renderPush(kind, params, 'fr').title).not.toBe('BIBIP');
+      expect(renderPush(kind, params, 'ar').title).not.toBe('BIBIP');
     }
   });
 });

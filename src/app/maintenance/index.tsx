@@ -10,7 +10,7 @@ import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { useVehicles } from '@/features/vehicles/hooks';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export default function MaintenanceScreen() {
   const { t, language } = useLanguage();
@@ -27,7 +27,7 @@ export default function MaintenanceScreen() {
 
         {maintenanceQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : maintenanceQuery.isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -44,7 +44,7 @@ export default function MaintenanceScreen() {
               <RefreshControl
                 refreshing={maintenanceQuery.isFetching}
                 onRefresh={() => void maintenanceQuery.refetch()}
-                tintColor={M3akPalette.mauve}
+                tintColor={BibipPalette.primary}
               />
             }
             renderItem={({ item }) => {
@@ -72,7 +72,7 @@ export default function MaintenanceScreen() {
           onPress={() => router.push('/maintenance/nouveau')}
           className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.onPrimary }}>
+          <ThemedText type="smallBold" style={{ color: BibipPalette.onPrimary }}>
             {`+ ${t('maintenance.addAction')}`}
           </ThemedText>
         </Pressable>

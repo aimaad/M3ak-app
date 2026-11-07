@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette, Shadows } from '@/constants/theme';
+import { BibipPalette, Shadows } from '@/constants/theme';
 import { daysLeft, shouldShowTrialBanner } from '@/features/agency/access';
 import {
   useAgencyAccess,
@@ -56,8 +56,8 @@ type DocumentAlertItem = {
 };
 
 const URGENCY_COLOR: Record<Exclude<ExpiryUrgency, 'ok'>, string> = {
-  bientot: M3akPalette.warning,
-  expire: M3akPalette.danger,
+  bientot: BibipPalette.warning,
+  expire: BibipPalette.danger,
 };
 
 function formatShortDate(iso: string): string {
@@ -165,7 +165,7 @@ export default function AccueilScreen() {
   if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
         <ThemedText type="small" themeColor="textSecondary" className="mt-2">
           {t('agency.loading')}
         </ThemedText>
@@ -191,7 +191,7 @@ export default function AccueilScreen() {
                 refreshing={isRefreshing}
                 onRefresh={refetchAll}
                 tintColor="#FFFFFF"
-                colors={[M3akPalette.mauve]}
+                colors={[BibipPalette.primary]}
               />
             }
           >
@@ -207,7 +207,7 @@ export default function AccueilScreen() {
             />
             {isLoading ? (
               <View className="items-center justify-center" style={{ paddingVertical: 48 }}>
-                <ActivityIndicator color={M3akPalette.mauve} />
+                <ActivityIndicator color={BibipPalette.primary} />
               </View>
             ) : (
               <View style={{ gap: 24, paddingHorizontal: 24, paddingTop: 8 }}>
@@ -234,12 +234,12 @@ export default function AccueilScreen() {
                 {logoMissing && !startVisible ? (
                   <Pressable
                     onPress={() => router.push('/entreprise')}
-                    className="gap-1 rounded-2xl bg-[#F8E6E9] px-4 py-3"
+                    className="gap-1 rounded-2xl bg-[#FBE8E6] px-4 py-3"
                   >
-                    <ThemedText type="smallBold" style={{ color: M3akPalette.dangerText }}>
+                    <ThemedText type="smallBold" style={{ color: BibipPalette.dangerText }}>
                       {t('entreprise.logo.homeNoticeTitle')}
                     </ThemedText>
-                    <ThemedText type="small" style={{ color: M3akPalette.dangerText }}>
+                    <ThemedText type="small" style={{ color: BibipPalette.dangerText }}>
                       {t('entreprise.logo.homeNotice')}
                     </ThemedText>
                   </Pressable>
@@ -260,12 +260,12 @@ export default function AccueilScreen() {
                   <View
                     className="h-12 w-12 items-center justify-center rounded-full"
                     style={{
-                      backgroundColor: M3akPalette.primary,
+                      backgroundColor: BibipPalette.primary,
                       ...Shadows.button,
                       shadowOpacity: 0.25,
                     }}
                   >
-                    <Ionicons name="sparkles" size={22} color={M3akPalette.onPrimary} />
+                    <Ionicons name="sparkles" size={22} color={BibipPalette.onPrimary} />
                   </View>
                   <View className="flex-1 gap-0.5">
                     <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>

@@ -42,8 +42,8 @@ export async function getPushToken(): Promise<string | null> {
     if (!isPushSupported()) return null;
 
     if (Platform.OS === 'android') {
-      await Notifications.setNotificationChannelAsync('default', { name: 'M3ak', importance: Notifications.AndroidImportance.DEFAULT });
-      await Notifications.setNotificationChannelAsync('urgent', { name: 'M3ak urgent', importance: Notifications.AndroidImportance.HIGH });
+      await Notifications.setNotificationChannelAsync('default', { name: 'BIBIP', importance: Notifications.AndroidImportance.DEFAULT });
+      await Notifications.setNotificationChannelAsync('urgent', { name: 'BIBIP urgent', importance: Notifications.AndroidImportance.HIGH });
     }
 
     const existing = await Notifications.getPermissionsAsync();

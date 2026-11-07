@@ -5,7 +5,7 @@ import { Image, View } from 'react-native';
 import { Button } from '@/components/button';
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { shrinkImageForUpload } from '@/features/storage/api';
 import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -112,8 +112,8 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
     <View className="items-center gap-3">
       <View className="flex-row items-center gap-2">
         <ThemedText type="smallBold">{t('entreprise.logo.title')}</ThemedText>
-        <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: missing ? M3akPalette.dangerLight : M3akPalette.successLight }}>
-          <ThemedText type="small" style={{ fontSize: 11, color: missing ? M3akPalette.danger : M3akPalette.success }}>
+        <View className="rounded-full px-2 py-0.5" style={{ backgroundColor: missing ? BibipPalette.dangerLight : BibipPalette.successLight }}>
+          <ThemedText type="small" style={{ fontSize: 11, color: missing ? BibipPalette.danger : BibipPalette.success }}>
             {missing ? t('entreprise.logo.required') : t('entreprise.logo.ok')}
           </ThemedText>
         </View>
@@ -122,7 +122,7 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       {shownUri ? (
         <Image source={{ uri: shownUri }} style={{ width: 110, height: 110, borderRadius: 16, opacity: busy ? 0.6 : 1 }} resizeMode="contain" />
       ) : (
-        <View className="h-28 w-28 items-center justify-center rounded-2xl bg-canvas" style={missing ? { borderWidth: 1.5, borderColor: M3akPalette.danger } : undefined}>
+        <View className="h-28 w-28 items-center justify-center rounded-2xl bg-canvas" style={missing ? { borderWidth: 1.5, borderColor: BibipPalette.danger } : undefined}>
           <ThemedText type="title" themeColor="primary">
             {initial}
           </ThemedText>
@@ -130,7 +130,7 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       )}
 
       {missing && phase === 'idle' ? (
-        <ThemedText type="small" style={{ color: M3akPalette.danger }} className="text-center">
+        <ThemedText type="small" style={{ color: BibipPalette.danger }} className="text-center">
           {canEdit ? t('entreprise.logo.missingOwner') : t('entreprise.logo.missingOther')}
         </ThemedText>
       ) : (
@@ -156,14 +156,14 @@ export function LogoField({ agencyId, logoPath, canEdit, initial }: { agencyId: 
       ) : null}
 
       {phase === 'done' ? (
-        <ThemedText type="small" style={{ color: M3akPalette.success }}>
+        <ThemedText type="small" style={{ color: BibipPalette.success }}>
           {t('entreprise.logo.saved')}
         </ThemedText>
       ) : null}
 
       {phase === 'error' && errorKey ? (
-        <View className="w-full gap-2 rounded-2xl bg-[#F8E6E9] px-4 py-3">
-          <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+        <View className="w-full gap-2 rounded-2xl bg-[#FBE8E6] px-4 py-3">
+          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
             {t(errorKey)}
           </ThemedText>
           {picked && ['entreprise.logo.errors.network', 'entreprise.logo.errors.timeout', 'entreprise.logo.errors.failed'].includes(errorKey) ? (

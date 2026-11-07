@@ -3,7 +3,7 @@ import { ActivityIndicator, Image, View } from 'react-native';
 import { useSignedUrl } from '@/features/storage/hooks';
 
 import { ThemedText } from './themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 type DocumentPreviewProps = {
   label: string;
@@ -28,7 +28,7 @@ export function DocumentPreview({ label, bucket, path, emptyLabel }: DocumentPre
         </View>
       ) : isLoading || !signedUrl ? (
         <View className="h-36 items-center justify-center rounded-2xl bg-canvas">
-          <ActivityIndicator color={M3akPalette.mauve} />
+          <ActivityIndicator color={BibipPalette.primary} />
         </View>
       ) : (
         <View className="h-36 w-full overflow-hidden rounded-2xl">

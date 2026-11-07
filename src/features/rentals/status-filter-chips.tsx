@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import { RENTAL_STATUS_FILTERS, type RentalStatusFilter } from './filters';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 type RentalStatusFilterChipsProps = {
   value: RentalStatusFilter;
@@ -27,10 +27,10 @@ export function RentalStatusFilterChips({ value, onChange, counts }: RentalStatu
               selected ? 'border-ink bg-ink' : 'border-line bg-white'
             }`}
           >
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+            <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
               {t(`locations.status.${status}`)}
             </ThemedText>
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.muted }}>
+            <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.muted }}>
               {counts[status]}
             </ThemedText>
           </Pressable>

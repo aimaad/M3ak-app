@@ -3,7 +3,7 @@ import { Alert, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -36,11 +36,11 @@ export function DuplicateVehicleCard({ duplicate, onContinue }: { duplicate: Veh
   }
 
   return (
-    <View className="gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.warningLight }}>
-      <ThemedText type="smallBold" style={{ color: M3akPalette.warning }}>
+    <View className="gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.warningLight }}>
+      <ThemedText type="smallBold" style={{ color: BibipPalette.warning }}>
         {t('vehicle.duplicate.title')}
       </ThemedText>
-      <ThemedText type="small" style={{ color: M3akPalette.warning }}>
+      <ThemedText type="small" style={{ color: BibipPalette.warning }}>
         {duplicate.field === 'vin' ? t('vehicle.duplicate.sameVin') : t('vehicle.duplicate.samePlate')}
       </ThemedText>
       <View className="rounded-xl bg-white px-3 py-2">

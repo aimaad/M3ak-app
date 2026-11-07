@@ -68,7 +68,7 @@ function PeriodTab({
           height: 42,
           borderRadius: 21,
           // Halo plus mesuré qu'avant (intensité 1 → 0,6, rayon 16 → 13) : verre poli, pas néon.
-          shadowColor: '#D58BFF',
+          shadowColor: '#7DDCC8',
           shadowRadius: 13,
           shadowOffset: { width: 0, height: 0 },
         },
@@ -89,9 +89,9 @@ function PeriodTab({
           <Svg width="100%" height="100%" preserveAspectRatio="none" style={FILL}>
             <Defs>
               <LinearGradient id="kp-selected" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor="#BE78F8" />
-                <Stop offset="0.5" stopColor="#9946E2" />
-                <Stop offset="1" stopColor="#7F2FCA" />
+                <Stop offset="0" stopColor="#2BC0A8" />
+                <Stop offset="0.5" stopColor="#0E9482" />
+                <Stop offset="1" stopColor="#066B5F" />
               </LinearGradient>
               <LinearGradient id="kp-shine" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.4" />
@@ -164,7 +164,7 @@ export function PeriodTabs({
       style={{
         height: 50,
         borderRadius: 25,
-        shadowColor: '#CB83F5',
+        shadowColor: '#7DDCC8',
         shadowOpacity: 0.32,
         shadowRadius: 16,
         shadowOffset: { width: 0, height: 5 },
@@ -189,7 +189,7 @@ export function PeriodTabs({
             <LinearGradient id="kp-glass" x1="0" y1="0" x2="0" y2="1">
               <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.2" />
               <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity="0.04" />
-              <Stop offset="1" stopColor="#CB83F5" stopOpacity="0.1" />
+              <Stop offset="1" stopColor="#7DDCC8" stopOpacity="0.1" />
             </LinearGradient>
           </Defs>
           <Rect width="100%" height="100%" fill="url(#kp-glass)" />

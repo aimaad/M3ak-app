@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useVehicleRentals } from '@/features/rentals/hooks';
 import { useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
@@ -30,9 +30,9 @@ import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { useLanguage } from '@/i18n/use-language';
 
 const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
-  ok: M3akPalette.muted,
-  bientot: M3akPalette.warning,
-  expire: M3akPalette.danger,
+  ok: BibipPalette.muted,
+  bientot: BibipPalette.warning,
+  expire: BibipPalette.danger,
 };
 
 export default function VehicleDetailScreen() {
@@ -113,7 +113,7 @@ export default function VehicleDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -285,7 +285,7 @@ export default function VehicleDetailScreen() {
                       </View>
                       <ThemedText
                         type="small"
-                        style={{ color: item.statut === 'effectuee' ? '#116B54' : item.statut === 'en_cours' ? '#3F62AD' : M3akPalette.muted }}
+                        style={{ color: item.statut === 'effectuee' ? '#1E6B3A' : item.statut === 'en_cours' ? '#3F62AD' : BibipPalette.muted }}
                       >
                         {item.statut === 'effectuee'
                           ? t('maintenance.done')

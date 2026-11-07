@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import type { AgencyRole } from '@/features/agency/types';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -26,7 +26,7 @@ function NoteHistory({ noteId }: { noteId: string }) {
   const { t } = useLanguage();
   const { data, isLoading } = useNoteRevisions(noteId, true);
 
-  if (isLoading) return <ActivityIndicator color={M3akPalette.mauve} />;
+  if (isLoading) return <ActivityIndicator color={BibipPalette.primary} />;
   if (!data || data.length === 0) {
     return (
       <ThemedText type="small" themeColor="textSecondary">
@@ -157,7 +157,7 @@ function NoteItem({
           ) : null}
           {editable ? (
             <Pressable onPress={handleDelete} hitSlop={6} disabled={deleteNote.isPending}>
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {t('customer.notes.delete')}
               </ThemedText>
             </Pressable>
@@ -213,16 +213,16 @@ export function CustomerNotesSection({
       <View className="gap-1">
         <ThemedText type="smallBold">{t('customer.notes.title')}</ThemedText>
         <View className="self-start rounded-full bg-[#FBF1DE] px-2.5 py-1">
-          <ThemedText type="small" style={{ color: M3akPalette.warning, fontSize: 11 }}>
+          <ThemedText type="small" style={{ color: BibipPalette.warning, fontSize: 11 }}>
             {t('customer.notes.confidential')}
           </ThemedText>
         </View>
       </View>
 
       {notesQuery.isLoading ? (
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       ) : notesQuery.isError ? (
-        <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
           {t('customer.notes.loadError')}
         </ThemedText>
       ) : (notesQuery.data ?? []).length === 0 ? (

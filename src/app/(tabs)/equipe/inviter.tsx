@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useCreateAgencyInvite, useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { inviteErrorKey } from '@/features/agency/invite-errors';
 import { InviteResultCard } from '@/features/agency/invite-result-card';
@@ -27,7 +27,7 @@ function Chip({ label, selected, onPress }: { label: string; selected: boolean; 
         selected ? 'border-brand bg-brand' : 'border-line bg-white'
       }`}
     >
-      <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+      <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
         {label}
       </ThemedText>
     </Pressable>
@@ -191,7 +191,7 @@ export default function InviterScreen() {
               </ThemedText>
 
               {submitError ? (
-                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                   {submitError}
                 </ThemedText>
               ) : null}

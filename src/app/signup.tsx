@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { resendSignupCode, signUpWithEmail, verifySignupCode } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
 import {
@@ -185,8 +185,8 @@ export default function SignupScreen() {
           />
 
           {error ? (
-            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
-              <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.dangerLight }}>
+              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                 {error}
               </ThemedText>
             </View>

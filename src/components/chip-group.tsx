@@ -1,7 +1,7 @@
 import { Pressable, View } from 'react-native';
 
 import { ThemedText } from './themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 export function ChipGroup<T extends string>({
   options,
@@ -29,7 +29,7 @@ export function ChipGroup<T extends string>({
               isSelected ? 'border-brand bg-brand' : 'border-line bg-white'
             } ${disabled ? 'opacity-50' : ''}`}
           >
-            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : M3akPalette.ink }}>
+            <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : BibipPalette.ink }}>
               {getLabel(option)}
             </ThemedText>
           </Pressable>

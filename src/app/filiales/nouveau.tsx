@@ -8,7 +8,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useCreateBranch } from '@/features/branches/hooks';
 import { isBranchFormValid, validateBranchForm, type BranchFormValues } from '@/features/branches/validation';
@@ -67,7 +67,7 @@ export default function NouvelleFilialeScreen() {
           />
 
           {submitError ? (
-            <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
               {submitError}
             </ThemedText>
           ) : null}

@@ -8,7 +8,7 @@ import { CollapsibleSection } from '@/components/collapsible-section';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ZoomableImage } from '@/components/zoomable-image';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useDeparturePolicy } from '@/features/rentals/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -156,15 +156,15 @@ export function CustomerForm({
   return (
     <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
       {draft.fromOcr ? (
-        <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.mauveLight }}>
-          <ThemedText type="smallBold" style={{ color: M3akPalette.mauveDeep }}>
+        <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.primaryLight }}>
+          <ThemedText type="smallBold" style={{ color: BibipPalette.primaryDeep }}>
             {t('customer.ocr.bannerTitle')}
           </ThemedText>
-          <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
+          <ThemedText type="small" style={{ color: BibipPalette.primaryDeep }}>
             {t('customer.ocr.bannerBody')}
           </ThemedText>
           {draft.fromCache ? (
-            <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
+            <ThemedText type="small" style={{ color: BibipPalette.primaryDeep }}>
               {t('ocr.fromCache')}
             </ThemedText>
           ) : null}
@@ -185,8 +185,8 @@ export function CustomerForm({
       ) : null}
 
       {(draft.warnings ?? []).map((code) => (
-        <View key={code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: code === 'licence_expiring' ? M3akPalette.mauveLight : M3akPalette.warningLight }}>
-          <ThemedText type="small" style={{ color: code === 'licence_expiring' ? M3akPalette.mauveDeep : M3akPalette.warning }}>
+        <View key={code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: code === 'licence_expiring' ? BibipPalette.primaryLight : BibipPalette.warningLight }}>
+          <ThemedText type="small" style={{ color: code === 'licence_expiring' ? BibipPalette.primaryDeep : BibipPalette.warning }}>
             {t(`customer.ocr.checks.${code}`)}
           </ThemedText>
         </View>
@@ -272,9 +272,9 @@ export function CustomerForm({
           })}
 
           {showErrors && gaps.length > 0 ? (
-            <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: M3akPalette.dangerLight }}>
+            <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.dangerLight }}>
               {gaps.map((gap) => (
-                <ThemedText key={gap} type="small" style={{ color: M3akPalette.danger }}>
+                <ThemedText key={gap} type="small" style={{ color: BibipPalette.danger }}>
                   {t(`customer.documentsManager.licenceRequired.${gap}`)}
                 </ThemedText>
               ))}
@@ -377,7 +377,7 @@ export function CustomerForm({
       ) : null}
 
       {submitError ? (
-        <ThemedText type="small" style={{ color: '#A83C4B' }}>
+        <ThemedText type="small" style={{ color: '#A8322B' }}>
           {submitError}
         </ThemedText>
       ) : null}

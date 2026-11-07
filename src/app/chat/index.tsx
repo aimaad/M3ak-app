@@ -8,7 +8,7 @@ import { PressableCard } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { ChatAvatar } from '@/features/chat/chat-bubble';
 import { useConversations, useDeleteConversation } from '@/features/chat/hooks';
 import { useOcrSettings } from '@/features/ocr/hooks';
@@ -39,11 +39,11 @@ export default function ChatListScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : !active ? (
           <View className="flex-1 items-center justify-center gap-3 px-8">
-            <Ionicons name="chatbubbles-outline" size={44} color={M3akPalette.mauve} />
+            <Ionicons name="chatbubbles-outline" size={44} color={BibipPalette.primary} />
             <ThemedText type="default" themeColor="textSecondary" className="text-center">
               {t(chatAvailability === 'owner_can_enable' ? 'chat.inactive.ownerCanEnable' : chatAvailability === 'ask_owner' ? 'chat.inactive.askOwner' : 'chat.inactive.noKey')}
             </ThemedText>
@@ -70,9 +70,9 @@ export default function ChatListScreen() {
                   hitSlop={10}
                   accessibilityRole="button"
                   accessibilityLabel={t('chat.delete')}
-                  className="h-11 w-11 items-center justify-center rounded-full bg-[#F8E6E9]"
+                  className="h-11 w-11 items-center justify-center rounded-full bg-[#FBE8E6]"
                 >
-                  <Ionicons name="trash-outline" size={18} color="#A83C4B" />
+                  <Ionicons name="trash-outline" size={18} color="#A8322B" />
                 </Pressable>
               </PressableCard>
             )}

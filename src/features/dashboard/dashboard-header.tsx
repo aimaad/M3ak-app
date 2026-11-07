@@ -1,8 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useIsFocused } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { Image, Pressable, useWindowDimensions, View, type LayoutChangeEvent } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Pressable,
+  useWindowDimensions,
+  View,
+  type LayoutChangeEvent,
+  type LayoutRectangle,
+} from 'react-native';
 import Animated, {
   Extrapolation,
   interpolate,
@@ -15,12 +21,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
+import { BRAND_NAME, LogoMark } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
-import { fontFamilyFor, M3akPalette } from '@/constants/theme';
+import { fontFamilyFor, BibipPalette } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import {
   endOpening,
-  getOpeningMode,
+  setLogoTarget,
   startOpening,
   useAssetsReady,
   useOpeningStatus,
@@ -30,30 +37,18 @@ import { useLanguage } from '@/i18n/use-language';
 import { getInitials } from '@/lib/initials';
 
 import { headerFirstName } from './header-format';
-import { HeroVeil, LogoGlow } from './hero-opening';
 import { HERO_DARK, HERO_FADE_HEIGHT, HeroCar, HeroScene } from './hero-scene';
 import type { DashboardPeriod } from './kpis';
 import { PeriodTabs } from './period-tabs';
 
-// Version éclaircie du logo, sur fond transparent : lisible directement sur le fond sombre (sans pastille).
-const MARK = require('../../../assets/images/logo-m3ak-ribbon-light.png');
-/** Proportions du logo (640 × 373). */
-const MARK_RATIO = 640 / 373;
-
 const DARK = HERO_DARK;
-/** Petite ligne décorative : champagne rosé vers champagne clair (seule touche dorée de l'interface). */
-const CHAMPAGNE = '#C9A58B';
-const CHAMPAGNE_LIGHT = '#E8C7A8';
+/** Petite ligne décorative : le lime du logo vers la menthe (l'accent de la marque sur fond sombre). */
+const ACCENT = BibipPalette.lime;
+const ACCENT_LIGHT = BibipPalette.mint;
 const FADE_HEIGHT = HERO_FADE_HEIGHT;
 const TABS_GAP = 21;
 /** Hauteur de la petite barre fixe (sous la zone de sécurité). */
 const COMPACT_BAR = 56;
-
-function LogoMark({ height }: { height: number }) {
-  return (
-    <Image source={MARK} resizeMode="contain" style={{ width: height * MARK_RATIO, height }} />
-  );
-}
 
 /** Rond de profil (photo ou initiales) à contour lavande : ouvre le profil. Même bouton dans le hero et dans la petite barre. */
 function ProfileButton({ path, initials }: { path: string | null | undefined; initials: string }) {
@@ -63,7 +58,7 @@ function ProfileButton({ path, initials }: { path: string | null | undefined; in
       onPress={() => router.push('/profil')}
       accessibilityRole="button"
       accessibilityLabel={t('accueil.header.profile')}
-      className="h-11 w-11 items-center justify-center rounded-full border-2 border-lavender active:border-white"
+      className="h-11 w-11 items-center justify-center rounded-full border-2 border-mint active:border-white"
     >
       <Avatar path={path} size={40} initials={initials} />
     </Pressable>
@@ -131,9 +126,24 @@ export function DashboardHeader({
   // Ouverture : chaque élément du hero apparaît à son heure sur l'horloge unique (voir features/opening). Hors ouverture,
   // l'horloge est « terminée » et tout est simplement visible.
   const opening = useOpeningStatus();
-  const mode = getOpeningMode();
   const assetsReady = useAssetsReady();
   const logoReveal = useReveal('logo');
+  // Emplacement exact de la pastille du logo (coordonnées de l'écran) : le logo de l'introduction vient s'y poser.
+  const boxes = useRef<{
+    row?: LayoutRectangle;
+    wrapper?: LayoutRectangle;
+    tile?: LayoutRectangle;
+  }>({});
+  const reportLogoTarget = () => {
+    const { row, wrapper, tile } = boxes.current;
+    if (!row || !wrapper || !tile) return;
+    setLogoTarget({
+      x: row.x + wrapper.x + tile.x,
+      y: row.y + wrapper.y + tile.y,
+      width: tile.width,
+      height: tile.height,
+    });
+  };
   const nameReveal = useReveal('name');
   const greetingReveal = useReveal('greeting', 10);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
@@ -184,13 +194,11 @@ export function DashboardHeader({
             reduceMotion={reduceMotion}
             onError={() => endOpening('aborted')}
           />
-          {opening !== 'idle' ? <HeroVeil mode={mode} /> : null}
           <HeroCar
             width={size.width}
             height={size.height}
             scrollY={scrollY}
             reduceMotion={reduceMotion}
-            mode={mode}
             animating={opening !== 'idle'}
           />
         </>
@@ -204,17 +212,33 @@ export function DashboardHeader({
           paddingEnd: insets.right + 20,
         }}
       >
-        <View className="flex-row items-center justify-between" style={{ minHeight: 48, gap: 12 }}>
+        <View
+          className="flex-row items-center justify-between"
+          style={{ minHeight: 48, gap: 12 }}
+          onLayout={(event) => {
+            boxes.current.row = event.nativeEvent.layout;
+            reportLogoTarget();
+          }}
+        >
           <View
             accessible
             accessibilityRole="image"
-            accessibilityLabel="M3ak"
+            accessibilityLabel={BRAND_NAME}
+            onLayout={(event) => {
+              boxes.current.wrapper = event.nativeEvent.layout;
+              reportLogoTarget();
+            }}
             // Mise en page en style (et non en classe) : les classes ne s'appliquent pas au conteneur animé.
             style={{ flexShrink: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}
           >
-            <Animated.View style={logoReveal}>
-              {opening !== 'idle' ? <LogoGlow mode={mode} /> : null}
-              <LogoMark height={logoHeight} />
+            <Animated.View
+              style={logoReveal}
+              onLayout={(event) => {
+                boxes.current.tile = event.nativeEvent.layout;
+                reportLogoTarget();
+              }}
+            >
+              <LogoMark height={logoHeight} onDark />
             </Animated.View>
             {showName ? (
               <Animated.View
@@ -243,7 +267,7 @@ export function DashboardHeader({
                       fontFamily: fontFamilyFor('fr', 'extrabold'),
                     }}
                   >
-                    M3ak
+                    {BRAND_NAME}
                   </ThemedText>
                   {showAgency ? (
                     <ThemedText
@@ -297,7 +321,7 @@ export function DashboardHeader({
                 {greetingParts[0]}
                 <ThemedText
                   style={{
-                    color: M3akPalette.lavender,
+                    color: BibipPalette.mint,
                     fontSize: 24,
                     lineHeight: 31,
                     fontFamily: fontFamilyFor(language, 'bold'),
@@ -330,8 +354,8 @@ export function DashboardHeader({
             <Svg width="100%" height="100%" preserveAspectRatio="none">
               <Defs>
                 <LinearGradient id="kh-accent" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor={CHAMPAGNE} />
-                  <Stop offset="1" stopColor={CHAMPAGNE_LIGHT} />
+                  <Stop offset="0" stopColor={ACCENT} />
+                  <Stop offset="1" stopColor={ACCENT_LIGHT} />
                 </LinearGradient>
               </Defs>
               <Rect width="100%" height="100%" fill="url(#kh-accent)" />
@@ -413,11 +437,11 @@ export function CompactTopBar({
       <View
         accessible
         accessibilityRole="image"
-        accessibilityLabel="M3ak"
+        accessibilityLabel={BRAND_NAME}
         className="shrink flex-row items-center"
         style={{ gap: 8 }}
       >
-        <LogoMark height={40} />
+        <LogoMark height={40} onDark />
         <ThemedText
           numberOfLines={1}
           style={{
@@ -428,7 +452,7 @@ export function CompactTopBar({
             fontFamily: fontFamilyFor('fr', 'extrabold'),
           }}
         >
-          M3ak
+          {BRAND_NAME}
         </ThemedText>
       </View>
       <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>

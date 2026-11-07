@@ -2,20 +2,18 @@ import type { ReactNode } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 
-import { getOpeningMode, openingTime } from './opening-store';
+import { openingTime } from './opening-store';
 import { easeOut, revealWindow, windowProgress, type RevealSlot } from './opening-timeline';
 
 /**
- * Apparition d'un élément du dashboard pendant l'ouverture : fondu + très léger mouvement vers le haut, à l'heure prévue par
- * le scénario courant. Hors ouverture l'horloge est « terminée » : l'élément est simplement visible (aucune différence de mise
- * en page, aucun coût).
+ * Apparition d'un élément du dashboard pendant l'ouverture : fondu + très léger mouvement vers le haut, à l'heure prévue.
+ * Hors ouverture l'horloge est « terminée » : l'élément est simplement visible (aucune différence de mise en page, aucun coût).
  */
 export function useReveal(slot: RevealSlot, rise = 8) {
-  const { from, to, start } = revealWindow(getOpeningMode(), slot);
-  const travel = start >= 1 ? 0 : rise;
+  const { from, to, start } = revealWindow(slot);
   return useAnimatedStyle(() => {
     const p = easeOut(windowProgress(openingTime.value, from, to));
-    return { opacity: start + (1 - start) * p, transform: [{ translateY: (1 - p) * travel }] };
+    return { opacity: start + (1 - start) * p, transform: [{ translateY: (1 - p) * rise }] };
   });
 }
 

@@ -31,7 +31,7 @@ import type {
   VehicleStatus,
   VehicleTransmission,
 } from './types';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 type VehicleFormProps = {
   initialValues?: VehicleFormValues;
@@ -235,7 +235,7 @@ export function VehicleForm({
                 branchId === null ? 'border-brand bg-brand' : 'border-line bg-white'
               }`}
             >
-              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : M3akPalette.ink }}>
+              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : BibipPalette.ink }}>
                 {t('vehicle.fields.allBranches')}
               </ThemedText>
             </Pressable>
@@ -249,7 +249,7 @@ export function VehicleForm({
                     isSelected ? 'border-brand bg-brand' : 'border-line bg-white'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : M3akPalette.ink }}>
+                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : BibipPalette.ink }}>
                     {branch.nom}
                   </ThemedText>
                 </Pressable>
@@ -382,8 +382,8 @@ export function VehicleForm({
       />
 
       {submitError ? (
-        <View className="rounded-2xl bg-[#F8E6E9] px-4 py-3">
-          <ThemedText type="small" style={{ color: '#A83C4B' }}>
+        <View className="rounded-2xl bg-[#FBE8E6] px-4 py-3">
+          <ThemedText type="small" style={{ color: '#A8322B' }}>
             {submitError}
           </ThemedText>
         </View>

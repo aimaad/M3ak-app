@@ -23,7 +23,7 @@ import type { Vehicle } from '@/features/vehicles/types';
 import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const EMPTY_RENTALS: Rental[] = [];
 
@@ -124,7 +124,7 @@ export default function LocationsScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('locations.loading')}
             </ThemedText>
@@ -157,7 +157,7 @@ export default function LocationsScreen() {
               <RefreshControl
                 refreshing={rentalsQuery.isFetching}
                 onRefresh={() => void rentalsQuery.refetch()}
-                tintColor={M3akPalette.mauve}
+                tintColor={BibipPalette.primary}
               />
             }
             renderItem={({ item }) => (
@@ -185,7 +185,7 @@ export default function LocationsScreen() {
           onPress={() => router.push('/locations/nouveau')}
           className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.onPrimary }}>
+          <ThemedText type="smallBold" style={{ color: BibipPalette.onPrimary }}>
             {`+ ${t('locations.addRental')}`}
           </ThemedText>
         </Pressable>

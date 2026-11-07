@@ -6,7 +6,7 @@ import { Card } from '@/components/card';
 import { ChipGroup } from '@/components/chip-group';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import {
   buildDriverCandidates,
   newDriverCandidate,
@@ -153,10 +153,10 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
           </ThemedText>
 
           <View className="gap-1 rounded-2xl bg-brand-light px-4 py-3">
-            <ThemedText type="small" style={{ color: M3akPalette.mauveDeep }}>
+            <ThemedText type="small" style={{ color: BibipPalette.primaryDeep }}>
               {t('locations.drivers.principal')}
             </ThemedText>
-            <ThemedText type="smallBold" style={{ color: M3akPalette.mauveDeep }}>
+            <ThemedText type="smallBold" style={{ color: BibipPalette.primaryDeep }}>
               {principalLabel}
               {value.principal ? '' : ` (${t('locations.drivers.theClient')})`}
             </ThemedText>
@@ -188,7 +188,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                         </ThemedText>
                       </Pressable>
                       <Pressable onPress={() => onChange(removeAdditionalDriver(value, candidate.key))} hitSlop={6}>
-                        <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                           {t('locations.drivers.remove')}
                         </ThemedText>
                       </Pressable>
@@ -231,7 +231,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                 </Pressable>
               ))}
               {error ? (
-                <ThemedText type="small" style={{ color: M3akPalette.danger }}>
+                <ThemedText type="small" style={{ color: BibipPalette.danger }}>
                   {t(`locations.drivers.addErrors.${error}`, { max })}
                 </ThemedText>
               ) : null}

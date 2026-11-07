@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import { STATUS_FILTERS, type StatusFilter } from './filters';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 type StatusFilterChipsProps = {
   value: StatusFilter;
@@ -27,10 +27,10 @@ export function StatusFilterChips({ value, onChange, counts }: StatusFilterChips
               selected ? 'border-ink bg-ink' : 'border-line bg-white'
             }`}
           >
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.ink }}>
+            <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
               {t(`flotte.status.${status}`)}
             </ThemedText>
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : M3akPalette.muted }}>
+            <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.muted }}>
               {counts[status]}
             </ThemedText>
           </Pressable>

@@ -43,14 +43,14 @@ export function PickerField<T>({
 
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
-        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#C55461]' : 'border-line'} bg-white`}
+        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#C8443B]' : 'border-line'} bg-white`}
       >
         <ThemedText type="default" themeColor={selectedItem ? undefined : 'textSecondary'}>
           {selectedItem ? getLabel(selectedItem) : placeholder}
         </ThemedText>
       </Pressable>
       {error ? (
-        <ThemedText type="small" style={{ color: '#A83C4B' }}>
+        <ThemedText type="small" style={{ color: '#A8322B' }}>
           {error}
         </ThemedText>
       ) : null}

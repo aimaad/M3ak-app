@@ -4,15 +4,15 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { ContractStatus } from './types';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const STYLES: Record<ContractStatus, { background: string; text: string; dot: string }> = {
-  preparation: { background: '#F1EEF7', text: M3akPalette.muted, dot: M3akPalette.muted },
+  preparation: { background: '#F0EEE5', text: BibipPalette.muted, dot: BibipPalette.muted },
   pret_a_signer: { background: '#FBF1DE', text: '#8A5A0B', dot: '#8A5A0B' },
   signe: { background: '#E8EEF9', text: '#5479C7', dot: '#5479C7' },
   en_cours: { background: '#E8EEF9', text: '#3F62AD', dot: '#3F62AD' },
-  cloture: { background: '#E3F3EE', text: '#116B54', dot: '#116B54' },
-  annule: { background: '#F8E6E9', text: '#C55461', dot: '#C55461' },
+  cloture: { background: '#E3F3E8', text: '#1E6B3A', dot: '#1E6B3A' },
+  annule: { background: '#FBE8E6', text: '#C8443B', dot: '#C8443B' },
 };
 
 export function ContractStatusBadge({ status }: { status: ContractStatus }) {

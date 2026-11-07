@@ -24,7 +24,7 @@ import {
 import { persistCapturedPhoto } from './local-photo-storage';
 import { CAPTURE_ANGLES, CAPTURE_PLAN, isSkippableAngle, type InspectionType, type PhotoAngle } from './types';
 import { usePhotoSync } from './use-photo-sync';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 type InspectionCaptureScreenProps = {
   rentalId: string;
@@ -146,7 +146,7 @@ export function InspectionCaptureScreen({
   if (!permission) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
       </ThemedView>
     );
   }
@@ -241,7 +241,7 @@ export function InspectionCaptureScreen({
                   <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
                     {t(`inspection.groups.${entry.group}`)}
                   </ThemedText>
-                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#116B54' : M3akPalette.ink }}>
+                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#1E6B3A' : BibipPalette.ink }}>
                     {done}/{entry.angles.length}
                   </ThemedText>
                 </View>
@@ -260,13 +260,13 @@ export function InspectionCaptureScreen({
                     selected
                       ? 'border-brand bg-brand'
                       : done
-                        ? 'border-[#116B54] bg-[#E3F3EE]'
+                        ? 'border-[#1E6B3A] bg-[#E3F3E8]'
                         : 'border-line bg-white'
                   }`}
                 >
                   <ThemedText
                     type="small"
-                    style={{ color: selected ? '#ffffff' : done ? '#116B54' : M3akPalette.ink }}
+                    style={{ color: selected ? '#ffffff' : done ? '#1E6B3A' : BibipPalette.ink }}
                   >
                     {`${done ? '✓ ' : skipped.includes(angle) ? '– ' : ''}${t(`inspection.angles.${angle}`)}`}
                   </ThemedText>
@@ -301,7 +301,7 @@ export function InspectionCaptureScreen({
                 disabled={!inspection || isCapturing}
                 className="h-16 w-16 items-center justify-center rounded-full border-4 border-brand bg-white"
               >
-                {isCapturing ? <ActivityIndicator color={M3akPalette.mauve} /> : <View className="h-11 w-11 rounded-full bg-brand" />}
+                {isCapturing ? <ActivityIndicator color={BibipPalette.primary} /> : <View className="h-11 w-11 rounded-full bg-brand" />}
               </Pressable>
               <View className="w-24" />
             </View>

@@ -9,7 +9,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { CustomerDocumentsSection } from '@/features/customers/customer-documents-section';
 import { CustomerNotesSection } from '@/features/customers/customer-notes-section';
@@ -97,7 +97,7 @@ export default function ClientDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -214,9 +214,9 @@ export default function ClientDetailScreen() {
                               <View
                                 key={incident.type}
                                 className="rounded-full px-2 py-0.5"
-                                style={{ backgroundColor: M3akPalette.dangerLight }}
+                                style={{ backgroundColor: BibipPalette.dangerLight }}
                               >
-                                <ThemedText type="small" style={{ color: M3akPalette.danger, fontSize: 11 }}>
+                                <ThemedText type="small" style={{ color: BibipPalette.danger, fontSize: 11 }}>
                                   {t(`customer.incidents.${incident.type}`)}
                                 </ThemedText>
                               </View>

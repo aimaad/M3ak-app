@@ -1,20 +1,20 @@
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 /** Thème commun de tous les calendriers de l'app : fond blanc, chiffres foncés, sélection violette, jamais de texte pâle sur fond pâle. */
 export const CALENDAR_THEME = {
   calendarBackground: '#FFFFFF',
   backgroundColor: '#FFFFFF',
-  textSectionTitleColor: M3akPalette.muted,
-  dayTextColor: M3akPalette.ink,
-  textDisabledColor: M3akPalette.subtle,
-  monthTextColor: M3akPalette.ink,
-  arrowColor: M3akPalette.mauve,
-  disabledArrowColor: M3akPalette.subtle,
-  todayTextColor: M3akPalette.mauveDeep,
-  todayBackgroundColor: M3akPalette.mauveLight,
-  selectedDayBackgroundColor: M3akPalette.mauve,
+  textSectionTitleColor: BibipPalette.muted,
+  dayTextColor: BibipPalette.ink,
+  textDisabledColor: BibipPalette.subtle,
+  monthTextColor: BibipPalette.ink,
+  arrowColor: BibipPalette.primary,
+  disabledArrowColor: BibipPalette.subtle,
+  todayTextColor: BibipPalette.primaryDeep,
+  todayBackgroundColor: BibipPalette.primaryLight,
+  selectedDayBackgroundColor: BibipPalette.primary,
   selectedDayTextColor: '#FFFFFF',
-  dotColor: M3akPalette.mauve,
+  dotColor: BibipPalette.primary,
   selectedDotColor: '#FFFFFF',
   textDayFontFamily: 'Cairo_500Medium',
   textMonthFontFamily: 'Cairo_700Bold',
@@ -30,6 +30,6 @@ export const BOOKED_DAY_MARK = {
   disableTouchEvent: true,
   startingDay: true,
   endingDay: true,
-  color: '#F8E6E9',
-  textColor: '#A83C4B',
+  color: '#FBE8E6',
+  textColor: '#A8322B',
 } as const;

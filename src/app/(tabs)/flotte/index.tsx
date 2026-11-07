@@ -32,7 +32,7 @@ import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
 import type { Vehicle } from '@/features/vehicles/types';
-import { M3akPalette } from '@/constants/theme';
+import { BibipPalette } from '@/constants/theme';
 
 const EMPTY_VEHICLES: Vehicle[] = [];
 const SORT_OPTIONS: VehicleSort[] = ['recent', 'marque', 'immatriculation', 'prixJour', 'kilometrage'];
@@ -85,7 +85,7 @@ export default function FlotteScreen() {
   if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={M3akPalette.mauve} />
+        <ActivityIndicator color={BibipPalette.primary} />
         <ThemedText type="small" themeColor="textSecondary" className="mt-2">
           {t('agency.loading')}
         </ThemedText>
@@ -185,7 +185,7 @@ export default function FlotteScreen() {
                     filters.marque === 'toutes' ? 'border-ink bg-ink' : 'border-line bg-white'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: filters.marque === 'toutes' ? '#ffffff' : M3akPalette.ink }}>
+                  <ThemedText type="small" style={{ color: filters.marque === 'toutes' ? '#ffffff' : BibipPalette.ink }}>
                     {t('flotte.allBrands')}
                   </ThemedText>
                 </Pressable>
@@ -197,7 +197,7 @@ export default function FlotteScreen() {
                       filters.marque === marque ? 'border-ink bg-ink' : 'border-line bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: filters.marque === marque ? '#ffffff' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: filters.marque === marque ? '#ffffff' : BibipPalette.ink }}>
                       {marque}
                     </ThemedText>
                   </Pressable>
@@ -218,7 +218,7 @@ export default function FlotteScreen() {
                       sort === option ? 'border-brand bg-brand' : 'border-line bg-white'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: sort === option ? '#ffffff' : M3akPalette.ink }}>
+                    <ThemedText type="small" style={{ color: sort === option ? '#ffffff' : BibipPalette.ink }}>
                       {t(`flotte.sort.${option}`)}
                     </ThemedText>
                   </Pressable>
@@ -230,7 +230,7 @@ export default function FlotteScreen() {
 
         {vehiclesQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('flotte.loading')}
             </ThemedText>
@@ -263,7 +263,7 @@ export default function FlotteScreen() {
               <RefreshControl
                 refreshing={vehiclesQuery.isFetching}
                 onRefresh={() => void vehiclesQuery.refetch()}
-                tintColor={M3akPalette.mauve}
+                tintColor={BibipPalette.primary}
               />
             }
             renderItem={({ item }) => (
@@ -285,7 +285,7 @@ export default function FlotteScreen() {
           onPress={() => router.push('/flotte/nouveau')}
           className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: M3akPalette.onPrimary }}>
+          <ThemedText type="smallBold" style={{ color: BibipPalette.onPrimary }}>
             {`+ ${t('flotte.addVehicle')}`}
           </ThemedText>
         </Pressable>

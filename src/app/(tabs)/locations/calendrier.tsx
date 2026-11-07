@@ -8,7 +8,7 @@ import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { M3akPalette, Shadows } from '@/constants/theme';
+import { BibipPalette, Shadows } from '@/constants/theme';
 import { useCustomers } from '@/features/customers/hooks';
 import type { Customer } from '@/features/customers/types';
 import { RENTAL_STATUS_FILTERS, type RentalStatusFilter } from '@/features/rentals/filters';
@@ -95,11 +95,11 @@ export default function CalendrierScreen() {
       marks[day] = {
         dots: statuses.map((status) => ({ key: status, color: RENTAL_STATUS_STYLES[status].dot })),
         selected: day === selectedDay,
-        selectedColor: M3akPalette.mauve,
+        selectedColor: BibipPalette.primary,
       };
     }
     if (selectedDay && !marks[selectedDay]) {
-      marks[selectedDay] = { selected: true, selectedColor: M3akPalette.mauve };
+      marks[selectedDay] = { selected: true, selectedColor: BibipPalette.primary };
     }
     return marks;
   }, [daysWithBookings, selectedDay]);
@@ -141,7 +141,7 @@ export default function CalendrierScreen() {
                   statusFilter === status ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: statusFilter === status ? '#FFFFFF' : M3akPalette.ink }}>
+                <ThemedText type="small" style={{ color: statusFilter === status ? '#FFFFFF' : BibipPalette.ink }}>
                   {t(`locations.status.${status}`)}
                 </ThemedText>
               </Pressable>
@@ -154,7 +154,7 @@ export default function CalendrierScreen() {
                 vehicleFilter === 'tous' ? 'border-brand bg-brand' : 'border-line bg-white'
               }`}
             >
-              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#FFFFFF' : M3akPalette.ink }}>
+              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#FFFFFF' : BibipPalette.ink }}>
                 {t('locations.calendar.allVehicles')}
               </ThemedText>
             </Pressable>
@@ -166,7 +166,7 @@ export default function CalendrierScreen() {
                   vehicleFilter === v.id ? 'border-brand bg-brand' : 'border-line bg-white'
                 }`}
               >
-                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#FFFFFF' : M3akPalette.ink }}>
+                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#FFFFFF' : BibipPalette.ink }}>
                   {v.immatriculation}
                 </ThemedText>
               </Pressable>
@@ -176,7 +176,7 @@ export default function CalendrierScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={M3akPalette.mauve} />
+            <ActivityIndicator color={BibipPalette.primary} />
           </View>
         ) : (
           <View className="flex-1">
@@ -194,7 +194,7 @@ export default function CalendrierScreen() {
                 {legendStatuses.map((status) => (
                   <View key={status} className="flex-row items-center gap-1.5">
                     <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: RENTAL_STATUS_STYLES[status].dot }} />
-                    <ThemedText type="small" style={{ color: M3akPalette.muted, fontSize: 12 }}>
+                    <ThemedText type="small" style={{ color: BibipPalette.muted, fontSize: 12 }}>
                       {t(`locations.status.${status}`)}
                     </ThemedText>
                   </View>
