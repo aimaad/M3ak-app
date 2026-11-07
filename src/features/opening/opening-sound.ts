@@ -3,8 +3,8 @@ import type { AudioPlayer } from 'expo-audio';
 import { readSoundEnabled } from './opening-storage';
 
 const ENGINE = require('../../../assets/audio/m3ak-engine-start.mp3');
-/** Volume modéré par défaut. */
-const VOLUME = 0.7;
+/** Volume : le fichier est déjà dosé (pic ≈ 0,96) ; le volume du téléphone reste maître. */
+const VOLUME = 1;
 /** Le fichier dure ≈ 1,38 s : on libère le lecteur peu après, sans jamais couper le son brutalement. */
 const RELEASE_AFTER_MS = 2600;
 
@@ -33,19 +33,29 @@ export async function prepareEngineSound(): Promise<void> {
     const created = createAudioPlayer(ENGINE);
     created.volume = VOLUME;
     player = created;
-  } catch {
+  } catch (error) {
+    // Visible dans le terminal d'Expo (développement) : permet de comprendre pourquoi on n'entend rien.
+    if (__DEV__) console.warn("[BIBIP] son d'ouverture indisponible :", error);
     player = null;
   }
 }
 
 /** Joue le moteur une seule fois par ouverture (jamais deux instances en même temps). */
 export function playEngineSound(): void {
-  if (!player || played) return;
+  if (!player) {
+    if (__DEV__)
+      console.warn('[BIBIP] moteur : lecteur non prêt (son coupé ou module audio indisponible)');
+    return;
+  }
+  if (played) return;
   played = true;
   try {
+    player.seekTo(0).catch(() => {});
     player.play();
-  } catch {
+    if (__DEV__) console.log('[BIBIP] moteur lancé (volume', player.volume, ')');
+  } catch (error) {
     // Son indisponible : l'animation continue en silence.
+    if (__DEV__) console.warn('[BIBIP] lecture du moteur impossible :', error);
   }
   releaseTimer = setTimeout(releaseEngineSound, RELEASE_AFTER_MS);
 }
