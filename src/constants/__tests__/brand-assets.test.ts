@@ -9,21 +9,30 @@ const { createHash } = require('node:crypto');
 const root: string = path.resolve(__dirname, '../../..');
 const read = (file: string): any => fs.readFileSync(path.join(root, file));
 
-/** Empreinte du PNG intégré au logo officiel fourni : il ne doit jamais changer. */
-const OFFICIAL_LOGO_PNG_SHA256 = '5d024c7bd8fcd2bd73e642e48b26ef78880309f6d3d702856ae115da1d1c4cc5';
+/** Empreintes des deux fichiers du symbole (gris pour fond clair, blanc pour fond sombre) : ils ne doivent jamais changer. */
+const SYMBOL_SHA256 = {
+  'bibip-symbole-gris.svg': '0e7212b4cbf674e37eae6022239e1cc1cec77c73fadf0a9fd8b40a25fad81288',
+  'bibip-symbole-blanc.svg': '8ac2598c1626ba106640c19b23839841096e41d5b2b60451e94d6a18b8072a4c',
+};
 
-describe('logo officiel BIBIP', () => {
-  it('le fichier source fourni est conservé tel quel (PNG intégré inchangé)', () => {
-    const svg = read('assets/branding/BIBIP_logo_exact.svg').toString('utf8');
-    const match = /data:image\/png;base64,([A-Za-z0-9+/=]+)/.exec(svg);
-    expect(match).not.toBeNull();
-    const png = Buffer.from(match![1], 'base64');
-    expect(createHash('sha256').update(png).digest('hex')).toBe(OFFICIAL_LOGO_PNG_SHA256);
+describe('logo BIBIP (symbole « b » + deux ondes orange)', () => {
+  it('les fichiers du symbole sont conservés tels quels', () => {
+    for (const [file, hash] of Object.entries(SYMBOL_SHA256)) {
+      expect(createHash('sha256').update(read(`assets/images/${file}`)).digest('hex')).toBe(hash);
+    }
+  });
+
+  it("le symbole utilise graphite ou blanc pour le « b » et l'orange de la marque pour les ondes", () => {
+    const gris = read('assets/images/bibip-symbole-gris.svg').toString('utf8');
+    const blanc = read('assets/images/bibip-symbole-blanc.svg').toString('utf8');
+    expect(gris).toContain('#202527');
+    expect(gris).toContain('#CA531D');
+    expect(blanc).toContain('#FFFFFF');
+    expect(blanc).toContain('#CA531D');
   });
 
   it("les fichiers de l'app existent et les anciens logos ont disparu", () => {
     for (const file of [
-      'logo-bibip.png',
       'icon.png',
       'splash-icon.png',
       'favicon.png',
@@ -33,6 +42,8 @@ describe('logo officiel BIBIP', () => {
     ]) {
       expect(fs.existsSync(path.join(root, 'assets/images', file))).toBe(true);
     }
+    expect(fs.existsSync(path.join(root, 'assets/branding/BIBIP_logo_exact.svg'))).toBe(false);
+    expect(fs.existsSync(path.join(root, 'assets/images/logo-bibip.png'))).toBe(false);
     const images = fs.readdirSync(path.join(root, 'assets/images'));
     expect(images.filter((name: string) => /m3ak|tutut|kriha/i.test(name))).toEqual([]);
   });

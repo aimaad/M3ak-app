@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Avatar } from '@/components/avatar';
 import { BRAND_NAME, LogoMark } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
-import { Brand, fontFamilyFor, Palette, Themes } from '@/constants/theme';
+import { Brand, BRAND_FONT, fontFamilyFor, Palette, Themes } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import {
   endOpening,
@@ -215,10 +215,10 @@ export function DashboardHeader({
                       fontSize: 22,
                       lineHeight: 26,
                       letterSpacing: -0.3,
-                      fontFamily: fontFamilyFor('fr', 'extrabold'),
+                      fontFamily: BRAND_FONT,
                     }}
                   >
-                    {BRAND_NAME}
+                    bibip
                   </ThemedText>
                   {showAgency ? (
                     <ThemedText
@@ -382,10 +382,10 @@ export function CompactTopBar({
             fontSize: 20,
             lineHeight: 24,
             letterSpacing: -0.3,
-            fontFamily: fontFamilyFor('fr', 'extrabold'),
+            fontFamily: BRAND_FONT,
           }}
         >
-          {BRAND_NAME}
+          bibip
         </ThemedText>
       </View>
       <View className="shrink-0 flex-row items-center" style={{ gap: 8 }}>

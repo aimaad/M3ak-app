@@ -8,6 +8,7 @@ import {
   Cairo_700Bold,
   useFonts,
 } from '@expo-google-fonts/cairo';
+import { Montserrat_600SemiBold } from '@expo-google-fonts/montserrat';
 import {
   PlusJakartaSans_500Medium,
   PlusJakartaSans_600SemiBold,
@@ -85,6 +86,7 @@ export default function RootLayout() {
     PlusJakartaSans_600SemiBold,
     PlusJakartaSans_700Bold,
     PlusJakartaSans_800ExtraBold,
+    Montserrat_600SemiBold,
   });
 
   // Ouverture « Signature Ignition » : armée à chaque lancement à froid, avant le premier affichage (sauf animations

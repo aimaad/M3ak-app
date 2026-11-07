@@ -76,6 +76,9 @@ export const Fonts = Platform.select({
   },
 })!;
 
+/** Police du texte « bibip » dans le logo (Montserrat SemiBold 600), chargée au démarrage (`_layout.tsx`). */
+export const BRAND_FONT = 'Montserrat_600SemiBold';
+
 export type FontWeightName = 'medium' | 'semibold' | 'bold' | 'extrabold';
 
 /**

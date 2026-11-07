@@ -1,90 +1,77 @@
 #!/usr/bin/env python3
 """
-Génère les fichiers image de la marque BIBIP à partir du logo officiel `assets/branding/BIBIP_logo_exact.svg`.
+Génère les icônes de la marque BIBIP à partir de la géométrie du symbole (celle de `assets/images/bibip-symbole-*.svg`) :
+un « b » (trait + cercle) et deux ondes sonores orange, dans un cadre de 124 × 124 (viewBox « -0.25 -7.3 124 124 »).
 
-Règle absolue : le logo n'est JAMAIS modifié (formes, couleurs, dégradés, transparence). Ce script ne fait que :
-  - extraire le PNG intégré dans le SVG (octets identiques) ;
-  - rogner les marges totalement transparentes (aucun pixel modifié) ;
-  - redimensionner (mêmes couleurs, rendu plus petit) pour les usages de l'app, l'icône, l'écran de démarrage, le favicon ;
-  - poser le logo sur le fond ivoire (icône iOS, qui n'a pas de transparence) ou sur fond transparent (Android, splash).
-La silhouette « monochrome » d'Android 13 est exigée par le système (icône thématique) : c'est le masque de transparence du
-logo, pas une version recolorée du logo affichée dans l'app.
+  - icon.png                    : fond graphite #202527, « b » blanc, ondes orange, symbole ≈ 60 % de la largeur ;
+  - android-icon-foreground.png : même symbole sur fond transparent (zone de sécurité adaptative) ;
+  - android-icon-background.png : aplat graphite #202527 ;
+  - android-icon-monochrome.png : symbole entier en une seule couleur (Android 13, icône thématique) ;
+  - splash-icon.png             : petit symbole blanc + ondes orange sur fond transparent ;
+  - favicon.png                 : symbole sur fond graphite.
 
-Usage (depuis la racine du projet) :  python3 scripts/build-brand-assets.py
-Dépendances : Pillow, NumPy.
+Usage (depuis la racine du projet) :  python3 scripts/build-brand-assets.py      Dépendances : Pillow.
 """
-import base64
-import hashlib
-import re
+import math
 from pathlib import Path
 
-import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
-SVG = ROOT / 'assets/branding/BIBIP_logo_exact.svg'
 OUT = ROOT / 'assets/images'
-IVORY = (250, 248, 241, 255)  # #FAF8F1
+GRAPHITE = (32, 37, 39, 255)  # #202527
+ORANGE = (202, 83, 29, 255)  # #CA531D
+WHITE = (255, 255, 255, 255)
+CLEAR = (0, 0, 0, 0)
+
+# Géométrie du symbole (unités du viewBox). Boîte englobante du dessin, traits compris.
+BBOX = (11.5, 1.5, 112.0, 107.9)
+CX, CY = 46.0, 64.0
+SS = 4  # suréchantillonnage
 
 
-def extract_png() -> bytes:
-    match = re.search(r'data:image/png;base64,([A-Za-z0-9+/=]+)', SVG.read_text(encoding='utf8'))
-    if not match:
-        raise SystemExit('Aucun PNG intégré dans le SVG du logo.')
-    return base64.b64decode(match.group(1))
+def draw_symbol(canvas: int, width_fraction: float, body, waves, background) -> Image.Image:
+    """Dessine le symbole centré, sa largeur occupant `width_fraction` de la toile."""
+    big = canvas * SS
+    k = big * width_fraction / (BBOX[2] - BBOX[0])  # pixels par unité
+    ox = big / 2 - k * (BBOX[0] + BBOX[2]) / 2
+    oy = big / 2 - k * (BBOX[1] + BBOX[3]) / 2
+    img = Image.new('RGBA', (big, big), background)
+    d = ImageDraw.Draw(img)
 
+    def p(x, y):
+        return ox + k * x, oy + k * y
 
-def resize_premultiplied(image: Image.Image, size: tuple[int, int]) -> Image.Image:
-    """Redimensionne sans frange sombre sur les bords transparents."""
-    return image.convert('RGBa').resize(size, Image.LANCZOS).convert('RGBA')
+    def disc(x, y, r, fill):
+        px, py = p(x, y)
+        d.ellipse((px - r * k, py - r * k, px + r * k, py + r * k), fill=fill)
 
-
-def fit(image: Image.Image, width: int) -> Image.Image:
-    return resize_premultiplied(image, (width, round(image.height * width / image.width)))
-
-
-def on_canvas(logo: Image.Image, canvas: int, fraction: float, background) -> Image.Image:
-    """Centre le logo (largeur = fraction de la toile) sur un fond uni ou transparent."""
-    sized = fit(logo, round(canvas * fraction))
-    sized = sized if sized.height <= canvas * fraction else resize_premultiplied(
-        logo, (round(logo.width * canvas * fraction / logo.height), round(canvas * fraction))
-    )
-    layer = Image.new('RGBA', (canvas, canvas), background)
-    layer.alpha_composite(sized, ((canvas - sized.width) // 2, (canvas - sized.height) // 2))
-    return layer
+    # « b » : trait vertical à bouts ronds + cercle (anneau).
+    d.line((*p(18, 8), *p(18, 92)), fill=body, width=round(13 * k))
+    disc(18, 8, 6.5, body)
+    disc(18, 92, 6.5, body)
+    r_out, r_in = 26 + 6.5, 26 - 6.5
+    px, py = p(46, 64)
+    d.ellipse((px - r_out * k, py - r_out * k, px + r_out * k, py + r_out * k), fill=body)
+    d.ellipse((px - r_in * k, py - r_in * k, px + r_in * k, py + r_in * k), fill=background)
+    # Deux ondes : arcs de ±40° autour du centre du cercle, bouts ronds.
+    for radius in (46, 62):
+        box = (*p(CX - radius, CY - radius), *p(CX + radius, CY + radius))
+        d.arc(box, -40, 40, fill=waves, width=round(8 * k))
+        for sign in (-1, 1):
+            a = math.radians(40 * sign)
+            disc(CX + radius * math.cos(a), CY + radius * math.sin(a), 4, waves)
+    return img.resize((canvas, canvas), Image.LANCZOS)
 
 
 def main() -> None:
-    png = extract_png()
-    print('PNG du logo :', len(png), 'octets, sha256', hashlib.sha256(png).hexdigest())
-    original = Image.open(__import__('io').BytesIO(png)).convert('RGBA')
-    alpha = np.array(original)[..., 3]
-    # Le PNG contient quelques pixels quasi invisibles (opacité ≤ 3 %) jusque dans les coins : on rogne autour du logo visible,
-    # avec une marge, sans modifier aucun pixel conservé.
-    ys, xs = np.where(alpha > 8)
-    margin = 16
-    box = (max(xs.min() - margin, 0), max(ys.min() - margin, 0), min(xs.max() + 1 + margin, original.width), min(ys.max() + 1 + margin, original.height))
-    logo = original.crop(box)
-    print('Logo rogné :', logo.size)
-
-    fit(logo, 640).save(OUT / 'logo-bibip.png', optimize=True)
-
-    # Icône de l'app (iOS : pas de transparence → fond ivoire).
-    on_canvas(logo, 1024, 0.72, IVORY).convert('RGB').save(OUT / 'icon.png', optimize=True)
-    # Android adaptatif : premier plan transparent (zone de sécurité ≈ 66 %), fond ivoire uni.
-    on_canvas(logo, 1024, 0.60, (0, 0, 0, 0)).save(OUT / 'android-icon-foreground.png', optimize=True)
-    Image.new('RGB', (1024, 1024), IVORY[:3]).save(OUT / 'android-icon-background.png', optimize=True)
-    # Android 13 « icône thématique » : silhouette (masque de transparence) exigée par le système.
-    foreground = on_canvas(logo, 432, 0.60, (0, 0, 0, 0))
-    mask = np.array(foreground)[..., 3]
-    mono = np.zeros((432, 432, 4), dtype=np.uint8)
-    mono[..., :3] = 255
-    mono[..., 3] = mask
-    Image.fromarray(mono, 'RGBA').save(OUT / 'android-icon-monochrome.png', optimize=True)
-    # Écran de démarrage (fond ivoire posé par app.json) et favicon : logo sur fond transparent.
-    fit(logo, 1024).save(OUT / 'splash-icon.png', optimize=True)
-    on_canvas(logo, 192, 0.96, (0, 0, 0, 0)).save(OUT / 'favicon.png', optimize=True)
-    print('Fichiers écrits dans', OUT)
+    draw_symbol(1024, 0.60, WHITE, ORANGE, GRAPHITE).convert('RGB').save(OUT / 'icon.png', optimize=True)
+    draw_symbol(1024, 0.40, WHITE, ORANGE, CLEAR).save(OUT / 'android-icon-foreground.png', optimize=True)
+    Image.new('RGB', (1024, 1024), GRAPHITE[:3]).save(OUT / 'android-icon-background.png', optimize=True)
+    draw_symbol(432, 0.40, WHITE, WHITE, CLEAR).save(OUT / 'android-icon-monochrome.png', optimize=True)
+    draw_symbol(1024, 0.80, WHITE, ORANGE, CLEAR).save(OUT / 'splash-icon.png', optimize=True)
+    draw_symbol(192, 0.80, WHITE, ORANGE, GRAPHITE).convert('RGB').save(OUT / 'favicon.png', optimize=True)
+    print('Icônes écrites dans', OUT)
 
 
 if __name__ == '__main__':

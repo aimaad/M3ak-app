@@ -3,41 +3,39 @@
 Principes tirés du skill `mobile-app-ui-design` (règles 60/30/10, grille de 8, ombres douces, hiérarchie, contraste, états vides). Le nom de l'application est **BIBIP** et sa palette est **Emerald Ivory** (émeraude `#087F70` sur ivoire `#FAF8F1`). Les identifiants techniques (slug Expo `m3ak`, scheme `m3ak`, clés de stockage `m3ak.*`, noms de fonctions serveur, tables) gardent leur nom d'origine : les renommer casserait les liens, les données locales et le serveur.
 
 ## Logo
-Le logo officiel BIBIP (fichier fourni : `assets/branding/BIBIP_logo_exact.svg`, un PNG transparent intégré) est **définitif et ne se modifie jamais** : ni formes, ni couleurs (verts et accent lime), ni dégradés, ni transparence. Il n'est ni recréé en CSS/SVG ni recoloré pour suivre la palette de l'interface : le logo et l'interface ont chacun leurs couleurs.
+Le logo BIBIP est un symbole « b » (trait + cercle) accompagné de deux ondes sonores orange, suivi du texte « bibip » en minuscules (Montserrat SemiBold 600). Fichiers sources : `assets/images/bibip-symbole-gris.svg` (« b » graphite `#202527`, fond clair) et `bibip-symbole-blanc.svg` (« b » blanc, fond sombre) ; les ondes sont toujours orange `#CA531D`. Ils ne se modifient pas (empreintes vérifiées par `brand-assets.test.ts`).
 
-`scripts/build-brand-assets.py` en extrait le PNG (octets identiques), rogne les marges vides et fabrique les tailles utiles : `assets/images/logo-bibip.png` (usage dans l'app), `icon.png` (iOS, fond ivoire car pas de transparence), `android-icon-foreground/background/monochrome.png`, `splash-icon.png` et `favicon.png`. La silhouette « monochrome » est exigée par Android 13 (icône thématique), c'est le masque de transparence du logo. Le composant `Logo` / `LogoMark` (`src/components/logo.tsx`) affiche le logo + le nom « BIBIP » (le logo n'a pas de mot-symbole) : sur fond clair il est posé tel quel, **sur fond sombre il est posé sur une pastille ivoire arrondie** (il garde ses couleurs et reste lisible).
+Le composant `Logo` (`src/components/logo.tsx`) redessine ces mêmes tracés avec `react-native-svg` : prop `symbolOnly` pour le symbole seul, `tone` (`dark` / `light` / `auto`) pour le fond. `scripts/build-brand-assets.py` fabrique les icônes : `icon.png` (fond graphite, « b » blanc, ondes orange, symbole ≈ 60 % de la largeur), `android-icon-foreground/background/monochrome.png`, `splash-icon.png` et `favicon.png`. L'icône de l'app est le symbole seul.
 
-## Palette BIBIP « Emerald Ivory »
-**Source de vérité unique : `src/constants/brand.js`**, lue par `src/constants/theme.ts` (`BibipPalette`, `Shadows`, `Colors`, `Typefaces`) et par `tailwind.config.js` (classes `bg-brand`, `border-line`, `bg-canvas`, `bg-primary`, `text-on-primary`, `border-mint`…). **Aucune couleur de marque écrite en dur** : toujours un jeton. Les noms sont des rôles (`primary` = émeraude signature). Test : `src/constants/__tests__/theme-contrast.test.ts` (valeurs imposées, contrastes WCAG AA, tailwind aligné sur le thème).
+## Palette BIBIP « Graphite & Orange »
+**Source de vérité unique : `src/constants/brand.js`** (jetons `light` et `dark`), lue par `src/constants/theme.ts` (`Brand`, `Themes`, `Palette`, `Shadows`, `Colors`) et par `tailwind.config.js`. Le thème sombre est préparé mais l'application reste forcée en clair (`userInterfaceStyle: "light"`).
 
-| Rôle | Jeton | Valeur | Usage |
-|---|---|---|---|
-| Émeraude signature | `primary`, `brand` | `#087F70` | boutons, navigation, liens. Blanc dessus : 4,9:1 ; sur l'ivoire : 4,6:1 |
-| Émeraude appuyé | `primaryPressed` | `#066B5F` | état pressé ; texte d'action sur teintes claires (5,4:1) |
-| Émeraude profond | `primaryDeep`, `brand-deep` | `#0A3A34` | hero, cartes premium (revenus), menu latéral PC. Blanc dessus : 12,6:1 |
-| Vert nuit | `night` | `#06211D` | fonds les plus sombres (ouverture), contraste texte sur ambre |
-| Teintes claires | `primaryLight`, `primarySoft` | `#DDF1EC`, `#EEF7F4` | sélections, pastilles, fonds doux |
-| Menthe | `mint` | `#7DDCC8` | accents sur fond sombre (7,8:1 sur l'émeraude profond) |
-| Lime | `lime` | `#C9F333` | accent du logo : petites touches sur fond sombre (traits, points) |
-| Ivoire | `background`, `canvas` | `#FAF8F1` | fond principal |
-| Blanc pur | `surface` | `#FFFFFF` | cartes et surfaces |
-| Texte principal | `ink` | `#202B29` | titres et texte (13,7:1 sur l'ivoire) |
-| Texte secondaire | `muted` | `#5B6866` | lisible (≥ 4,5:1) sur toutes les surfaces |
-| Bordures | `border`, `borderSoft` | `#E7E3D4`, `#F0EDE1` | contours de cartes et de champs (`border-line`) |
+| Rôle | Jeton | Clair | Sombre | Usage |
+|---|---|---|---|---|
+| Fond | `background` | `#FFFFFF` | `#202527` | fond des écrans |
+| Surface / surface alt. | `surface`, `surfaceAlt` | `#F6F6F5`, `#EDEEEE` | `#2A3033`, `#343B3F` | zones douces, pastilles, champs |
+| Carte | `card` | `#FFFFFF` | `#2A3033` | cartes : fond + bordure, **sans ombre** |
+| Bordure | `border` | `#E2E4E5` | `#3F474B` | contours de cartes et de champs |
+| Texte principal | `textPrimary` | `#202527` | `#FFFFFF` | titres et texte (graphite) |
+| Texte secondaire / discret | `textSecondary`, `textMuted` | `#5E6466`, `#8A9092` | — | `textMuted` : décoratif ou grand texte seulement (2,99:1 sur `surface`) |
+| Orange (action) | `primary` | `#CA531D` | — | **un seul bouton plein par écran** ; blanc dessus 4,4:1, donc texte 16 px minimum et gras |
+| Orange appuyé | `primaryPressed` | `#A84416` | — | état pressé ; texte d'action sur teinte claire |
+| Orange doux | `primarySoft`, `onPrimarySoft` | `#FBEDE6`, `#A84416` | — | sélections, pastilles |
+| Orange en texte | `accentText` | `#CA531D` | `#EC7A45` | seulement ≥ 16 px ou en gras ; petits liens en graphite avec flèche orange |
+| Graphite | `Brand.graphite` | `#202527` | — | hero, carte des revenus, onglet actif, puces sélectionnées |
 
 ### Couleurs fonctionnelles
-Les teintes d'origine servent aux **pastilles, icônes et fonds** ; pour du **texte sur clair** on prend la variante `*Text`, plus foncée (l'ambre n'atteint que 2,5:1 sur blanc). Le vert « succès » est volontairement distinct de l'émeraude de la marque ; le rouge et l'ambre restent des couleurs purement fonctionnelles. Test : `theme-contrast.test.ts`.
+| Sens | Jeton | Valeur | Fond doux |
+|---|---|---|---|
+| Succès / disponible | `success` | `#1A7F53` | `successSoft` `#E3F3EB` |
+| Information / en location | `info` | `#3D6FB6` | `infoSoft` `#E6EEF8` (sombre `#223246`) |
+| Attention / maintenance | `warning` | `#7A5A00` | `warningSoft` `#FFF6D6` |
+| Erreur / suppression | `error` | `#C42B4B` | `errorSoft` `#FBE6EA` |
 
-| Sens | Pastille / icône | Texte | Fond clair | Statuts concernés |
-|---|---|---|---|---|
-| Disponible / succès | `success` `#2E8B57` | `successText` `#1E6B3A` | `successLight` | véhicule disponible, location terminée |
-| En location / information | `info` `#5479C7` | `infoText` `#3F62AD` | `infoLight` | véhicule en location, location en cours |
-| Maintenance / attention | `warning` `#D99835` | `warningText` `#8A5A0B` | `warningLight` | maintenance, à confirmer |
-| Retard / erreur | `danger` `#C8443B` | `dangerText` `#A8322B` | `dangerLight` | retards, erreurs de saisie |
-| Indisponible / neutre | `neutral` `#8E9693` | `neutralText` `#5B6866` | `neutralLight` | indisponible, annulée |
+Règles : dégradés et ombres colorées supprimés ; seule ombre autorisée, grise et très légère (`Shadows.raised`) pour les éléments flottants (bouton « + », feuilles, fenêtres). Les actions destructrices sont un bouton contour/texte `error`, jamais un aplat primaire, toujours avec confirmation ; le rouge est interdit pour une action non destructrice.
 
 - **Typographie** : Plus Jakarta Sans (latin) et Cairo (arabe), une police par graisse (`fontFamilyFor`). Échelle : corps 14–16, titre de section 18, titre de page 28, grand chiffre 34.
-- **Formes** : cartes 16 px (`rounded-2xl`), cartes vedettes 24 px, ombres très légères teintées émeraude profond, zones tactiles ≥ 44.
+- **Formes** : cartes 16 px (`rounded-2xl`), cartes vedettes 24 px, pas d'ombre sur les cartes (fond blanc + bordure), zones tactiles ≥ 44.
 - **Documents imprimés** (contrat, rapports, journal) : leurs couleurs propres, inchangées.
 
 ## Tableau de bord (Accueil)
