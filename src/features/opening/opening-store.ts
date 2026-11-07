@@ -14,7 +14,7 @@ import {
   releaseEngineSound,
   stopEngineSound,
 } from './opening-sound';
-import { DONE_TIME, SIG } from './opening-timeline';
+import { DONE_TIME, REAL_DURATION, SIG } from './opening-timeline';
 
 /**
  * Horloge unique de l'ouverture (ms). Par défaut elle est « terminée » : sans ouverture, tout est déjà à son état final
@@ -116,9 +116,9 @@ export function useAssetsReady(): boolean {
 export function startOpening(height: number) {
   if (nextStatusOnStart(status) !== 'playing') return;
   heroHeight = height;
-  openingTime.value = withTiming(SIG.end, { duration: SIG.end, easing: Easing.linear });
+  openingTime.value = withTiming(SIG.end, { duration: REAL_DURATION, easing: Easing.linear });
   setStatus('playing');
-  endTimer = setTimeout(() => endOpening('completed'), SIG.end + 80);
+  endTimer = setTimeout(() => endOpening('completed'), REAL_DURATION + 80);
 }
 
 /** Déclenche le moteur (appelé à l'instant précis du démarrage) : sans effet si l'ouverture est déjà terminée. */

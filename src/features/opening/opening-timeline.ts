@@ -16,8 +16,15 @@ export const SIG = {
   placeEnd: 1500,
   end: 2000,
   /** Le moteur démarre un peu avant les phares : son pic (≈ 0,55 s après son début) tombe à leur pleine intensité. */
-  soundAt: 250,
+  soundAt: Math.round(700 - 550 / 1.75),
 } as const;
+
+/**
+ * Ralentissement global : le storyboard est écrit sur 2,0 s, l'animation réelle dure 2,0 s × SLOW (3,5 s). Toutes les
+ * phases gardent leurs proportions ; seule la vitesse de l'horloge change.
+ */
+export const SLOW = 1.75;
+export const REAL_DURATION = SIG.end * SLOW;
 
 /** Valeur de l'horloge quand il n'y a (plus) rien à jouer : au-delà de toutes les fenêtres, tout est à son état final. */
 export const DONE_TIME = 10_000;

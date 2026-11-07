@@ -3,6 +3,8 @@ import {
   easeInOut,
   easeOut,
   keys,
+  REAL_DURATION,
+  SLOW,
   revealWindow,
   SIG,
   stageCurves,
@@ -29,6 +31,10 @@ describe('Signature Ignition : chronologie', () => {
       300, 700, 1100, 1500, 2000,
     ]);
     expect(DONE_TIME).toBeGreaterThan(SIG.end);
+  });
+
+  it('l’animation réelle dure 3,5 s (2,0 s ralenties ×1,75)', () => {
+    expect(REAL_DURATION).toBe(3500);
   });
 
   it('windowProgress borne entre 0 et 1', () => {
@@ -71,7 +77,11 @@ describe('Signature Ignition : chronologie', () => {
   });
 
   it('scène 2 : la voiture apparaît puis les phares s’allument après le départ du son', () => {
-    expect(SIG.soundAt).toBeLessThan(380);
+    // Le moteur démarre au moment où les phares commencent à s'allumer (380 ms de la chronologie).
+    expect(Math.abs(SIG.soundAt - 380)).toBeLessThan(30);
+    // Le pic du moteur (0,55 s après son début, en temps réel) tombe à la pleine intensité des phares (0,7 s de la chronologie).
+    expect((700 - SIG.soundAt) * SLOW).toBeGreaterThan(500);
+    expect((700 - SIG.soundAt) * SLOW).toBeLessThan(600);
     expect(stageCurves(300).front).toBe(0);
     expect(stageCurves(500).front).toBeGreaterThan(0.3);
     // La voiture reste dans l'obscurité à son apparition.
