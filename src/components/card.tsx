@@ -10,7 +10,7 @@ type CardProps = ViewProps & {
 
 /** Surface blanche (ou vert forêt en variante vedette), bords arrondis, ombre très légère. */
 export function Card({ padded = true, variant = 'default', className, style, ...rest }: CardProps) {
-  const surface = variant === 'forest' ? 'rounded-3xl bg-brand-deep' : 'rounded-2xl border border-line bg-white';
+  const surface = variant === 'forest' ? 'rounded-3xl bg-graphite' : 'rounded-2xl border border-border bg-card';
   return (
     <View
       className={`${surface} ${padded ? 'p-4' : ''} ${className ?? ''}`}
@@ -27,7 +27,7 @@ type PressableCardProps = PressableProps & {
 export function PressableCard({ padded = true, className, ...rest }: PressableCardProps) {
   return (
     <Pressable
-      className={`rounded-2xl border border-line bg-white active:bg-brand-soft ${padded ? 'p-4' : ''} ${className ?? ''}`}
+      className={`rounded-2xl border border-border bg-card active:bg-primary-soft ${padded ? 'p-4' : ''} ${className ?? ''}`}
       style={Shadows.card}
       {...rest}
     />

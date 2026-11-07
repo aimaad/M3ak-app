@@ -3,7 +3,7 @@ import { Alert, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -36,14 +36,14 @@ export function DuplicateVehicleCard({ duplicate, onContinue }: { duplicate: Veh
   }
 
   return (
-    <View className="gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.warningLight }}>
-      <ThemedText type="smallBold" style={{ color: BibipPalette.warning }}>
+    <View className="gap-3 rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.warningSoft }}>
+      <ThemedText type="smallBold" style={{ color: Palette.warning }}>
         {t('vehicle.duplicate.title')}
       </ThemedText>
-      <ThemedText type="small" style={{ color: BibipPalette.warning }}>
+      <ThemedText type="small" style={{ color: Palette.warning }}>
         {duplicate.field === 'vin' ? t('vehicle.duplicate.sameVin') : t('vehicle.duplicate.samePlate')}
       </ThemedText>
-      <View className="rounded-xl bg-white px-3 py-2">
+      <View className="rounded-xl bg-card px-3 py-2">
         <ThemedText type="smallBold">{`${vehicle.marque} ${vehicle.modele}`.trim()}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {vehicle.immatriculation}

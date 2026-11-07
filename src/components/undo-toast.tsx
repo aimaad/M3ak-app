@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { UndoController, type ActiveUndo, type UndoRequest } from '@/lib/undo';
 
@@ -33,13 +33,13 @@ export function UndoProvider({ children }: { children: ReactNode }) {
           <View
             accessibilityLiveRegion="polite"
             className="w-full flex-row items-center justify-between gap-3 rounded-2xl px-4 py-3"
-            style={{ maxWidth: 480, backgroundColor: BibipPalette.ink, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}
+            style={{ maxWidth: 480, backgroundColor: Palette.textPrimary, shadowColor: Palette.shadow, shadowOpacity: 0.14, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 8 }}
           >
-            <ThemedText type="small" style={{ color: '#FFFFFF', flex: 1 }}>
+            <ThemedText type="small" style={{ color: Brand.white, flex: 1 }}>
               {active.message}
             </ThemedText>
             <Pressable onPress={() => void controller.undo()} accessibilityRole="button" hitSlop={10} className="min-h-11 justify-center px-2">
-              <ThemedText type="smallBold" style={{ color: BibipPalette.primaryLight }}>
+              <ThemedText type="smallBold" style={{ color: Palette.primarySoft }}>
                 {active.actionLabel}
               </ThemedText>
             </Pressable>

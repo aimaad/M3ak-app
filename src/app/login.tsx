@@ -8,7 +8,7 @@ import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextField } from '@/components/text-field';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { signInWithEmail } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
 import { friendlyErrorKey } from '@/lib/user-errors';
@@ -57,10 +57,10 @@ export default function LoginScreen() {
                 key={code}
                 onPress={() => changeLanguage(code)}
                 className={`rounded-full border px-3 py-1 ${
-                  selected ? 'border-brand bg-brand' : 'border-line bg-white'
+                  selected ? 'border-graphite bg-graphite' : 'border-border bg-card'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+                <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
                   {t(`common.${LANGUAGE_LABEL_KEY[code]}`)}
                 </ThemedText>
               </Pressable>
@@ -96,8 +96,8 @@ export default function LoginScreen() {
             />
 
             {error ? (
-              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.dangerLight }}>
-                <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.errorSoft }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {error}
                 </ThemedText>
               </View>

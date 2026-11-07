@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 import { GlassCard } from './home-cards';
 
@@ -10,25 +10,25 @@ type Tone = 'default' | 'good' | 'warning' | 'danger';
 
 /** Couleur de l'icône (et de la valeur quand le ton signale quelque chose) ; l'état n'est jamais porté par la couleur seule : icône + intitulé. */
 const TONE_COLOR: Record<Tone, string> = {
-  default: BibipPalette.primary,
-  good: BibipPalette.success,
-  warning: BibipPalette.warning,
-  danger: BibipPalette.danger,
+  default: Palette.primary,
+  good: Palette.success,
+  warning: Palette.warning,
+  danger: Palette.error,
 };
 
 /** Texte de la valeur : variantes foncées des couleurs fonctionnelles (4,5:1 sur blanc). */
 const TONE_TEXT: Record<Tone, string> = {
-  default: BibipPalette.ink,
-  good: BibipPalette.successText,
-  warning: BibipPalette.warningText,
-  danger: BibipPalette.dangerText,
+  default: Palette.textPrimary,
+  good: Palette.success,
+  warning: Palette.warning,
+  danger: Palette.error,
 };
 
 const TONE_TINT: Record<Tone, string> = {
-  default: BibipPalette.primaryLight,
-  good: BibipPalette.successLight,
-  warning: BibipPalette.warningLight,
-  danger: BibipPalette.dangerLight,
+  default: Palette.primarySoft,
+  good: Palette.successSoft,
+  warning: Palette.warningSoft,
+  danger: Palette.errorSoft,
 };
 
 /**

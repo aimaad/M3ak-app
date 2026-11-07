@@ -3,18 +3,18 @@ import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette, Shadows } from '@/constants/theme';
+import { Shadows, Brand, Palette } from '@/constants/theme';
 
 import type { ChatMessage } from './types';
 
-/** Pastille M3ak : violet vif avec une étincelle, reconnaissable d'un coup d'œil. */
+/** Pastille BIBIP : graphite avec une étincelle orange, reconnaissable d'un coup d'œil. */
 export function ChatAvatar({ size = 32 }: { size?: number }) {
   return (
     <View
       className="items-center justify-center rounded-full"
-      style={{ width: size, height: size, backgroundColor: BibipPalette.primary, ...Shadows.button, shadowOpacity: 0.25 }}
+      style={{ width: size, height: size, backgroundColor: Brand.graphite }}
     >
-      <Ionicons name="sparkles" size={Math.round(size * 0.5)} color="#FFFFFF" />
+      <Ionicons name="sparkles" size={Math.round(size * 0.5)} color={Brand.orangeLight} />
     </View>
   );
 }
@@ -40,17 +40,17 @@ export function ChatBubble({ message, onOpenSource }: { message: ChatMessage; on
         <View
           style={[
             {
-              backgroundColor: mine ? BibipPalette.primary : '#FFFFFF',
+              backgroundColor: mine ? Brand.graphite : Palette.card,
               borderWidth: mine ? 0 : 1,
-              borderColor: BibipPalette.border,
+              borderColor: Palette.border,
               borderRadius: 20,
               paddingHorizontal: 16,
               paddingVertical: 12,
             },
-            mine ? { borderBottomEndRadius: 6, ...Shadows.button, shadowOpacity: 0.22 } : { borderBottomStartRadius: 6, ...Shadows.card },
+            mine ? { borderBottomEndRadius: 6 } : { borderBottomStartRadius: 6 },
           ]}
         >
-          <ThemedText type="default" style={{ color: mine ? '#FFFFFF' : BibipPalette.ink }} selectable>
+          <ThemedText type="default" style={{ color: mine ? Brand.white : Palette.textPrimary }} selectable>
             {message.content}
           </ThemedText>
         </View>
@@ -62,10 +62,10 @@ export function ChatBubble({ message, onOpenSource }: { message: ChatMessage; on
                 key={source.id}
                 onPress={() => onOpenSource(source.id)}
                 accessibilityRole="button"
-                className="min-h-8 flex-row items-center gap-1.5 rounded-full border border-line bg-brand-soft px-3 py-1.5"
+                className="min-h-8 flex-row items-center gap-1.5 rounded-full border border-border bg-primary-soft px-3 py-1.5"
               >
-                <Ionicons name="document-text-outline" size={14} color={BibipPalette.primaryDeep} />
-                <ThemedText type="small" style={{ color: BibipPalette.primaryDeep, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>
+                <Ionicons name="document-text-outline" size={14} color={Brand.graphite} />
+                <ThemedText type="small" style={{ color: Brand.graphite, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>
                   {source.label}
                 </ThemedText>
               </Pressable>
@@ -74,7 +74,7 @@ export function ChatBubble({ message, onOpenSource }: { message: ChatMessage; on
         ) : null}
 
         {time ? (
-          <ThemedText type="small" style={{ color: BibipPalette.subtle, fontSize: 11 }} className={mine ? 'self-end' : 'self-start'}>
+          <ThemedText type="small" style={{ color: Palette.textMuted, fontSize: 11 }} className={mine ? 'self-end' : 'self-start'}>
             {time}
           </ThemedText>
         ) : null}
@@ -104,7 +104,7 @@ function Dot({ delay }: { delay: number }) {
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: BibipPalette.primary,
+        backgroundColor: Palette.textMuted,
         opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
         transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }],
       }}
@@ -118,7 +118,7 @@ export function TypingBubble({ label }: { label: string }) {
     <View className="max-w-[92%] flex-row items-end gap-2 self-start">
       <ChatAvatar size={30} />
       <View
-        className="flex-row items-center gap-3 border border-line bg-white px-4 py-3"
+        className="flex-row items-center gap-3 border border-border bg-card px-4 py-3"
         style={{ borderRadius: 20, borderBottomStartRadius: 6, ...Shadows.card }}
       >
         <View className="flex-row items-center gap-1.5">
@@ -126,7 +126,7 @@ export function TypingBubble({ label }: { label: string }) {
           <Dot delay={160} />
           <Dot delay={320} />
         </View>
-        <ThemedText type="small" style={{ color: BibipPalette.muted }}>
+        <ThemedText type="small" style={{ color: Palette.textSecondary }}>
           {label}
         </ThemedText>
       </View>

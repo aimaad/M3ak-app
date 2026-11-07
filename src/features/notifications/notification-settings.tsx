@@ -2,7 +2,7 @@ import { Alert, Switch, View } from 'react-native';
 
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { useNotificationPreferences, useSaveNotificationPreferences } from './hooks';
@@ -20,7 +20,7 @@ function SwitchRow({ label, hint, value, onChange, disabled }: { label: string; 
           </ThemedText>
         ) : null}
       </View>
-      <Switch value={value} onValueChange={onChange} disabled={disabled} trackColor={{ true: BibipPalette.primary }} />
+      <Switch value={value} onValueChange={onChange} disabled={disabled} trackColor={{ true: Palette.primary }} />
     </View>
   );
 }

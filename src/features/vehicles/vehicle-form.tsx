@@ -31,7 +31,7 @@ import type {
   VehicleStatus,
   VehicleTransmission,
 } from './types';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 type VehicleFormProps = {
   initialValues?: VehicleFormValues;
@@ -232,10 +232,10 @@ export function VehicleForm({
             <Pressable
               onPress={() => setBranchId(null)}
               className={`rounded-full border px-4 py-2 ${
-                branchId === null ? 'border-brand bg-brand' : 'border-line bg-white'
+                branchId === null ? 'border-graphite bg-graphite' : 'border-border bg-card'
               }`}
             >
-              <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : BibipPalette.ink }}>
+              <ThemedText type="small" style={{ color: branchId === null ? Brand.white : Palette.textPrimary }}>
                 {t('vehicle.fields.allBranches')}
               </ThemedText>
             </Pressable>
@@ -246,10 +246,10 @@ export function VehicleForm({
                   key={branch.id}
                   onPress={() => setBranchId(branch.id)}
                   className={`rounded-full border px-4 py-2 ${
-                    isSelected ? 'border-brand bg-brand' : 'border-line bg-white'
+                    isSelected ? 'border-graphite bg-graphite' : 'border-border bg-card'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: isSelected ? '#ffffff' : BibipPalette.ink }}>
+                  <ThemedText type="small" style={{ color: isSelected ? Brand.white : Palette.textPrimary }}>
                     {branch.nom}
                   </ThemedText>
                 </Pressable>
@@ -357,7 +357,7 @@ export function VehicleForm({
           {t('vehicle.fields.statut')}
         </ThemedText>
         {statusLocked ? (
-          <View className="rounded-2xl border border-dashed border-line bg-white px-4 py-3">
+          <View className="rounded-2xl border border-dashed border-border bg-card px-4 py-3">
             <ThemedText type="small" themeColor="textSecondary">
               {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
             </ThemedText>
@@ -382,8 +382,8 @@ export function VehicleForm({
       />
 
       {submitError ? (
-        <View className="rounded-2xl bg-[#FBE8E6] px-4 py-3">
-          <ThemedText type="small" style={{ color: '#A8322B' }}>
+        <View className="rounded-2xl bg-error-soft px-4 py-3">
+          <ThemedText type="small" style={{ color: Palette.error }}>
             {submitError}
           </ThemedText>
         </View>

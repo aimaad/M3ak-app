@@ -8,7 +8,7 @@ import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { buildContractHtml } from '@/features/contracts/contract-pdf';
 import { ContractViewer } from '@/features/contracts/contract-viewer';
@@ -76,7 +76,7 @@ export default function SignerContratScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contract.sign.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            {isLoading || storedTemplate.isLoading ? <ActivityIndicator color={BibipPalette.primary} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
+            {isLoading || storedTemplate.isLoading ? <ActivityIndicator color={Palette.primary} /> : <ThemedText themeColor="textSecondary">{t('contract.notFound')}</ThemedText>}
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -169,7 +169,7 @@ export default function SignerContratScreen() {
             <ScrollView className="flex-1" contentContainerClassName="gap-4 px-6 pb-6">
               <Card padded={false} className="px-4">
                 {summaryRows.map(([label, value]) => (
-                  <View key={label} className="border-b border-line py-3 last:border-b-0">
+                  <View key={label} className="border-b border-border py-3 last:border-b-0">
                     <ThemedText type="small" themeColor="textSecondary">
                       {label}
                     </ThemedText>
@@ -192,13 +192,13 @@ export default function SignerContratScreen() {
                   loading={preparing}
                   style={{ alignSelf: 'stretch' }}
                 />
-                <ThemedText type="smallBold" style={{ color: reachedEnd ? '#1E6B3A' : '#8A5A0B' }}>
+                <ThemedText type="smallBold" style={{ color: reachedEnd ? Palette.success : Palette.warning }}>
                   {reachedEnd ? t('contract.sign.readDone') : t('contract.sign.readPending')}
                 </ThemedText>
               </Card>
             </ScrollView>
 
-            <View className="gap-3 border-t border-line bg-white px-6 py-4">
+            <View className="gap-3 border-t border-border bg-card px-6 py-4">
               <Pressable
                 onPress={() => reachedEnd && setAccepted((value) => !value)}
                 disabled={!reachedEnd}
@@ -206,9 +206,9 @@ export default function SignerContratScreen() {
                 style={{ opacity: reachedEnd ? 1 : 0.4 }}
               >
                 <View
-                  className={`h-6 w-6 items-center justify-center rounded-md border-2 ${accepted ? 'border-brand bg-brand' : 'border-subtle bg-white'}`}
+                  className={`h-6 w-6 items-center justify-center rounded-md border-2 ${accepted ? 'border-graphite bg-graphite' : 'border-content-muted bg-card'}`}
                 >
-                  {accepted ? <ThemedText style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
+                  {accepted ? <ThemedText style={{ color: Brand.white, lineHeight: 18 }}>✓</ThemedText> : null}
                 </View>
                 <ThemedText type="small" style={{ flex: 1 }}>
                   {t('contract.sign.accept')}
@@ -241,24 +241,24 @@ export default function SignerContratScreen() {
                   <SignatureView signature={staffSignature} height={56} />
                 ) : staffMissing ? (
                   <>
-                    <ThemedText type="small" style={{ color: BibipPalette.warning }} className="text-center">
+                    <ThemedText type="small" style={{ color: Palette.warning }} className="text-center">
                       {t('contract.sign.staffMissing')}
                     </ThemedText>
                     <Button label={t('profil.signature.add')} variant="secondary" size="sm" onPress={() => router.push('/profil/signature')} />
                   </>
                 ) : (
-                  <ActivityIndicator color={BibipPalette.primary} />
+                  <ActivityIndicator color={Palette.primary} />
                 )}
               </Card>
             </View>
 
             {stampMissing ? (
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.stampMissingOwner' : 'contract.sign.stampMissing')}
               </ThemedText>
             ) : null}
             {logoMissing ? (
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t(agencyQuery.data?.role === 'owner' ? 'contract.sign.logoMissingOwner' : 'contract.sign.logoMissing')}
               </ThemedText>
             ) : null}
@@ -269,7 +269,7 @@ export default function SignerContratScreen() {
               <Button label={t('entreprise.stamp.add')} variant="secondary" size="sm" onPress={() => router.push('/entreprise')} />
             ) : null}
             {error ? (
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {error}
               </ThemedText>
             ) : null}

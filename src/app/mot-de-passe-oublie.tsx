@@ -18,6 +18,7 @@ import {
 } from '@/features/auth/validation';
 import { useLanguage } from '@/i18n/use-language';
 import { friendlyErrorKey } from '@/lib/user-errors';
+import { Palette } from '@/constants/theme';
 
 /** Mot de passe oublié : 1) saisir l'e-mail, 2) saisir le code reçu et choisir un nouveau mot de passe. */
 export default function ForgotPasswordScreen() {
@@ -106,7 +107,7 @@ export default function ForgotPasswordScreen() {
                 keyboardType="email-address"
               />
               {error ? (
-                <ThemedText type="small" style={{ color: '#A8322B' }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {error}
                 </ThemedText>
               ) : null}
@@ -148,7 +149,7 @@ export default function ForgotPasswordScreen() {
                 error={touched && passwordErrors.confirmPassword ? t(`auth.errors.${passwordErrors.confirmPassword}`) : undefined}
               />
               {error ? (
-                <ThemedText type="small" style={{ color: '#A8322B' }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {error}
                 </ThemedText>
               ) : null}

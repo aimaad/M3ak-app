@@ -8,7 +8,7 @@ import { Pager } from '@/components/pager';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useDismissAllNotifications, useDismissNotification, useNotifications, useRestoreNotifications } from '@/features/notifications/hooks';
 import { useUndo } from '@/components/undo-toast';
@@ -60,7 +60,7 @@ export default function NotificationsScreen() {
           right={
             items.length > 0 ? (
               <Pressable onPress={clearAll} hitSlop={8}>
-                <ThemedText type="small" style={{ color: '#A8322B' }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {t('notifications.clearAll')}
                 </ThemedText>
               </Pressable>
@@ -70,7 +70,7 @@ export default function NotificationsScreen() {
 
         {query.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : query.isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -83,14 +83,14 @@ export default function NotificationsScreen() {
             data={pagination.items}
             keyExtractor={(item) => item.id}
             contentContainerClassName="gap-3 px-6 pb-10"
-            refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={() => void query.refetch()} tintColor={BibipPalette.primary} />}
+            refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={() => void query.refetch()} tintColor={Palette.primary} />}
             renderItem={({ item }) => {
               const view = notificationView(item, t, language);
               const colors = SEVERITY_COLORS[item.severity];
               return (
                 <Pressable
                   onPress={() => open(item)}
-                  className="flex-row gap-3 overflow-hidden rounded-2xl border border-line bg-white p-3"
+                  className="flex-row gap-3 overflow-hidden rounded-2xl border border-border bg-card p-3"
                   accessibilityRole="button"
                 >
                   <View className="h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: colors.background }}>
@@ -107,7 +107,7 @@ export default function NotificationsScreen() {
                         accessibilityRole="button"
                         accessibilityLabel={t('notifications.dismiss')}
                       >
-                        <Ionicons name="close" size={18} color={BibipPalette.primary} />
+                        <Ionicons name="close" size={18} color={Palette.primary} />
                       </Pressable>
                     </View>
                     <ThemedText type="small">{view.body}</ThemedText>
@@ -127,10 +127,10 @@ export default function NotificationsScreen() {
                           onPress={() => Linking.openURL(`tel:${view.phone}`)}
                           hitSlop={8}
                           className="flex-row items-center gap-1 rounded-full px-3 py-1"
-                          style={{ backgroundColor: BibipPalette.primary }}
+                          style={{ backgroundColor: Palette.primary }}
                         >
-                          <Ionicons name="call" size={13} color="#fff" />
-                          <ThemedText type="small" style={{ color: '#fff', fontSize: 12 }}>
+                          <Ionicons name="call" size={13} color={Brand.white} />
+                          <ThemedText type="small" style={{ color: Brand.white, fontSize: 12 }}>
                             {t('notifications.call', { phone: view.phone })}
                           </ThemedText>
                         </Pressable>
@@ -143,7 +143,7 @@ export default function NotificationsScreen() {
             ListFooterComponent={<Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />}
             ListEmptyComponent={
               <View className="items-center gap-3 px-6 pt-16">
-                <Ionicons name="notifications-off-outline" size={44} color={BibipPalette.primary} />
+                <Ionicons name="notifications-off-outline" size={44} color={Palette.primary} />
                 <ThemedText type="default" themeColor="textSecondary" className="text-center">
                   {t('notifications.empty')}
                 </ThemedText>

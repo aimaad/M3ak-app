@@ -1,12 +1,12 @@
 import { View } from 'react-native';
 
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 /** Barre de chargement : `fraction` de 0 à 1. */
-export function ProgressBar({ fraction, color = BibipPalette.primary }: { fraction: number; color?: string }) {
+export function ProgressBar({ fraction, color = Palette.primary }: { fraction: number; color?: string }) {
   const percent = Math.round(Math.max(0, Math.min(1, fraction)) * 100);
   return (
-    <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: percent }} className="h-3 w-full overflow-hidden rounded-full bg-line">
+    <View accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: percent }} className="h-3 w-full overflow-hidden rounded-full bg-border">
       <View style={{ width: `${percent}%`, backgroundColor: color, height: '100%', borderRadius: 999 }} />
     </View>
   );

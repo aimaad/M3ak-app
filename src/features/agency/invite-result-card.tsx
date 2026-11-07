@@ -4,7 +4,7 @@ import { Linking, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { formatInviteCode } from './invite-code';
@@ -41,20 +41,20 @@ export function InviteResultCard({ result, onDone }: { result: InviteResult; onD
       : t('equipe.invite.emailNotConfigured');
 
   return (
-    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <ThemedText type="smallBold">
         {t('equipe.invite.createdFor', { name: `${result.prenom} ${result.nom}`.trim() })}
       </ThemedText>
 
-      <ThemedText type="small" style={{ color: result.emailSent ? BibipPalette.primary : BibipPalette.danger }}>
+      <ThemedText type="small" style={{ color: result.emailSent ? Palette.primary : Palette.error }}>
         {emailLine}
       </ThemedText>
 
-      <View className="items-center rounded-2xl bg-brand-light px-4 py-4">
+      <View className="items-center rounded-2xl bg-primary-soft px-4 py-4">
         <ThemedText type="small" themeColor="textSecondary">
           {t('equipe.invite.codeLabel')}
         </ThemedText>
-        <ThemedText type="subtitle" style={{ letterSpacing: 2, color: BibipPalette.primaryDeep }} selectable>
+        <ThemedText type="subtitle" style={{ letterSpacing: 2, color: Brand.graphite }} selectable>
           {code}
         </ThemedText>
       </View>

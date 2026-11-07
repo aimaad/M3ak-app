@@ -1,6 +1,6 @@
 import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
-import { fontFamilyFor, Fonts, BibipPalette, ThemeColor, type FontWeightName } from '@/constants/theme';
+import { fontFamilyFor, Fonts, ThemeColor, type FontWeightName, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 import { useTheme } from '@/hooks/use-theme';
 import { normalizeText } from '@/lib/normalize-text';
@@ -14,12 +14,16 @@ export function ThemedText({ style, type = 'default', themeColor, children, ...r
   const theme = useTheme();
   const { language } = useLanguage();
   const weight = WEIGHT_BY_TYPE[type];
+  // Règle BIBIP : le texte orange n'est autorisé qu'en gras ou en 16 px et plus (contraste 4,4:1). Les petits textes (14 px
+  // courants : liens, libellés) restent en graphite ; la flèche ou l'icône voisine porte l'orange.
+  const colorKey: ThemeColor =
+    themeColor === 'primary' && !ORANGE_TEXT_TYPES.has(type) ? 'text' : (themeColor ?? 'text');
 
   return (
     <Text
       style={[
         // flexShrink : dans une ligne, un texte long passe à la ligne au lieu de déborder sur son voisin (React Native ne réduit pas par défaut).
-        { color: theme[themeColor ?? 'text'], flexShrink: 1 },
+        { color: theme[colorKey], flexShrink: 1 },
         weight ? { fontFamily: fontFamilyFor(language, weight) } : null,
         type === 'default' && styles.default,
         type === 'title' && styles.title,
@@ -37,6 +41,9 @@ export function ThemedText({ style, type = 'default', themeColor, children, ...r
     </Text>
   );
 }
+
+/** Types de texte où l'orange est autorisé : gras, ou 16 px et plus. */
+const ORANGE_TEXT_TYPES = new Set<NonNullable<ThemedTextProps['type']>>(['smallBold', 'default', 'title', 'subtitle']);
 
 /** Une graisse par type de texte (les polices M3ak n'ont qu'un fichier par graisse). */
 const WEIGHT_BY_TYPE: Record<NonNullable<ThemedTextProps['type']>, FontWeightName | null> = {
@@ -78,7 +85,7 @@ const styles = StyleSheet.create({
   linkPrimary: {
     lineHeight: 30,
     fontSize: 14,
-    color: BibipPalette.primary,
+    color: Palette.textPrimary,
   },
   code: {
     fontFamily: Fonts.mono,

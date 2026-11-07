@@ -10,7 +10,7 @@ import { ZoomableImage } from '@/components/zoomable-image';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { setCustomerCreationDraft } from '@/features/customers/customer-creation-draft';
 import {
   EMPTY_CREATION_DRAFT,
@@ -128,7 +128,7 @@ export default function ScannerPermisScreen() {
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
         <ScreenHeader title={t('customer.create.scanTitle')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10">
-          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={BibipPalette.primary} /> : null}
+          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={Palette.primary} /> : null}
 
           {status === 'idle' && availability !== 'loading' && availability !== 'active' ? (
             <Card className="gap-4">
@@ -167,7 +167,7 @@ export default function ScannerPermisScreen() {
                 {photos.recto && photos.verso ? '' : t('customer.ocr.bothRequired')}
               </ThemedText>
               <Button label={t('customer.ocr.analyzeBoth')} disabled={!photos.recto || !photos.verso} onPress={analyze} />
-              <View className="rounded-2xl bg-canvas px-4 py-3">
+              <View className="rounded-2xl bg-background px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('ocr.privacyCloud')}
                 </ThemedText>
@@ -177,7 +177,7 @@ export default function ScannerPermisScreen() {
 
           {status === 'processing' ? (
             <Card className="flex-row items-center gap-3">
-              <ActivityIndicator color={BibipPalette.primary} />
+              <ActivityIndicator color={Palette.primary} />
               <ThemedText type="small" themeColor="textSecondary">
                 {t('customer.ocr.analyzing')}
               </ThemedText>

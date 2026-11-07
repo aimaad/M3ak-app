@@ -11,7 +11,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { AGENCY_ASSETS_BUCKET } from '@/features/agency/api';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
 import {
@@ -44,7 +44,7 @@ function SwitchRow({ label, help, value, onChange }: { label: string; help?: str
           </ThemedText>
         ) : null}
       </View>
-      <Switch value={value} onValueChange={onChange} trackColor={{ true: BibipPalette.primary, false: '#D8D6CB' }} />
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: Palette.primary, false: Palette.border }} />
     </View>
   );
 }
@@ -53,8 +53,8 @@ function Section({ number, title, help, children }: { number: number; title: str
   return (
     <Card className="gap-3">
       <View className="flex-row items-center gap-3">
-        <View className="h-7 w-7 items-center justify-center rounded-full bg-brand">
-          <ThemedText type="smallBold" style={{ color: '#fff' }}>
+        <View className="h-7 w-7 items-center justify-center rounded-full bg-primary">
+          <ThemedText type="smallBold" style={{ color: Brand.white }}>
             {number}
           </ThemedText>
         </View>
@@ -85,7 +85,7 @@ export default function ReglagesContratScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('contractTemplate.simple.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -256,7 +256,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
         <ScreenHeader title={t('contractTemplate.simple.title')} subtitle={t('contractTemplate.simple.subtitle')} showBack />
 
         <ScrollView contentContainerClassName="gap-4 px-6 pb-8" keyboardShouldPersistTaps="handled">
-          <View className="gap-1 rounded-2xl bg-brand-light p-4">
+          <View className="gap-1 rounded-2xl bg-primary-soft p-4">
             <ThemedText type="smallBold">{t('contractTemplate.simple.introTitle')}</ThemedText>
             <ThemedText type="small">{t('contractTemplate.simple.intro')}</ThemedText>
           </View>
@@ -274,7 +274,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
               ] as const
             ).map(([key, value]) => (
               <View key={key} className="flex-row items-center gap-2">
-                <Ionicons name={value ? 'checkmark-circle' : 'alert-circle'} size={18} color={value ? BibipPalette.success : BibipPalette.warning} />
+                <Ionicons name={value ? 'checkmark-circle' : 'alert-circle'} size={18} color={value ? Palette.success : Palette.warning} />
                 <ThemedText type="small" style={{ flex: 1 }}>
                   {t(`contractTemplate.simple.agencyFields.${key}`)} : {value ? value : t('contractTemplate.simple.agencyMissing')}
                 </ThemedText>
@@ -289,12 +289,12 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
             <TextField label={t('contractTemplate.simple.if')} value={options.legal.if} onChangeText={(value) => change((o) => ({ ...o, legal: { ...o.legal, if: value } }))} />
             <TextField label={t('contractTemplate.simple.cnss')} value={options.legal.cnss} onChangeText={(cnss) => change((o) => ({ ...o, legal: { ...o.legal, cnss } }))} />
             {options.legal.extra.map((item, index) => (
-              <View key={`${item.label}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-line bg-canvas px-4 py-2">
+              <View key={`${item.label}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2">
                 <ThemedText type="default" style={{ flex: 1 }}>
                   {item.label} : {item.value}
                 </ThemedText>
                 <Pressable accessibilityLabel={t('contractTemplate.simple.remove')} hitSlop={8} onPress={() => change((o) => ({ ...o, legal: { ...o.legal, extra: o.legal.extra.filter((_, i) => i !== index) } }))}>
-                  <Ionicons name="trash-outline" size={20} color={BibipPalette.danger} />
+                  <Ionicons name="trash-outline" size={20} color={Palette.error} />
                 </Pressable>
               </View>
             ))}
@@ -317,7 +317,7 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
                 {key === 'franchise' && options.sections.franchise ? (
                   <View className="gap-2 pb-2">
                     <Pressable onPress={() => setShowFranchise((open) => !open)} className="flex-row items-center gap-2">
-                      <Ionicons name="create-outline" size={16} color={BibipPalette.primary} />
+                      <Ionicons name="create-outline" size={16} color={Palette.primary} />
                       <ThemedText type="small" themeColor="primary">
                         {showFranchise ? t('contractTemplate.simple.hideText') : t('contractTemplate.simple.editText')}
                       </ThemedText>
@@ -331,12 +331,12 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
 
           <Section number={4} title={t('contractTemplate.simple.extraTitle')} help={t('contractTemplate.simple.extraHelp')}>
             {options.extraFields.map((name, index) => (
-              <View key={`${name}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-line bg-canvas px-4 py-2">
+              <View key={`${name}-${index}`} className="flex-row items-center gap-2 rounded-2xl border border-border bg-background px-4 py-2">
                 <ThemedText type="default" style={{ flex: 1 }}>
                   {name}
                 </ThemedText>
                 <Pressable accessibilityLabel={t('contractTemplate.simple.remove')} hitSlop={8} onPress={() => change((o) => ({ ...o, extraFields: o.extraFields.filter((_, i) => i !== index) }))}>
-                  <Ionicons name="trash-outline" size={20} color={BibipPalette.danger} />
+                  <Ionicons name="trash-outline" size={20} color={Palette.error} />
                 </Pressable>
               </View>
             ))}
@@ -349,15 +349,15 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
               {options.conditions.map((condition, index) => {
                 const open = openCondition === index;
                 return (
-                  <View key={index} className="rounded-2xl border border-line bg-white">
+                  <View key={index} className="rounded-2xl border border-border bg-card">
                     <Pressable onPress={() => setOpenCondition(open ? null : index)} className="flex-row items-center gap-3 px-4 py-3">
                       <ThemedText type="smallBold" style={{ flex: 1 }} numberOfLines={1}>
                         {`${index + 1}. ${condition.titleFr || condition.titleAr || t('contractTemplate.simple.newCondition')}`}
                       </ThemedText>
-                      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={BibipPalette.muted} />
+                      <Ionicons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={Palette.textSecondary} />
                     </Pressable>
                     {open ? (
-                      <View className="gap-3 border-t border-line px-4 py-4">
+                      <View className="gap-3 border-t border-border px-4 py-4">
                         <TextField label={t('contractTemplate.simple.conditionTitleFr')} value={condition.titleFr} onChangeText={(titleFr) => updateCondition(index, { titleFr })} />
                         <TextField label={t('contractTemplate.simple.conditionTextFr')} value={condition.textFr} onChangeText={(textFr) => updateCondition(index, { textFr })} multiline />
                         <TextField label={t('contractTemplate.simple.conditionTitleAr')} value={condition.titleAr} onChangeText={(titleAr) => updateCondition(index, { titleAr })} />
@@ -376,13 +376,13 @@ function Settings({ agencyId, agencyName, initial }: { agencyId: string; agencyN
           <Button label={t('contractTemplate.simple.reset')} variant="ghost" size="sm" onPress={handleReset} disabled={remove.isPending} />
         </ScrollView>
 
-        <View className="gap-2 border-t border-line bg-white px-6 py-3">
+        <View className="gap-2 border-t border-border bg-card px-6 py-3">
           {error ? (
-            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {error}
             </ThemedText>
           ) : dirty ? (
-            <ThemedText type="small" style={{ color: BibipPalette.warning }}>
+            <ThemedText type="small" style={{ color: Palette.warning }}>
               {t('contractTemplate.simple.unsaved')}
             </ThemedText>
           ) : null}

@@ -24,7 +24,7 @@ import {
 import { persistCapturedPhoto } from './local-photo-storage';
 import { CAPTURE_ANGLES, CAPTURE_PLAN, isSkippableAngle, type InspectionType, type PhotoAngle } from './types';
 import { usePhotoSync } from './use-photo-sync';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 type InspectionCaptureScreenProps = {
   rentalId: string;
@@ -146,7 +146,7 @@ export function InspectionCaptureScreen({
   if (!permission) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       </ThemedView>
     );
   }
@@ -158,8 +158,8 @@ export function InspectionCaptureScreen({
           <ThemedText type="default" themeColor="textSecondary" className="text-center">
             {t('inspection.permissionRequired')}
           </ThemedText>
-          <Pressable onPress={requestPermission} className="rounded-2xl bg-brand px-5 py-3">
-            <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+          <Pressable onPress={requestPermission} className="rounded-2xl bg-primary px-5 py-3">
+            <ThemedText type="smallBold" style={{ color: Brand.white, fontSize: 16, lineHeight: 22 }}>
               {t('inspection.grantPermission')}
             </ThemedText>
           </Pressable>
@@ -171,7 +171,7 @@ export function InspectionCaptureScreen({
   return (
     <ThemedView className="flex-1 bg-black">
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <View className="bg-white">
+        <View className="bg-card">
           <ScreenHeader
             title={t(`inspection.title.${type}`)}
             subtitle={t('inspection.progress', { done: coveredAngles.filter((angle) => CAPTURE_ANGLES.includes(angle)).length, total: CAPTURE_ANGLES.length })}
@@ -184,8 +184,8 @@ export function InspectionCaptureScreen({
             <CameraView ref={cameraRef} style={{ flex: 1 }} facing="back" />
           ) : (
             <View className="flex-1 items-center justify-center">
-              <ActivityIndicator color="#ffffff" />
-              <ThemedText type="small" style={{ color: '#ffffff' }} className="mt-2">
+              <ActivityIndicator color={Brand.white} />
+              <ThemedText type="small" style={{ color: Brand.white }} className="mt-2">
                 {t('inspection.starting')}
               </ThemedText>
             </View>
@@ -194,12 +194,12 @@ export function InspectionCaptureScreen({
           {activeAngle ? (
             <View className="absolute inset-x-3 top-3 items-center gap-2">
               <View className="rounded-full bg-black/60 px-4 py-2">
-                <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+                <ThemedText type="smallBold" style={{ color: Brand.white }}>
                   {t('inspection.angleRequired', { angle: t(`inspection.angles.${activeAngle}`) })}
                 </ThemedText>
               </View>
               <View className="rounded-2xl bg-black/60 px-4 py-2">
-                <ThemedText type="small" style={{ color: '#ffffff', textAlign: 'center' }}>
+                <ThemedText type="small" style={{ color: Brand.white, textAlign: 'center' }}>
                   {t(`inspection.angleHints.${activeAngle}`)}
                 </ThemedText>
               </View>
@@ -213,7 +213,7 @@ export function InspectionCaptureScreen({
               className="absolute bottom-4 self-center rounded-full bg-black/60 px-4 py-2"
               style={{ alignSelf: 'center' }}
             >
-              <ThemedText type="small" style={{ color: '#ffffff' }}>
+              <ThemedText type="small" style={{ color: Brand.white }}>
                 {t('locations.journey.skip.action')}
               </ThemedText>
             </Pressable>
@@ -224,24 +224,24 @@ export function InspectionCaptureScreen({
               onPress={() => syncNow()}
               className="absolute bottom-4 left-4 right-4 flex-row items-center justify-center gap-2 rounded-full bg-black/60 px-4 py-2"
             >
-              {isSyncing ? <ActivityIndicator color="#ffffff" size="small" /> : null}
-              <ThemedText type="small" style={{ color: '#ffffff' }}>
+              {isSyncing ? <ActivityIndicator color={Brand.white} size="small" /> : null}
+              <ThemedText type="small" style={{ color: Brand.white }}>
                 {t('inspection.pendingUpload', { count: pendingPhotos.length })}
               </ThemedText>
             </Pressable>
           ) : null}
         </View>
 
-        <View className="gap-3 bg-white px-4 pb-4 pt-3">
+        <View className="gap-3 bg-card px-4 pb-4 pt-3">
           <View className="flex-row gap-2">
             {CAPTURE_PLAN.map((entry) => {
               const done = entry.angles.filter((angle) => coveredAngles.includes(angle)).length;
               return (
-                <View key={entry.group} className="flex-1 rounded-xl bg-canvas px-2 py-1.5">
+                <View key={entry.group} className="flex-1 rounded-xl bg-background px-2 py-1.5">
                   <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
                     {t(`inspection.groups.${entry.group}`)}
                   </ThemedText>
-                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? '#1E6B3A' : BibipPalette.ink }}>
+                  <ThemedText type="smallBold" style={{ color: done === entry.angles.length ? Palette.success : Palette.textPrimary }}>
                     {done}/{entry.angles.length}
                   </ThemedText>
                 </View>
@@ -258,15 +258,15 @@ export function InspectionCaptureScreen({
                   onPress={() => setManualAngle(angle)}
                   className={`rounded-full border px-3 py-1.5 ${
                     selected
-                      ? 'border-brand bg-brand'
+                      ? 'border-graphite bg-graphite'
                       : done
-                        ? 'border-[#1E6B3A] bg-[#E3F3E8]'
-                        : 'border-line bg-white'
+                        ? 'border-success bg-success-soft'
+                        : 'border-border bg-card'
                   }`}
                 >
                   <ThemedText
                     type="small"
-                    style={{ color: selected ? '#ffffff' : done ? '#1E6B3A' : BibipPalette.ink }}
+                    style={{ color: selected ? Brand.white : done ? Palette.success : Palette.textPrimary }}
                   >
                     {`${done ? '✓ ' : skipped.includes(angle) ? '– ' : ''}${t(`inspection.angles.${angle}`)}`}
                   </ThemedText>
@@ -279,9 +279,9 @@ export function InspectionCaptureScreen({
             <Pressable
               onPress={handleFinish}
               disabled={completeInspection.isPending}
-              className="items-center rounded-2xl bg-brand px-4 py-4"
+              className="items-center rounded-2xl bg-primary px-4 py-4"
             >
-              <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+              <ThemedText type="smallBold" style={{ color: Brand.white, fontSize: 16, lineHeight: 22 }}>
                 {t('inspection.finish')}
               </ThemedText>
             </Pressable>
@@ -299,9 +299,9 @@ export function InspectionCaptureScreen({
               <Pressable
                 onPress={handleCapture}
                 disabled={!inspection || isCapturing}
-                className="h-16 w-16 items-center justify-center rounded-full border-4 border-brand bg-white"
+                className="h-16 w-16 items-center justify-center rounded-full border-4 border-primary bg-card"
               >
-                {isCapturing ? <ActivityIndicator color={BibipPalette.primary} /> : <View className="h-11 w-11 rounded-full bg-brand" />}
+                {isCapturing ? <ActivityIndicator color={Palette.primary} /> : <View className="h-11 w-11 rounded-full bg-primary" />}
               </Pressable>
               <View className="w-24" />
             </View>

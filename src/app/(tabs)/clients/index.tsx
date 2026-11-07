@@ -25,14 +25,14 @@ import { useDesktopLayout } from '@/hooks/use-desktop-layout';
 import { isRTL } from '@/i18n';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 const EMPTY_CUSTOMERS: Customer[] = [];
 
 function KpiTile({ label, value }: { label: string; value: number }) {
   return (
-    <View className="min-w-[130px] gap-1 rounded-2xl border border-line bg-white px-4 py-3">
-      <ThemedText type="title" themeColor="primary">
+    <View className="min-w-[130px] gap-1 rounded-2xl border border-border bg-card px-4 py-3">
+      <ThemedText type="title">
         {value}
       </ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
@@ -134,10 +134,10 @@ export default function ClientsScreen() {
               <Pressable
                 onPress={() => setFilters((prev) => ({ ...prev, typeClient: 'tous' }))}
                 className={`rounded-full border px-4 py-2 ${
-                  filters.typeClient === 'tous' ? 'border-ink bg-ink' : 'border-line bg-white'
+                  filters.typeClient === 'tous' ? 'border-graphite bg-graphite' : 'border-border bg-card'
                 }`}
               >
-                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? '#ffffff' : BibipPalette.ink }}>
+                <ThemedText type="small" style={{ color: filters.typeClient === 'tous' ? Brand.white : Palette.textPrimary }}>
                   {t('flotte.status.tous')}
                 </ThemedText>
               </Pressable>
@@ -146,10 +146,10 @@ export default function ClientsScreen() {
                   key={type}
                   onPress={() => setFilters((prev) => ({ ...prev, typeClient: type }))}
                   className={`rounded-full border px-4 py-2 ${
-                    filters.typeClient === type ? 'border-ink bg-ink' : 'border-line bg-white'
+                    filters.typeClient === type ? 'border-graphite bg-graphite' : 'border-border bg-card'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: filters.typeClient === type ? '#ffffff' : BibipPalette.ink }}>
+                  <ThemedText type="small" style={{ color: filters.typeClient === type ? Brand.white : Palette.textPrimary }}>
                     {t(`customer.type.${type}`)}
                   </ThemedText>
                 </Pressable>
@@ -160,7 +160,7 @@ export default function ClientsScreen() {
 
         {customersQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
             <ThemedText type="small" themeColor="textSecondary" className="mt-2">
               {t('clients.loading')}
             </ThemedText>
@@ -193,7 +193,7 @@ export default function ClientsScreen() {
               <RefreshControl
                 refreshing={customersQuery.isFetching}
                 onRefresh={() => void customersQuery.refetch()}
-                tintColor={BibipPalette.primary}
+                tintColor={Palette.primary}
               />
             }
             renderItem={({ item }) => (
@@ -215,7 +215,7 @@ export default function ClientsScreen() {
           onPress={() => router.push('/clients/nouveau')}
           className={`absolute bottom-6 ${fabSideClass} flex-row items-center gap-2 rounded-full bg-primary px-5 py-4`}
         >
-          <ThemedText type="smallBold" style={{ color: BibipPalette.onPrimary }}>
+          <ThemedText type="smallBold" style={{ color: Palette.onPrimary, fontSize: 16, lineHeight: 22 }}>
             {`+ ${t('clients.addClient')}`}
           </ThemedText>
         </Pressable>

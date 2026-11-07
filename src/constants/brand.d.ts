@@ -1,38 +1,3 @@
-export declare const BRAND: {
-  readonly primary: string;
-  readonly primaryPressed: string;
-  readonly primaryDeep: string;
-  readonly night: string;
-  readonly primaryLight: string;
-  readonly primarySoft: string;
-  readonly mint: string;
-  readonly lime: string;
-  readonly background: string;
-  readonly surface: string;
-  readonly ink: string;
-  readonly muted: string;
-  readonly subtle: string;
-  readonly border: string;
-  readonly borderSoft: string;
-  readonly success: string;
-  readonly successText: string;
-  readonly successLight: string;
-  readonly info: string;
-  readonly infoText: string;
-  readonly infoLight: string;
-  readonly warning: string;
-  readonly warningText: string;
-  readonly warningLight: string;
-  readonly danger: string;
-  readonly dangerText: string;
-  readonly dangerLight: string;
-  readonly dangerBorder: string;
-  readonly neutral: string;
-  readonly neutralText: string;
-  readonly neutralLight: string;
-  readonly onPrimary: string;
-};
-
 export declare const brand: { readonly graphite: string; readonly orange: string; readonly orangeLight: string; readonly white: string };
 
 export type ThemeTokens = {

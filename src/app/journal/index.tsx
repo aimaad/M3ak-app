@@ -11,7 +11,7 @@ import { ChipGroup } from '@/components/chip-group';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useAgencyMembers, useMyAgency } from '@/features/agency/hooks';
 import { listAuditEntriesForExport } from '@/features/audit/api';
 import { generateAuditPdf, printAuditInBrowser } from '@/features/audit/audit-pdf';
@@ -126,7 +126,7 @@ export default function JournalScreen() {
           </ThemedText>
         ) : null}
         {filters.granularity !== 'all' && filters.granularity !== 'custom' ? (
-          <View className="flex-row items-center justify-between rounded-2xl border border-line bg-white px-2 py-1">
+          <View className="flex-row items-center justify-between rounded-2xl border border-border bg-card px-2 py-1">
             <Button
               label={isRtl ? '›' : '‹'}
               variant="ghost"
@@ -172,7 +172,7 @@ export default function JournalScreen() {
       <View className="gap-2">
         <ThemedText type="smallBold">{t('journal.summary.title')}</ThemedText>
         {summaryQuery.isLoading ? (
-          <ActivityIndicator color={BibipPalette.primary} />
+          <ActivityIndicator color={Palette.primary} />
         ) : (summaryQuery.data ?? []).length === 0 ? (
           <ThemedText type="small" themeColor="textSecondary">
             {t('journal.summary.none')}
@@ -201,7 +201,7 @@ export default function JournalScreen() {
 
       <Button label={exporting ? t('journal.exporting') : t('journal.export')} onPress={handleExport} disabled={exporting || !isAuditRangeValid(filters)} loading={exporting} />
       {exportError ? (
-        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+        <ThemedText type="small" style={{ color: Palette.error }}>
           {exportError}
         </ThemedText>
       ) : null}
@@ -215,7 +215,7 @@ export default function JournalScreen() {
 
         {agencyQuery.isLoading || entriesQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : (
           <FlatList

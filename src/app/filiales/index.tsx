@@ -10,6 +10,7 @@ import { ThemedView } from '@/components/themed-view';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { useBranches, useDeleteBranch } from '@/features/branches/hooks';
 import { useLanguage } from '@/i18n/use-language';
+import { Palette } from '@/constants/theme';
 
 export default function FilialesScreen() {
   const { t } = useLanguage();
@@ -71,7 +72,7 @@ export default function FilialesScreen() {
                     ) : null}
                   </View>
                   {isManager ? (
-                    <ThemedText type="small" style={{ color: '#A8322B' }}>
+                    <ThemedText type="small" style={{ color: Palette.error }}>
                       {t('filiales.delete')}
                     </ThemedText>
                   ) : null}

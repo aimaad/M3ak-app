@@ -1,7 +1,7 @@
 import { View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 type Props = {
   /** Étape affichée, à partir de 0. */
@@ -26,7 +26,7 @@ export function WizardProgress({ current, total, title, stepLabel }: Props) {
           <View
             key={index}
             className="h-1.5 flex-1 rounded-full"
-            style={{ backgroundColor: index <= current ? BibipPalette.primary : BibipPalette.border }}
+            style={{ backgroundColor: index <= current ? Palette.primary : Palette.border }}
           />
         ))}
       </View>

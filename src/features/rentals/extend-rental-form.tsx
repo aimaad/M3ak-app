@@ -7,7 +7,7 @@ import { BOOKED_DAY_MARK, CALENDAR_THEME } from './calendar-theme';
 
 import { Button } from '@/components/button';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { bookedDates } from './availability';
@@ -73,11 +73,11 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
     markedDates[date] = { ...BOOKED_DAY_MARK };
   }
   if (selectedDay) {
-    markedDates[selectedDay] = { startingDay: true, endingDay: true, color: BibipPalette.primary, textColor: '#FFFFFF' };
+    markedDates[selectedDay] = { startingDay: true, endingDay: true, color: Palette.primary, textColor: Brand.white };
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <ThemedText type="smallBold">{t('locations.extend.title')}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">
         {t('locations.extend.currentEnd', { date: new Date(rental.dateFinPrevue).toLocaleDateString('fr-FR') })}
@@ -95,7 +95,7 @@ export function ExtendRentalForm({ rental }: { rental: Rental }) {
         style={{ borderRadius: 24, overflow: 'hidden' }}
       />
       {error ? (
-        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+        <ThemedText type="small" style={{ color: Palette.error }}>
           {error}
         </ThemedText>
       ) : null}

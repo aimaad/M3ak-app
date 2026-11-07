@@ -2,18 +2,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Pressable, View, type LayoutChangeEvent } from 'react-native';
-import Svg, {
-  Circle,
-  Defs,
-  LinearGradient,
-  Path,
-  RadialGradient,
-  Rect,
-  Stop,
-} from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { fontFamilyFor, BibipPalette } from '@/constants/theme';
+import { fontFamilyFor, Brand, Palette, Themes } from '@/constants/theme';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -25,8 +17,8 @@ const periodKey = (period: MetricsPeriod) =>
   period === 'today' ? 'today' : period === '7d' ? 'days7' : 'days30';
 
 /**
- * Carte « verre » claire : dégradé blanc vers lavande très pâle, liseré blanc, ombre mauve diffuse. Appuyable si `onPress`.
- * `highlighted` : variante mauve clair à liseré mauve (l'action principale d'une rangée).
+ * Carte : fond blanc et bordure `border`, sans ombre ni dégradé. Appuyable si `onPress`. `highlighted` : bordure et fond
+ * teintés orange doux (l'action principale d'une rangée).
  */
 export function GlassCard({
   children,
@@ -46,36 +38,20 @@ export function GlassCard({
       className={`overflow-hidden rounded-[22px] ${className ?? ''}`}
       style={{
         borderWidth: 1,
-        borderColor: highlighted ? 'rgba(141,49,204,0.5)' : 'rgba(255,255,255,0.98)',
+        borderColor: highlighted ? Palette.primary : Palette.border,
+        backgroundColor: highlighted ? Palette.primarySoft : Palette.card,
       }}
     >
-      <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
-        <Defs>
-          <LinearGradient id={highlighted ? 'gc-hi' : 'gc-lo'} x1="0" y1="0" x2="1" y2="1">
-            <Stop offset="0" stopColor={highlighted ? '#EEF7F4' : '#FFFFFF'} />
-            <Stop offset="1" stopColor={highlighted ? '#A9DDD1' : '#DDF1EC'} />
-          </LinearGradient>
-        </Defs>
-        <Rect width="100%" height="100%" fill={`url(#${highlighted ? 'gc-hi' : 'gc-lo'})`} />
-      </Svg>
       {children}
     </View>
   );
-  const shadow = {
-    borderRadius: 22,
-    shadowColor: '#087F70',
-    shadowOpacity: highlighted ? 0.34 : 0.2,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 4,
-  } as const;
-  if (!onPress) return <View style={shadow}>{content}</View>;
+  if (!onPress) return <View style={{ borderRadius: 22 }}>{content}</View>;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [shadow, { opacity: pressed ? 0.85 : 1 }]}
+      style={({ pressed }) => [{ borderRadius: 22 }, { opacity: pressed ? 0.85 : 1 }]}
     >
       {content}
     </Pressable>
@@ -90,10 +66,10 @@ function IconTile({ icon, size = 30 }: { icon: keyof typeof Ionicons.glyphMap; s
         width: size,
         height: size,
         borderRadius: size * 0.33,
-        backgroundColor: BibipPalette.primaryLight,
+        backgroundColor: Palette.surfaceAlt,
       }}
     >
-      <Ionicons name={icon} size={size * 0.55} color={BibipPalette.primary} />
+      <Ionicons name={icon} size={size * 0.55} color={Brand.graphite} />
     </View>
   );
 }
@@ -140,7 +116,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
               <ThemedText
                 numberOfLines={2}
                 style={{
-                  color: BibipPalette.muted,
+                  color: Palette.textSecondary,
                   fontSize: 12.5,
                   lineHeight: 16,
                   fontFamily: fontFamilyFor(language, 'semibold'),
@@ -151,7 +127,7 @@ export function StatTrio({ metrics }: { metrics: DashboardMetrics }) {
               <View className="flex-1 justify-end">
                 <ThemedText
                   style={{
-                    color: BibipPalette.ink,
+                    color: Palette.textPrimary,
                     fontSize: 28,
                     lineHeight: 34,
                     fontFamily: fontFamilyFor(language, 'extrabold'),
@@ -188,14 +164,14 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
   const badge =
     change === null
       ? {
-          bg: 'rgba(255,255,255,0.14)',
-          fg: 'rgba(255,255,255,0.85)',
+          bg: Palette.textPrimary,
+          fg: Themes.dark.textSecondary,
           text: t('accueil.period.noCompare'),
           icon: 'remove' as const,
         }
       : {
-          bg: negative ? 'rgba(197,84,97,0.30)' : 'rgba(45,212,191,0.2)',
-          fg: negative ? '#F5B5AF' : '#5EEAD4',
+          bg: negative ? Themes.dark.errorSoft : Themes.dark.successSoft,
+          fg: negative ? Themes.dark.error : Themes.dark.success,
           text: `${change > 0 ? '+' : ''}${change} % ${t(`accueil.period.vs.${key}`)}`,
           icon: (negative ? 'arrow-down' : 'arrow-up') as 'arrow-down' | 'arrow-up',
         };
@@ -204,34 +180,11 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
     <View
       onLayout={(event: LayoutChangeEvent) => setWidth(event.nativeEvent.layout.width)}
       className="overflow-hidden rounded-[22px]"
-      style={{
-        shadowColor: '#0A3A34',
-        shadowOpacity: 0.3,
-        shadowRadius: 18,
-        shadowOffset: { width: 0, height: 10 },
-        elevation: 5,
-      }}
     >
       <View
         className="overflow-hidden rounded-[22px]"
-        style={{ borderWidth: 1, borderColor: 'rgba(182,154,207,0.35)' }}
+        style={{ backgroundColor: Brand.graphite }}
       >
-        <Svg width="100%" height="100%" preserveAspectRatio="none" style={{ position: 'absolute' }}>
-          <Defs>
-            <LinearGradient id="rc-bg" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0" stopColor="#06211D" />
-              <Stop offset="0.5" stopColor="#0A3A34" />
-              <Stop offset="1" stopColor="#0D5E52" />
-            </LinearGradient>
-            <RadialGradient id="rc-glow" cx="0.9" cy="0.95" rx="0.7" ry="0.9" fx="0.9" fy="0.95">
-              <Stop offset="0" stopColor="#7DDCC8" stopOpacity="0.32" />
-              <Stop offset="1" stopColor="#7DDCC8" stopOpacity="0" />
-            </RadialGradient>
-          </Defs>
-          <Rect width="100%" height="100%" fill="url(#rc-bg)" />
-          <Rect width="100%" height="100%" fill="url(#rc-glow)" />
-        </Svg>
-
         {chartWidth > 0 && trend && line ? (
           <View
             pointerEvents="none"
@@ -244,26 +197,11 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
             }}
           >
             <Svg width={chartWidth} height={chartHeight}>
-              <Defs>
-                <LinearGradient id="rc-area" x1="0" y1="0" x2="0" y2="1">
-                  <Stop offset="0" stopColor="#12A18C" stopOpacity="0.6" />
-                  <Stop offset="1" stopColor="#087F70" stopOpacity="0" />
-                </LinearGradient>
-              </Defs>
-              <Path d={area} fill="url(#rc-area)" />
+              <Path d={area} fill={Brand.orangeLight} fillOpacity={0.14} />
               <Path
                 d={line}
                 fill="none"
-                stroke="#7DDCC8"
-                strokeOpacity={0.35}
-                strokeWidth={8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <Path
-                d={line}
-                fill="none"
-                stroke="#BFE6DE"
+                stroke={Brand.orangeLight}
                 strokeWidth={2.5}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -273,9 +211,9 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                   cx={Math.min(end.x, chartWidth - 5)}
                   cy={end.y}
                   r={4.5}
-                  fill="#FFFFFF"
-                  stroke="#7DDCC8"
-                  strokeWidth={2}
+                  fill={Brand.graphite}
+                  stroke={Brand.orangeLight}
+                  strokeWidth={2.5}
                 />
               ) : null}
             </Svg>
@@ -297,16 +235,16 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
                   width={7}
                   height={[6, 10, 7, 14, 9, 16, 11, 18][index]}
                   rx={3}
-                  fill="#7DDCC8"
+                  fill={Brand.orangeLight}
                   fillOpacity={0.22}
                 />
               ))}
-              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill="#7DDCC8" fillOpacity={0.4} />
+              <Rect x={4} y={31} width={112} height={1.5} rx={1} fill={Brand.orangeLight} fillOpacity={0.4} />
             </Svg>
             <ThemedText
               numberOfLines={3}
               style={{
-                color: '#BFE6DE',
+                color: Themes.dark.textSecondary,
                 fontSize: 11.5,
                 lineHeight: 15,
                 textAlign: 'center',
@@ -322,14 +260,14 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
           <View className="flex-row items-center gap-2">
             <View
               className="h-9 w-9 items-center justify-center rounded-xl"
-              style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+              style={{ backgroundColor: Themes.dark.surfaceAlt }}
             >
-              <Ionicons name="bar-chart" size={19} color="#FFFFFF" />
+              <Ionicons name="bar-chart" size={19} color={Brand.white} />
             </View>
             <ThemedText
               numberOfLines={1}
               style={{
-                color: '#BFE6DE',
+                color: Themes.dark.textSecondary,
                 fontSize: 13,
                 lineHeight: 18,
                 fontFamily: fontFamilyFor(language, 'semibold'),
@@ -344,7 +282,7 @@ export function RevenueCard({ metrics }: { metrics: DashboardMetrics }) {
             minimumFontScale={0.7}
             accessibilityLabel={`${t(`accueil.period.revenue.${key}`)} : ${mad(revenue.current)}`}
             style={{
-              color: '#FFFFFF',
+              color: Brand.white,
               fontSize: 30,
               lineHeight: 38,
               fontFamily: fontFamilyFor(language, 'extrabold'),
@@ -446,12 +384,12 @@ function QuickTile({ tile, highlighted = false }: { tile: Tile; highlighted?: bo
           <Ionicons
             name={tile.icon}
             size={26}
-            color={highlighted ? BibipPalette.primary : BibipPalette.primaryDeep}
+            color={highlighted ? Palette.primary : Brand.graphite}
           />
           <ThemedText
             numberOfLines={2}
             style={{
-              color: BibipPalette.ink,
+              color: Palette.textPrimary,
               fontSize: 11,
               lineHeight: 14,
               textAlign: 'center',
@@ -493,7 +431,7 @@ export function QuickAccessTiles({ role }: { role: string | null | undefined }) 
           >
             <ThemedText
               style={{
-                color: BibipPalette.primary,
+                color: Palette.textPrimary,
                 fontSize: 14,
                 lineHeight: 20,
                 fontFamily: fontFamilyFor(language, 'bold'),
@@ -504,7 +442,7 @@ export function QuickAccessTiles({ role }: { role: string | null | undefined }) 
             <Ionicons
               name={expanded ? 'chevron-up' : arrow}
               size={16}
-              color={BibipPalette.primary}
+              color={Palette.primary}
             />
           </Pressable>
         ) : null}

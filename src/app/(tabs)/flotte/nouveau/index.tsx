@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { findDuplicateVehicle } from '@/features/vehicles/api';
@@ -38,13 +38,13 @@ function OptionCard({
     <PressableCard
       onPress={disabled ? undefined : onPress}
       className="flex-row items-center gap-3"
-      style={[highlighted ? { borderColor: BibipPalette.primary, borderWidth: 1.5 } : null, disabled ? { opacity: 0.5 } : null]}
+      style={[highlighted ? { borderColor: Palette.primary, borderWidth: 1.5 } : null, disabled ? { opacity: 0.5 } : null]}
     >
       <View
         className="h-12 w-12 items-center justify-center rounded-2xl"
-        style={{ backgroundColor: highlighted ? BibipPalette.primary : BibipPalette.primaryLight }}
+        style={{ backgroundColor: highlighted ? Palette.primary : Palette.primarySoft }}
       >
-        <Ionicons name={icon} size={22} color={highlighted ? '#ffffff' : BibipPalette.primary} />
+        <Ionicons name={icon} size={22} color={highlighted ? Brand.white : Palette.primary} />
       </View>
       <View className="flex-1 gap-0.5">
         <ThemedText type="smallBold">{title}</ThemedText>
@@ -52,7 +52,7 @@ function OptionCard({
           {subtitle}
         </ThemedText>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={BibipPalette.subtle} />
+      <Ionicons name="chevron-forward" size={18} color={Palette.textMuted} />
     </PressableCard>
   );
 }
@@ -148,8 +148,8 @@ export default function NouveauVehiculeScreen() {
               />
 
               {duplicate ? (
-                <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.warningLight }}>
-                  <ThemedText type="small" style={{ color: BibipPalette.warning }}>
+                <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.warningSoft }}>
+                  <ThemedText type="small" style={{ color: Palette.warning }}>
                     {duplicate.field === 'vin'
                       ? t('vehicle.quickCreate.duplicateVin')
                       : t('vehicle.quickCreate.duplicatePlate')}
@@ -164,7 +164,7 @@ export default function NouveauVehiculeScreen() {
               ) : null}
 
               {checkError ? (
-                <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {checkError}
                 </ThemedText>
               ) : null}

@@ -9,7 +9,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { CustomerDocumentsSection } from '@/features/customers/customer-documents-section';
 import { CustomerNotesSection } from '@/features/customers/customer-notes-section';
@@ -97,7 +97,7 @@ export default function ClientDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -114,7 +114,7 @@ export default function ClientDetailScreen() {
         ) : (
           <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
             <View className="flex-row items-center gap-2">
-              <View className="rounded-full bg-brand-light px-2.5 py-1">
+              <View className="rounded-full bg-primary-soft px-2.5 py-1">
                 <ThemedText type="small" themeColor="primary">
                   {t(`customer.type.${customer.typeClient}`)}
                 </ThemedText>
@@ -184,7 +184,7 @@ export default function ClientDetailScreen() {
             <View className="gap-2">
               <ThemedText type="smallBold">{t('customer.historySection')}</ThemedText>
               {rentals.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-line bg-white p-4">
+                <View className="gap-1 rounded-3xl border border-dashed border-border bg-card p-4">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('customer.historyPlaceholder')}
                   </ThemedText>
@@ -214,9 +214,9 @@ export default function ClientDetailScreen() {
                               <View
                                 key={incident.type}
                                 className="rounded-full px-2 py-0.5"
-                                style={{ backgroundColor: BibipPalette.dangerLight }}
+                                style={{ backgroundColor: Palette.errorSoft }}
                               >
-                                <ThemedText type="small" style={{ color: BibipPalette.danger, fontSize: 11 }}>
+                                <ThemedText type="small" style={{ color: Palette.error, fontSize: 11 }}>
                                   {t(`customer.incidents.${incident.type}`)}
                                 </ThemedText>
                               </View>

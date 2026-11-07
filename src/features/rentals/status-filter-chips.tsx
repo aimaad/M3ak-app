@@ -4,7 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import { RENTAL_STATUS_FILTERS, type RentalStatusFilter } from './filters';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 type RentalStatusFilterChipsProps = {
   value: RentalStatusFilter;
@@ -24,13 +24,13 @@ export function RentalStatusFilterChips({ value, onChange, counts }: RentalStatu
             key={status}
             onPress={() => onChange(status)}
             className={`flex-row items-center gap-1.5 rounded-full border px-4 py-2 ${
-              selected ? 'border-ink bg-ink' : 'border-line bg-white'
+              selected ? 'border-graphite bg-graphite' : 'border-border bg-card'
             }`}
           >
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+            <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
               {t(`locations.status.${status}`)}
             </ThemedText>
-            <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.muted }}>
+            <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textSecondary }}>
               {counts[status]}
             </ThemedText>
           </Pressable>

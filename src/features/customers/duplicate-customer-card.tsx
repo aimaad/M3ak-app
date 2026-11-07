@@ -6,6 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { DuplicateMatch } from './duplicates';
+import { Palette } from '@/constants/theme';
 
 /**
  * « Ce client semble déjà enregistré » : montre qui, pourquoi, et laisse l'employé décider — ouvrir la fiche
@@ -17,12 +18,12 @@ export function DuplicateCustomerCard({ matches }: { matches: DuplicateMatch[] }
   const shown = matches.slice(0, 2);
 
   return (
-    <View className="gap-3 rounded-2xl bg-[#FBF1DE] px-4 py-3">
-      <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
+    <View className="gap-3 rounded-2xl bg-warning-soft px-4 py-3">
+      <ThemedText type="smallBold" style={{ color: Palette.warning }}>
         {t('customer.duplicate.title')}
       </ThemedText>
       {shown.map(({ customer, reasons }) => (
-        <View key={customer.id} className="gap-1 rounded-xl bg-white px-3 py-2">
+        <View key={customer.id} className="gap-1 rounded-xl bg-card px-3 py-2">
           <ThemedText type="smallBold">{customer.nomComplet}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
             {reasons.map((reason) => t(`customer.duplicate.reasons.${reason}`)).join(' · ')}

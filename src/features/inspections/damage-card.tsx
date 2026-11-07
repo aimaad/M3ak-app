@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ZoomableImage } from '@/components/zoomable-image';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { DamagePatch } from './api';
@@ -13,7 +13,7 @@ import { DamageEditor, parseCost, type DamageDraft } from './damage-editor';
 import { confidencePercent, effectiveCost, needsCheck, type Damage } from './damages';
 import { usePhotoSignedUrl } from './hooks';
 
-const SEVERITY_COLOR = { leger: '#8A5A0B', modere: '#C2410C', grave: '#A8322B' } as const;
+const SEVERITY_COLOR = { leger: Palette.warning, modere: '#C2410C', grave: Palette.error } as const;
 
 type Props = {
   damage: Damage;
@@ -46,7 +46,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
   const percent = confidencePercent(damage);
   const check = needsCheck(damage);
   const rejected = damage.statut === 'rejete';
-  const color = damage.nouveau ? '#C8443B' : '#D97706';
+  const color = damage.nouveau ? Palette.error : '#D97706';
 
   async function run(patch: DamagePatch) {
     setSaving(true);
@@ -85,19 +85,19 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       </View>
 
       <View className="flex-row flex-wrap gap-1.5">
-        <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? '#FBE8E6' : '#FBF1DE'} />
+        <Badge text={t(damage.nouveau ? 'inspection.analysis.damages.new' : 'inspection.analysis.damages.existing')} color={color} bg={damage.nouveau ? Palette.errorSoft : Palette.warningSoft} />
         <Badge
           text={t(`inspection.analysis.damages.status.${damage.statut}`)}
-          color={damage.statut === 'confirme' ? '#1E6B3A' : damage.statut === 'rejete' ? '#6B7280' : BibipPalette.primaryDeep}
-          bg={damage.statut === 'confirme' ? '#E3F3E8' : damage.statut === 'rejete' ? '#F0EEE5' : BibipPalette.primaryLight}
+          color={damage.statut === 'confirme' ? Palette.success : damage.statut === 'rejete' ? '#6B7280' : Brand.graphite}
+          bg={damage.statut === 'confirme' ? Palette.successSoft : damage.statut === 'rejete' ? Palette.surfaceAlt : Palette.primarySoft}
         />
-        {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color="#3F62AD" bg="#E8EEF9" /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
-        {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color="#8A5A0B" bg="#FBF1DE" /> : null}
+        {percent !== null ? <Badge text={t('inspection.analysis.damages.confidence', { percent })} color={Palette.info} bg={Palette.infoSoft} /> : <Badge text={t('inspection.analysis.damages.manual')} color="#475569" bg="#E2E8F0" />}
+        {check ? <Badge text={t('inspection.analysis.damages.toCheck')} color={Palette.warning} bg={Palette.warningSoft} /> : null}
       </View>
 
       {damage.description ? <ThemedText type="small">{damage.description}</ThemedText> : null}
       {damage.comparaison === 'retour_seul' && damage.source === 'ia' ? (
-        <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+        <ThemedText type="small" style={{ color: Palette.warning }}>
           {t('inspection.analysis.damages.noDepartPhoto')}
         </ThemedText>
       ) : null}
@@ -121,12 +121,12 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       {canChooseContract && damage.statut === 'confirme' ? (
         <Pressable
           onPress={() => run({ dansContrat: !damage.dansContrat })}
-          className="flex-row items-center gap-3 rounded-2xl bg-canvas px-3 py-2.5"
+          className="flex-row items-center gap-3 rounded-2xl bg-background px-3 py-2.5"
           accessibilityRole="switch"
           accessibilityState={{ checked: damage.dansContrat }}
         >
-          <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: BibipPalette.primary, backgroundColor: damage.dansContrat ? BibipPalette.primary : '#fff' }}>
-            {damage.dansContrat ? <ThemedText type="smallBold" style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
+          <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: Palette.primary, backgroundColor: damage.dansContrat ? Palette.primary : Brand.white }}>
+            {damage.dansContrat ? <ThemedText type="smallBold" style={{ color: Brand.white, lineHeight: 18 }}>✓</ThemedText> : null}
           </View>
           <ThemedText type="small" style={{ flex: 1 }}>
             {t(damage.dansContrat ? 'inspection.decision.inContract' : 'inspection.decision.notInContract')}
@@ -156,7 +156,7 @@ export function DamageCard({ damage, index, photoPath, canChooseNew, canChooseCo
       ) : (
         <>
           {error ? (
-            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {error}
             </ThemedText>
           ) : null}

@@ -25,7 +25,7 @@ import { InviteResultCard } from '@/features/agency/invite-result-card';
 import { canRemoveMember } from '@/features/agency/permissions';
 import type { AgencyInvite, AgencyMember, AgencyRole, InviteResult } from '@/features/agency/types';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 export default function EquipeScreen() {
   const { t } = useLanguage();
@@ -152,7 +152,7 @@ export default function EquipeScreen() {
                 membersQuery.refetch();
                 invitesQuery.refetch();
               }}
-              tintColor={BibipPalette.primary}
+              tintColor={Palette.primary}
             />
           }
         >
@@ -212,7 +212,7 @@ export default function EquipeScreen() {
                       ? (branches.find((b) => b.id === invite.branchId)?.nom ?? null)
                       : null;
                     return (
-                      <View key={invite.id} className="gap-2 rounded-2xl border border-line bg-white px-4 py-3">
+                      <View key={invite.id} className="gap-2 rounded-2xl border border-border bg-card px-4 py-3">
                         <View className="flex-row items-start justify-between gap-3">
                           <View className="flex-1">
                             <ThemedText type="smallBold">{inviteName(invite)}</ThemedText>

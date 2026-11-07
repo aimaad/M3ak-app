@@ -21,7 +21,7 @@ import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/fil
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 const EMPTY_VALUES: MaintenanceFormValues = {
   vehicleId: '',
@@ -106,10 +106,10 @@ export default function NouvelleMaintenanceScreen() {
                     key={type}
                     onPress={() => update('type', type)}
                     className={`rounded-full border px-4 py-2 ${
-                      selected ? 'border-brand bg-brand' : 'border-line bg-white'
+                      selected ? 'border-graphite bg-graphite' : 'border-border bg-card'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
                       {t(`maintenance.types.${type}`)}
                     </ThemedText>
                   </Pressable>
@@ -143,7 +143,7 @@ export default function NouvelleMaintenanceScreen() {
           />
 
           {submitError ? (
-            <ThemedText type="small" style={{ color: '#A8322B' }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {submitError}
             </ThemedText>
           ) : null}

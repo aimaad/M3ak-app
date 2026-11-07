@@ -4,16 +4,16 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { RentalStatus } from './types';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 
 /** Couleurs des statuts, partagées avec le calendrier : même statut, même couleur partout. */
 export const RENTAL_STATUS_STYLES: Record<RentalStatus, { background: string; text: string; dot: string }> = {
-  en_attente_confirmation: { background: BibipPalette.warningLight, text: BibipPalette.warningText, dot: BibipPalette.warning },
-  confirmee: { background: BibipPalette.primaryLight, text: BibipPalette.primaryDeep, dot: BibipPalette.primary },
-  reservee: { background: BibipPalette.primaryLight, text: BibipPalette.primaryDeep, dot: BibipPalette.primary },
-  en_cours: { background: BibipPalette.infoLight, text: BibipPalette.infoText, dot: BibipPalette.info },
-  terminee: { background: BibipPalette.successLight, text: BibipPalette.successText, dot: BibipPalette.success },
-  annulee: { background: BibipPalette.neutralLight, text: BibipPalette.neutralText, dot: BibipPalette.neutral },
+  en_attente_confirmation: { background: Palette.warningSoft, text: Palette.warning, dot: Palette.warning },
+  confirmee: { background: Palette.primarySoft, text: Brand.graphite, dot: Palette.primary },
+  reservee: { background: Palette.primarySoft, text: Brand.graphite, dot: Palette.primary },
+  en_cours: { background: Palette.infoSoft, text: Palette.info, dot: Palette.info },
+  terminee: { background: Palette.successSoft, text: Palette.success, dot: Palette.success },
+  annulee: { background: Palette.surfaceAlt, text: Palette.textSecondary, dot: Palette.textMuted },
 };
 
 export function RentalStatusBadge({ status }: { status: RentalStatus }) {

@@ -10,7 +10,7 @@ import { CustomerDocumentsSection } from './customer-documents-section';
 
 import { useCreateDriver, useDrivers, useRemoveDriver } from './hooks';
 import { isDriverFormValid, toDriverInput, validateDriverForm, type DriverFormValues } from './driver-validation';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 const EMPTY_VALUES: DriverFormValues = {
   prenom: '',
@@ -77,16 +77,16 @@ export function DriverList({
   return (
     <View className="gap-3">
       {driversQuery.isLoading ? (
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       ) : (driversQuery.data ?? []).length === 0 ? (
-        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-line bg-white">
+        <View className="h-16 items-center justify-center rounded-2xl border border-dashed border-border bg-card">
           <ThemedText type="small" themeColor="textSecondary">
             {t('customer.noDrivers')}
           </ThemedText>
         </View>
       ) : (
         (driversQuery.data ?? []).map((driver) => (
-          <View key={driver.id} className="gap-3 rounded-2xl border border-line bg-white px-4 py-3">
+          <View key={driver.id} className="gap-3 rounded-2xl border border-border bg-card px-4 py-3">
             <View className="flex-row items-center justify-between">
               <View className="flex-1">
                 <ThemedText type="smallBold">{driver.nomComplet}</ThemedText>
@@ -105,7 +105,7 @@ export function DriverList({
                 </Pressable>
                 {canRemove ? (
                   <Pressable onPress={() => handleRemove(driver.id)} hitSlop={8}>
-                    <ThemedText type="small" style={{ color: '#A8322B' }}>
+                    <ThemedText type="small" style={{ color: Palette.error }}>
                       {t('customer.removeDriver')}
                     </ThemedText>
                   </Pressable>
@@ -125,7 +125,7 @@ export function DriverList({
       )}
 
       {showForm ? (
-        <View className="gap-2 rounded-2xl border border-line bg-white p-4">
+        <View className="gap-2 rounded-2xl border border-border bg-card p-4">
           <TextField
             label={t('customer.fields.prenom')}
             value={values.prenom}
@@ -169,7 +169,7 @@ export function DriverList({
       ) : (
         <Pressable
           onPress={() => setShowForm(true)}
-          className="items-center rounded-2xl border border-line bg-white px-4 py-3"
+          className="items-center rounded-2xl border border-border bg-card px-4 py-3"
         >
           <ThemedText type="small" themeColor="primary">
             {`+ ${t('customer.addDriver')}`}

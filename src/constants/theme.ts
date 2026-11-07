@@ -1,59 +1,59 @@
 /**
- * Palette officielle BIBIP « Emerald Ivory » : les valeurs vivent dans `brand.js` (source de vérité, partagée avec
- * `tailwind.config.js`) ; voir docs/DESIGN.md.
+ * Identité BIBIP : graphite + orange. Les valeurs vivent dans `brand.js` (source de vérité, partagée avec `tailwind.config.js`) ;
+ * voir docs/DESIGN.md. Les composants utilisent ces tokens sémantiques, jamais de valeur hex directement.
  *
- * Les noms sont des RÔLES : `primary` = émeraude signature (boutons, navigation, texte et icônes d'action), `primaryDeep` =
- * émeraude profond (hero, cartes premium). Les couleurs fonctionnelles (`success`, `info`, `warning`, `danger`, `neutral`)
- * servent aux pastilles, icônes et fonds ; pour du TEXTE sur clair on prend la variante `*Text`, plus foncée.
- * Le logo BIBIP n'est jamais recoloré : ses couleurs sont celles du fichier fourni.
+ * Règles d'usage : orange réservé aux actions et aux accents (≈ 10 % de l'écran), un seul bouton orange plein par écran, texte
+ * blanc sur orange en 16 px gras minimum, texte orange (`accentText`) en 16 px ou gras seulement, le rouge `error` jamais pour
+ * une action non destructive, pas de dégradé, pas d'ombre colorée.
  */
 
 import { Platform } from 'react-native';
 
-import { BRAND, brand as BrandColors, dark as DarkTokens, light as LightTokens } from './brand';
-
-export const BibipPalette = BRAND;
+import { brand as BrandColors, dark as DarkTokens, light as LightTokens } from './brand';
 
 /** Couleurs de marque (graphite, orange, orange clair, blanc). */
 export const Brand = BrandColors;
-/** Thèmes sémantiques (voir `brand.js`). L'app est en mode clair forcé ; le thème sombre est prêt mais pas encore branché. */
+/** Thèmes sémantiques. L'app est en mode clair forcé ; le thème sombre est prêt mais pas encore branché. */
 export const Themes = { light: LightTokens, dark: DarkTokens } as const;
 /** Palette courante de l'app (thème clair forcé). */
 export const Palette = LightTokens;
 
-/** Ombres légères teintées d'émeraude profond (jamais un gris ou un noir pur) : bordures et espaces d'abord. */
+/**
+ * Ombres : AUCUNE ombre teintée. Seuls les éléments flottants (bouton « + », barre fixe, bottom sheets, modales) ont une ombre
+ * neutre très légère (grise, faible opacité). Les cartes n'ont pas d'ombre : fond blanc et bordure.
+ */
 export const Shadows = {
-  card: { shadowColor: BRAND.primaryDeep, shadowOpacity: 0.07, shadowRadius: 14, shadowOffset: { width: 0, height: 4 }, elevation: 2 },
-  raised: { shadowColor: BRAND.primaryDeep, shadowOpacity: 0.14, shadowRadius: 20, shadowOffset: { width: 0, height: 10 }, elevation: 5 },
-  button: { shadowColor: BRAND.primary, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  card: {},
+  raised: { shadowColor: Palette.shadow, shadowOpacity: 0.12, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 4 },
+  button: {},
 } as const;
 
 export const Colors = {
   light: {
-    text: BibipPalette.ink,
-    background: BibipPalette.background,
-    backgroundElement: BibipPalette.surface,
-    backgroundSelected: BibipPalette.primaryLight,
-    textSecondary: BibipPalette.muted,
-    primary: BibipPalette.primary,
-    accent: BibipPalette.primaryDeep,
-    success: BibipPalette.successText,
-    warning: BibipPalette.warningText,
-    danger: BibipPalette.dangerText,
-    border: BibipPalette.border,
+    text: LightTokens.textPrimary,
+    background: LightTokens.background,
+    backgroundElement: LightTokens.card,
+    backgroundSelected: LightTokens.primarySoft,
+    textSecondary: LightTokens.textSecondary,
+    primary: LightTokens.primary,
+    accent: LightTokens.accentText,
+    success: LightTokens.success,
+    warning: LightTokens.warning,
+    danger: LightTokens.error,
+    border: LightTokens.border,
   },
   dark: {
-    text: '#F2F6F4',
-    background: BibipPalette.night,
-    backgroundElement: '#0E2D28',
-    backgroundSelected: BibipPalette.primaryDeep,
-    textSecondary: '#A9BDB8',
-    primary: BibipPalette.mint,
-    accent: BibipPalette.mint,
-    success: '#6FD08C',
-    warning: BibipPalette.warning,
-    danger: '#E88A82',
-    border: '#1B3F39',
+    text: DarkTokens.textPrimary,
+    background: DarkTokens.background,
+    backgroundElement: DarkTokens.card,
+    backgroundSelected: DarkTokens.primarySoft,
+    textSecondary: DarkTokens.textSecondary,
+    primary: DarkTokens.primary,
+    accent: DarkTokens.accentText,
+    success: DarkTokens.success,
+    warning: DarkTokens.warning,
+    danger: DarkTokens.error,
+    border: DarkTokens.border,
   },
 } as const;
 

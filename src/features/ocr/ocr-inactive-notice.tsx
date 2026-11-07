@@ -6,14 +6,15 @@ import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
 import { inactiveMessageKey, type OcrAvailability } from './availability';
+import { Palette } from '@/constants/theme';
 
 /** Message « fonction non active pour votre entreprise » (avec accès aux réglages pour le propriétaire). */
 export function OcrInactiveNotice({ availability }: { availability: OcrAvailability }) {
   const { t } = useLanguage();
   if (availability === 'active' || availability === 'loading') return null;
   return (
-    <View className="gap-2 rounded-2xl bg-[#FBF1DE] px-4 py-3">
-      <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+    <View className="gap-2 rounded-2xl bg-warning-soft px-4 py-3">
+      <ThemedText type="small" style={{ color: Palette.warning }}>
         {t(inactiveMessageKey(availability))}
       </ThemedText>
       {availability === 'owner_can_enable' ? (

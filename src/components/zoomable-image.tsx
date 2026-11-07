@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
+import { Palette, Brand } from '@/constants/theme';
 
 /** Cadre posé sur l'image, coordonnées relatives (0 à 1) ; `label` = petit numéro affiché sur le cadre. */
 export type ImageBox = { x: number; y: number; w: number; h: number; label?: string; color?: string };
@@ -44,13 +45,13 @@ function Boxes({ boxes }: { boxes: ImageBox[] }) {
             width: `${box.w * 100}%`,
             height: `${box.h * 100}%`,
             borderWidth: 2,
-            borderColor: box.color ?? '#C8443B',
+            borderColor: box.color ?? Palette.error,
             borderRadius: 4,
           }}
         >
           {box.label ? (
-            <View style={{ position: 'absolute', top: -10, left: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: box.color ?? '#C8443B', alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
-              <ThemedText type="small" style={{ color: '#fff', fontSize: 11, lineHeight: 14 }}>
+            <View style={{ position: 'absolute', top: -10, left: -2, minWidth: 18, height: 18, borderRadius: 9, backgroundColor: box.color ?? Palette.error, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 }}>
+              <ThemedText type="small" style={{ color: Brand.white, fontSize: 11, lineHeight: 14 }}>
                 {box.label}
               </ThemedText>
             </View>
@@ -83,7 +84,7 @@ export function ZoomableImage({ uri, style, label, boxes }: Props) {
     <>
       <Pressable onPress={() => setOpen(true)} accessibilityRole="imagebutton" accessibilityLabel={label ?? t('common.zoomHint')} style={{ flex: 1 }}>
         {boxes && boxes.length > 0 && ratio ? (
-          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#000', borderRadius: 16, overflow: 'hidden' }}>
+          <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: Brand.graphite, borderRadius: 16, overflow: 'hidden' }}>
             <View style={{ height: '100%', aspectRatio: ratio, maxWidth: '100%' }}>
               <Image source={{ uri }} style={{ width: '100%', height: '100%' }} resizeMode="stretch" />
               <Boxes boxes={boxes} />
@@ -93,19 +94,19 @@ export function ZoomableImage({ uri, style, label, boxes }: Props) {
           <Image source={{ uri }} style={[{ width: '100%', height: '100%' }, style]} resizeMode="cover" />
         )}
         <View className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-0.5">
-          <ThemedText type="small" style={{ color: '#fff' }}>
+          <ThemedText type="small" style={{ color: Brand.white }}>
             🔍
           </ThemedText>
         </View>
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)} statusBarTranslucent>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.92)', paddingTop: topInset, paddingBottom: bottomInset }}>
+        <View style={{ flex: 1, backgroundColor: Brand.graphite, paddingTop: topInset, paddingBottom: bottomInset }}>
           <View className="flex-row items-center justify-between px-5 pb-3">
-            <ThemedText type="smallBold" style={{ color: '#fff' }}>
+            <ThemedText type="smallBold" style={{ color: Brand.white }}>
               {label ?? ''}
             </ThemedText>
-            <Pressable onPress={() => setOpen(false)} className="rounded-full bg-white/20 px-4 py-2" accessibilityRole="button">
-              <ThemedText type="smallBold" style={{ color: '#fff' }}>
+            <Pressable onPress={() => setOpen(false)} className="rounded-full bg-card/20 px-4 py-2" accessibilityRole="button">
+              <ThemedText type="smallBold" style={{ color: Brand.white }}>
                 {t('common.close')}
               </ThemedText>
             </Pressable>

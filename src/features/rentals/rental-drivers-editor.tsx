@@ -6,7 +6,7 @@ import { Card } from '@/components/card';
 import { ChipGroup } from '@/components/chip-group';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import {
   buildDriverCandidates,
   newDriverCandidate,
@@ -152,11 +152,11 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
             {t('locations.drivers.separationHint')}
           </ThemedText>
 
-          <View className="gap-1 rounded-2xl bg-brand-light px-4 py-3">
-            <ThemedText type="small" style={{ color: BibipPalette.primaryDeep }}>
+          <View className="gap-1 rounded-2xl bg-primary-soft px-4 py-3">
+            <ThemedText type="small" style={{ color: Brand.graphite }}>
               {t('locations.drivers.principal')}
             </ThemedText>
-            <ThemedText type="smallBold" style={{ color: BibipPalette.primaryDeep }}>
+            <ThemedText type="smallBold" style={{ color: Brand.graphite }}>
               {principalLabel}
               {value.principal ? '' : ` (${t('locations.drivers.theClient')})`}
             </ThemedText>
@@ -175,7 +175,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                 {t('locations.drivers.additional', { count: value.additional.length, max })}
               </ThemedText>
               {value.additional.map((candidate) => (
-                <View key={candidate.key} className="gap-1 rounded-2xl border border-line bg-white px-4 py-3">
+                <View key={candidate.key} className="gap-1 rounded-2xl border border-border bg-card px-4 py-3">
                   <ThemedText type="smallBold">{candidate.nomComplet}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
                     {subLabel(candidate, t) || '—'}
@@ -188,7 +188,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                         </ThemedText>
                       </Pressable>
                       <Pressable onPress={() => onChange(removeAdditionalDriver(value, candidate.key))} hitSlop={6}>
-                        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+                        <ThemedText type="small" style={{ color: Palette.error }}>
                           {t('locations.drivers.remove')}
                         </ThemedText>
                       </Pressable>
@@ -222,7 +222,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                   onPress={() => {
                     if (addCandidate(candidate)) setQuery('');
                   }}
-                  className="rounded-2xl border border-line bg-white px-4 py-3 active:bg-canvas"
+                  className="rounded-2xl border border-border bg-card px-4 py-3 active:bg-background"
                 >
                   <ThemedText type="smallBold">{candidate.nomComplet}</ThemedText>
                   <ThemedText type="small" themeColor="textSecondary">
@@ -231,7 +231,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
                 </Pressable>
               ))}
               {error ? (
-                <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {t(`locations.drivers.addErrors.${error}`, { max })}
                 </ThemedText>
               ) : null}
@@ -239,7 +239,7 @@ export function RentalDriversEditor({ customer, value, onChange, maxAdditional, 
           ) : null}
 
           {adding && !disabled ? (
-            <View className="gap-2 rounded-2xl border border-line bg-white p-4">
+            <View className="gap-2 rounded-2xl border border-border bg-card p-4">
               <ThemedText type="smallBold">{t('locations.drivers.newTitle')}</ThemedText>
               <TextField
                 label={t('customer.fields.prenom')}

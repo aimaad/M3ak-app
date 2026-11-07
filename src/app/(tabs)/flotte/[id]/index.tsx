@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useVehicleRentals } from '@/features/rentals/hooks';
 import { useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
@@ -30,9 +30,9 @@ import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { useLanguage } from '@/i18n/use-language';
 
 const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
-  ok: BibipPalette.muted,
-  bientot: BibipPalette.warning,
-  expire: BibipPalette.danger,
+  ok: Palette.textSecondary,
+  bientot: Palette.warning,
+  expire: Palette.error,
 };
 
 export default function VehicleDetailScreen() {
@@ -113,7 +113,7 @@ export default function VehicleDetailScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -262,7 +262,7 @@ export default function VehicleDetailScreen() {
                 ) : null}
               </View>
               {maintenanceItems.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-line bg-white p-4">
+                <View className="gap-1 rounded-3xl border border-dashed border-border bg-card p-4">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('maintenance.empty')}
                   </ThemedText>
@@ -285,7 +285,7 @@ export default function VehicleDetailScreen() {
                       </View>
                       <ThemedText
                         type="small"
-                        style={{ color: item.statut === 'effectuee' ? '#1E6B3A' : item.statut === 'en_cours' ? '#3F62AD' : BibipPalette.muted }}
+                        style={{ color: item.statut === 'effectuee' ? Palette.success : item.statut === 'en_cours' ? Palette.info : Palette.textSecondary }}
                       >
                         {item.statut === 'effectuee'
                           ? t('maintenance.done')

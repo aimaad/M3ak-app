@@ -12,7 +12,7 @@ import {
   type TemplateValues,
   type TextStyle,
 } from './template';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 
 export function escapeHtml(value: string | null | undefined): string {
   if (!value) return '';
@@ -44,7 +44,7 @@ function hasOnlyEmptyFields(line: string, values: TemplateValues): boolean {
 }
 
 const SIZE_PX = { xs: 9, sm: 11, md: 12, lg: 15, xl: 20 } as const;
-const COLOR = { default: BibipPalette.ink, muted: BibipPalette.muted, accent: BibipPalette.primaryDeep } as const;
+const COLOR = { default: Palette.textPrimary, muted: Palette.textSecondary, accent: Brand.graphite } as const;
 
 function html(text: string, values: TemplateValues): string {
   return escapeHtml(fillPlaceholders(text, values)).replace(/\n/g, '<br />');
@@ -159,9 +159,9 @@ function renderBlock(block: Block, input: RenderInput, rtlDefault: boolean): str
   }
 }
 
-const CAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 150" width="70" height="116"><rect x="12" y="8" width="66" height="134" rx="26" fill="none" stroke={BibipPalette.ink} stroke-width="2.5"/><rect x="22" y="34" width="46" height="26" rx="6" fill="none" stroke={BibipPalette.ink} stroke-width="2"/><rect x="22" y="92" width="46" height="24" rx="6" fill="none" stroke={BibipPalette.ink} stroke-width="2"/><rect x="4" y="30" width="9" height="20" rx="3" fill={BibipPalette.ink}/><rect x="77" y="30" width="9" height="20" rx="3" fill={BibipPalette.ink}/><rect x="4" y="100" width="9" height="20" rx="3" fill={BibipPalette.ink}/><rect x="77" y="100" width="9" height="20" rx="3" fill={BibipPalette.ink}/><line x1="45" y1="62" x2="45" y2="90" stroke={BibipPalette.ink} stroke-width="1.5"/></svg>`;
+const CAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 150" width="70" height="116"><rect x="12" y="8" width="66" height="134" rx="26" fill="none" stroke={Palette.textPrimary} stroke-width="2.5"/><rect x="22" y="34" width="46" height="26" rx="6" fill="none" stroke={Palette.textPrimary} stroke-width="2"/><rect x="22" y="92" width="46" height="24" rx="6" fill="none" stroke={Palette.textPrimary} stroke-width="2"/><rect x="4" y="30" width="9" height="20" rx="3" fill={Palette.textPrimary}/><rect x="77" y="30" width="9" height="20" rx="3" fill={Palette.textPrimary}/><rect x="4" y="100" width="9" height="20" rx="3" fill={Palette.textPrimary}/><rect x="77" y="100" width="9" height="20" rx="3" fill={Palette.textPrimary}/><line x1="45" y1="62" x2="45" y2="90" stroke={Palette.textPrimary} stroke-width="1.5"/></svg>`;
 
-const GAUGE_BASE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke={BibipPalette.ink} stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke={BibipPalette.ink} stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke={BibipPalette.ink} stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke={BibipPalette.ink} stroke-width="1.5"/><text x="8" y="82" font-size="10" fill={BibipPalette.ink}>0</text><text x="12" y="34" font-size="10" fill={BibipPalette.ink}>1/4</text><text x="68" y="10" font-size="10" fill={BibipPalette.ink}>2/4</text><text x="122" y="34" font-size="10" fill={BibipPalette.ink}>3/4</text><text x="142" y="82" font-size="10" fill={BibipPalette.ink}>4/4</text>`;
+const GAUGE_BASE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 84" width="150" height="80"><path d="M16 70 A64 64 0 0 1 144 70" fill="none" stroke={Palette.textPrimary} stroke-width="2.5"/><line x1="80" y1="70" x2="80" y2="12" stroke={Palette.textPrimary} stroke-width="1.5"/><line x1="35" y1="25" x2="42" y2="33" stroke={Palette.textPrimary} stroke-width="1.5"/><line x1="125" y1="25" x2="118" y2="33" stroke={Palette.textPrimary} stroke-width="1.5"/><text x="8" y="82" font-size="10" fill={Palette.textPrimary}>0</text><text x="12" y="34" font-size="10" fill={Palette.textPrimary}>1/4</text><text x="68" y="10" font-size="10" fill={Palette.textPrimary}>2/4</text><text x="122" y="34" font-size="10" fill={Palette.textPrimary}>3/4</text><text x="142" y="82" font-size="10" fill={Palette.textPrimary}>4/4</text>`;
 /** Lit « 50 % » (ou 50) et renvoie un pourcentage entre 0 et 100, ou null si le niveau n'est pas connu. */
 export function fuelPercent(raw: string | undefined | null): number | null {
   const match = /(\d+(?:[.,]\d+)?)/.exec(raw ?? '');
@@ -176,9 +176,9 @@ export function gaugeSvg(percent: number | null): string {
   const angle = Math.PI * (1 - percent / 100);
   const x = (80 + 58 * Math.cos(angle)).toFixed(1);
   const y = (70 - 58 * Math.sin(angle)).toFixed(1);
-  const needle = `<line x1="80" y1="70" x2="${x}" y2="${y}" stroke="#A8322B" stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill="#A8322B"/>`;
-  const arc = percent > 0 ? `<path d="M16 70 A64 64 0 0 1 ${(80 + 64 * Math.cos(angle)).toFixed(1)} ${(70 - 64 * Math.sin(angle)).toFixed(1)}" fill="none" stroke="#A8322B" stroke-width="5" opacity="0.35"/>` : '';
-  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke={BibipPalette.ink} stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill="#A8322B">${Math.round(percent)} %</text></svg>`;
+  const needle = `<line x1="80" y1="70" x2="${x}" y2="${y}" stroke={Palette.error} stroke-width="3" stroke-linecap="round"/><circle cx="80" cy="70" r="4" fill={Palette.error}/>`;
+  const arc = percent > 0 ? `<path d="M16 70 A64 64 0 0 1 ${(80 + 64 * Math.cos(angle)).toFixed(1)} ${(70 - 64 * Math.sin(angle)).toFixed(1)}" fill="none" stroke={Palette.error} stroke-width="5" opacity="0.35"/>` : '';
+  return GAUGE_BASE.replace('<line x1="80" y1="70" x2="80" y2="12" stroke={Palette.textPrimary} stroke-width="1.5"/>', '') + arc + needle + `<text x="80" y="82" font-size="9" font-weight="bold" text-anchor="middle" fill={Palette.error}>${Math.round(percent)} %</text></svg>`;
 }
 
 
@@ -201,18 +201,18 @@ const MIN_ZOOM = 0.45;
 const CSS = `
   @page { size: ${PAGE.width}px ${PAGE.height}px; margin: 0; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: #202B29; font-size: 10px; line-height: 1.35; }
+  body { margin: 0; font-family: Helvetica, Arial, sans-serif; color: ${Palette.textPrimary}; font-size: 10px; line-height: 1.35; }
   .sheet { width: ${PAGE.width}px; height: ${SHEET_H}px; padding: ${PAGE.padY}px ${PAGE.padX}px; page-break-after: always; break-after: page; overflow: hidden; }
   html, body { margin: 0; padding: 0; }
   .fit { display: flex; flex-direction: column; justify-content: space-between; }
   .sheet.last { page-break-after: auto; break-after: auto; }
-  .box { border: 1.2px solid #202B29; border-radius: 5px; margin: 4px 0; overflow: hidden; }
-  .banner { background: #202B29; color: #fff; font-weight: bold; text-align: center; padding: 2px 6px; font-size: 10px; letter-spacing: .4px; text-transform: uppercase; }
+  .box { border: 1.2px solid ${Palette.textPrimary}; border-radius: 5px; margin: 4px 0; overflow: hidden; }
+  .banner { background: ${Palette.textPrimary}; color: ${Brand.white}; font-weight: bold; text-align: center; padding: 2px 6px; font-size: 10px; letter-spacing: .4px; text-transform: uppercase; }
   .banner.dark { border-radius: 10px; margin: 3px; }
   .boxbody { padding: 4px 6px; }
   .frow { display: flex; gap: 4px; padding: 1.5px 0; align-items: baseline; }
   .flabel { white-space: nowrap; font-size: 9.5px; }
-  .fvalue { flex: 1; border-bottom: 1px dotted #8A9593; min-height: 12px; font-weight: bold; color: #3F62AD; font-size: 9.5px; }
+  .fvalue { flex: 1; border-bottom: 1px dotted ${Palette.textMuted}; min-height: 12px; font-weight: bold; color: ${Palette.info}; font-size: 9.5px; }
   .boxtext { font-size: 7.5px; line-height: 1.3; text-align: justify; }
   .pair { display: flex; gap: 8px; align-items: stretch; }
   .pair > * { flex: 1; min-width: 0; }
@@ -225,32 +225,32 @@ const CSS = `
   .gauge svg { width: 120px; height: 64px; }
   .gauge-title { font-size: 9.5px; font-weight: bold; }
   .heading { margin: 8px 0 4px; padding-bottom: 2px; }
-  .underlined { border-bottom: 1px solid #E7E3D4; }
-  .boxed { border: 1px solid #202B29; padding: 4px 6px; }
+  .underlined { border-bottom: 1px solid ${Palette.border}; }
+  .boxed { border: 1px solid ${Palette.textPrimary}; padding: 4px 6px; }
   .para { margin: 4px 0; }
   .list { margin: 4px 0; padding-inline-start: 18px; }
   table { width: 100%; border-collapse: collapse; margin-top: 3px; }
   td { padding: 2px 0; vertical-align: top; }
-  .fields td.label { color: #5B6866; width: 24%; padding-inline-end: 6px; }
-  table.bordered td { border: 1px solid #D8D6CB; padding: 3px 5px; }
-  .cols td { padding: 4px 6px; border-bottom: 1px solid #E7E3D4; font-size: 8px; }
-  .cols.bordered td { border: 1px solid #D8D6CB; }
+  .fields td.label { color: ${Palette.textSecondary}; width: 24%; padding-inline-end: 6px; }
+  table.bordered td { border: 1px solid ${Palette.border}; padding: 3px 5px; }
+  .cols td { padding: 4px 6px; border-bottom: 1px solid ${Palette.border}; font-size: 8px; }
+  .cols.bordered td { border: 1px solid ${Palette.border}; }
   .terms td { padding: 4px 8px; font-size: 7px; line-height: 1.3; text-align: justify; }
-  .terms td + td { border-inline-start: 1px solid #D8D6CB; }
+  .terms td + td { border-inline-start: 1px solid ${Palette.border}; }
   .terms .art { margin-bottom: 4px; }
   .header td { width: 33%; font-size: 10px; }
   .logo { max-height: 52px; max-width: 120px; object-fit: contain; }
-  hr { border: 0; border-top: 1px solid #D8D6CB; margin: 6px 0; }
+  hr { border: 0; border-top: 1px solid ${Palette.border}; margin: 6px 0; }
   .signatures { margin-top: 8px; display: flex; justify-content: space-between; gap: 16px; page-break-inside: avoid; }
-  .sign-box { flex: 1; border: 1px solid #D8D6CB; border-radius: 5px; padding: 5px; font-size: 9px; text-align: center; }
+  .sign-box { flex: 1; border: 1px solid ${Palette.border}; border-radius: 5px; padding: 5px; font-size: 9px; text-align: center; }
   .sign-title { font-weight: bold; }
-  .sign-area { position: relative; height: 96px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #202B29; margin: 4px 0 3px; }
+  .sign-area { position: relative; height: 96px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid ${Palette.textPrimary}; margin: 4px 0 3px; }
   .stamp-svg { position: absolute; inset-inline-end: 4px; top: -2px; line-height: 0; }
   .stamp-svg svg { display: block; }
   .sign-area svg.sig { max-height: 58px; }
   .stamp { height: 80px; max-width: 95px; object-fit: contain; margin-inline-start: 6px; }
   .sign-name { font-weight: bold; }
-  .sign-date { color: #5B6866; font-size: 8px; }
+  .sign-date { color: ${Palette.textSecondary}; font-size: 8px; }
 `;
 
 const isHalf = (block: Block) => (block.type === 'box' || block.type === 'fuelGauge' || block.type === 'vehicleDiagram') && block.width === 'half';

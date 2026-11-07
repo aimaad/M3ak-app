@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useContract, useCreateContract, useReplaceContract } from '@/features/contracts/hooks';
 import { buildSnapshotValues, departureSnapshotValues } from '@/features/contracts/snapshot';
@@ -148,7 +148,7 @@ export default function NouveauContratScreen() {
         <ScreenHeader title={t(old ? 'contract.form.editTitle' : 'contract.form.newTitle')} showBack />
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : isError ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -176,7 +176,7 @@ export default function NouveauContratScreen() {
             </Card>
 
             {old ? (
-              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.primaryLight }}>
+              <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.primarySoft }}>
                 <ThemedText type="small">{t('contract.form.editHelp', { numero: old.numero })}</ThemedText>
               </View>
             ) : null}
@@ -187,8 +187,8 @@ export default function NouveauContratScreen() {
                 {t('contract.form.departureHelp')}
               </ThemedText>
               {!inspectionDone ? (
-                <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FBF1DE' }}>
-                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.warningSoft }}>
+                  <ThemedText type="small" style={{ color: Palette.warning }}>
                     {t('contract.form.inspectionFirst')}
                   </ThemedText>
                   <Button
@@ -213,9 +213,9 @@ export default function NouveauContratScreen() {
                       <Pressable
                         key={condition}
                         onPress={() => setEtatDepart(condition)}
-                        className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
+                        className={`rounded-full border px-4 py-2 ${selected ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
                       >
-                        <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>{t(`contract.condition.${condition}`)}</ThemedText>
+                        <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>{t(`contract.condition.${condition}`)}</ThemedText>
                       </Pressable>
                     );
                   })}
@@ -231,9 +231,9 @@ export default function NouveauContratScreen() {
                       <Pressable
                         key={key}
                         onPress={() => setAccessoires((prev) => (prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key]))}
-                        className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
+                        className={`rounded-full border px-4 py-2 ${selected ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
                       >
-                        <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>{t(`contract.accessory.${key}`)}</ThemedText>
+                        <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>{t(`contract.accessory.${key}`)}</ThemedText>
                       </Pressable>
                     );
                   })}
@@ -243,7 +243,7 @@ export default function NouveauContratScreen() {
               <View className="gap-2">
                 <ThemedText type="small" themeColor="textSecondary">{t('contract.form.damagesTitle')}</ThemedText>
                 {inspectionDone && candidates.length === 0 ? (
-                  <ThemedText type="small" style={{ color: '#1E6B3A' }}>{t('contract.form.noDamages')}</ThemedText>
+                  <ThemedText type="small" style={{ color: Palette.success }}>{t('contract.form.noDamages')}</ThemedText>
                 ) : null}
                 {candidates.map((damage) => {
                   const included = isIncluded(damage);
@@ -251,12 +251,12 @@ export default function NouveauContratScreen() {
                     <Pressable
                       key={damage.id}
                       onPress={() => setFlipped((prev) => (prev.includes(damage.id) ? prev.filter((id) => id !== damage.id) : [...prev, damage.id]))}
-                      className="flex-row items-center gap-3 rounded-2xl border border-line bg-white px-4 py-3"
+                      className="flex-row items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
                       accessibilityRole="switch"
                       accessibilityState={{ checked: included }}
                     >
-                      <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: BibipPalette.primary, backgroundColor: included ? BibipPalette.primary : '#fff' }}>
-                        {included ? <ThemedText type="smallBold" style={{ color: '#fff', lineHeight: 18 }}>✓</ThemedText> : null}
+                      <View className="h-6 w-6 items-center justify-center rounded-md border-2" style={{ borderColor: Palette.primary, backgroundColor: included ? Palette.primary : Brand.white }}>
+                        {included ? <ThemedText type="smallBold" style={{ color: Brand.white, lineHeight: 18 }}>✓</ThemedText> : null}
                       </View>
                       <View className="flex-1">
                         <ThemedText type="small">{damageLine(damage, t)}</ThemedText>
@@ -299,7 +299,7 @@ export default function NouveauContratScreen() {
             />
 
             {submitError ? (
-              <ThemedText type="small" style={{ color: '#A8322B' }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {submitError}
               </ThemedText>
             ) : null}

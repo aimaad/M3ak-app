@@ -25,7 +25,7 @@ export function ScreenHeader({ title, subtitle, showBack, right }: ScreenHeaderP
               onPress={() => router.back()}
               hitSlop={12}
               accessibilityLabel={t('common.back')}
-              className="h-11 w-11 items-center justify-center rounded-full border border-line bg-white"
+              className="h-11 w-11 items-center justify-center rounded-full border border-border bg-card"
             >
               <ThemedText type="smallBold">{backArrow}</ThemedText>
             </Pressable>

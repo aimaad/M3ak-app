@@ -13,7 +13,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
 import { findDuplicateInList } from '@/features/vehicles/duplicates';
@@ -220,7 +220,7 @@ export default function ScannerCarteGriseScreen() {
         <ScreenHeader title={t('vehicle.quickCreate.scanTitle')} showBack />
 
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={BibipPalette.primary} /> : null}
+          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={Palette.primary} /> : null}
 
           {status === 'idle' && availability !== 'loading' && availability !== 'active' ? (
             <Card className="gap-4">
@@ -264,7 +264,7 @@ export default function ScannerCarteGriseScreen() {
               <Button label={t('vehicle.quickCreate.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
               <View className="w-full gap-3">
                 <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
-                <View className="rounded-2xl bg-canvas px-4 py-3">
+                <View className="rounded-2xl bg-background px-4 py-3">
                   <ThemedText type="small" themeColor="textSecondary">
                     {t('ocr.privacyCloud')}
                   </ThemedText>
@@ -288,7 +288,7 @@ export default function ScannerCarteGriseScreen() {
 
           {status === 'processing' ? (
             <Card className="items-center gap-3 py-8">
-              <ActivityIndicator color={BibipPalette.primary} />
+              <ActivityIndicator color={Palette.primary} />
               <ThemedText type="small" themeColor="textSecondary">
                 {t('vehicle.quickCreate.analyzingBoth')}
               </ThemedText>
@@ -334,11 +334,11 @@ export default function ScannerCarteGriseScreen() {
                 </ThemedText>
               ) : null}
 
-              <View className="gap-2 rounded-2xl bg-canvas px-4 py-3">
+              <View className="gap-2 rounded-2xl bg-background px-4 py-3">
                 <View className="flex-row flex-wrap gap-2">
                   {(['recto', 'verso'] as const).map((face) => (
-                    <View key={face} className="flex-row items-center gap-1 rounded-full px-3 py-1" style={{ backgroundColor: faces[face] ? BibipPalette.successLight : BibipPalette.warningLight }}>
-                      <ThemedText type="small" style={{ color: faces[face] ? BibipPalette.success : BibipPalette.warning }}>
+                    <View key={face} className="flex-row items-center gap-1 rounded-full px-3 py-1" style={{ backgroundColor: faces[face] ? Palette.successSoft : Palette.warningSoft }}>
+                      <ThemedText type="small" style={{ color: faces[face] ? Palette.success : Palette.warning }}>
                         {faces[face] ? '✓ ' : '• '}
                         {t(`vehicle.quickCreate.face.${face}`)}
                       </ThemedText>
@@ -348,25 +348,25 @@ export default function ScannerCarteGriseScreen() {
                 {scans.length < 2 ? (
                   <ThemedText type="small">{t(scans[0]?.face === 'recto' ? 'vehicle.quickCreate.faceMissingVerso' : 'vehicle.quickCreate.faceMissingRecto')}</ThemedText>
                 ) : faces.recto && faces.verso ? (
-                  <ThemedText type="small" style={{ color: BibipPalette.success }}>
+                  <ThemedText type="small" style={{ color: Palette.success }}>
                     {t('vehicle.quickCreate.bothFaces')}
                   </ThemedText>
                 ) : null}
                 {emptyFaces.map((face) => (
-                  <ThemedText key={face} type="small" style={{ color: BibipPalette.warning }}>
+                  <ThemedText key={face} type="small" style={{ color: Palette.warning }}>
                     {t('vehicle.quickCreate.nothingNewFace', { face: t(`vehicle.quickCreate.face.${face}`) })}
                   </ThemedText>
                 ))}
                 {errorCode ? (
-                  <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+                  <ThemedText type="small" style={{ color: Palette.error }}>
                     {t(scanErrorMessageKey(errorCode))}
                   </ThemedText>
                 ) : null}
               </View>
 
               {checks.map((check) => (
-                <View key={check.code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: check.severity === 'warning' ? BibipPalette.warningLight : BibipPalette.primaryLight }}>
-                  <ThemedText type="small" style={{ color: check.severity === 'warning' ? BibipPalette.warning : BibipPalette.primaryDeep }}>
+                <View key={check.code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: check.severity === 'warning' ? Palette.warningSoft : Palette.primarySoft }}>
+                  <ThemedText type="small" style={{ color: check.severity === 'warning' ? Palette.warning : Brand.graphite }}>
                     {t(`vehicle.quickCreate.checks.${check.code}`)}
                   </ThemedText>
                 </View>
@@ -471,7 +471,7 @@ export default function ScannerCarteGriseScreen() {
               <RegistrationInfo fields={merged} t={t} />
 
               <View className="flex-row gap-2">
-                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3">
+                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-border bg-card px-4 py-3">
                   <ThemedText type="small">{t('vehicle.quickCreate.retake')}</ThemedText>
                 </Pressable>
               </View>
@@ -534,7 +534,7 @@ function ReviewField({
     <View className="gap-1">
       <TextField label={label} value={value} onChangeText={onChangeText} keyboardType={keyboardType} />
       {confidence === 'medium' ? (
-        <ThemedText type="small" style={{ color: BibipPalette.warning }}>
+        <ThemedText type="small" style={{ color: Palette.warning }}>
           {t('vehicle.quickCreate.toVerify')}
         </ThemedText>
       ) : null}

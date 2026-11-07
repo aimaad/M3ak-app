@@ -4,7 +4,7 @@ import { ActivityIndicator, Alert, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import type { AgencyRole } from '@/features/agency/types';
 import { documentExpiryStatus } from '@/features/customers/documents';
 import { useLanguage } from '@/i18n/use-language';
@@ -22,10 +22,10 @@ import {
 import { useConfirmDepartureCheck, useDepartureCheck } from './hooks';
 
 const SUMMARY_COLORS: Record<CheckSummary, { bg: string; fg: string }> = {
-  blocked: { bg: BibipPalette.dangerLight, fg: BibipPalette.danger },
-  confirmation_needed: { bg: BibipPalette.warningLight, fg: BibipPalette.warning },
-  ready_with_warnings: { bg: BibipPalette.warningLight, fg: BibipPalette.warning },
-  ready: { bg: BibipPalette.successLight, fg: BibipPalette.success },
+  blocked: { bg: Palette.errorSoft, fg: Palette.error },
+  confirmation_needed: { bg: Palette.warningSoft, fg: Palette.warning },
+  ready_with_warnings: { bg: Palette.warningSoft, fg: Palette.warning },
+  ready: { bg: Palette.successSoft, fg: Palette.success },
 };
 
 function formatDate(iso: string): string {
@@ -36,12 +36,12 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
   const { t } = useLanguage();
 
   return (
-    <View className="gap-2 rounded-2xl border border-line bg-white p-3">
+    <View className="gap-2 rounded-2xl border border-border bg-card p-3">
       <View className="flex-row items-center justify-between gap-2">
         <ThemedText type="smallBold" style={{ flex: 1 }}>
           {party.name}
         </ThemedText>
-        <View className="rounded-full bg-brand-light px-2 py-0.5">
+        <View className="rounded-full bg-primary-soft px-2 py-0.5">
           <ThemedText type="small" themeColor="primary" style={{ fontSize: 11 }}>
             {t(`locations.departureCheck.party.${party.kind}`)}
           </ThemedText>
@@ -56,7 +56,7 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
         party.documents.map((doc) => {
           const status = documentExpiryStatus({ expiresAt: doc.expiresAt });
           const color =
-            status === 'expired' ? BibipPalette.danger : status === 'expiring_soon' ? BibipPalette.warning : BibipPalette.muted;
+            status === 'expired' ? Palette.error : status === 'expiring_soon' ? Palette.warning : Palette.textSecondary;
           return (
             <ThemedText key={doc.id} type="small" style={{ color }}>
               {`${t(`customer.documentTypes.${doc.type}`)} · ${
@@ -69,19 +69,19 @@ function PartyCard({ party, customerId }: { party: DepartureParty; customerId: s
 
       {party.issues.map((issue) => (
         <View key={issue.code} className="flex-row items-start gap-2">
-          <ThemedText type="small" style={{ color: issue.severity === 'blocking' ? BibipPalette.danger : BibipPalette.warning }}>
+          <ThemedText type="small" style={{ color: issue.severity === 'blocking' ? Palette.error : Palette.warning }}>
             {issue.severity === 'blocking' ? '●' : '▲'}
           </ThemedText>
           <ThemedText
             type="small"
-            style={{ flex: 1, color: issue.severity === 'blocking' ? BibipPalette.danger : BibipPalette.warning }}
+            style={{ flex: 1, color: issue.severity === 'blocking' ? Palette.error : Palette.warning }}
           >
             {t(issueMessageKey(issue))}
           </ThemedText>
         </View>
       ))}
       {party.issues.length === 0 ? (
-        <ThemedText type="small" style={{ color: BibipPalette.success }}>
+        <ThemedText type="small" style={{ color: Palette.success }}>
           {t('locations.departureCheck.nothingToReport')}
         </ThemedText>
       ) : null}
@@ -117,7 +117,7 @@ export function DepartureChecklist({
   if (checkQuery.isLoading) {
     return (
       <View className="items-center py-4">
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       </View>
     );
   }
@@ -178,7 +178,7 @@ export function DepartureChecklist({
               loading={confirm.isPending}
             />
           ) : check.blockingCount > 0 ? (
-            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {t('locations.departureCheck.fixBlockingFirst')}
             </ThemedText>
           ) : check.policy.confirmationRole === 'manager' && role === 'employee' && state !== 'confirmed' ? (

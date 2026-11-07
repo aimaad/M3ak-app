@@ -21,7 +21,7 @@ import { useInspectionForRental } from '@/features/inspections/hooks';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 export default function DepartScreen() {
   const { id, vehicleId } = useLocalSearchParams<{ id: string; vehicleId: string }>();
@@ -108,7 +108,7 @@ export default function DepartScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.depart.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -187,9 +187,9 @@ export default function DepartScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatDepart(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -197,7 +197,7 @@ export default function DepartScreen() {
               })}
             </View>
             {touched && contractErrors.etatDepart ? (
-              <ThemedText type="small" style={{ color: '#A8322B' }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -214,9 +214,9 @@ export default function DepartScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -235,7 +235,7 @@ export default function DepartScreen() {
           />
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#A8322B' }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {error}
             </ThemedText>
           ) : null}

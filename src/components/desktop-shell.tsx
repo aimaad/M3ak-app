@@ -5,7 +5,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import { Logo } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Themes, Brand } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { signOut } from '@/features/auth/api';
 import { useSession } from '@/features/auth/session-context';
@@ -63,12 +63,12 @@ export function DesktopShell({ children }: { children: ReactNode }) {
   const items = NAV.filter((item) => (!item.ownerOnly || role === 'owner') && (!item.managersOnly || canManage));
 
   return (
-    <View className="flex-1 flex-row" style={{ backgroundColor: BibipPalette.background }}>
-      <View className="w-64 bg-brand-deep">
+    <View className="flex-1 flex-row" style={{ backgroundColor: Palette.background }}>
+      <View className="w-64 bg-graphite">
         <View className="px-6 pb-4 pt-6">
           <Logo tone="light" />
           {agencyQuery.data ? (
-            <ThemedText type="smallBold" className="mt-3" numberOfLines={1} style={{ color: '#FFFFFF' }}>
+            <ThemedText type="smallBold" className="mt-3" numberOfLines={1} style={{ color: Brand.white }}>
               {agencyQuery.data.agencyName}
             </ThemedText>
           ) : null}
@@ -83,20 +83,20 @@ export function DesktopShell({ children }: { children: ReactNode }) {
                 accessibilityRole="link"
                 accessibilityState={{ selected }}
                 className="min-h-11 flex-row items-center gap-3 rounded-xl px-3"
-                style={{ backgroundColor: selected ? BibipPalette.primary : 'transparent' }}
+                style={{ backgroundColor: selected ? Palette.primary : 'transparent' }}
               >
-                <Ionicons name={item.icon} size={20} color={selected ? BibipPalette.onPrimary : '#D2EEE8'} />
-                <ThemedText type="smallBold" style={{ color: selected ? BibipPalette.onPrimary : '#E2F3EF' }}>
+                <Ionicons name={item.icon} size={20} color={selected ? Palette.onPrimary : Palette.primarySoft} />
+                <ThemedText type="smallBold" style={{ color: selected ? Palette.onPrimary : Themes.dark.textPrimary }}>
                   {t(item.labelKey)}
                 </ThemedText>
               </Pressable>
             );
           })}
         </ScrollView>
-        <View className="gap-1 border-t px-3 py-3" style={{ borderColor: 'rgba(255,255,255,0.14)' }}>
+        <View className="gap-1 border-t px-3 py-3" style={{ borderColor: Themes.dark.border }}>
           <Pressable onPress={() => signOut()} className="min-h-11 flex-row items-center gap-3 rounded-xl px-3">
-            <Ionicons name="log-out-outline" size={20} color="#BFE6DE" />
-            <ThemedText type="smallBold" style={{ color: '#E2F3EF' }}>{t('auth.signOut')}</ThemedText>
+            <Ionicons name="log-out-outline" size={20} color={Themes.dark.textSecondary} />
+            <ThemedText type="smallBold" style={{ color: Themes.dark.textPrimary }}>{t('auth.signOut')}</ThemedText>
           </Pressable>
         </View>
       </View>

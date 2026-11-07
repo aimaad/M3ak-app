@@ -1,7 +1,7 @@
 import { Image, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette, fontFamilyFor } from '@/constants/theme';
+import { fontFamilyFor, Brand, Palette } from '@/constants/theme';
 
 /** Logo officiel BIBIP (fichier fourni, jamais recoloré ni redessiné) : voir `scripts/build-brand-assets.py`. */
 export const BIBIP_LOGO = require('../../assets/images/logo-bibip.png');
@@ -36,7 +36,7 @@ export function Logo({ size = 'md', markOnly = false, tone = 'dark' }: LogoProps
       {markOnly ? null : (
         <ThemedText
           style={{
-            color: tone === 'light' ? '#FFFFFF' : BibipPalette.primaryDeep,
+            color: tone === 'light' ? Brand.white : Brand.graphite,
             fontSize: wordSize,
             lineHeight: wordSize * 1.2,
             fontFamily: fontFamilyFor('fr', 'extrabold'),
@@ -73,7 +73,7 @@ export function LogoMark({ height, onDark = false }: { height: number; onDark?: 
         width: inner * BIBIP_LOGO_RATIO + padding * 2,
         padding,
         borderRadius: Math.round(height * 0.3),
-        backgroundColor: BibipPalette.background,
+        backgroundColor: Palette.background,
         alignItems: 'center',
         justifyContent: 'center',
       }}

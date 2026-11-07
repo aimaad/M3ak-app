@@ -1,13 +1,14 @@
 import type { VehicleStatus } from '@/features/vehicles/types';
+import { Brand, Palette } from '@/constants/theme';
 
-/** Les quatre statuts principaux, chacun dans une nuance de violet de la palette ; tout le reste est regroupé dans « Autres ». */
+/** Les quatre statuts principaux, chacun dans la couleur de son statut (vert, bleu, ambre, orange) ; tout le reste est regroupé dans « Autres ». */
 const MAIN: { status: VehicleStatus; color: string }[] = [
-  { status: 'disponible', color: '#087F70' },
-  { status: 'en_location', color: '#7DDCC8' },
-  { status: 'maintenance', color: '#0A3A34' },
-  { status: 'a_inspecter', color: '#BFE6DE' },
+  { status: 'disponible', color: Palette.success },
+  { status: 'en_location', color: Palette.info },
+  { status: 'maintenance', color: Palette.warning },
+  { status: 'a_inspecter', color: Brand.orange },
 ];
-export const OTHERS_COLOR = '#A9B3B0';
+export const OTHERS_COLOR = Palette.textMuted;
 
 export type FleetShare = { key: string; value: number; color: string };
 

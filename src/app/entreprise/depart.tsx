@@ -10,7 +10,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { DEFAULT_DEPARTURE_POLICY, type DeparturePolicy } from '@/features/rentals/departure-check';
 import { useDeparturePolicy, useSaveDeparturePolicy } from '@/features/rentals/hooks';
@@ -44,8 +44,8 @@ function Toggle({ label, hint, value, onChange }: { label: string; hint: string;
           {hint}
         </ThemedText>
       </View>
-      <View className={`rounded-full px-3 py-1 ${value ? 'bg-brand' : 'bg-line'}`}>
-        <ThemedText type="small" style={{ color: value ? '#ffffff' : BibipPalette.muted }}>
+      <View className={`rounded-full px-3 py-1 ${value ? 'bg-primary' : 'bg-border'}`}>
+        <ThemedText type="small" style={{ color: value ? Brand.white : Palette.textSecondary }}>
           {value ? t('common.yes') : t('common.no')}
         </ThemedText>
       </View>
@@ -93,15 +93,15 @@ export default function PolitiqueDepartScreen() {
 
         {policyQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : (
           <ScrollView contentContainerClassName="gap-4 px-6 pb-10">
-            <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.warningLight }}>
-              <ThemedText type="smallBold" style={{ color: BibipPalette.warning }}>
+            <View className="gap-1 rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.warningSoft }}>
+              <ThemedText type="smallBold" style={{ color: Palette.warning }}>
                 {t('entreprise.departurePolicy.validationTitle')}
               </ThemedText>
-              <ThemedText type="small" style={{ color: BibipPalette.warning }}>
+              <ThemedText type="small" style={{ color: Palette.warning }}>
                 {t('entreprise.departurePolicy.validationBody')}
               </ThemedText>
             </View>
@@ -164,7 +164,7 @@ export default function PolitiqueDepartScreen() {
             </Card>
 
             {saved ? (
-              <ThemedText type="small" style={{ color: BibipPalette.success }}>
+              <ThemedText type="small" style={{ color: Palette.success }}>
                 {t('entreprise.departurePolicy.saved')}
               </ThemedText>
             ) : null}

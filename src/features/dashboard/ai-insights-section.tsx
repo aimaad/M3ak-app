@@ -5,7 +5,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import type { InsightsAvailability } from '@/features/ocr/availability';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -14,9 +14,9 @@ import { insightsErrorMessageKey } from './insights-api';
 import { SectionTitle } from './kpi-card';
 
 const PRIORITY_COLOR: Record<InsightRecommendation['priority'], string> = {
-  high: BibipPalette.danger,
-  medium: BibipPalette.warning,
-  low: BibipPalette.success,
+  high: Palette.error,
+  medium: Palette.warning,
+  low: Palette.success,
 };
 const TREND_SYMBOL = { up: '▲', down: '▼', flat: '▬' } as const;
 
@@ -78,7 +78,7 @@ export function AiInsightsSection({
     return (
       <View className="gap-3">
         <SectionTitle>{t('accueil.ai.title')}</SectionTitle>
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       </View>
     );
   }
@@ -123,14 +123,14 @@ export function AiInsightsSection({
 
       {isLoading && !insights ? (
         <Card className="flex-row items-center gap-3">
-          <ActivityIndicator color={BibipPalette.primary} />
+          <ActivityIndicator color={Palette.primary} />
           <ThemedText type="small" themeColor="textSecondary">
             {t('accueil.ai.loading')}
           </ThemedText>
         </Card>
       ) : error ? (
         <Card className="gap-1">
-          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+          <ThemedText type="small" style={{ color: Palette.error }}>
             {t(insightsErrorMessageKey(error))}
           </ThemedText>
         </Card>

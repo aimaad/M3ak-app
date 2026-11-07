@@ -8,7 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette, Shadows } from '@/constants/theme';
+import { Shadows, Palette, Brand } from '@/constants/theme';
 import { daysLeft, shouldShowTrialBanner } from '@/features/agency/access';
 import {
   useAgencyAccess,
@@ -56,8 +56,8 @@ type DocumentAlertItem = {
 };
 
 const URGENCY_COLOR: Record<Exclude<ExpiryUrgency, 'ok'>, string> = {
-  bientot: BibipPalette.warning,
-  expire: BibipPalette.danger,
+  bientot: Palette.warning,
+  expire: Palette.error,
 };
 
 function formatShortDate(iso: string): string {
@@ -165,7 +165,7 @@ export default function AccueilScreen() {
   if (agencyQuery.isPending) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
         <ThemedText type="small" themeColor="textSecondary" className="mt-2">
           {t('agency.loading')}
         </ThemedText>
@@ -190,8 +190,8 @@ export default function AccueilScreen() {
               <RefreshControl
                 refreshing={isRefreshing}
                 onRefresh={refetchAll}
-                tintColor="#FFFFFF"
-                colors={[BibipPalette.primary]}
+                tintColor={Brand.white}
+                colors={[Palette.primary]}
               />
             }
           >
@@ -207,16 +207,16 @@ export default function AccueilScreen() {
             />
             {isLoading ? (
               <View className="items-center justify-center" style={{ paddingVertical: 48 }}>
-                <ActivityIndicator color={BibipPalette.primary} />
+                <ActivityIndicator color={Palette.primary} />
               </View>
             ) : (
               <View style={{ gap: 24, paddingHorizontal: 24, paddingTop: 8 }}>
                 {trialDays !== null ? (
-                  <View className="gap-1 rounded-2xl bg-[#FBF1DE] px-4 py-3">
-                    <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
+                  <View className="gap-1 rounded-2xl bg-warning-soft px-4 py-3">
+                    <ThemedText type="smallBold" style={{ color: Palette.warning }}>
                       {t('access.trialBannerTitle')}
                     </ThemedText>
-                    <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                    <ThemedText type="small" style={{ color: Palette.warning }}>
                       {trialDays <= 1
                         ? t('access.trialLastDay')
                         : t('access.trialDays', { days: trialDays })}
@@ -234,12 +234,12 @@ export default function AccueilScreen() {
                 {logoMissing && !startVisible ? (
                   <Pressable
                     onPress={() => router.push('/entreprise')}
-                    className="gap-1 rounded-2xl bg-[#FBE8E6] px-4 py-3"
+                    className="gap-1 rounded-2xl bg-error-soft px-4 py-3"
                   >
-                    <ThemedText type="smallBold" style={{ color: BibipPalette.dangerText }}>
+                    <ThemedText type="smallBold" style={{ color: Palette.error }}>
                       {t('entreprise.logo.homeNoticeTitle')}
                     </ThemedText>
-                    <ThemedText type="small" style={{ color: BibipPalette.dangerText }}>
+                    <ThemedText type="small" style={{ color: Palette.error }}>
                       {t('entreprise.logo.homeNotice')}
                     </ThemedText>
                   </Pressable>
@@ -253,19 +253,19 @@ export default function AccueilScreen() {
 
                 <Pressable
                   onPress={() => router.push('/chat')}
-                  className="flex-row items-center gap-3 rounded-2xl border border-line bg-white p-4"
+                  className="flex-row items-center gap-3 rounded-2xl border border-border bg-card p-4"
                   style={Shadows.card}
                   accessibilityRole="button"
                 >
                   <View
                     className="h-12 w-12 items-center justify-center rounded-full"
                     style={{
-                      backgroundColor: BibipPalette.primary,
+                      backgroundColor: Palette.primary,
                       ...Shadows.button,
                       shadowOpacity: 0.25,
                     }}
                   >
-                    <Ionicons name="sparkles" size={22} color={BibipPalette.onPrimary} />
+                    <Ionicons name="sparkles" size={22} color={Palette.onPrimary} />
                   </View>
                   <View className="flex-1 gap-0.5">
                     <ThemedText type="smallBold">{t('accueil.askM3ak.title')}</ThemedText>

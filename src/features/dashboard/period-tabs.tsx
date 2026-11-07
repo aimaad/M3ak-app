@@ -8,10 +8,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { fontFamilyFor } from '@/constants/theme';
+import { fontFamilyFor, Brand, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { DASHBOARD_PERIODS, type DashboardPeriod } from './kpis';
@@ -27,9 +26,9 @@ const TRANSITION_MS = 220;
 const FILL = { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0 } as const;
 
 /**
- * Un bouton de période. Le « violet verre » du bouton choisi (dégradé, reflet, liseré, halo) apparaît en fondu pendant que
- * la largeur du bouton glisse de 1 à 1,4 : l'indicateur passe d'un bouton à l'autre en 220 ms, sur le fil d'interface.
- * Même géométrie qu'avant : hauteur 42, rayon 21, marges intérieures 8, espace de 7 entre icône et texte.
+ * Un bouton de période. Le fond graphite du bouton choisi apparaît en fondu pendant que la largeur du bouton glisse de 1 à
+ * 1,4 : l'indicateur passe d'un bouton à l'autre en 220 ms, sur le fil d'interface. Aplats uniques, aucune ombre colorée.
+ * Hauteur 42, rayon 21, marges intérieures 8, espace de 7 entre icône et texte.
  */
 function PeriodTab({
   label,
@@ -52,11 +51,7 @@ function PeriodTab({
       : withTiming(target, { duration: TRANSITION_MS, easing: Easing.inOut(Easing.cubic) });
   }, [selected, reduceMotion, progress]);
 
-  const bodyStyle = useAnimatedStyle(() => ({
-    flexGrow: 1 + 0.4 * progress.value,
-    shadowOpacity: 0.6 * progress.value,
-    elevation: 4 * progress.value,
-  }));
+  const bodyStyle = useAnimatedStyle(() => ({ flexGrow: 1 + 0.4 * progress.value }));
   const pillStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
 
   return (
@@ -67,10 +62,6 @@ function PeriodTab({
           flexBasis: 'auto',
           height: 42,
           borderRadius: 21,
-          // Halo plus mesuré qu'avant (intensité 1 → 0,6, rayon 16 → 13) : verre poli, pas néon.
-          shadowColor: '#7DDCC8',
-          shadowRadius: 13,
-          shadowOffset: { width: 0, height: 0 },
         },
         bodyStyle,
       ]}
@@ -83,39 +74,14 @@ function PeriodTab({
         className="flex-row items-center justify-center"
         style={{ flex: 1, borderRadius: 21, overflow: 'hidden', gap: 7, paddingHorizontal: 8 }}
       >
-        {/* Un seul bord. Le dégradé couvre tout le bouton (le bouton rogne aux coins arrondis) puis un unique liseré clair le
-            souligne : plus de double trait ni de marge entre le violet et le bord. */}
-        <Animated.View pointerEvents="none" style={[FILL, pillStyle]}>
-          <Svg width="100%" height="100%" preserveAspectRatio="none" style={FILL}>
-            <Defs>
-              <LinearGradient id="kp-selected" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0" stopColor="#2BC0A8" />
-                <Stop offset="0.5" stopColor="#0E9482" />
-                <Stop offset="1" stopColor="#066B5F" />
-              </LinearGradient>
-              <LinearGradient id="kp-shine" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.4" />
-                <Stop offset="0.6" stopColor="#FFFFFF" stopOpacity="0.08" />
-                <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0" />
-              </LinearGradient>
-              <LinearGradient id="kp-rim" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0" />
-                <Stop offset="1" stopColor="#FFFFFF" stopOpacity="0.16" />
-              </LinearGradient>
-            </Defs>
-            <Rect width="100%" height="100%" fill="url(#kp-selected)" />
-            <Rect width="100%" height="52%" fill="url(#kp-shine)" />
-            <Rect y="72%" width="100%" height="28%" fill="url(#kp-rim)" />
-          </Svg>
-          <View
-            style={[
-              FILL,
-              { borderRadius: 21, borderWidth: 1, borderColor: 'rgba(255,255,255,0.55)' },
-            ]}
-          />
-        </Animated.View>
+        <Animated.View
+          pointerEvents="none"
+          style={[FILL, { borderRadius: 21, backgroundColor: Brand.graphite }, pillStyle]}
+        />
 
-        {showIcon ? <Ionicons name="calendar-outline" size={17} color="#FFFFFF" /> : null}
+        {showIcon ? (
+          <Ionicons name="calendar-outline" size={17} color={selected ? Brand.white : Palette.textSecondary} />
+        ) : null}
         <ThemedText
           numberOfLines={1}
           adjustsFontSizeToFit
@@ -123,15 +89,8 @@ function PeriodTab({
           style={{
             fontSize: 13.5,
             lineHeight: 18,
-            color: '#FFFFFF',
+            color: selected ? Brand.white : Palette.textSecondary,
             fontFamily: fontFamilyFor(language, selected ? 'bold' : 'semibold'),
-            ...(selected
-              ? {
-                  textShadowColor: 'rgba(50,10,90,0.5)',
-                  textShadowRadius: 3,
-                  textShadowOffset: { width: 0, height: 1 },
-                }
-              : null),
           }}
         >
           {label}
@@ -142,9 +101,8 @@ function PeriodTab({
 }
 
 /**
- * Sélecteur de période posé sur le hero : Aujourd'hui / 7 jours / 30 jours. Gélule de verre sombre (fond aubergine
- * translucide, reflet clair, liseré lavande, halo violet mesuré) ; la période choisie est un bouton plus large en dégradé
- * violet lumineux avec reflet intérieur, liseré blanc et halo. 50 dp de haut ; blanc sur le dégradé : au moins 4,9:1.
+ * Sélecteur de période posé sur le hero : Aujourd'hui / 7 jours / 30 jours. Gélule blanche cernée d'une bordure ; la période
+ * choisie est un bouton plus large en graphite, texte blanc (≥ 12:1). 50 dp de haut, aucune ombre.
  */
 export function PeriodTabs({
   value,
@@ -157,45 +115,17 @@ export function PeriodTabs({
   // Sous 340 dp de large, les icônes sont retirées pour que les trois libellés tiennent en entier.
   const showIcons = useWindowDimensions().width >= 340;
   return (
-    // Verre : fond aubergine translucide, reflet clair sur la moitié haute, liseré lavande et halo violet.
     <View
       accessibilityRole="tablist"
       accessibilityLabel={t('accueil.period.label')}
       style={{
         height: 50,
         borderRadius: 25,
-        shadowColor: '#7DDCC8',
-        shadowOpacity: 0.32,
-        shadowRadius: 16,
-        shadowOffset: { width: 0, height: 5 },
-        elevation: 4,
+        backgroundColor: Palette.card,
+        borderWidth: 1,
+        borderColor: Palette.border,
       }}
     >
-      <View
-        pointerEvents="none"
-        style={[
-          FILL,
-          {
-            borderRadius: 25,
-            overflow: 'hidden',
-            backgroundColor: 'rgba(40,16,62,0.62)',
-            borderWidth: 1,
-            borderColor: 'rgba(214,160,250,0.6)',
-          },
-        ]}
-      >
-        <Svg width="100%" height="100%" preserveAspectRatio="none" style={FILL}>
-          <Defs>
-            <LinearGradient id="kp-glass" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#FFFFFF" stopOpacity="0.2" />
-              <Stop offset="0.5" stopColor="#FFFFFF" stopOpacity="0.04" />
-              <Stop offset="1" stopColor="#7DDCC8" stopOpacity="0.1" />
-            </LinearGradient>
-          </Defs>
-          <Rect width="100%" height="100%" fill="url(#kp-glass)" />
-        </Svg>
-      </View>
-
       <View className="flex-1 flex-row items-center" style={{ paddingHorizontal: 4, gap: 2 }}>
         {DASHBOARD_PERIODS.map((period) => (
           <PeriodTab

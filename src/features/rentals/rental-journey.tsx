@@ -5,7 +5,7 @@ import { Alert, Pressable, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import type { AgencyRole } from '@/features/agency/types';
 import { ContractStatusBadge } from '@/features/contracts/contract-status-badge';
 import type { Contract } from '@/features/contracts/types';
@@ -39,10 +39,10 @@ type Props = {
 const mad = (amount: number) => `${Math.round(amount).toLocaleString('fr-FR')} MAD`;
 
 const COLORS: Record<JourneyStepStatus, { bg: string; fg: string }> = {
-  done: { bg: BibipPalette.successLight, fg: BibipPalette.success },
-  current: { bg: BibipPalette.primary, fg: '#FFFFFF' },
-  attention: { bg: BibipPalette.warningLight, fg: BibipPalette.warning },
-  locked: { bg: '#F0EEE5', fg: BibipPalette.subtle },
+  done: { bg: Palette.successSoft, fg: Palette.success },
+  current: { bg: Palette.primary, fg: Brand.white },
+  attention: { bg: Palette.warningSoft, fg: Palette.warning },
+  locked: { bg: Palette.surfaceAlt, fg: Palette.textMuted },
 };
 
 function Bullet({ status, number }: { status: JourneyStepStatus; number: number }) {
@@ -168,7 +168,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
             <ThemedText type="small" themeColor="textSecondary">{t('locations.journey.steps.inspection.help')}</ThemedText>
             {inspectionDepart?.skipped ? (
               <>
-                <ThemedText type="small" style={{ color: BibipPalette.warning }}>{t('locations.journey.skip.skippedNote')}</ThemedText>
+                <ThemedText type="small" style={{ color: Palette.warning }}>{t('locations.journey.skip.skippedNote')}</ThemedText>
                 <Button label={t('locations.journey.skip.doItAnyway')} variant="secondary" onPress={() => resume('depart')} loading={resumeDepart.isPending} />
               </>
             ) : inspectionDepart?.statut === 'terminee' || inspectionDepart?.statut === 'validee' ? (
@@ -205,7 +205,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
               </View>
             ))}
             {step.status === 'attention' ? (
-              <ThemedText type="small" style={{ color: BibipPalette.warning }}>{t('locations.journey.steps.payment.notRequired')}</ThemedText>
+              <ThemedText type="small" style={{ color: Palette.warning }}>{t('locations.journey.steps.payment.notRequired')}</ThemedText>
             ) : null}
             <AddPaymentForm agencyId={rental.agencyId} rentalId={rental.id} />
           </>
@@ -226,7 +226,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
             <ThemedText type="small" themeColor="textSecondary">{t('locations.journey.steps.inspection_retour.help')}</ThemedText>
             {inspectionRetour?.skipped ? (
               <>
-                <ThemedText type="small" style={{ color: BibipPalette.warning }}>{t('locations.journey.skip.skippedNote')}</ThemedText>
+                <ThemedText type="small" style={{ color: Palette.warning }}>{t('locations.journey.skip.skippedNote')}</ThemedText>
                 <Button label={t('locations.journey.skip.doItAnyway')} variant="secondary" onPress={() => resume('retour')} loading={resumeRetour.isPending} />
               </>
             ) : step.status === 'done' ? (
@@ -278,8 +278,8 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
             {allDone ? t('locations.journey.allDone') : t('locations.journey.progress', { done: doneCount, total })}
           </ThemedText>
         </View>
-        <View className="h-2 overflow-hidden rounded-full bg-line">
-          <View className="h-2 rounded-full" style={{ width: `${(doneCount / total) * 100}%`, backgroundColor: BibipPalette.primary }} />
+        <View className="h-2 overflow-hidden rounded-full bg-border">
+          <View className="h-2 rounded-full" style={{ width: `${(doneCount / total) * 100}%`, backgroundColor: Palette.primary }} />
         </View>
       </View>
 
@@ -288,7 +288,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
         const isOpen = !locked && expanded === step.key;
         const content = isOpen ? body(step) : null;
         return (
-          <Card key={step.key} padded={false} className="overflow-hidden" style={{ opacity: locked ? 0.6 : 1, borderColor: step.status === 'current' ? BibipPalette.primary : undefined, borderWidth: step.status === 'current' ? 1.5 : undefined }}>
+          <Card key={step.key} padded={false} className="overflow-hidden" style={{ opacity: locked ? 0.6 : 1, borderColor: step.status === 'current' ? Palette.primary : undefined, borderWidth: step.status === 'current' ? 1.5 : undefined }}>
             <Pressable
               className="flex-row items-center gap-3 px-4 py-3"
               accessibilityRole="button"
@@ -304,7 +304,7 @@ export function RentalJourney({ rental, role, contract, inspectionDepart, inspec
               </View>
               {!locked ? <ThemedText type="small" themeColor="textSecondary">{isOpen ? '▲' : '▼'}</ThemedText> : null}
             </Pressable>
-            {content ? <View className="gap-3 border-t border-line px-4 py-4">{content}</View> : null}
+            {content ? <View className="gap-3 border-t border-border px-4 py-4">{content}</View> : null}
           </Card>
         );
       })}

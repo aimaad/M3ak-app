@@ -11,7 +11,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useMyAgency, useMyProfile, useUpdateMyProfile, useUploadMemberAvatar } from '@/features/agency/hooks';
 import type { MemberProfile } from '@/features/agency/types';
 import { signOut, updateMyPassword } from '@/features/auth/api';
@@ -53,7 +53,7 @@ export default function ProfilScreen() {
 
         {profileQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : !profileQuery.data ? (
           <View className="flex-1 items-center justify-center px-8">
@@ -139,29 +139,29 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
         <View className="flex-row gap-2">
           <Pressable
             onPress={() => handlePickAvatar('camera')}
-            className="rounded-full border border-line bg-white px-4 py-2"
+            className="rounded-full border border-border bg-card px-4 py-2"
           >
             <ThemedText type="small">{t('common.camera')}</ThemedText>
           </Pressable>
           <Pressable
             onPress={() => handlePickAvatar('library')}
-            className="rounded-full border border-line bg-white px-4 py-2"
+            className="rounded-full border border-border bg-card px-4 py-2"
           >
             <ThemedText type="small">{t('common.gallery')}</ThemedText>
           </Pressable>
         </View>
-        {uploadAvatar.isPending ? <ActivityIndicator color={BibipPalette.primary} /> : null}
+        {uploadAvatar.isPending ? <ActivityIndicator color={Palette.primary} /> : null}
       </View>
 
       <Card padded={false} className="px-4">
-        <View className="flex-row items-center justify-between border-b border-line py-3">
+        <View className="flex-row items-center justify-between border-b border-border py-3">
           <ThemedText type="default" themeColor="textSecondary">
             {t('profil.fields.type')}
           </ThemedText>
           <ThemedText type="smallBold">{t(`equipe.roles.${profile.role}`)}</ThemedText>
         </View>
         {profile.branchNom ? (
-          <View className="flex-row items-center justify-between border-b border-line py-3">
+          <View className="flex-row items-center justify-between border-b border-border py-3">
             <ThemedText type="default" themeColor="textSecondary">
               {t('profil.fields.branch')}
             </ThemedText>
@@ -191,12 +191,12 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           error={profileTouched && !nom.trim() ? t('profil.errors.required') : undefined}
         />
         {profileError ? (
-          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+          <ThemedText type="small" style={{ color: Palette.error }}>
             {profileError}
           </ThemedText>
         ) : null}
         {profileSuccess ? (
-          <ThemedText type="small" style={{ color: BibipPalette.success }}>
+          <ThemedText type="small" style={{ color: Palette.success }}>
             {t('profil.updateSuccess')}
           </ThemedText>
         ) : null}
@@ -214,7 +214,7 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           {profile.signaturePath && signatureQuery.data ? (
             <SignatureView signature={signatureQuery.data} />
           ) : profile.signaturePath && signatureQuery.isLoading ? (
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           ) : (
             <ThemedText type="small" themeColor="textSecondary" className="text-center">
               {t('profil.signature.none')}
@@ -254,12 +254,12 @@ function ProfilForm({ agencyId, profile }: { agencyId: string | undefined; profi
           autoCapitalize="none"
         />
         {passwordError ? (
-          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+          <ThemedText type="small" style={{ color: Palette.error }}>
             {passwordError}
           </ThemedText>
         ) : null}
         {passwordSuccess ? (
-          <ThemedText type="small" style={{ color: BibipPalette.success }}>
+          <ThemedText type="small" style={{ color: Palette.success }}>
             {t('profil.passwordSuccess')}
           </ThemedText>
         ) : null}

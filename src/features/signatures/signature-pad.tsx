@@ -3,7 +3,7 @@ import { PanResponder, Pressable, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 import { strokeToPath, type HandwrittenSignature, type Point } from './signature';
 
@@ -66,7 +66,7 @@ export function SignaturePad({ height, clearLabel, placeholder, onChange, onDraw
           setMeasuredHeight(Math.round(event.nativeEvent.layout.height));
         }}
         style={height ? { height } : { flex: 1, minHeight: 160 }}
-        className="overflow-hidden rounded-2xl border-2 border-dashed border-subtle bg-white"
+        className="overflow-hidden rounded-2xl border-2 border-dashed border-content-muted bg-card"
       >
         <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
           <Svg width="100%" height="100%">
@@ -83,8 +83,8 @@ export function SignaturePad({ height, clearLabel, placeholder, onChange, onDraw
           </View>
         ) : null}
       </View>
-      <Pressable onPress={() => setStrokes([])} disabled={strokes.length === 0} className="self-end rounded-full border border-line bg-white px-4 py-2">
-        <ThemedText type="small" style={{ color: strokes.length === 0 ? BibipPalette.primary : BibipPalette.ink, opacity: strokes.length === 0 ? 0.4 : 1 }}>
+      <Pressable onPress={() => setStrokes([])} disabled={strokes.length === 0} className="self-end rounded-full border border-border bg-card px-4 py-2">
+        <ThemedText type="small" style={{ color: strokes.length === 0 ? Palette.primary : Palette.textPrimary, opacity: strokes.length === 0 ? 0.4 : 1 }}>
           {clearLabel}
         </ThemedText>
       </Pressable>

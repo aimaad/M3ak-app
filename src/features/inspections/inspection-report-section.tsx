@@ -8,7 +8,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
 import { useCustomer } from '@/features/customers/hooks';
 import { useDeposit, useResolveDeposit } from '@/features/deposits/hooks';
@@ -159,7 +159,7 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
     }
   }
 
-  if (!rental) return <ActivityIndicator color={BibipPalette.primary} />;
+  if (!rental) return <ActivityIndicator color={Palette.primary} />;
 
   return (
     <View className="gap-4">
@@ -179,13 +179,13 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
               <>
                 <View className="flex-row justify-between">
                   <ThemedText type="small" themeColor="textSecondary">{t('inspection.report.deduction')}</ThemedText>
-                  <ThemedText type="smallBold" style={{ color: '#A8322B' }}>{`− ${mad(deposit.montantRetenu)}`}</ThemedText>
+                  <ThemedText type="smallBold" style={{ color: Palette.error }}>{`− ${mad(deposit.montantRetenu)}`}</ThemedText>
                 </View>
                 <View className="flex-row justify-between">
                   <ThemedText type="small" themeColor="textSecondary">{t('inspection.report.toRefund')}</ThemedText>
-                  <ThemedText type="smallBold" style={{ color: '#1E6B3A' }}>{mad(deposit.montantRestitue)}</ThemedText>
+                  <ThemedText type="smallBold" style={{ color: Palette.success }}>{mad(deposit.montantRestitue)}</ThemedText>
                 </View>
-                <ThemedText type="small" style={{ color: '#1E6B3A' }}>
+                <ThemedText type="small" style={{ color: Palette.success }}>
                   {t('inspection.report.validated')}
                 </ThemedText>
               </>
@@ -200,17 +200,17 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
                 />
                 <View className="flex-row justify-between">
                   <ThemedText type="small" themeColor="textSecondary">{t('inspection.report.toRefund')}</ThemedText>
-                  <ThemedText type="smallBold" style={{ color: '#1E6B3A' }}>
+                  <ThemedText type="smallBold" style={{ color: Palette.success }}>
                     {mad(Math.max(deposit.montantBloque - (amount ?? 0), 0))}
                   </ThemedText>
                 </View>
                 {amount !== null && amount > deposit.montantBloque ? (
-                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                  <ThemedText type="small" style={{ color: Palette.warning }}>
                     {t('inspection.report.exceedsDeposit', { excess: mad(amount - deposit.montantBloque) })}
                   </ThemedText>
                 ) : null}
                 {blockedByPending ? (
-                  <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                  <ThemedText type="small" style={{ color: Palette.warning }}>
                     {t('inspection.analysis.summary.pendingDecision', { count: pendingCount })}
                   </ThemedText>
                 ) : null}
@@ -229,7 +229,7 @@ export function InspectionReportSection({ rentalId, damages, pendingCount, inspe
       <Card className="gap-3">
         <ThemedText type="smallBold">{t('inspection.report.title')}</ThemedText>
         {error ? (
-          <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+          <ThemedText type="small" style={{ color: Palette.error }}>
             {error}
           </ThemedText>
         ) : null}

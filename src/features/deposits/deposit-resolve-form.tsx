@@ -8,6 +8,7 @@ import { useLanguage } from '@/i18n/use-language';
 import { useResolveDeposit } from './hooks';
 import { resolveDeposit } from './resolution';
 import type { Deposit } from './types';
+import { Brand } from '@/constants/theme';
 
 export function DepositResolveForm({ deposit }: { deposit: Deposit }) {
   const { t } = useLanguage();
@@ -21,7 +22,7 @@ export function DepositResolveForm({ deposit }: { deposit: Deposit }) {
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <TextField
         label={t('locations.cautionResolveLabel')}
         value={montantRetenu}
@@ -35,11 +36,11 @@ export function DepositResolveForm({ deposit }: { deposit: Deposit }) {
         onPress={handleSubmit}
         disabled={resolve.isPending}
         className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
-          resolve.isPending ? 'bg-subtle' : 'bg-brand'
+          resolve.isPending ? 'bg-content-muted' : 'bg-primary'
         }`}
       >
-        {resolve.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-        <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+        {resolve.isPending ? <ActivityIndicator color={Brand.white} /> : null}
+        <ThemedText type="smallBold" style={{ color: Brand.white, fontSize: 16, lineHeight: 22 }}>
           {t('locations.cautionResolveAction')}
         </ThemedText>
       </Pressable>

@@ -1,3 +1,4 @@
+import { Palette } from '@/constants/theme';
 /**
  * Cachet de l'agence généré par M3ak : un vrai tampon dessiné en vectoriel (anneaux, texte en arc, lignes centrées,
  * léger angle, encre bleue/rouge/noire), pas une simple photo. Il reste net à l'impression et sur le PDF.
@@ -10,7 +11,7 @@ export type StampColor = 'blue' | 'red' | 'black';
 
 export const STAMP_SHAPES: StampShape[] = ['round', 'rect', 'oval'];
 export const STAMP_COLORS: StampColor[] = ['blue', 'red', 'black'];
-export const STAMP_INK: Record<StampColor, string> = { blue: '#3F62AD', red: '#A8322B', black: '#1F2937' };
+export const STAMP_INK: Record<StampColor, string> = { blue: Palette.info, red: Palette.error, black: '#1F2937' };
 
 export const STAMP_LIMITS = { title: 36, address: 80, phone: 24 } as const;
 

@@ -7,7 +7,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { useCreatePayment } from './hooks';
 import { PAYMENT_METHODS, type PaymentMethod } from './types';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; rentalId: string }) {
   const { t } = useLanguage();
@@ -31,7 +31,7 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
     return (
       <Pressable
         onPress={() => setExpanded(true)}
-        className="items-center rounded-2xl border border-line bg-white px-4 py-3"
+        className="items-center rounded-2xl border border-border bg-card px-4 py-3"
       >
         <ThemedText type="smallBold" themeColor="primary">
           {`+ ${t('locations.addPayment')}`}
@@ -41,7 +41,7 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
   }
 
   return (
-    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <TextField
         label={t('locations.paymentAmount')}
         value={montant}
@@ -60,10 +60,10 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
                 key={method}
                 onPress={() => setMethode(method)}
                 className={`rounded-full border px-3 py-1.5 ${
-                  selected ? 'border-brand bg-brand' : 'border-line bg-white'
+                  selected ? 'border-graphite bg-graphite' : 'border-border bg-card'
                 }`}
               >
-                <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+                <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
                   {t(`locations.paymentMethods.${method}`)}
                 </ThemedText>
               </Pressable>
@@ -75,11 +75,11 @@ export function AddPaymentForm({ agencyId, rentalId }: { agencyId: string; renta
         onPress={handleSubmit}
         disabled={!isValid || createPayment.isPending}
         className={`flex-row items-center justify-center gap-2 rounded-2xl px-4 py-3 ${
-          !isValid || createPayment.isPending ? 'bg-subtle' : 'bg-brand'
+          !isValid || createPayment.isPending ? 'bg-content-muted' : 'bg-primary'
         }`}
       >
-        {createPayment.isPending ? <ActivityIndicator color="#ffffff" /> : null}
-        <ThemedText type="smallBold" style={{ color: '#ffffff' }}>
+        {createPayment.isPending ? <ActivityIndicator color={Brand.white} /> : null}
+        <ThemedText type="smallBold" style={{ color: Brand.white, fontSize: 16, lineHeight: 22 }}>
           {t('locations.addPayment')}
         </ThemedText>
       </Pressable>

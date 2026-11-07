@@ -3,6 +3,7 @@ import * as Print from 'expo-print';
 
 import { actorLabel, describeAuditEntry } from './describe';
 import type { AuditEntry } from './types';
+import { Brand, Palette } from '@/constants/theme';
 
 type T = (key: string, params?: Record<string, unknown>) => string;
 
@@ -50,16 +51,16 @@ export function buildAuditHtml(input: AuditPdfInput): string {
   <head>
     <meta charset="utf-8" />
     <style>
-      body { font-family: Helvetica, Arial, sans-serif; color: #202B29; padding: 24px; }
-      h1 { font-size: 20px; margin: 0 0 4px; color: #0A5C52; }
-      .meta { color: #5B6866; font-size: 12px; margin-bottom: 14px; line-height: 1.6; }
+      body { font-family: Helvetica, Arial, sans-serif; color: ${Palette.textPrimary}; padding: 24px; }
+      h1 { font-size: 20px; margin: 0 0 4px; color: ${Brand.graphite}; }
+      .meta { color: ${Palette.textSecondary}; font-size: 12px; margin-bottom: 14px; line-height: 1.6; }
       table { width: 100%; border-collapse: collapse; font-size: 11px; }
-      th { text-align: start; background: #DDF1EC; padding: 6px; }
-      td { padding: 6px; border-bottom: 1px solid #E7E3D4; vertical-align: top; }
+      th { text-align: start; background: ${Palette.surfaceAlt}; padding: 6px; }
+      td { padding: 6px; border-bottom: 1px solid ${Palette.border}; vertical-align: top; }
       .nowrap { white-space: nowrap; }
-      .muted { color: #5B6866; font-size: 10px; }
-      .warn { margin-top: 10px; padding: 8px; background: #FBF1DE; color: #78350F; font-size: 11px; }
-      .footer { margin-top: 18px; color: #5B6866; font-size: 10px; }
+      .muted { color: ${Palette.textSecondary}; font-size: 10px; }
+      .warn { margin-top: 10px; padding: 8px; background: ${Palette.warningSoft}; color: ${Palette.warning}; font-size: 11px; }
+      .footer { margin-top: 18px; color: ${Palette.textSecondary}; font-size: 10px; }
     </style>
   </head>
   <body dir="${language === 'ar' ? 'rtl' : 'ltr'}">

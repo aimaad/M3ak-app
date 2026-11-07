@@ -3,6 +3,7 @@ import { Pressable, ScrollView, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
+import { Palette } from '@/constants/theme';
 
 type PickerFieldProps<T> = {
   label: string;
@@ -43,20 +44,20 @@ export function PickerField<T>({
 
       <Pressable
         onPress={() => setExpanded((prev) => !prev)}
-        className={`rounded-2xl border px-4 py-3 ${error ? 'border-[#C8443B]' : 'border-line'} bg-white`}
+        className={`rounded-2xl border px-4 py-3 ${error ? 'border-error' : 'border-border'} bg-card`}
       >
         <ThemedText type="default" themeColor={selectedItem ? undefined : 'textSecondary'}>
           {selectedItem ? getLabel(selectedItem) : placeholder}
         </ThemedText>
       </Pressable>
       {error ? (
-        <ThemedText type="small" style={{ color: '#A8322B' }}>
+        <ThemedText type="small" style={{ color: Palette.error }}>
           {error}
         </ThemedText>
       ) : null}
 
       {expanded ? (
-        <View className="gap-2 rounded-2xl border border-line bg-white p-3">
+        <View className="gap-2 rounded-2xl border border-border bg-card p-3">
           <TextField placeholder={searchPlaceholder} value={query} onChangeText={setQuery} />
           <ScrollView className="max-h-52" keyboardShouldPersistTaps="handled">
             {filtered.map((item) => {
@@ -70,7 +71,7 @@ export function PickerField<T>({
                     setExpanded(false);
                     setQuery('');
                   }}
-                  className={`rounded-xl px-3 py-2 ${selected ? 'bg-brand-light' : ''}`}
+                  className={`rounded-xl px-3 py-2 ${selected ? 'bg-primary-soft' : ''}`}
                 >
                   <ThemedText type="smallBold">{getLabel(item)}</ThemedText>
                   {getSubLabel?.(item) ? (

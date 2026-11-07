@@ -11,7 +11,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { useBranches } from '@/features/branches/hooks';
 import { mergeDocuments } from '@/features/storage/documents';
@@ -256,8 +256,8 @@ export default function FinaliserVehiculeScreen() {
     return (
       <ThemedView className="flex-1">
         <SafeAreaView className="flex-1 items-center justify-center gap-6 px-8" edges={['top', 'left', 'right']}>
-          <View className="h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: BibipPalette.successLight }}>
-            <Ionicons name="checkmark" size={32} color={BibipPalette.success} />
+          <View className="h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: Palette.successSoft }}>
+            <Ionicons name="checkmark" size={32} color={Palette.success} />
           </View>
           <ThemedText type="subtitle" className="text-center">
             {t('vehicle.quickCreate.successTitle')}
@@ -281,8 +281,8 @@ export default function FinaliserVehiculeScreen() {
 
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
           {draft?.uncertainFields && draft.uncertainFields.length > 0 ? (
-            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.warningLight }}>
-              <ThemedText type="small" style={{ color: BibipPalette.warning }}>
+            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.warningSoft }}>
+              <ThemedText type="small" style={{ color: Palette.warning }}>
                 {t('vehicle.quickCreate.reviewBeforeSave')}
               </ThemedText>
             </View>
@@ -322,7 +322,7 @@ export default function FinaliserVehiculeScreen() {
               onSelect={(c) => update('categorie', c)}
             />
             {touched && missing.categorie ? (
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t('vehicle.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -354,10 +354,10 @@ export default function FinaliserVehiculeScreen() {
                 <Pressable
                   onPress={() => setBranchId(null)}
                   className={`rounded-full border px-4 py-2 ${
-                    branchId === null ? 'border-brand bg-brand' : 'border-line bg-white'
+                    branchId === null ? 'border-graphite bg-graphite' : 'border-border bg-card'
                   }`}
                 >
-                  <ThemedText type="small" style={{ color: branchId === null ? '#ffffff' : BibipPalette.ink }}>
+                  <ThemedText type="small" style={{ color: branchId === null ? Brand.white : Palette.textPrimary }}>
                     {t('vehicle.fields.allBranches')}
                   </ThemedText>
                 </Pressable>
@@ -366,10 +366,10 @@ export default function FinaliserVehiculeScreen() {
                     key={branch.id}
                     onPress={() => setBranchId(branch.id)}
                     className={`rounded-full border px-4 py-2 ${
-                      branchId === branch.id ? 'border-brand bg-brand' : 'border-line bg-white'
+                      branchId === branch.id ? 'border-graphite bg-graphite' : 'border-border bg-card'
                     }`}
                   >
-                    <ThemedText type="small" style={{ color: branchId === branch.id ? '#ffffff' : BibipPalette.ink }}>
+                    <ThemedText type="small" style={{ color: branchId === branch.id ? Brand.white : Palette.textPrimary }}>
                       {branch.nom}
                     </ThemedText>
                   </Pressable>
@@ -383,7 +383,7 @@ export default function FinaliserVehiculeScreen() {
               {t('vehicle.fields.statut')}
             </ThemedText>
             {statusLocked ? (
-              <View className="rounded-2xl border border-dashed border-line bg-white px-4 py-3">
+              <View className="rounded-2xl border border-dashed border-border bg-card px-4 py-3">
                 <ThemedText type="small" themeColor="textSecondary">
                   {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
                 </ThemedText>
@@ -409,7 +409,7 @@ export default function FinaliserVehiculeScreen() {
           />
 
           <Pressable onPress={() => setShowMore((prev) => !prev)} className="flex-row items-center gap-1 py-2">
-            <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={BibipPalette.primary} />
+            <Ionicons name={showMore ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.primary} />
             <ThemedText type="small" themeColor="primary">
               {t('vehicle.quickCreate.moreInfo')}
             </ThemedText>
@@ -538,8 +538,8 @@ export default function FinaliserVehiculeScreen() {
           ) : null}
 
           {submitError ? (
-            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: BibipPalette.dangerLight }}>
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+            <View className="rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.errorSoft }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {submitError}
               </ThemedText>
             </View>

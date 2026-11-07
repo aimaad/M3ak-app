@@ -5,6 +5,7 @@ import { useSignedUrl } from '@/features/storage/hooks';
 
 import { VEHICLE_PHOTOS_BUCKET } from './api';
 import type { VehiclePhoto } from './types';
+import { Brand } from '@/constants/theme';
 
 function GalleryThumbnail({
   photo,
@@ -22,14 +23,14 @@ function GalleryThumbnail({
       {signedUrl ? (
         <Image source={{ uri: signedUrl }} className="h-28 w-28 rounded-2xl" resizeMode="cover" />
       ) : (
-        <View className="h-28 w-28 rounded-2xl bg-canvas" />
+        <View className="h-28 w-28 rounded-2xl bg-background" />
       )}
       {canDelete ? (
         <Pressable
           onPress={onDelete}
-          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-ink"
+          className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-graphite"
         >
-          <ThemedText type="small" style={{ color: '#ffffff' }}>
+          <ThemedText type="small" style={{ color: Brand.white }}>
             ×
           </ThemedText>
         </Pressable>
@@ -51,7 +52,7 @@ export function VehiclePhotoGallery({
 }) {
   if (photos.length === 0) {
     return (
-      <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-line bg-white">
+      <View className="h-24 items-center justify-center rounded-2xl border border-dashed border-border bg-card">
         <ThemedText type="small" themeColor="textSecondary">
           {emptyLabel}
         </ThemedText>

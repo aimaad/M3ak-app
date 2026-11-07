@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Themes } from '@/constants/theme';
 import { useAgencyDetails, useMyAgency } from '@/features/agency/hooks';
 import { useSession } from '@/features/auth/session-context';
 import { useCustomers } from '@/features/customers/hooks';
@@ -64,12 +64,12 @@ export default function BienvenueScreen() {
   const screen = ready ? currentWelcomeScreen(steps, started, skipped) : null;
 
   return (
-    <View className="flex-1" style={{ backgroundColor: BibipPalette.primaryDeep }}>
+    <View className="flex-1" style={{ backgroundColor: Brand.graphite }}>
       <SafeAreaView className="w-full flex-1">
         <View className="flex-1 px-6">
         <View className="min-h-11 flex-row items-center justify-between">
           {screen?.kind === 'step' ? (
-            <ThemedText type="small" style={{ color: '#FFFFFF', opacity: 0.85 }} accessibilityLiveRegion="polite">
+            <ThemedText type="small" style={{ color: Brand.white, opacity: 0.85 }} accessibilityLiveRegion="polite">
               {t('onboarding.welcome.stepOf', { current: screen.position, total: screen.total })}
             </ThemedText>
           ) : (
@@ -77,7 +77,7 @@ export default function BienvenueScreen() {
           )}
           {screen && screen.kind !== 'done' ? (
             <Pressable onPress={() => void leave()} hitSlop={10} accessibilityRole="button" className="min-h-11 justify-center">
-              <ThemedText type="smallBold" style={{ color: '#FFFFFF', opacity: 0.85 }}>
+              <ThemedText type="smallBold" style={{ color: Brand.white, opacity: 0.85 }}>
                 {t('onboarding.welcome.later')}
               </ThemedText>
             </Pressable>
@@ -86,30 +86,30 @@ export default function BienvenueScreen() {
 
         {!screen ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={Brand.white} />
           </View>
         ) : (
           <>
             <View className="flex-1 items-center justify-center gap-6">
-              <View className="h-28 w-28 items-center justify-center rounded-full" style={{ backgroundColor: 'rgba(255,255,255,0.16)' }}>
-                <Ionicons name={ICONS[screen.kind === 'step' ? screen.step.key : screen.kind]} size={56} color="#FFFFFF" />
+              <View className="h-28 w-28 items-center justify-center rounded-full" style={{ backgroundColor: Themes.dark.surface }}>
+                <Ionicons name={ICONS[screen.kind === 'step' ? screen.step.key : screen.kind]} size={56} color={Brand.white} />
               </View>
 
               {screen.kind === 'step' ? (
                 <View className="items-center gap-3 px-2">
-                  <ThemedText type="subtitle" style={{ color: '#FFFFFF', textAlign: 'center' }} accessibilityRole="header">
+                  <ThemedText type="subtitle" style={{ color: Brand.white, textAlign: 'center' }} accessibilityRole="header">
                     {t(`onboarding.welcome.steps.${screen.step.key}.title`)}
                   </ThemedText>
-                  <ThemedText style={{ color: '#FFFFFF', opacity: 0.9, textAlign: 'center' }}>
+                  <ThemedText style={{ color: Brand.white, opacity: 0.9, textAlign: 'center' }}>
                     {t(`onboarding.welcome.steps.${screen.step.key}.hint`)}
                   </ThemedText>
                 </View>
               ) : (
                 <View className="items-center gap-3 px-2">
-                  <ThemedText type="subtitle" style={{ color: '#FFFFFF', textAlign: 'center' }} accessibilityRole="header">
+                  <ThemedText type="subtitle" style={{ color: Brand.white, textAlign: 'center' }} accessibilityRole="header">
                     {screen.kind === 'intro' ? t('onboarding.welcome.introTitle') : t('onboarding.welcome.doneTitle')}
                   </ThemedText>
-                  <ThemedText style={{ color: '#FFFFFF', opacity: 0.9, textAlign: 'center' }}>
+                  <ThemedText style={{ color: Brand.white, opacity: 0.9, textAlign: 'center' }}>
                     {screen.kind === 'intro'
                       ? t('onboarding.welcome.introBody', { agency: agencyQuery.data?.agencyName ?? '', count: screen.total })
                       : screen.skipped > 0
@@ -128,9 +128,9 @@ export default function BienvenueScreen() {
                   else void leave();
                 }}
                 accessibilityRole="button"
-                className="min-h-14 items-center justify-center rounded-2xl bg-white px-4"
+                className="min-h-14 items-center justify-center rounded-2xl bg-card px-4"
               >
-                <ThemedText type="smallBold" style={{ color: BibipPalette.primaryDeep }}>
+                <ThemedText type="smallBold" style={{ color: Brand.graphite }}>
                   {screen.kind === 'intro'
                     ? t('onboarding.welcome.start')
                     : screen.kind === 'step'
@@ -144,7 +144,7 @@ export default function BienvenueScreen() {
                   accessibilityRole="button"
                   className="min-h-12 items-center justify-center"
                 >
-                  <ThemedText type="smallBold" style={{ color: '#FFFFFF', opacity: 0.85 }}>
+                  <ThemedText type="smallBold" style={{ color: Brand.white, opacity: 0.85 }}>
                     {t('onboarding.welcome.skipStep')}
                   </ThemedText>
                 </Pressable>

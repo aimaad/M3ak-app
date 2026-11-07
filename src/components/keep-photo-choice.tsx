@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, View } from 'react-native';
 
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { ThemedText } from './themed-text';
@@ -17,8 +17,8 @@ export function KeepPhotoChoice({ value, onChange }: { value: boolean; onChange:
       accessibilityRole="checkbox"
       accessibilityState={{ checked: value }}
       onPress={() => onChange(!value)}
-      className="flex-row items-start gap-3 rounded-2xl bg-canvas px-4 py-3">
-      <Ionicons name={value ? 'checkbox' : 'square-outline'} size={22} color={BibipPalette.primary} />
+      className="flex-row items-start gap-3 rounded-2xl bg-background px-4 py-3">
+      <Ionicons name={value ? 'checkbox' : 'square-outline'} size={22} color={Palette.primary} />
       <View className="flex-1 gap-1">
         <ThemedText type="smallBold">{t('ocr.keepPhoto.label')}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">

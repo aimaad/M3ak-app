@@ -55,13 +55,13 @@ export function DocumentPhotoField({ label, bucket, localUri, existingPath, onPi
       <View className="flex-row gap-2">
         <Pressable
           onPress={() => handlePick('camera')}
-          className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3"
+          className="flex-1 items-center rounded-2xl border border-border bg-card px-4 py-3"
         >
           <ThemedText type="small">{t('common.camera')}</ThemedText>
         </Pressable>
         <Pressable
           onPress={() => handlePick('library')}
-          className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3"
+          className="flex-1 items-center rounded-2xl border border-border bg-card px-4 py-3"
         >
           <ThemedText type="small">{t('common.gallery')}</ThemedText>
         </Pressable>

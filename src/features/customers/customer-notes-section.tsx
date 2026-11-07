@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import type { AgencyRole } from '@/features/agency/types';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -26,7 +26,7 @@ function NoteHistory({ noteId }: { noteId: string }) {
   const { t } = useLanguage();
   const { data, isLoading } = useNoteRevisions(noteId, true);
 
-  if (isLoading) return <ActivityIndicator color={BibipPalette.primary} />;
+  if (isLoading) return <ActivityIndicator color={Palette.primary} />;
   if (!data || data.length === 0) {
     return (
       <ThemedText type="small" themeColor="textSecondary">
@@ -35,7 +35,7 @@ function NoteHistory({ noteId }: { noteId: string }) {
     );
   }
   return (
-    <View className="gap-2 rounded-2xl bg-canvas p-3">
+    <View className="gap-2 rounded-2xl bg-background p-3">
       {data.map((revision) => (
         <View key={revision.id} className="gap-0.5">
           <ThemedText type="small" themeColor="textSecondary" style={{ fontSize: 11 }}>
@@ -157,7 +157,7 @@ function NoteItem({
           ) : null}
           {editable ? (
             <Pressable onPress={handleDelete} hitSlop={6} disabled={deleteNote.isPending}>
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t('customer.notes.delete')}
               </ThemedText>
             </Pressable>
@@ -212,17 +212,17 @@ export function CustomerNotesSection({
     <View className="gap-3">
       <View className="gap-1">
         <ThemedText type="smallBold">{t('customer.notes.title')}</ThemedText>
-        <View className="self-start rounded-full bg-[#FBF1DE] px-2.5 py-1">
-          <ThemedText type="small" style={{ color: BibipPalette.warning, fontSize: 11 }}>
+        <View className="self-start rounded-full bg-warning-soft px-2.5 py-1">
+          <ThemedText type="small" style={{ color: Palette.warning, fontSize: 11 }}>
             {t('customer.notes.confidential')}
           </ThemedText>
         </View>
       </View>
 
       {notesQuery.isLoading ? (
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       ) : notesQuery.isError ? (
-        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+        <ThemedText type="small" style={{ color: Palette.error }}>
           {t('customer.notes.loadError')}
         </ThemedText>
       ) : (notesQuery.data ?? []).length === 0 ? (

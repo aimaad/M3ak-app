@@ -17,7 +17,7 @@ import { CONTRACT_STATUSES } from '@/features/contracts/types';
 import type { Contract, ContractStatus } from '@/features/contracts/types';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
@@ -91,9 +91,9 @@ export default function ContratsScreen() {
         <View className="flex-row flex-wrap gap-2 px-6 pb-4">
           <Pressable
             onPress={() => setStatusFilter('tous')}
-            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-ink bg-ink' : 'border-line bg-white'}`}
+            className={`rounded-full border px-4 py-2 ${statusFilter === 'tous' ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
           >
-            <ThemedText type="small" style={{ color: statusFilter === 'tous' ? '#ffffff' : BibipPalette.ink }}>
+            <ThemedText type="small" style={{ color: statusFilter === 'tous' ? Brand.white : Palette.textPrimary }}>
               {t('flotte.status.tous')}
             </ThemedText>
           </Pressable>
@@ -101,9 +101,9 @@ export default function ContratsScreen() {
             <Pressable
               key={status}
               onPress={() => setStatusFilter(status)}
-              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-ink bg-ink' : 'border-line bg-white'}`}
+              className={`rounded-full border px-4 py-2 ${statusFilter === status ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
             >
-              <ThemedText type="small" style={{ color: statusFilter === status ? '#ffffff' : BibipPalette.ink }}>
+              <ThemedText type="small" style={{ color: statusFilter === status ? Brand.white : Palette.textPrimary }}>
                 {t(`contract.status.${status}`)}
               </ThemedText>
             </Pressable>
@@ -112,7 +112,7 @@ export default function ContratsScreen() {
 
         {contractsQuery.isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : contractsQuery.isError ? (
           <View className="flex-1 items-center justify-center px-8">

@@ -4,7 +4,7 @@ import { Pressable, View } from 'react-native';
 
 import { ProgressBar } from '@/components/progress-bar';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { useStoredFlag } from './use-stored-flag';
@@ -27,7 +27,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
   const { done, total } = progressOf(steps);
 
   return (
-    <View className="gap-3 rounded-2xl border border-line bg-white p-4">
+    <View className="gap-3 rounded-2xl border border-border bg-card p-4">
       <View className="flex-row items-start justify-between gap-3">
         <View className="flex-1 gap-0.5">
           <ThemedText type="smallBold">{t('onboarding.start.title')}</ThemedText>
@@ -57,12 +57,12 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
             <Ionicons
               name={step.done ? 'checkmark-circle' : 'ellipse-outline'}
               size={24}
-              color={step.done ? '#1E6B3A' : BibipPalette.primary}
+              color={step.done ? Palette.success : Palette.primary}
             />
             <View className="flex-1">
               <ThemedText
                 type="smallBold"
-                style={{ color: step.done ? BibipPalette.subtle : BibipPalette.ink, textDecorationLine: step.done ? 'line-through' : 'none' }}
+                style={{ color: step.done ? Palette.textMuted : Palette.textPrimary, textDecorationLine: step.done ? 'line-through' : 'none' }}
               >
                 {t(`onboarding.start.steps.${step.key}.title`)}
               </ThemedText>
@@ -72,7 +72,7 @@ export function GettingStartedCard({ steps, userId, agencyId, ready }: Props) {
                 </ThemedText>
               ) : null}
             </View>
-            {!step.done ? <Ionicons name="chevron-forward" size={18} color={BibipPalette.subtle} /> : null}
+            {!step.done ? <Ionicons name="chevron-forward" size={18} color={Palette.textMuted} /> : null}
           </Pressable>
         ))}
       </View>

@@ -8,7 +8,7 @@ import { Card } from '@/components/card';
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BibipPalette, Shadows } from '@/constants/theme';
+import { Shadows, Palette, Brand } from '@/constants/theme';
 import { useCustomers } from '@/features/customers/hooks';
 import type { Customer } from '@/features/customers/types';
 import { RENTAL_STATUS_FILTERS, type RentalStatusFilter } from '@/features/rentals/filters';
@@ -95,11 +95,11 @@ export default function CalendrierScreen() {
       marks[day] = {
         dots: statuses.map((status) => ({ key: status, color: RENTAL_STATUS_STYLES[status].dot })),
         selected: day === selectedDay,
-        selectedColor: BibipPalette.primary,
+        selectedColor: Palette.primary,
       };
     }
     if (selectedDay && !marks[selectedDay]) {
-      marks[selectedDay] = { selected: true, selectedColor: BibipPalette.primary };
+      marks[selectedDay] = { selected: true, selectedColor: Palette.primary };
     }
     return marks;
   }, [daysWithBookings, selectedDay]);
@@ -138,10 +138,10 @@ export default function CalendrierScreen() {
                 key={status}
                 onPress={() => setStatusFilter(status)}
                 className={`rounded-full border px-4 py-2 ${
-                  statusFilter === status ? 'border-brand bg-brand' : 'border-line bg-white'
+                  statusFilter === status ? 'border-graphite bg-graphite' : 'border-border bg-card'
                 }`}
               >
-                <ThemedText type="small" style={{ color: statusFilter === status ? '#FFFFFF' : BibipPalette.ink }}>
+                <ThemedText type="small" style={{ color: statusFilter === status ? Brand.white : Palette.textPrimary }}>
                   {t(`locations.status.${status}`)}
                 </ThemedText>
               </Pressable>
@@ -151,10 +151,10 @@ export default function CalendrierScreen() {
             <Pressable
               onPress={() => setVehicleFilter('tous')}
               className={`rounded-full border px-4 py-2 ${
-                vehicleFilter === 'tous' ? 'border-brand bg-brand' : 'border-line bg-white'
+                vehicleFilter === 'tous' ? 'border-graphite bg-graphite' : 'border-border bg-card'
               }`}
             >
-              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? '#FFFFFF' : BibipPalette.ink }}>
+              <ThemedText type="small" style={{ color: vehicleFilter === 'tous' ? Brand.white : Palette.textPrimary }}>
                 {t('locations.calendar.allVehicles')}
               </ThemedText>
             </Pressable>
@@ -163,10 +163,10 @@ export default function CalendrierScreen() {
                 key={v.id}
                 onPress={() => setVehicleFilter(v.id)}
                 className={`rounded-full border px-4 py-2 ${
-                  vehicleFilter === v.id ? 'border-brand bg-brand' : 'border-line bg-white'
+                  vehicleFilter === v.id ? 'border-graphite bg-graphite' : 'border-border bg-card'
                 }`}
               >
-                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? '#FFFFFF' : BibipPalette.ink }}>
+                <ThemedText type="small" style={{ color: vehicleFilter === v.id ? Brand.white : Palette.textPrimary }}>
                   {v.immatriculation}
                 </ThemedText>
               </Pressable>
@@ -176,7 +176,7 @@ export default function CalendrierScreen() {
 
         {isLoading ? (
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         ) : (
           <View className="flex-1">
@@ -194,7 +194,7 @@ export default function CalendrierScreen() {
                 {legendStatuses.map((status) => (
                   <View key={status} className="flex-row items-center gap-1.5">
                     <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: RENTAL_STATUS_STYLES[status].dot }} />
-                    <ThemedText type="small" style={{ color: BibipPalette.muted, fontSize: 12 }}>
+                    <ThemedText type="small" style={{ color: Palette.textSecondary, fontSize: 12 }}>
                       {t(`locations.status.${status}`)}
                     </ThemedText>
                   </View>
@@ -223,7 +223,7 @@ export default function CalendrierScreen() {
                 return (
                   <Pressable
                     onPress={() => router.push(`/locations/${item.id}`)}
-                    className="flex-row overflow-hidden rounded-2xl border border-line bg-white"
+                    className="flex-row overflow-hidden rounded-2xl border border-border bg-card"
                     style={Shadows.card}
                   >
                     <View style={{ width: 5, backgroundColor: RENTAL_STATUS_STYLES[item.statut].dot }} />

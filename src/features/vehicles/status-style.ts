@@ -1,16 +1,16 @@
 import type { VehicleStatus } from './types';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 
 export type StatusStyle = { background: string; text: string; dot: string };
 
 // Couleurs fonctionnelles officielles : disponible = vert, en location = bleu, maintenance = ambre, indisponible = gris.
 const STATUS_STYLES: Record<VehicleStatus, StatusStyle> = {
-  disponible: { background: BibipPalette.successLight, text: BibipPalette.successText, dot: BibipPalette.success },
-  en_location: { background: BibipPalette.infoLight, text: BibipPalette.infoText, dot: BibipPalette.info },
-  maintenance: { background: BibipPalette.warningLight, text: BibipPalette.warningText, dot: BibipPalette.warning },
-  a_inspecter: { background: BibipPalette.primaryLight, text: BibipPalette.primaryDeep, dot: BibipPalette.primary },
-  en_preparation: { background: BibipPalette.primarySoft, text: BibipPalette.primary, dot: BibipPalette.mint },
-  indisponible: { background: BibipPalette.neutralLight, text: BibipPalette.neutralText, dot: BibipPalette.neutral },
+  disponible: { background: Palette.successSoft, text: Palette.success, dot: Palette.success },
+  en_location: { background: Palette.infoSoft, text: Palette.info, dot: Palette.info },
+  maintenance: { background: Palette.warningSoft, text: Palette.warning, dot: Palette.warning },
+  a_inspecter: { background: Palette.primarySoft, text: Brand.graphite, dot: Palette.primary },
+  en_preparation: { background: Palette.primarySoft, text: Palette.primary, dot: Brand.orangeLight },
+  indisponible: { background: Palette.surfaceAlt, text: Palette.textSecondary, dot: Palette.textMuted },
 };
 
 export function statusStyle(status: VehicleStatus): StatusStyle {

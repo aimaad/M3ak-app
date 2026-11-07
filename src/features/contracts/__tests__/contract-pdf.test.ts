@@ -1,6 +1,7 @@
 import { assertContractIsComplete, buildContractHtml } from '../contract-pdf';
 import type { Contract } from '../types';
 import { sampleContract } from '../sample-contract';
+import { Palette } from '@/constants/theme';
 
 // Tests exécutés par Jest (Node) : on lit les sources avec require, sans dépendre des types Node.
 declare const __dirname: string;
@@ -242,7 +243,7 @@ describe('jauge de carburant automatique', () => {
   it("dessine l'aiguille au bon endroit (50 % = verticale, 100 % = à droite)", () => {
     expect(gaugeSvg(50)).toContain('x2="80.0" y2="12.0"');
     expect(gaugeSvg(100)).toContain('x2="138.0" y2="70.0"');
-    expect(gaugeSvg(null)).not.toContain('#A8322B');
+    expect(gaugeSvg(null)).not.toContain(Palette.error);
   });
   it('apparaît dans le contrat quand le carburant de départ est connu', () => {
     const base = sampleContract();

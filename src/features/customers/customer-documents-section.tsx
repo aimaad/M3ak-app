@@ -6,7 +6,7 @@ import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ZoomableImage } from '@/components/zoomable-image';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -41,10 +41,10 @@ type Props = {
 };
 
 const STATUS_COLOR = {
-  expired: BibipPalette.danger,
-  expiring_soon: BibipPalette.warning,
-  ok: BibipPalette.muted,
-  no_date: BibipPalette.muted,
+  expired: Palette.error,
+  expiring_soon: Palette.warning,
+  ok: Palette.textSecondary,
+  no_date: Palette.textSecondary,
 } as const;
 
 function formatDate(iso: string): string {
@@ -68,8 +68,8 @@ function DocumentThumbnail({ path, label }: { path: string; label?: string }) {
   const { data: url, isLoading } = useSignedUrl(CUSTOMER_DOCUMENTS_BUCKET, path);
   if (isLoading || !url) {
     return (
-      <View className="h-28 flex-1 items-center justify-center rounded-2xl bg-canvas">
-        <ActivityIndicator color={BibipPalette.primary} />
+      <View className="h-28 flex-1 items-center justify-center rounded-2xl bg-background">
+        <ActivityIndicator color={Palette.primary} />
       </View>
     );
   }
@@ -163,7 +163,7 @@ function DocumentCard({
             </ThemedText>
           ) : null}
         </View>
-        <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: '#F0EEE5' }}>
+        <View className="rounded-full px-2.5 py-1" style={{ backgroundColor: Palette.surfaceAlt }}>
           <ThemedText type="small" style={{ color: STATUS_COLOR[status], fontSize: 11 }}>
             {status === 'no_date'
               ? t('customer.documentsManager.status.no_date')
@@ -197,7 +197,7 @@ function DocumentCard({
       </ThemedText>
 
       {editing ? (
-        <View className="gap-3 border-t border-line pt-3">
+        <View className="gap-3 border-t border-border pt-3">
           <DocumentForm
             values={values}
             onChange={setValues}
@@ -243,7 +243,7 @@ function DocumentCard({
           </Pressable>
           {canDelete ? (
             <Pressable onPress={handleDelete} hitSlop={6} disabled={deleteDocument.isPending}>
-              <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t('customer.documentsManager.delete')}
               </ThemedText>
             </Pressable>
@@ -298,13 +298,13 @@ export function CustomerDocumentsSection({ agencyId, owner, canDelete, title }: 
       <ThemedText type="smallBold">{title ?? t('customer.documentsSection')}</ThemedText>
 
       {documentsQuery.isLoading ? (
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       ) : documentsQuery.isError ? (
-        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+        <ThemedText type="small" style={{ color: Palette.error }}>
           {t('customer.documentsManager.loadError')}
         </ThemedText>
       ) : documents.length === 0 ? (
-        <View className="items-center rounded-2xl border border-dashed border-line bg-white px-4 py-5">
+        <View className="items-center rounded-2xl border border-dashed border-border bg-card px-4 py-5">
           <ThemedText type="small" themeColor="textSecondary" className="text-center">
             {t('customer.documentsManager.empty')}
           </ThemedText>
@@ -326,7 +326,7 @@ export function CustomerDocumentsSection({ agencyId, owner, canDelete, title }: 
             onPickFile={setLocalUri}
           />
           {error ? (
-            <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {error}
             </ThemedText>
           ) : null}

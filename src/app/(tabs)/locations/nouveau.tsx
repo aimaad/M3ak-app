@@ -29,7 +29,7 @@ import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/fil
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 function toISO(date: string, time: string): string {
   return new Date(`${date}T${time}:00`).toISOString();
@@ -263,11 +263,11 @@ export default function NouvelleLocationScreen() {
           ) : null}
 
           {stepKey === 'client' && identityMissing && customer ? (
-            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: '#FBE8E6' }}>
-              <ThemedText type="smallBold" style={{ color: '#A8322B' }}>
+            <View className="gap-2 rounded-2xl px-4 py-3" style={{ backgroundColor: Palette.errorSoft }}>
+              <ThemedText type="smallBold" style={{ color: Palette.error }}>
                 {t('locations.wizard.identityRequiredTitle')}
               </ThemedText>
-              <ThemedText type="small" style={{ color: '#A8322B' }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t('locations.wizard.identityRequiredBody', { name: customer.nomComplet })}
               </ThemedText>
               <Button label={t('locations.wizard.completeCustomer')} size="sm" onPress={() => router.push(`/clients/${customer.id}/modifier`)} />
@@ -286,12 +286,12 @@ export default function NouvelleLocationScreen() {
                   <TextField label={t('locations.heureRetour')} value={heureRetour} onChangeText={setHeureRetour} placeholder="18:00" containerClassName="flex-1" />
                 </View>
                 {showErrors && errors.dates ? (
-                  <ThemedText type="small" style={{ color: '#A8322B' }}>
+                  <ThemedText type="small" style={{ color: Palette.error }}>
                     {t(`locations.form.errors.${errors.dates}`)}
                   </ThemedText>
                 ) : null}
                 {availability ? (
-                  <ThemedText type="smallBold" style={{ color: availability.available.length > 0 ? '#1E6B3A' : '#A8322B' }}>
+                  <ThemedText type="smallBold" style={{ color: availability.available.length > 0 ? Palette.success : Palette.error }}>
                     {availability.available.length > 0
                       ? t('locations.wizard.availableCount', { count: availability.available.length })
                       : t('locations.wizard.noneAvailable')}
@@ -306,7 +306,7 @@ export default function NouvelleLocationScreen() {
           {stepKey === 'vehicule' ? (
             <>
               {!availability ? (
-                <ThemedText type="small" style={hasPeriod ? undefined : { color: '#A8322B' }} themeColor={hasPeriod ? 'textSecondary' : undefined}>
+                <ThemedText type="small" style={hasPeriod ? undefined : { color: Palette.error }} themeColor={hasPeriod ? 'textSecondary' : undefined}>
                   {hasPeriod ? t('locations.wizard.checking') : t('locations.wizard.pickDatesFirst')}
                 </ThemedText>
               ) : (
@@ -315,7 +315,7 @@ export default function NouvelleLocationScreen() {
                     {t('locations.wizard.forPeriod', { start: formatDate(startISO), end: formatDate(endISO) })}
                   </ThemedText>
                   {pickedBecameUnavailable ? (
-                    <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                    <ThemedText type="small" style={{ color: Palette.warning }}>
                       {t('locations.wizard.pickedUnavailable', { vehicle: `${pickedVehicle?.marque} ${pickedVehicle?.modele}` })}
                     </ThemedText>
                   ) : null}
@@ -337,11 +337,11 @@ export default function NouvelleLocationScreen() {
                           key={v.id}
                           onPress={() => setPickedVehicle(v)}
                           className="gap-1"
-                          style={{ borderWidth: 2, borderColor: selected ? BibipPalette.primary : 'transparent' }}
+                          style={{ borderWidth: 2, borderColor: selected ? Palette.primary : 'transparent' }}
                         >
                           <View className="flex-row items-center justify-between">
                             <ThemedText type="smallBold">{`${v.marque} ${v.modele}`}</ThemedText>
-                            {selected ? <ThemedText type="smallBold" style={{ color: BibipPalette.primary }}>✓</ThemedText> : null}
+                            {selected ? <ThemedText type="smallBold" style={{ color: Palette.primary }}>✓</ThemedText> : null}
                           </View>
                           <ThemedText type="small" themeColor="textSecondary">{v.immatriculation}</ThemedText>
                           <View className="flex-row items-center justify-between">
@@ -355,7 +355,7 @@ export default function NouvelleLocationScreen() {
                     });
                   })()}
                   {showErrors && errors.vehicleId ? (
-                    <ThemedText type="small" style={{ color: '#A8322B' }}>
+                    <ThemedText type="small" style={{ color: Palette.error }}>
                       {t(`locations.form.errors.${errors.vehicleId}`)}
                     </ThemedText>
                   ) : null}
@@ -400,7 +400,7 @@ export default function NouvelleLocationScreen() {
           {stepKey === 'prix' ? (
             <>
               {priceBreakdown ? (
-                <View className="gap-1 rounded-2xl border border-line bg-white p-4">
+                <View className="gap-1 rounded-2xl border border-border bg-card p-4">
                   <View className="flex-row items-center justify-between">
                     <ThemedText type="small" themeColor="textSecondary">
                       {t('locations.priceBreakdown.duree', { count: priceBreakdown.dureeJours })}
@@ -413,7 +413,7 @@ export default function NouvelleLocationScreen() {
                     </ThemedText>
                     <ThemedText type="small">{`${priceBreakdown.sousTotal.toLocaleString('fr-FR')} MAD`}</ThemedText>
                   </View>
-                  <View className="mt-1 flex-row items-center justify-between border-t border-line pt-2">
+                  <View className="mt-1 flex-row items-center justify-between border-t border-border pt-2">
                     <ThemedText type="smallBold">{t('locations.priceBreakdown.total')}</ThemedText>
                     <ThemedText type="smallBold" themeColor="primary">{`${priceBreakdown.total.toLocaleString('fr-FR')} MAD`}</ThemedText>
                   </View>
@@ -429,7 +429,7 @@ export default function NouvelleLocationScreen() {
 
           {stepKey === 'recap' ? (
             <>
-              <View className="rounded-2xl border border-line bg-white px-4">
+              <View className="rounded-2xl border border-border bg-card px-4">
                 {(
                   [
                     [t('locations.customer'), customer?.nomComplet ?? '—', 'client'],
@@ -443,7 +443,7 @@ export default function NouvelleLocationScreen() {
                     ...(notes.trim() ? [[t('locations.notes'), notes.trim(), 'prix']] : []),
                   ] as [string, string, (typeof WIZARD_STEPS)[number]][]
                 ).map(([label, value, target]) => (
-                  <View key={label} className="flex-row items-center justify-between gap-3 border-b border-line py-3 last:border-b-0">
+                  <View key={label} className="flex-row items-center justify-between gap-3 border-b border-border py-3 last:border-b-0">
                     <View className="flex-1">
                       <ThemedText type="small" themeColor="textSecondary">
                         {label}
@@ -468,7 +468,7 @@ export default function NouvelleLocationScreen() {
                 {t('locations.wizard.afterCreate')}
               </ThemedText>
               {submitError ? (
-                <ThemedText type="small" style={{ color: '#A8322B' }}>
+                <ThemedText type="small" style={{ color: Palette.error }}>
                   {submitError}
                 </ThemedText>
               ) : null}
@@ -476,7 +476,7 @@ export default function NouvelleLocationScreen() {
           ) : null}
         </ScrollView>
 
-        <View className="gap-2 border-t border-line bg-white px-6 py-3">
+        <View className="gap-2 border-t border-border bg-card px-6 py-3">
           {isLast ? (
             <>
               <Button label={t('locations.form.saveAsConfirmed')} onPress={() => submitFromRecap('confirmee')} disabled={busy} loading={submittingAs === 'confirmee'} />

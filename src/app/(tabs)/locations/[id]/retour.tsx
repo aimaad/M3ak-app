@@ -18,7 +18,7 @@ import { validateOdometerForm } from '@/features/rentals/validation';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 export default function RetourScreen() {
   const { id, vehicleId } = useLocalSearchParams<{ id: string; vehicleId: string }>();
@@ -97,7 +97,7 @@ export default function RetourScreen() {
         <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
           <ScreenHeader title={t('locations.retour.title')} showBack />
           <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={BibipPalette.primary} />
+            <ActivityIndicator color={Palette.primary} />
           </View>
         </SafeAreaView>
       </ThemedView>
@@ -152,9 +152,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={condition}
                     onPress={() => setEtatRetour(condition)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-brand bg-brand' : 'border-line bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#ffffff' : BibipPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
                       {t(`contract.condition.${condition}`)}
                     </ThemedText>
                   </Pressable>
@@ -162,7 +162,7 @@ export default function RetourScreen() {
               })}
             </View>
             {touched && contractErrors.etatRetour ? (
-              <ThemedText type="small" style={{ color: '#A8322B' }}>
+              <ThemedText type="small" style={{ color: Palette.error }}>
                 {t('contract.form.errors.required')}
               </ThemedText>
             ) : null}
@@ -179,9 +179,9 @@ export default function RetourScreen() {
                   <Pressable
                     key={key}
                     onPress={() => toggleAccessoire(key)}
-                    className={`rounded-full border px-4 py-2 ${selected ? 'border-[#C8443B] bg-[#FBE8E6]' : 'border-line bg-white'}`}
+                    className={`rounded-full border px-4 py-2 ${selected ? 'border-error bg-error-soft' : 'border-border bg-card'}`}
                   >
-                    <ThemedText type="small" style={{ color: selected ? '#C8443B' : BibipPalette.ink }}>
+                    <ThemedText type="small" style={{ color: selected ? Palette.error : Palette.textPrimary }}>
                       {t(`contract.accessory.${key}`)}
                     </ThemedText>
                   </Pressable>
@@ -200,17 +200,17 @@ export default function RetourScreen() {
           />
 
           {fees && totalFrais > 0 ? (
-            <View className="gap-2 rounded-2xl bg-[#FBF1DE] p-4">
-              <ThemedText type="smallBold" style={{ color: '#8A5A0B' }}>
+            <View className="gap-2 rounded-2xl bg-warning-soft p-4">
+              <ThemedText type="smallBold" style={{ color: Palette.warning }}>
                 {t('contract.fields.fraisProposes')}
               </ThemedText>
               {fees.retardMinutes > 0 ? (
-                <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                <ThemedText type="small" style={{ color: Palette.warning }}>
                   {t('contract.feeRetard', { minutes: fees.retardMinutes, amount: fees.fraisRetard })}
                 </ThemedText>
               ) : null}
               {fees.fraisCarburant > 0 ? (
-                <ThemedText type="small" style={{ color: '#8A5A0B' }}>
+                <ThemedText type="small" style={{ color: Palette.warning }}>
                   {t('contract.feeCarburant', { amount: fees.fraisCarburant })}
                 </ThemedText>
               ) : null}
@@ -220,8 +220,8 @@ export default function RetourScreen() {
                 onChangeText={setJustification}
               />
               <Pressable onPress={() => setAppliquerFrais((prev) => !prev)} className="flex-row items-center gap-2">
-                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-brand bg-brand' : 'border-subtle bg-white'}`}>
-                  {appliquerFrais ? <ThemedText type="small" style={{ color: '#ffffff' }}>✓</ThemedText> : null}
+                <View className={`h-5 w-5 items-center justify-center rounded border ${appliquerFrais ? 'border-graphite bg-graphite' : 'border-content-muted bg-card'}`}>
+                  {appliquerFrais ? <ThemedText type="small" style={{ color: Brand.white }}>✓</ThemedText> : null}
                 </View>
                 <ThemedText type="small">{t('contract.applyFeesLabel', { amount: totalFrais })}</ThemedText>
               </Pressable>
@@ -229,7 +229,7 @@ export default function RetourScreen() {
           ) : null}
 
           {error ? (
-            <ThemedText type="small" style={{ color: '#A8322B' }}>
+            <ThemedText type="small" style={{ color: Palette.error }}>
               {error}
             </ThemedText>
           ) : null}

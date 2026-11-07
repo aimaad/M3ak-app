@@ -4,7 +4,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { setCalendarLocale } from './calendar-locale';
 import { BOOKED_DAY_MARK, CALENDAR_THEME } from './calendar-theme';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 
 export type DateRangeValue = { start: string | null; end: string | null };
 
@@ -15,7 +15,7 @@ type DateRangeCalendarProps = {
   minDate?: string;
 };
 
-const COLOR_PRIMARY = BibipPalette.primary;
+const COLOR_PRIMARY = Palette.primary;
 
 function todayISO(): string {
   return new Date().toISOString().slice(0, 10);
@@ -45,7 +45,7 @@ export function buildMarkedDates(
       marks[cursor] = {
         ...marks[cursor],
         color: COLOR_PRIMARY,
-        textColor: '#FFFFFF',
+        textColor: Brand.white,
         startingDay: cursor === range.start,
         endingDay: cursor === range.end,
       };
@@ -59,7 +59,7 @@ export function buildMarkedDates(
       startingDay: true,
       endingDay: true,
       color: COLOR_PRIMARY,
-      textColor: '#FFFFFF',
+      textColor: Brand.white,
     };
   }
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/button';
 import { ChipGroup } from '@/components/chip-group';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette, Brand } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import { DAMAGE_SEVERITIES, DAMAGE_TYPES, DAMAGE_ZONES, type DamageSeverity, type DamageType, type DamageZone } from './damages';
@@ -43,7 +43,7 @@ export function DamageEditor({ initial, canChooseNew, saving, error, saveLabel, 
   const costInvalid = draft.cost.trim() !== '' && parseCost(draft.cost) === null;
 
   return (
-    <View className="gap-3 border-t border-line pt-3">
+    <View className="gap-3 border-t border-border pt-3">
       <View className="gap-1.5">
         <ThemedText type="small" themeColor="textSecondary">
           {t('inspection.analysis.damages.zone')}
@@ -79,8 +79,8 @@ export function DamageEditor({ initial, canChooseNew, saving, error, saveLabel, 
       </View>
       {canChooseNew ? (
         <Pressable onPress={() => setDraft((prev) => ({ ...prev, nouveau: !prev.nouveau }))} className="flex-row items-center gap-2" accessibilityRole="switch" accessibilityState={{ checked: draft.nouveau }}>
-          <View className="h-6 w-6 items-center justify-center rounded-md border" style={{ borderColor: BibipPalette.primary, backgroundColor: draft.nouveau ? BibipPalette.primary : '#fff' }}>
-            {draft.nouveau ? <ThemedText type="smallBold" style={{ color: '#fff' }}>✓</ThemedText> : null}
+          <View className="h-6 w-6 items-center justify-center rounded-md border" style={{ borderColor: Palette.primary, backgroundColor: draft.nouveau ? Palette.primary : Brand.white }}>
+            {draft.nouveau ? <ThemedText type="smallBold" style={{ color: Brand.white }}>✓</ThemedText> : null}
           </View>
           <ThemedText type="small">{t('inspection.analysis.damages.isNew')}</ThemedText>
         </Pressable>
@@ -101,7 +101,7 @@ export function DamageEditor({ initial, canChooseNew, saving, error, saveLabel, 
         maxLength={300}
       />
       {error ? (
-        <ThemedText type="small" style={{ color: BibipPalette.danger }}>
+        <ThemedText type="small" style={{ color: Palette.error }}>
           {error}
         </ThemedText>
       ) : null}

@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
+import { Brand } from '@/constants/theme';
 
 type VehiclePhotoPickerProps = {
   label: string;
@@ -48,9 +49,9 @@ export function VehiclePhotoPicker({ label, localUris, onAdd, onRemove }: Vehicl
               <Image source={{ uri }} className="h-24 w-24 rounded-2xl" resizeMode="cover" />
               <Pressable
                 onPress={() => onRemove(uri)}
-                className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-ink"
+                className="absolute -right-1 -top-1 h-6 w-6 items-center justify-center rounded-full bg-graphite"
               >
-                <ThemedText type="small" style={{ color: '#ffffff' }}>
+                <ThemedText type="small" style={{ color: Brand.white }}>
                   ×
                 </ThemedText>
               </Pressable>
@@ -62,13 +63,13 @@ export function VehiclePhotoPicker({ label, localUris, onAdd, onRemove }: Vehicl
       <View className="flex-row gap-2">
         <Pressable
           onPress={() => handlePick('camera')}
-          className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3"
+          className="flex-1 items-center rounded-2xl border border-border bg-card px-4 py-3"
         >
           <ThemedText type="small">{t('common.camera')}</ThemedText>
         </Pressable>
         <Pressable
           onPress={() => handlePick('library')}
-          className="flex-1 items-center rounded-2xl border border-line bg-white px-4 py-3"
+          className="flex-1 items-center rounded-2xl border border-border bg-card px-4 py-3"
         >
           <ThemedText type="small">{t('common.gallery')}</ThemedText>
         </Pressable>

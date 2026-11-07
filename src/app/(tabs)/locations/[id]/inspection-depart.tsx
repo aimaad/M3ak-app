@@ -4,7 +4,7 @@ import { ActivityIndicator } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { InspectionCaptureScreen } from '@/features/inspections/inspection-capture-screen';
 import { useRental } from '@/features/rentals/hooks';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 export default function InspectionDepartScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -13,7 +13,7 @@ export default function InspectionDepartScreen() {
   if (!rental) {
     return (
       <ThemedView className="flex-1 items-center justify-center">
-        <ActivityIndicator color={BibipPalette.primary} />
+        <ActivityIndicator color={Palette.primary} />
       </ThemedView>
     );
   }

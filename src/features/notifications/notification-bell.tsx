@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Brand, Palette, Themes } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -32,30 +32,35 @@ export function NotificationBell({ tone = 'default' }: { tone?: 'default' | 'onF
       }
       className={
         onForest
-          ? 'h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/25 active:bg-white/25'
-          : 'h-10 w-10 items-center justify-center rounded-full bg-white'
+          ? 'h-11 w-11 items-center justify-center rounded-full border'
+          : 'h-10 w-10 items-center justify-center rounded-full bg-card'
+      }
+      style={({ pressed }) =>
+        onForest
+          ? { backgroundColor: pressed ? Themes.dark.surfaceAlt : Themes.dark.surface, borderColor: Themes.dark.border }
+          : undefined
       }
     >
       <Ionicons
         name={count > 0 && !onForest ? 'notifications' : 'notifications-outline'}
         size={onForest ? 21 : 22}
-        color={onForest ? '#FFFFFF' : BibipPalette.primary}
+        color={onForest ? Brand.white : Palette.textPrimary}
       />
       {label ? (
         <View
           className="absolute min-w-5 items-center justify-center rounded-full px-1"
           style={{
-            backgroundColor: BibipPalette.primary,
+            backgroundColor: Palette.primary,
             top: onForest ? -2 : -4,
             end: onForest ? -2 : -4,
             height: 20,
             borderWidth: 1.5,
-            borderColor: onForest ? BibipPalette.mint : '#FFFFFF',
+            borderColor: onForest ? Themes.dark.surface : Palette.card,
           }}
         >
           <ThemedText
             type="small"
-            style={{ color: '#fff', fontSize: 11, lineHeight: 14, fontWeight: '700' }}
+            style={{ color: Brand.white, fontSize: 11, lineHeight: 14, fontWeight: '700' }}
           >
             {label}
           </ThemedText>

@@ -17,12 +17,11 @@ import Animated, {
   type SharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Avatar } from '@/components/avatar';
 import { BRAND_NAME, LogoMark } from '@/components/logo';
 import { ThemedText } from '@/components/themed-text';
-import { fontFamilyFor, BibipPalette } from '@/constants/theme';
+import { Brand, fontFamilyFor, Palette, Themes } from '@/constants/theme';
 import { NotificationBell } from '@/features/notifications/notification-bell';
 import {
   endOpening,
@@ -39,9 +38,6 @@ import type { DashboardPeriod } from './kpis';
 import { PeriodTabs } from './period-tabs';
 
 const DARK = HERO_DARK;
-/** Petite ligne décorative : le lime du logo vers la menthe (l'accent de la marque sur fond sombre). */
-const ACCENT = BibipPalette.lime;
-const ACCENT_LIGHT = BibipPalette.mint;
 const FADE_HEIGHT = HERO_FADE_HEIGHT;
 const TABS_GAP = 21;
 /** Hauteur de la petite barre fixe (sous la zone de sécurité). */
@@ -55,7 +51,7 @@ function ProfileButton({ path, initials }: { path: string | null | undefined; in
       onPress={() => router.push('/profil')}
       accessibilityRole="button"
       accessibilityLabel={t('accueil.header.profile')}
-      className="h-11 w-11 items-center justify-center rounded-full border-2 border-mint active:border-white"
+      className="h-11 w-11 items-center justify-center rounded-full border-2 border-orange-light active:border-white"
     >
       <Avatar path={path} size={40} initials={initials} />
     </Pressable>
@@ -77,9 +73,13 @@ function HeaderIconButton({
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
-      className="h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-black/25 active:bg-white/25"
+      className="h-11 w-11 items-center justify-center rounded-full border"
+      style={({ pressed }) => ({
+        backgroundColor: pressed ? Themes.dark.surfaceAlt : Themes.dark.surface,
+        borderColor: Themes.dark.border,
+      })}
     >
-      <Ionicons name={icon} size={21} color="#FFFFFF" />
+      <Ionicons name={icon} size={21} color={Brand.white} />
     </Pressable>
   );
 }
@@ -202,7 +202,7 @@ export function DashboardHeader({
                   style={{
                     width: 1,
                     height: logoHeight * 0.62,
-                    backgroundColor: 'rgba(255,255,255,0.35)',
+                    backgroundColor: Themes.dark.border,
                   }}
                 />
                 <View className="shrink">
@@ -211,7 +211,7 @@ export function DashboardHeader({
                     adjustsFontSizeToFit
                     minimumFontScale={0.7}
                     style={{
-                      color: '#FFFFFF',
+                      color: Brand.white,
                       fontSize: 22,
                       lineHeight: 26,
                       letterSpacing: -0.3,
@@ -224,7 +224,7 @@ export function DashboardHeader({
                     <ThemedText
                       numberOfLines={1}
                       style={{
-                        color: 'rgba(255,255,255,0.7)',
+                        color: Themes.dark.textSecondary,
                         fontSize: 11,
                         lineHeight: 14,
                         fontFamily: fontFamilyFor(language, 'medium'),
@@ -255,7 +255,7 @@ export function DashboardHeader({
             minimumFontScale={0.75}
             accessibilityRole="header"
             style={{
-              color: '#FFFFFF',
+              color: Brand.white,
               fontSize: 24,
               lineHeight: 31,
               fontFamily: fontFamilyFor(language, 'bold'),
@@ -266,7 +266,7 @@ export function DashboardHeader({
                 {greetingParts[0]}
                 <ThemedText
                   style={{
-                    color: BibipPalette.mint,
+                    color: Brand.orangeLight,
                     fontSize: 24,
                     lineHeight: 31,
                     fontFamily: fontFamilyFor(language, 'bold'),
@@ -285,7 +285,7 @@ export function DashboardHeader({
             style={{
               marginTop: 4,
               maxWidth: '100%',
-              color: 'rgba(255,255,255,0.86)',
+              color: Themes.dark.textPrimary,
               fontSize: 11.5,
               lineHeight: 16,
               fontFamily: fontFamilyFor(language, 'medium'),
@@ -293,19 +293,8 @@ export function DashboardHeader({
           >
             {t('accueil.header.tagline')}
           </ThemedText>
-          <View
-            style={{ marginTop: 12, width: 38, height: 3, borderRadius: 2, overflow: 'hidden' }}
-          >
-            <Svg width="100%" height="100%" preserveAspectRatio="none">
-              <Defs>
-                <LinearGradient id="kh-accent" x1="0" y1="0" x2="1" y2="0">
-                  <Stop offset="0" stopColor={ACCENT} />
-                  <Stop offset="1" stopColor={ACCENT_LIGHT} />
-                </LinearGradient>
-              </Defs>
-              <Rect width="100%" height="100%" fill="url(#kh-accent)" />
-            </Svg>
-          </View>
+          {/* Petite ligne décorative : orange clair uni (l'accent de la marque sur fond sombre). */}
+          <View style={{ marginTop: 12, width: 38, height: 3, borderRadius: 2, backgroundColor: Brand.orangeLight }} />
         </View>
 
         <View style={{ marginTop: TABS_GAP + 6 }}>
@@ -367,12 +356,13 @@ export function CompactTopBar({
           gap: 12,
           backgroundColor: DARK,
           borderBottomWidth: 1,
-          borderBottomColor: 'rgba(255,255,255,0.08)',
-          shadowColor: '#000000',
-          shadowOpacity: 0.25,
-          shadowRadius: 12,
-          shadowOffset: { width: 0, height: 4 },
-          elevation: 6,
+          borderBottomColor: Themes.dark.border,
+          // Barre flottante : seule ombre autorisée, grise et très légère.
+          shadowColor: Palette.shadow,
+          shadowOpacity: 0.12,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 3 },
+          elevation: 3,
         },
         style,
       ]}
@@ -388,7 +378,7 @@ export function CompactTopBar({
         <ThemedText
           numberOfLines={1}
           style={{
-            color: '#FFFFFF',
+            color: Brand.white,
             fontSize: 20,
             lineHeight: 24,
             letterSpacing: -0.3,

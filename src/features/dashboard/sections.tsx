@@ -5,7 +5,7 @@ import { Pressable, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { BibipPalette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { countByStatus } from '@/features/vehicles/filters';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -85,10 +85,10 @@ export function FleetSection({
           className="min-h-11 flex-row items-center justify-center"
           style={{ gap: 4 }}
         >
-          <ThemedText type="smallBold" style={{ color: BibipPalette.primary }}>
+          <ThemedText type="smallBold" style={{ color: Palette.primary }}>
             {t('accueil.fleet.seeFleet')}
           </ThemedText>
-          <Ionicons name="arrow-forward" size={16} color={BibipPalette.primary} />
+          <Ionicons name="arrow-forward" size={16} color={Palette.primary} />
         </Pressable>
       </View>
       <FleetDonut vehicles={vehicles} />
@@ -254,7 +254,7 @@ function VehicleRow({ item, showMoney }: { item: VehiclePerformance; showMoney: 
         {item.label}
       </ThemedText>
       <View className="items-end">
-        <ThemedText type="smallBold" style={{ color: BibipPalette.primary }}>
+        <ThemedText type="smallBold" style={{ color: Palette.primary }}>
           {t('accueil.performance.occupancy', { pct: item.occupancyPct })}
         </ThemedText>
         {showMoney ? (
