@@ -1,22 +1,28 @@
 /**
- * Chronologie de l'ouverture (millisecondes, 3,7 s) : un seul geste, comme une vraie voiture qui s'éveille dans le noir.
+ * Chronologie de l'ouverture (millisecondes, 3,6 s) : une vraie voiture qui s'éveille dans le noir.
  *
- *   0,0 – 0,9 s   l'écran est noir ; la silhouette de la voiture émerge à peine (fondu d'entrée très doux)
- *   0,9 – 2,1 s   la voiture s'allume progressivement (fondu continu entre les deux photos : phares, reflets sur le sol)
- *   2,1 s         le moteur démarre (son fourni) une fois la voiture allumée
- *   3,0 – 3,7 s   le noir se retire en douceur sur l'application
+ *   0,0 – 0,9 s   écran noir ; la silhouette de la voiture émerge à peine (fondu d'entrée très doux)
+ *   1,5 s         les phares s'allument d'un seul coup (≈ 0,12 s), et le moteur démarre exactement à cet instant
+ *   3,0 – 3,6 s   le noir se retire en douceur sur l'application
  *
+ * Le son (`m3ak-engine-start.mp3`, 1,04 s, rogné pour commencer directement par la montée du moteur) est lancé avec une
+ * avance `SOUND_LATENCY` qui compense le délai de sortie audio du téléphone : son et lumière sont perçus ensemble.
  * Une seule horloge (`openingTime`) pilote tout. Fonctions pures, utilisables dans les animations (« worklet »).
  */
+const LIT_START = 1500;
+/** Délai de sortie audio du téléphone (ms) : le son est lancé un peu avant la lumière. À ajuster à l'oreille si besoin. */
+export const SOUND_LATENCY = 60;
+
 export const IGN = {
   /** Fin du fondu d'entrée de la silhouette. */
-  darkInEnd: 600,
-  litStart: 900,
-  litEnd: 2100,
-  /** Le moteur démarre quand la voiture est allumée. */
-  soundAt: 2100,
+  darkInEnd: 900,
+  litStart: LIT_START,
+  /** Les phares s'allument d'un seul coup : 120 ms. */
+  litEnd: LIT_START + 120,
+  /** Le moteur démarre à l'allumage (légèrement avant, pour la latence audio). */
+  soundAt: LIT_START - SOUND_LATENCY,
   fadeStart: 3000,
-  end: 3700,
+  end: 3600,
 } as const;
 
 /** Valeur de l'horloge quand il n'y a (plus) rien à jouer : au-delà de toutes les fenêtres, tout est à son état final. */
@@ -57,8 +63,8 @@ export function ignitionCurves(t: number): IgnitionCurves {
   'worklet';
   return {
     dark: easeOut(windowProgress(t, 0, IGN.darkInEnd)),
-    // Une seule courbe continue (lente au départ, rapide au milieu, très douce à l'arrivée) : pas de palier, pas de saccade.
-    lit: easeInOut(windowProgress(t, IGN.litStart, IGN.litEnd)),
+    // Allumage franc et rapide (départ vif, arrivée douce) : les optiques s'allument d'un seul coup, comme sur une vraie voiture.
+    lit: easeOut(windowProgress(t, IGN.litStart, IGN.litEnd)),
     stage: 1 - easeInOut(windowProgress(t, IGN.fadeStart, IGN.end)),
   };
 }
