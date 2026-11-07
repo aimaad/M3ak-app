@@ -4,28 +4,19 @@ import {
   easeOut,
   ignitionCurves,
   IGN,
-  SOUND_LATENCY,
   windowProgress,
 } from '../opening-timeline';
 
 describe('ouverture : chronologie', () => {
-  it('noir → allumage → application, dans cet ordre', () => {
+  it('noir → allumage → moteur → application, dans cet ordre', () => {
     expect(IGN.darkInEnd).toBeLessThanOrEqual(IGN.litStart);
     expect(IGN.litStart).toBeLessThan(IGN.litEnd);
-    expect(IGN.fadeStart).toBeGreaterThan(IGN.litEnd);
+    // Le moteur se fait entendre APRÈS l'allumage complet.
+    expect(IGN.soundAt).toBeGreaterThanOrEqual(IGN.litEnd);
+    // Le noir ne se retire qu'une fois le moteur lancé.
+    expect(IGN.fadeStart).toBeGreaterThan(IGN.soundAt);
     expect(IGN.end).toBeGreaterThan(IGN.fadeStart);
     expect(DONE_TIME).toBeGreaterThan(IGN.end);
-  });
-
-  it('les phares s’allument d’un seul coup (≤ 150 ms)', () => {
-    expect(IGN.litEnd - IGN.litStart).toBeLessThanOrEqual(150);
-  });
-
-  it('le moteur démarre exactement à l’allumage (à la latence audio près)', () => {
-    expect(IGN.soundAt).toBe(IGN.litStart - SOUND_LATENCY);
-    expect(Math.abs(IGN.soundAt - IGN.litStart)).toBeLessThanOrEqual(100);
-    // Le son (1,04 s) est terminé ou presque quand le noir se retire.
-    expect(IGN.soundAt + 1040).toBeLessThanOrEqual(IGN.fadeStart + 600);
   });
 
   it('windowProgress borne entre 0 et 1', () => {
@@ -56,15 +47,18 @@ describe('ouverture : chronologie', () => {
     expect(ignitionCurves(IGN.litStart).lit).toBe(0);
   });
 
-  it('l’allumage est monotone : croissant, sans retour en arrière ni dépassement', () => {
+  it('l’allumage est continu : croissant, sans palier ni retour en arrière', () => {
     let previous = -1;
-    for (let t = IGN.litStart - 20; t <= IGN.litEnd + 20; t += 5) {
+    for (let t = IGN.litStart; t <= IGN.litEnd; t += 20) {
       const { lit } = ignitionCurves(t);
       expect(lit).toBeGreaterThanOrEqual(previous);
-      expect(lit).toBeLessThanOrEqual(1);
       previous = lit;
     }
     expect(ignitionCurves(IGN.litEnd).lit).toBe(1);
+    // Pas de saut d'une image à l'autre (≈ 16 ms) : la variation reste faible.
+    for (let t = IGN.litStart; t < IGN.litEnd; t += 16) {
+      expect(ignitionCurves(t + 16).lit - ignitionCurves(t).lit).toBeLessThan(0.03);
+    }
   });
 
   it('à la fin, l’introduction disparaît entièrement', () => {

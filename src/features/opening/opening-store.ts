@@ -8,14 +8,13 @@ import {
   type OpeningEnd,
   type OpeningStatus,
 } from './opening-state';
-import { playEngineHaptics, prepareEngineHaptics, stopEngineHaptics } from './opening-haptics';
 import {
   playEngineSound,
   prepareEngineSound,
   releaseEngineSound,
   stopEngineSound,
 } from './opening-sound';
-import { DONE_TIME, IGN, SOUND_LATENCY } from './opening-timeline';
+import { DONE_TIME, IGN } from './opening-timeline';
 
 /**
  * Horloge unique de l'ouverture (ms). Par défaut elle est « terminée » : sans ouverture, tout est déjà à son état final
@@ -67,7 +66,6 @@ export function armOpening(options: { reduceMotion: boolean; disabled: boolean }
   if (next.status === 'armed') {
     openingTime.value = 0;
     void prepareEngineSound();
-    void prepareEngineHaptics();
   }
   setStatus(next.status);
 }
@@ -98,11 +96,7 @@ export function startOpening() {
 
 /** Déclenche le moteur (appelé à l'instant précis du démarrage) : sans effet si l'ouverture est déjà terminée. */
 export function triggerEngineSound() {
-  if (status === 'playing') {
-    playEngineSound();
-    // La vibration est ressentie en même temps que le son est entendu (délai de sortie audio compensé).
-    playEngineHaptics(SOUND_LATENCY);
-  }
+  if (status === 'playing') playEngineSound();
 }
 
 /** Termine immédiatement : l'interface finale apparaît d'un coup. */
@@ -114,7 +108,6 @@ export function endOpening(reason: OpeningEnd) {
   cancelAnimation(openingTime);
   openingTime.value = DONE_TIME;
   // Fin naturelle : le son se termine de lui-même (libéré ensuite) ; introduction passée : courte décroissance ; abandon : libération.
-  if (reason !== 'completed') stopEngineHaptics();
   if (reason === 'skipped') stopEngineSound();
   else if (reason === 'aborted') releaseEngineSound();
 }
