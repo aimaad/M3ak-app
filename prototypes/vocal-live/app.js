@@ -263,7 +263,8 @@ async function startSession() {
     const current = live;
     current.session = await ai.live.connect({
       model: token.model,
-      config: { responseModalities: [Modality.AUDIO] },
+      // Les modèles Live de la famille 3 exigent un niveau de réflexion (le serveur l'indique ; il est aussi verrouillé dans le jeton).
+      config: { responseModalities: [Modality.AUDIO], ...(token.thinkingLevel ? { thinkingConfig: { thinkingLevel: token.thinkingLevel } } : {}) },
       callbacks: {
         onopen: () => {},
         onmessage: handleMessage,

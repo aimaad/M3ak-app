@@ -429,6 +429,15 @@ export function pickLiveModel(models: { name?: string; supportedGenerationMethod
   return names[0] ?? null;
 }
 
+/**
+ * Niveau de réflexion à envoyer : les modèles Live de la famille 3 l'exigent (« Thinking level must be specified for this model »).
+ * « MINIMAL » = le plus rapide, adapté à la conversation orale. Les modèles plus anciens ne l'acceptent pas : rien n'est envoyé.
+ */
+export function liveThinkingConfig(model: string): { thinkingLevel: 'MINIMAL' } | undefined {
+  const version = Number(/^gemini-(\d+(?:\.\d+)?)/.exec(model)?.[1] ?? 0);
+  return version >= 3 ? { thinkingLevel: 'MINIMAL' } : undefined;
+}
+
 /** Outils du mode vocal (prototype : un seul, la liste des voitures libres). Mêmes noms que le chat écrit. */
 export const LIVE_TOOLS = ['available_vehicles'] as const;
 

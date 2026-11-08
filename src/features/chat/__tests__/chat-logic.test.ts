@@ -1,4 +1,4 @@
-import { cleanDate, cleanLiveVoice, cleanSpeechText, cleanCount, cleanText, DEFAULT_LIVE_LIMITS, liveAllowance, liveCostUsd, liveLimitsFrom, liveSystemPrompt, liveToolDeclarations, LIVE_TOOLS, parseModelStep, partialAnswer, pcmToWav, pickLiveModel, pickSources, seenRentals, sessionSeconds, streamableText, systemPrompt, toRpcCall } from '../../../../supabase/functions/chat-m3ak/logic';
+import { cleanDate, cleanLiveVoice, cleanSpeechText, cleanCount, cleanText, DEFAULT_LIVE_LIMITS, liveAllowance, liveCostUsd, liveLimitsFrom, liveSystemPrompt, liveThinkingConfig, liveToolDeclarations, LIVE_TOOLS, parseModelStep, partialAnswer, pcmToWav, pickLiveModel, pickSources, seenRentals, sessionSeconds, streamableText, systemPrompt, toRpcCall } from '../../../../supabase/functions/chat-m3ak/logic';
 
 const ID1 = '11111111-1111-4111-8111-111111111111';
 const ID2 = '22222222-2222-4222-8222-222222222222';
@@ -145,6 +145,12 @@ describe('mode vocal temps réel : modèle, consigne, limites', () => {
     expect(pickLiveModel([model('gemini-3.1-flash-live-preview', ['generateContent']), model('gemini-2.5-flash-native-audio-latest')])).toBe('gemini-2.5-flash-native-audio-latest');
     expect(pickLiveModel([model('gemini-2.5-flash', ['generateContent'])])).toBeNull();
     expect(pickLiveModel([])).toBeNull();
+  });
+  it('niveau de réflexion : exigé par la famille 3, jamais envoyé aux anciens modèles', () => {
+    expect(liveThinkingConfig('gemini-3.1-flash-live-preview')).toEqual({ thinkingLevel: 'MINIMAL' });
+    expect(liveThinkingConfig('gemini-3-flash-live')).toEqual({ thinkingLevel: 'MINIMAL' });
+    expect(liveThinkingConfig('gemini-2.5-flash-native-audio-preview-12-2025')).toBeUndefined();
+    expect(liveThinkingConfig('autre')).toBeUndefined();
   });
   it('n’accepte que les voix de la liste', () => {
     expect(cleanLiveVoice('Kore')).toBe('Kore');

@@ -18,6 +18,7 @@ import {
   liveAllowance,
   liveCostUsd,
   liveLimitsFrom,
+  liveThinkingConfig,
   liveSystemPrompt,
   liveToolDeclarations,
   pickLiveModel,
@@ -134,6 +135,7 @@ Deno.serve(async (request: Request) => {
   const model = await liveModelFor(apiKey);
   if (!model) return json({ ok: false, error: 'live_unavailable', detail: 'no_live_model' });
   const voice = cleanLiveVoice(body.voice);
+  const thinking = liveThinkingConfig(model);
 
   try {
     const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: 'v1alpha' } });
@@ -146,6 +148,7 @@ Deno.serve(async (request: Request) => {
           model,
           config: {
             responseModalities: [Modality.AUDIO],
+            ...(thinking ? { thinkingConfig: thinking } : {}),
             systemInstruction: liveSystemPrompt(now, role),
             tools: liveToolDeclarations(),
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
@@ -174,7 +177,7 @@ Deno.serve(async (request: Request) => {
 
     console.log('live: jeton délivré', { modele: model, voix: voice, secondes: allowance.allowed });
     // Le jeton est la seule chose sensible renvoyée (courte durée, usage unique) : jamais la clé de l'entreprise.
-    return json({ ok: true, token: token.name, model, voice, sessionId: session.id, maxSeconds: allowance.allowed, role });
+    return json({ ok: true, token: token.name, model, voice, sessionId: session.id, maxSeconds: allowance.allowed, role, thinkingLevel: thinking?.thinkingLevel ?? null });
   } catch (error) {
     const detail = error instanceof Error ? error.message.split(apiKey).join('[clé]') : 'unknown';
     console.error('live: jeton non créé', detail.slice(0, 200));
