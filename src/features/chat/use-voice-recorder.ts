@@ -2,6 +2,7 @@ import {
   AudioModule,
   AudioQuality,
   IOSOutputFormat,
+  RecordingPresets,
   setAudioModeAsync,
   useAudioRecorder,
   useAudioRecorderState,
@@ -53,8 +54,18 @@ export function useVoiceRecorder() {
     const permission = await AudioModule.requestRecordingPermissionsAsync();
     if (!permission.granted) return permission.canAskAgain ? 'denied' : 'blocked';
     // Respecte le mode silencieux pour tout ce que l'app lit toute seule ; l'enregistrement, lui, doit être autorisé.
-    await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: false, interruptionMode: 'duckOthers' });
-    await recorder.prepareToRecordAsync();
+    try {
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: false, interruptionMode: 'duckOthers' });
+    } catch {
+      await setAudioModeAsync({ allowsRecording: true });
+    }
+    try {
+      await recorder.prepareToRecordAsync();
+    } catch (error) {
+      // Format 16 kHz refusé par ce téléphone : on retombe sur le format standard (m4a), que le serveur accepte aussi.
+      console.warn('Enregistrement : format 16 kHz refusé, repli sur le format standard.', error instanceof Error ? error.message : error);
+      await recorder.prepareToRecordAsync(RecordingPresets.HIGH_QUALITY);
+    }
     recorder.record();
     setPhase('recording');
     return 'ok';

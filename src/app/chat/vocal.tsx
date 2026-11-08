@@ -72,7 +72,8 @@ export default function VoiceModeScreen() {
       setPermission('ok');
       setLevels(Array(WAVE_BARS).fill(0));
       setStage('listening');
-    } catch {
+    } catch (error) {
+      console.warn('Mode vocal : démarrage du micro impossible.', error instanceof Error ? error.message : error);
       setErrorKey('chat.errors.voiceFailed');
       setStage('error');
     }
