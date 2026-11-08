@@ -8,11 +8,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, HomeFonts, Palette } from '@/constants/theme';
 import { chatErrorMessageKey } from '@/features/chat/api';
-import { ActionPill, ChatAvatar, DataCardView, DateSeparator, SmallPill, TypingBubble, UserBubble, VoiceBubble } from '@/features/chat/chat-bubble';
+import { ActionPill, ChatAvatar, DataCardView, DateSeparator, SmallPill, StreamingBubble, TypingBubble, UserBubble, VoiceBubble } from '@/features/chat/chat-bubble';
 import { useAskChat, useChatMessages, useConversations, useDeleteConversation, useRenameConversation } from '@/features/chat/hooks';
 import { canListen, detectMessageLanguage, type MessageLanguage } from '@/features/chat/language';
 import { RenameDialog } from '@/features/chat/rename-dialog';
-import { useSpeech } from '@/features/chat/speech';
+import { useListen } from '@/features/chat/natural-voice';
 import { useVoicePlayback } from '@/features/chat/use-voice-playback';
 import { makeTitle } from '@/features/chat/titles';
 import type { ChatCard, ChatCardItem, ChatMessage } from '@/features/chat/types';
@@ -74,7 +74,9 @@ function Conversation({ id, question }: { id: string; question?: string }) {
   const { mutate: removeConversation } = useDeleteConversation();
   const ask = useAskChat();
   const scrollRef = useRef<ScrollViewInstance>(null);
-  const { speakingId, toggle } = useSpeech();
+  const { speakingId, toggle } = useListen();
+  // Réponse en cours d'écriture (flux) : texte reçu jusqu'ici.
+  const [streaming, setStreaming] = useState('');
   const playback = useVoicePlayback();
 
   const serverMessages = messagesQuery.data ?? [];
@@ -88,7 +90,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
   useEffect(() => {
     const timer = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
     return () => clearTimeout(timer);
-  }, [messages.length, pending, failed]);
+  }, [messages.length, pending, failed, streaming.length]);
 
   const send = useCallback(
     (raw: string) => {
@@ -103,6 +105,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
           conversationId,
           language: language === 'ar' ? 'ar' : 'fr',
           // Conversation neuve : même identifiant à chaque essai, donc jamais de doublon si l'envoi est réessayé.
+          onText: setStreaming,
           ...(conversationId ? {} : { newConversationId: draftId, title: makeTitle(message) }),
         },
         {
@@ -116,7 +119,10 @@ function Conversation({ id, question }: { id: string; question?: string }) {
             setConversationId(answer.conversationId);
           },
           onError: (error) => setFailed({ message, errorKey: chatErrorMessageKey(error) }),
-          onSettled: () => setPending(null),
+          onSettled: () => {
+            setPending(null);
+            setStreaming('');
+          },
         }
       );
     },
@@ -266,7 +272,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
                       isLast={index === lastIndex}
                       speaking={speakingId === message.id}
                       copied={copiedId === message.id}
-                      onListen={(lang) => toggle(message.id, message.content, lang)}
+                      onListen={() => toggle(message.id, message.content)}
                       onCopy={() => void copy(message)}
                       onOpenSource={(sourceId) => router.push({ pathname: '/locations/[id]', params: { id: sourceId } })}
                       t={t}
@@ -279,7 +285,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
             {pending ? (
               <>
                 <UserBubble text={pending} />
-                <TypingBubble />
+                {streaming ? <StreamingBubble text={streaming} /> : <TypingBubble />}
               </>
             ) : null}
 

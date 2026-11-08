@@ -307,3 +307,98 @@ export function cleanTranscript(raw: unknown, max = 600): string {
   const value = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>).transcript : null;
   return typeof value === 'string' ? value.replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '';
 }
+
+// ---------------------------------------------------------------- flux de la réponse (texte progressif)
+
+/**
+ * Texte de la réponse déjà écrit dans le JSON du modèle, encore incomplet (flux). `null` tant que le modèle n'a pas annoncé
+ * « "action":"answer" » puis commencé « "answer":" » : un tour d'outil n'affiche donc jamais rien. Les échappements JSON
+ * sont décodés ; un échappement coupé en fin de flux est laissé de côté jusqu'au morceau suivant.
+ */
+export function partialAnswer(partial: string): string | null {
+  if (!/"action"\s*:\s*"answer"/.test(partial)) return null;
+  const start = /"answer"\s*:\s*"/.exec(partial);
+  if (!start) return null;
+  const simple: Record<string, string> = { n: '\n', t: '\t', r: '', b: '', f: '', '"': '"', '\\': '\\', '/': '/' };
+  let out = '';
+  for (let index = start.index + start[0].length; index < partial.length; index++) {
+    const char = partial[index];
+    if (char === '"') break;
+    if (char !== '\\') {
+      out += char;
+      continue;
+    }
+    const next = partial[index + 1];
+    if (next === undefined) break;
+    if (next === 'u') {
+      const hex = partial.slice(index + 2, index + 6);
+      if (hex.length < 4 || !/^[0-9a-f]{4}$/i.test(hex)) break;
+      out += String.fromCharCode(parseInt(hex, 16));
+      index += 5;
+    } else {
+      out += simple[next] ?? next;
+      index += 1;
+    }
+  }
+  return out;
+}
+
+/**
+ * Partie du texte qu'on peut montrer pendant le flux. Propriétaire : tout. Autres rôles : seulement les phrases terminées
+ * (ponctuation suivie d'un espace), puis `redactMoneyText` : un montant coupé en deux (« 12 » puis « 00 MAD ») ne s'affiche jamais.
+ * Le texte final complet, lui, est toujours renvoyé redacté à la fin.
+ */
+export function streamableText(text: string, role: Role): string {
+  if (role === 'owner') return text;
+  let cut = -1;
+  const boundary = /[.!?؟…\n]\s/g;
+  for (let match = boundary.exec(text); match; match = boundary.exec(text)) cut = match.index + 1;
+  return cut < 0 ? '' : redactMoneyText(text.slice(0, cut), role);
+}
+
+// ---------------------------------------------------------------- voix (synthèse vocale)
+
+export const MAX_SPEECH_CHARS = 700;
+export const SPEECH_SAMPLE_RATE = 24_000;
+
+/** Texte lu à voix haute : sans mise en forme, liens ni symboles de liste ; borné. */
+export function cleanSpeechText(raw: unknown, max = MAX_SPEECH_CHARS): string {
+  if (typeof raw !== 'string') return '';
+  return raw
+    .replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ')
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/[*_#`>~|]+/g, '')
+    .replace(/^\s*[-•]\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
+}
+
+/** Consigne de style placée devant le texte (la voix lit le texte, pas la consigne). */
+export function speechPrompt(text: string): string {
+  return `Lis ce texte à voix haute, de façon naturelle, chaleureuse et posée, comme une personne qui parle à un collègue, avec un rythme vivant : ${text}`;
+}
+
+/** Enveloppe du son brut (PCM 16 bits mono) en fichier WAV lisible partout. */
+export function pcmToWav(pcm: Uint8Array, sampleRate = SPEECH_SAMPLE_RATE): Uint8Array {
+  const header = new ArrayBuffer(44);
+  const view = new DataView(header);
+  const text = (offset: number, value: string) => [...value].forEach((char, i) => view.setUint8(offset + i, char.charCodeAt(0)));
+  text(0, 'RIFF');
+  view.setUint32(4, 36 + pcm.length, true);
+  text(8, 'WAVE');
+  text(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM
+  view.setUint16(22, 1, true); // mono
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  text(36, 'data');
+  view.setUint32(40, pcm.length, true);
+  const wav = new Uint8Array(44 + pcm.length);
+  wav.set(new Uint8Array(header), 0);
+  wav.set(pcm, 44);
+  return wav;
+}

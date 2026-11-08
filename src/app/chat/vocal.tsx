@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router, useLocalSearchParams } from 'expo-router';
-import * as Speech from 'expo-speech';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -13,7 +12,8 @@ import { useSession } from '@/features/auth/session-context';
 import { chatErrorMessageKey, transcribeAudio, uploadVoiceMessage } from '@/features/chat/api';
 import { useAskChat } from '@/features/chat/hooks';
 import { detectMessageLanguage } from '@/features/chat/language';
-import { speakableText } from '@/features/chat/speech';
+import { VoiceQueue } from '@/features/chat/natural-voice';
+import { takeSentences } from '@/features/chat/stream';
 import { makeTitle } from '@/features/chat/titles';
 import { openMicrophoneSettings, useVoiceRecorder } from '@/features/chat/use-voice-recorder';
 import { newId } from '@/features/chat/uuid';
@@ -50,14 +50,17 @@ export default function VoiceModeScreen() {
   const [permission, setPermission] = useState<'ok' | 'denied' | 'blocked'>('ok');
   const [levels, setLevels] = useState<number[]>(() => Array(WAVE_BARS).fill(0));
   const closed = useRef(false);
+  // Lecture à voix naturelle, phrase par phrase ; `turn` change quand l'utilisateur interrompt BIBIP.
+  const [voice] = useState(() => new VoiceQueue());
+  const turn = useRef(0);
 
   useEffect(() => {
     AsyncStorage.getItem(SPEAK_KEY).then((v) => v !== null && setSpeakReplies(v === '1')).catch(() => undefined);
     return () => {
       closed.current = true;
-      void Speech.stop();
+      voice.stop();
     };
-  }, []);
+  }, [voice]);
 
   const startListening = useCallback(async () => {
     if (closed.current) return;
@@ -114,6 +117,25 @@ export default function VoiceModeScreen() {
       setTranscript(text);
       setReply(null);
       setStage('thinking');
+      const myTurn = ++turn.current;
+      // Voix par phrases : dès qu'une phrase du flux est terminée, elle est lue ; la suite se prépare pendant ce temps.
+      let consumed = 0;
+      let spokenPrefix = '';
+      const feed = (text: string, final: boolean) => {
+        if (!speakReplies || turn.current !== myTurn || detectMessageLanguage(text) === 'darija-latin') return;
+        // Le serveur a recommencé la réponse (autre modèle) : on repart de zéro plutôt que de lire deux versions.
+        if (!text.startsWith(spokenPrefix)) {
+          voice.stop();
+          consumed = 0;
+        }
+        const { sentences, next } = takeSentences(text, consumed, final);
+        consumed = next;
+        spokenPrefix = text.slice(0, consumed);
+        if (sentences.length > 0) {
+          sentences.forEach((sentence) => voice.enqueue(sentence));
+          setStage('speaking');
+        }
+      };
       const answer = await ask.mutateAsync({
         message: text,
         conversationId,
@@ -121,20 +143,23 @@ export default function VoiceModeScreen() {
         voice: true,
         audioPath: path,
         audioMs: file.ms,
+        onText: (partial) => {
+          if (closed.current || turn.current !== myTurn) return;
+          setReply(partial);
+          feed(partial, false);
+        },
         ...(conversationId ? {} : { newConversationId: draftId, title: makeTitle(text) }),
       });
       if (closed.current) return;
       setConversationId(answer.conversationId);
+      if (turn.current !== myTurn) return;
       setReply(answer.answer);
-      const spoken = detectMessageLanguage(answer.answer);
-      if (speakReplies && spoken !== 'darija-latin') {
+      if (speakReplies && detectMessageLanguage(answer.answer) !== 'darija-latin') {
+        feed(answer.answer, true);
         setStage('speaking');
-        Speech.speak(speakableText(answer.answer), {
-          language: spoken === 'ar' ? 'ar-SA' : 'fr-FR',
-          onDone: () => void startListening(),
-          onStopped: () => undefined,
-          onError: () => void startListening(),
-        });
+        await voice.idle();
+        // Terminé sans interruption : l'écoute reprend toute seule.
+        if (!closed.current && turn.current === myTurn) void startListening();
       } else {
         setStage('idle');
       }
@@ -143,7 +168,7 @@ export default function VoiceModeScreen() {
       setErrorKey(chatErrorMessageKey(error));
       setStage('error');
     }
-  }, [ask, conversationId, draftId, hint, language, recorder, session, speakReplies, stage, startListening]);
+  }, [ask, conversationId, draftId, hint, language, recorder, session, speakReplies, stage, startListening, voice]);
 
   // Durée maximale (2 minutes) : l'envoi part tout seul.
   useEffect(() => {
@@ -153,24 +178,28 @@ export default function VoiceModeScreen() {
 
   const cancelRecording = useCallback(async () => {
     await recorder.cancel();
-    void Speech.stop();
+    turn.current += 1;
+    voice.stop();
     setStage('idle');
     setErrorKey(null);
-  }, [recorder]);
+  }, [recorder, voice]);
 
   const close = useCallback(async () => {
     closed.current = true;
-    void Speech.stop();
+    voice.stop();
     await recorder.cancel();
     if (existingConversation || !conversationId) router.back();
     else router.replace({ pathname: '/chat/[id]', params: { id: conversationId } });
-  }, [conversationId, existingConversation, recorder]);
+  }, [conversationId, existingConversation, recorder, voice]);
 
   const toggleSpeak = () => {
     const next = !speakReplies;
     setSpeakReplies(next);
     AsyncStorage.setItem(SPEAK_KEY, next ? '1' : '0').catch(() => undefined);
-    if (!next) void Speech.stop();
+    if (!next) {
+      turn.current += 1;
+      voice.stop();
+    }
   };
 
   // ---- Orbe : pulse au rythme de la voix (écoute), respiration lente pendant le traitement
@@ -327,7 +356,7 @@ export default function VoiceModeScreen() {
               <Ionicons name="trash-outline" size={20} color={Brand.white} />
             </Pressable>
             <Pressable
-              onPress={() => (listening ? void sendTurn() : stage === 'speaking' ? (void Speech.stop(), void startListening()) : stage === 'idle' || stage === 'error' ? void startListening() : undefined)}
+              onPress={() => (listening ? void sendTurn() : stage === 'speaking' ? (turn.current++, voice.stop(), void startListening()) : stage === 'idle' || stage === 'error' ? void startListening() : undefined)}
               disabled={stage === 'transcribing' || stage === 'thinking'}
               accessibilityRole="button"
               accessibilityLabel={t('chat.voice.send')}

@@ -54,11 +54,7 @@ export function parseCards(raw: unknown): ChatCard[] {
   });
 }
 
-/**
- * Pose une question à la fonction serveur `chat-m3ak` (IA avec la clé de l'entreprise, données de l'agence lues
- * avec les droits de l'utilisateur). Le serveur refuse tant que le propriétaire n'a pas activé le chat.
- */
-export async function askChat(input: {
+type ChatInput = {
   message: string;
   conversationId: string | null;
   language: 'fr' | 'ar';
@@ -69,11 +65,103 @@ export async function askChat(input: {
   voice?: boolean;
   audioPath?: string;
   audioMs?: number;
-}): Promise<ChatAnswer> {
+  /** Réponse en direct : reçoit le texte déjà écrit (cumulé) au fil de l'eau. Le texte final fait foi (même valeur que `answer`). */
+  onText?: (text: string) => void;
+};
+
+type AnswerBody = { ok?: boolean; error?: unknown; conversationId?: unknown; answer?: unknown; sources?: unknown; cards?: unknown } | null;
+
+function answerFromBody(body: AnswerBody): ChatAnswer {
+  if (body?.ok && typeof body.conversationId === 'string' && typeof body.answer === 'string') {
+    return { conversationId: body.conversationId, answer: body.answer, sources: parseSources(body.sources), cards: parseCards(body.cards) };
+  }
+  throw new ChatError(asCode(body?.error));
+}
+
+/**
+ * Réponse en flux (SSE) : le serveur envoie le texte au fur et à mesure puis un événement final. Rend `null` si le flux n'a pas
+ * pu démarrer (téléphone ou réseau sans flux) : l'appelant retombe alors sur l'appel classique, qui donne la même réponse.
+ */
+async function askChatStream(payload: Omit<ChatInput, 'onText'>, onText: (text: string) => void): Promise<ChatAnswer | null> {
+  const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+  const { data } = await getSupabase().auth.getSession();
+  const token = data.session?.access_token;
+  if (!url || !anonKey || !token) return null;
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let response: Response;
+  try {
+    const { fetch: streamingFetch } = await import('expo/fetch');
+    response = (await streamingFetch(`${url}/functions/v1/chat-m3ak`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${token}`, apikey: anonKey },
+      body: JSON.stringify({ ...payload, stream: true }),
+      signal: controller.signal,
+    })) as unknown as Response;
+  } catch {
+    clearTimeout(timer);
+    return null;
+  }
+  try {
+    if (response.status === 404) throw new ChatError('unavailable');
+    if (!(response.headers.get('content-type') ?? '').includes('text/event-stream')) {
+      // Refus avant le flux (non connecté, chat désactivé, requête invalide…) : réponse JSON classique.
+      return answerFromBody((await response.json().catch(() => null)) as AnswerBody);
+    }
+    if (!response.body) return null;
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let pending = '';
+    let final: AnswerBody = null;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      pending += decoder.decode(value, { stream: true });
+      let end = pending.indexOf('\n\n');
+      while (end >= 0) {
+        const line = pending.slice(0, end).split('\n').find((l) => l.startsWith('data:'));
+        pending = pending.slice(end + 2);
+        if (line) {
+          const event = (() => {
+            try {
+              return JSON.parse(line.slice(5).trim()) as { type?: string; text?: unknown } & Record<string, unknown>;
+            } catch {
+              return null;
+            }
+          })();
+          if (event?.type === 'text' && typeof event.text === 'string') onText(event.text);
+          else if (event?.type === 'done') final = event as AnswerBody;
+        }
+        end = pending.indexOf('\n\n');
+      }
+    }
+    if (!final) throw new ChatError('ocr_failed');
+    return answerFromBody(final);
+  } catch (error) {
+    if (error instanceof ChatError) throw error;
+    throw new ChatError(controller.signal.aborted ? 'ocr_timeout' : 'unavailable');
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Pose une question à la fonction serveur `chat-m3ak` (IA avec la clé de l'entreprise, données de l'agence lues
+ * avec les droits de l'utilisateur). Le serveur refuse tant que le propriétaire n'a pas activé le chat.
+ * Avec `onText`, la réponse arrive en direct (flux) ; sinon, ou si le flux est impossible, un seul appel classique.
+ */
+export async function askChat(input: ChatInput): Promise<ChatAnswer> {
+  const { onText, ...payload } = input;
+  if (onText) {
+    const streamed = await askChatStream(payload, onText);
+    if (streamed) return streamed;
+  }
   let outcome: Awaited<ReturnType<ReturnType<typeof getSupabase>['functions']['invoke']>> | 'timeout';
   try {
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), TIMEOUT_MS));
-    outcome = await Promise.race([getSupabase().functions.invoke('chat-m3ak', { body: input }), timeout]);
+    outcome = await Promise.race([getSupabase().functions.invoke('chat-m3ak', { body: payload }), timeout]);
   } catch {
     throw new ChatError('unavailable');
   }
@@ -88,10 +176,23 @@ export async function askChat(input: {
     }
     throw new ChatError('unavailable');
   }
-  const body = data as { ok?: boolean; error?: unknown; conversationId?: unknown; answer?: unknown; sources?: unknown; cards?: unknown } | null;
-  if (body?.ok && typeof body.conversationId === 'string' && typeof body.answer === 'string') {
-    return { conversationId: body.conversationId, answer: body.answer, sources: parseSources(body.sources), cards: parseCards(body.cards) };
+  return answerFromBody(data as AnswerBody);
+}
+
+/** Lit un texte à voix haute avec une voix naturelle (côté serveur, clé IA de l'entreprise). Rend un fichier WAV en base64. */
+export async function synthesizeSpeech(text: string): Promise<string> {
+  let outcome: Awaited<ReturnType<ReturnType<typeof getSupabase>['functions']['invoke']>> | 'timeout';
+  try {
+    const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), 40_000));
+    outcome = await Promise.race([getSupabase().functions.invoke('chat-m3ak', { body: { action: 'speak', text } }), timeout]);
+  } catch {
+    throw new ChatError('unavailable');
   }
+  if (outcome === 'timeout') throw new ChatError('ocr_timeout');
+  const { data, error } = outcome;
+  if (error) throw new ChatError('unavailable');
+  const body = data as { ok?: boolean; error?: unknown; audio?: unknown } | null;
+  if (body?.ok && typeof body.audio === 'string' && body.audio) return body.audio;
   throw new ChatError(asCode(body?.error));
 }
 

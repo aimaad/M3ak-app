@@ -193,6 +193,20 @@ function Dot({ delay, shade }: { delay: number; shade: string }) {
   );
 }
 
+/** Réponse en cours d'écriture (flux) : avatar + bulle avec le texte déjà reçu. */
+export function StreamingBubble({ text }: { text: string }) {
+  return (
+    <View accessibilityLiveRegion="polite" style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
+      <ChatAvatar />
+      <View style={{ flex: 1, minWidth: 0, backgroundColor: Palette.surface, borderRadius: 20, borderBottomStartRadius: 6, padding: 12 }}>
+        <HText size={15} style={{ lineHeight: 22, paddingHorizontal: 2 }}>
+          {text}
+        </HText>
+      </View>
+    </View>
+  );
+}
+
 /** « BIBIP écrit » : avatar + bulle avec trois points animés. */
 export function TypingBubble() {
   const { t } = useLanguage();

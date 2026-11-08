@@ -13,19 +13,24 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { encode as base64Encode } from 'https://deno.land/std@0.168.0/encoding/base64.ts';
 
-import { callGeminiJson, ProviderHttpError, StageTimeoutError, type Usage } from '../_shared/gemini.ts';
+import { callGeminiJson, callGeminiSpeech, ProviderHttpError, StageTimeoutError, type Usage } from '../_shared/gemini.ts';
 import {
   audioMimeFor,
   buildCards,
+  cleanSpeechText,
   cleanTranscript,
   MAX_AUDIO_BYTES,
   MAX_AUDIO_MS,
   MAX_TOOL_STEPS,
   parseModelStep,
+  partialAnswer,
+  pcmToWav,
   pickSources,
   redactMoneyText,
   resultForRole,
   seenRentals,
+  speechPrompt,
+  streamableText,
   systemPrompt,
   toRpcCall,
   transcriptionPrompt,
@@ -140,8 +145,9 @@ Deno.serve(async (request: Request) => {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { count } = await withTimeout(
       'limit',
-      admin.from('ocr_usage_events').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('document_type', 'chat').gte('created_at', since)
+      admin.from('ocr_usage_events').select('id', { count: 'exact', head: true }).eq('agency_id', agencyId).eq('document_type', 'chat').gte('created_at', since).or('model.is.null,model.not.ilike.%tts%')
     );
+    // Les lectures à voix haute (modèle « tts ») sont tracées dans les mêmes événements mais ne comptent pas dans les questions.
     if ((count ?? 0) >= DAILY_LIMIT) return json({ ok: false, error: 'chat_limit' });
   } catch (error) {
     if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
@@ -186,6 +192,22 @@ Deno.serve(async (request: Request) => {
     }
   }
 
+  // Action « speak » : lit un texte à voix haute avec une voix naturelle (Gemini, clé de l'entreprise). Rend un fichier WAV en base64.
+  if (body.action === 'speak') {
+    const text = cleanSpeechText(body.text);
+    if (!text) return json({ ok: false, error: 'invalid_request' }, 400);
+    try {
+      const speech = await callGeminiSpeech(apiKey, speechPrompt(text));
+      await recordUsage(admin, agencyId, true, undefined, speech.model, speech.usage);
+      return json({ ok: true, audio: base64Encode(pcmToWav(speech.pcm, speech.sampleRate)), mime: 'audio/wav' });
+    } catch (error) {
+      const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
+      console.error('Échec de la synthèse vocale :', detail.slice(0, 160));
+      await recordUsage(admin, agencyId, false, error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed');
+      return json({ ok: false, error: error instanceof ProviderHttpError && error.status === 429 ? 'ocr_quota' : error instanceof ProviderHttpError && error.status === 503 ? 'ocr_busy' : 'voice_failed' });
+    }
+  }
+
   // Question posée à la voix : le texte est la transcription ; l'audio (déjà transcrit) est rattaché au message.
   const voice = body.voice === true;
   const audioPath = voice ? validateAudioPath(userId, body.audioPath) : null;
@@ -224,6 +246,8 @@ Deno.serve(async (request: Request) => {
     throw error;
   }
 
+  // Tout le travail (outils, IA, enregistrement) : rend la réponse JSON ; `onText` reçoit le texte au fil de l'eau (flux).
+  const answerQuestion = async (onText?: (text: string) => void): Promise<Record<string, unknown>> => {
   const started = Date.now();
   console.log('chat: question reçue', { langue: language, conversation: newConversation ? 'nouvelle' : 'existante' });
   const prompt = systemPrompt(new Date(), language, role, voice);
@@ -235,6 +259,19 @@ Deno.serve(async (request: Request) => {
   let model: string | undefined;
   let answer: string | null = null;
   let sourceIds: string[] = [];
+  // Flux : on extrait la réponse du JSON qui s'écrit ; hors propriétaire, seules des phrases terminées et sans montant sortent.
+  let lastSent = '';
+  const onModelText = onText
+    ? (partial: string) => {
+        const written = partialAnswer(partial);
+        if (written === null) return;
+        const safe = streamableText(written, role);
+        if (safe && safe !== lastSent) {
+          lastSent = safe;
+          onText(safe);
+        }
+      }
+    : undefined;
 
   try {
     for (let step = 0; step <= MAX_TOOL_STEPS; step++) {
@@ -245,7 +282,7 @@ Deno.serve(async (request: Request) => {
         ...(transcript.length > 0 ? [{ text: `Résultats des outils déjà demandés (DONNÉES) :\n${transcript.join('\n')}` }] : []),
         ...(step === MAX_TOOL_STEPS ? [{ text: 'Tu as atteint la limite d\'outils : réponds maintenant avec "action":"answer".' }] : []),
       ];
-      const result = await callGeminiJson(apiKey, prompt, parts, { qualityFirst: true, perCallTimeoutMs: 15_000 });
+      const result = await callGeminiJson(apiKey, prompt, parts, { qualityFirst: true, perCallTimeoutMs: 15_000, onText: onModelText });
       model = result.model;
       totalUsage = { inputTokens: totalUsage.inputTokens + result.usage.inputTokens, outputTokens: totalUsage.outputTokens + result.usage.outputTokens };
 
@@ -283,20 +320,20 @@ Deno.serve(async (request: Request) => {
   } catch (error) {
     if (error instanceof StageTimeoutError) {
       await recordUsage(admin, agencyId, false, 'ocr_timeout');
-      return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
+      return { ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` };
     }
     const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
     console.error('Échec du chat M3ak :', detail.slice(0, 160));
     await recordUsage(admin, agencyId, false, error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed');
     // 429 = quota de la clé de l'entreprise atteint (à régler chez Google) ; 503 = surcharge passagère.
     const code = error instanceof ProviderHttpError && error.status === 429 ? 'ocr_quota' : error instanceof ProviderHttpError && error.status === 503 ? 'ocr_busy' : 'ocr_failed';
-    return json({ ok: false, error: code, detail: detail.slice(0, 200) });
+    return { ok: false, error: code, detail: detail.slice(0, 200) };
   }
 
   if (!answer) {
     console.error('chat: aucune réponse exploitable');
     await recordUsage(admin, agencyId, false, 'empty', model, totalUsage);
-    return json({ ok: false, error: 'chat_no_answer' });
+    return { ok: false, error: 'chat_no_answer' };
   }
 
   console.log('chat: réponse prête', `${Date.now() - started} ms`);
@@ -311,7 +348,7 @@ Deno.serve(async (request: Request) => {
       if (createError && (createError.code === '42703' || createError.code === 'PGRST204')) ({ error: createError } = await withTimeout('save', supabase.from('chat_conversations').insert(base)));
       if (createError) {
         console.error('chat: conversation non enregistrée', createError.code, createError.message);
-        return json({ ok: false, error: 'chat_save_failed' });
+        return { ok: false, error: 'chat_save_failed' };
       }
     }
     // Les deux lignes ont les mêmes colonnes (« sources » est obligatoire en base). `cards` existe depuis la migration 0062 :
@@ -336,5 +373,24 @@ Deno.serve(async (request: Request) => {
     console.error('chat: historique non enregistré', error instanceof Error ? error.message : 'erreur');
   }
   await recordUsage(admin, agencyId, true, undefined, model, totalUsage);
-  return json({ ok: true, conversationId, answer, sources, cards });
+  return { ok: true, conversationId, answer, sources, cards };
+  };
+
+  if (body.stream === true) {
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        const send = (event: Record<string, unknown>) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
+        try {
+          send({ type: 'done', ...(await answerQuestion((text) => send({ type: 'text', text }))) });
+        } catch (error) {
+          console.error('chat: flux interrompu', error instanceof Error ? error.message : 'erreur');
+          send({ type: 'done', ok: false, error: 'ocr_failed' });
+        }
+        controller.close();
+      },
+    });
+    return new Response(stream, { headers: { ...CORS_HEADERS, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' } });
+  }
+  return json(await answerQuestion());
 });
