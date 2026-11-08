@@ -1,4 +1,16 @@
-import { buildCards, parseModelStep, redactMoney, redactMoneyText, resultForRole, systemPrompt } from '../../../../supabase/functions/chat-m3ak/logic';
+import {
+  audioMimeFor,
+  buildCards,
+  cleanTranscript,
+  parseModelStep,
+  redactMoney,
+  redactMoneyText,
+  resultForRole,
+  systemPrompt,
+  transcriptionPrompt,
+  validateAudioPath,
+  VOICE_RULE,
+} from '../../../../supabase/functions/chat-m3ak/logic';
 
 const V1 = '11111111-1111-4111-8111-111111111111';
 const V2 = '22222222-2222-4222-8222-222222222222';
@@ -112,5 +124,46 @@ describe('chat : cartes de données construites à partir des résultats réels'
   it('le choix du modèle (« show ») est lu dans sa réponse', () => {
     const step = parseModelStep({ action: 'answer', answer: 'Trois voitures libres.', show: 'available_vehicles' });
     expect(step.kind === 'answer' && step.show).toBe('available_vehicles');
+  });
+});
+
+
+describe('chat vocal : chemins audio et transcription', () => {
+  const USER = '44444444-4444-4444-8444-444444444444';
+  const CONV = '55555555-5555-4555-8555-555555555555';
+  const FILE = '66666666-6666-4666-8666-666666666666';
+
+  it('n’accepte que le dossier de l’utilisateur lui-même et un fichier audio', () => {
+    expect(validateAudioPath(USER, `${USER}/${CONV}/${FILE}.wav`)).toBe(`${USER}/${CONV}/${FILE}.wav`);
+    expect(validateAudioPath(USER, `${USER}/${CONV}/${FILE}.aac`)).not.toBeNull();
+    expect(validateAudioPath('autre-utilisateur', `${USER}/${CONV}/${FILE}.wav`)).toBeNull();
+    expect(validateAudioPath(USER, `${CONV}/${CONV}/${FILE}.wav`)).toBeNull();
+  });
+  it('refuse les chemins piégés', () => {
+    for (const bad of [`${USER}/../${USER}/${FILE}.wav`, `/${USER}/${CONV}/${FILE}.wav`, `${USER}/${CONV}/${FILE}.exe`, `${USER}/${CONV}/x.wav`, `${USER}\\${CONV}\\${FILE}.wav`, 42, null, `${USER}/${CONV}/${FILE}.wav`.padEnd(300, 'a')]) {
+      expect(validateAudioPath(USER, bad)).toBeNull();
+    }
+  });
+  it('type MIME selon l’extension', () => {
+    expect(audioMimeFor('a/b/c.wav')).toBe('audio/wav');
+    expect(audioMimeFor('a/b/c.aac')).toBe('audio/aac');
+    expect(audioMimeFor('a/b/c.m4a')).toBe('audio/mp4');
+  });
+  it('transcription : texte nettoyé et borné, vide si rien', () => {
+    expect(cleanTranscript({ transcript: '  chkoun   li ma rje3ch \n tomobil ' })).toBe('chkoun li ma rje3ch tomobil');
+    expect(cleanTranscript({ transcript: 'x'.repeat(2000) }).length).toBe(600);
+    expect(cleanTranscript({})).toBe('');
+    expect(cleanTranscript('texte')).toBe('');
+  });
+  it('la consigne de transcription demande la fidélité, sans traduction', () => {
+    expect(transcriptionPrompt('auto')).toContain('sans traduire');
+    expect(transcriptionPrompt('darija')).toContain('darija marocaine');
+    expect(transcriptionPrompt('fr')).toContain('français');
+  });
+  it('mode vocal : la consigne impose la darija en lettres arabes ; absente hors mode vocal', () => {
+    const now = new Date('2026-11-08T12:00:00Z');
+    expect(systemPrompt(now, 'fr', 'owner', true)).toContain(VOICE_RULE.trim());
+    expect(VOICE_RULE).toContain('LETTRES ARABES');
+    expect(systemPrompt(now, 'fr', 'owner')).not.toContain('Mode vocal');
   });
 });

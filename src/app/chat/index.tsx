@@ -166,7 +166,7 @@ export default function ChatHistoryScreen() {
                     style={{ flex: 1, minWidth: 0, height: 44, color: Brand.white, fontSize: 14, fontFamily: language === 'ar' ? HomeFonts.arabic.medium : HomeFonts.text.regular, paddingVertical: 0 }}
                   />
                   {VOICE_ENABLED && !question.trim() ? (
-                    <Pressable onPress={() => router.push('/chat/vocal' as never)} accessibilityRole="button" accessibilityLabel={t('chat.history.askMic')} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
+                    <Pressable onPress={() => router.push('/chat/vocal')} accessibilityRole="button" accessibilityLabel={t('chat.history.askMic')} style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
                       <Ionicons name="mic-outline" size={20} color={Brand.white} />
                     </Pressable>
                   ) : (
@@ -243,6 +243,7 @@ export default function ChatHistoryScreen() {
                         <ConversationRow
                           key={conversation.id}
                           conversation={conversation}
+                          voice={conversation.viaVoice}
                           onOpen={() => router.push({ pathname: '/chat/[id]', params: { id: conversation.id } })}
                           onDelete={() => requestDelete(conversation)}
                           onMenu={() => openMenu(conversation)}

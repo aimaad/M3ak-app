@@ -18,10 +18,14 @@ export type ChatMessage = {
   content: string;
   sources: ChatSource[];
   cards: ChatCard[];
+  /** Message vocal : audio privé (chemin dans le stockage) et durée ; le texte du message est sa transcription. */
+  audioPath: string | null;
+  audioMs: number | null;
+  viaVoice: boolean;
   createdAt: string;
 };
 
 /** `preview` : début de la dernière réponse de BIBIP (null si aucune). */
-export type ChatConversation = { id: string; title: string; updatedAt: string; preview: string | null };
+export type ChatConversation = { id: string; title: string; updatedAt: string; preview: string | null; /** Commencée à la voix. */ viaVoice: boolean };
 
 export type ChatAnswer = { conversationId: string; answer: string; sources: ChatSource[]; cards: ChatCard[] };

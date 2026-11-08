@@ -9,6 +9,7 @@ const conv = (id: string, daysAgo: number, hour = 10, title = id, preview: strin
   id,
   title,
   preview,
+  viaVoice: false,
   updatedAt: new Date(2026, 10, 8 - daysAgo, hour).toISOString(),
 });
 

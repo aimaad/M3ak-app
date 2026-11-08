@@ -60,6 +60,12 @@
           "color": "#CA531D",
           "defaultChannel": "default"
         }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "BIBIP utilise le micro pour que vous puissiez parler à l'assistant (messages vocaux)."
+        }
       ]
     ],
     "experiments": {
@@ -81,6 +87,10 @@
     },
     "updates": {
       "url": "https://u.expo.dev/c1f89c76-1fca-4b65-90fd-36611f120665"
+    },
+    "locales": {
+      "fr": "./locales/fr.json",
+      "ar": "./locales/ar.json"
     }
   }
 }

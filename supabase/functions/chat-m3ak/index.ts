@@ -11,9 +11,28 @@
 // Aucune clé globale, aucun autre fournisseur ; la clé n'est jamais renvoyée ni journalisée.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
+import { encode as base64Encode } from 'https://deno.land/std@0.168.0/encoding/base64.ts';
 
 import { callGeminiJson, ProviderHttpError, StageTimeoutError, type Usage } from '../_shared/gemini.ts';
-import { buildCards, MAX_TOOL_STEPS, parseModelStep, pickSources, redactMoneyText, resultForRole, seenRentals, systemPrompt, toRpcCall, type Role } from './logic.ts';
+import {
+  audioMimeFor,
+  buildCards,
+  cleanTranscript,
+  MAX_AUDIO_BYTES,
+  MAX_AUDIO_MS,
+  MAX_TOOL_STEPS,
+  parseModelStep,
+  pickSources,
+  redactMoneyText,
+  resultForRole,
+  seenRentals,
+  systemPrompt,
+  toRpcCall,
+  transcriptionPrompt,
+  validateAudioPath,
+  type Role,
+  type VoiceHint,
+} from './logic.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -61,6 +80,19 @@ async function recordUsage(admin: AdminClient, agencyId: string, ok: boolean, er
     );
   } catch {
     // volontairement silencieux
+  }
+}
+
+/** Supprime les fichiers audio des messages effacés (file `chat_audio_cleanup`) : par lots, sans jamais bloquer une réponse. */
+async function cleanupAudio(admin: AdminClient) {
+  try {
+    const { data } = await withTimeout('cleanup', admin.from('chat_audio_cleanup').select('id, path').order('created_at').limit(20), 4_000);
+    const rows = (data ?? []) as { id: string; path: string }[];
+    if (rows.length === 0) return;
+    await withTimeout('cleanup', admin.storage.from('chat-audio').remove(rows.map((row) => row.path)), 6_000);
+    await withTimeout('cleanup', admin.from('chat_audio_cleanup').delete().in('id', rows.map((row) => row.id)), 4_000);
+  } catch {
+    // volontairement silencieux : la file sera reprise à la prochaine requête
   }
 }
 
@@ -124,6 +156,37 @@ Deno.serve(async (request: Request) => {
   } catch {
     return json({ ok: false, error: 'invalid_request' }, 400);
   }
+  await cleanupAudio(admin);
+
+  // Action « transcribe » : transcrit un message vocal (stocké dans le bucket privé) avec la clé Gemini de l'entreprise.
+  if (body.action === 'transcribe') {
+    const path = validateAudioPath(userId, body.audioPath);
+    if (!path) return json({ ok: false, error: 'invalid_request' }, 400);
+    const hint: VoiceHint = body.hint === 'fr' || body.hint === 'darija' ? body.hint : 'auto';
+    try {
+      const file = await withTimeout('audio', admin.storage.from('chat-audio').download(path), 20_000);
+      if (file.error || !file.data) return json({ ok: false, error: 'voice_failed' });
+      const bytes = new Uint8Array(await file.data.arrayBuffer());
+      if (bytes.length === 0) return json({ ok: false, error: 'voice_unintelligible' });
+      if (bytes.length > MAX_AUDIO_BYTES) return json({ ok: false, error: 'voice_too_long' });
+      const result = await callGeminiJson(apiKey, transcriptionPrompt(hint), [{ inlineData: { mimeType: audioMimeFor(path), data: base64Encode(bytes) } }, { text: 'Transcris cet enregistrement.' }], { perCallTimeoutMs: 30_000 });
+      await recordUsage(admin, agencyId, true, undefined, result.model, result.usage);
+      const transcript = cleanTranscript(result.json);
+      if (!transcript) return json({ ok: false, error: 'voice_unintelligible' });
+      return json({ ok: true, transcript });
+    } catch (error) {
+      if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
+      const detail = error instanceof ProviderHttpError ? `provider_${error.status}: ${error.message}` : error instanceof Error ? error.message : 'unknown';
+      console.error('Échec de la transcription :', detail.slice(0, 160));
+      await recordUsage(admin, agencyId, false, error instanceof ProviderHttpError ? `provider_${error.status}` : 'ocr_failed');
+      return json({ ok: false, error: error instanceof ProviderHttpError && error.status === 429 ? 'ocr_quota' : error instanceof ProviderHttpError && error.status === 503 ? 'ocr_busy' : 'voice_failed' });
+    }
+  }
+
+  // Question posée à la voix : le texte est la transcription ; l'audio (déjà transcrit) est rattaché au message.
+  const voice = body.voice === true;
+  const audioPath = voice ? validateAudioPath(userId, body.audioPath) : null;
+  const audioMs = audioPath && typeof body.audioMs === 'number' && Number.isFinite(body.audioMs) ? Math.min(Math.max(Math.round(body.audioMs), 0), MAX_AUDIO_MS) : null;
   const question = typeof body.message === 'string' ? body.message.replace(/\u0000/g, '').trim().slice(0, MAX_QUESTION_CHARS) : '';
   if (!question) return json({ ok: false, error: 'invalid_request' }, 400);
   const language = body.language === 'ar' ? 'ar' : 'fr';
@@ -160,7 +223,7 @@ Deno.serve(async (request: Request) => {
 
   const started = Date.now();
   console.log('chat: question reçue', { langue: language, conversation: newConversation ? 'nouvelle' : 'existante' });
-  const prompt = systemPrompt(new Date(), language, role);
+  const prompt = systemPrompt(new Date(), language, role, voice);
   const results: unknown[] = [];
   const executed: { tool: string; data: unknown }[] = [];
   let showHint: string | undefined;
@@ -239,10 +302,10 @@ Deno.serve(async (request: Request) => {
   const cards = buildCards(executed, showHint);
   try {
     if (newConversation) {
-      const { error: createError } = await withTimeout(
-        'save',
-        supabase.from('chat_conversations').insert({ id: newConversation.id, agency_id: agencyId, user_id: userId, title: newConversation.title })
-      );
+      const base = { id: newConversation.id, agency_id: agencyId, user_id: userId, title: newConversation.title };
+      let { error: createError } = await withTimeout('save', supabase.from('chat_conversations').insert(voice ? { ...base, via_voice: true } : base));
+      // Colonne « via_voice » pas encore installée (migration 0063) : on crée sans.
+      if (createError && (createError.code === '42703' || createError.code === 'PGRST204')) ({ error: createError } = await withTimeout('save', supabase.from('chat_conversations').insert(base)));
       if (createError) {
         console.error('chat: conversation non enregistrée', createError.code, createError.message);
         return json({ ok: false, error: 'chat_save_failed' });
@@ -250,12 +313,19 @@ Deno.serve(async (request: Request) => {
     }
     // Les deux lignes ont les mêmes colonnes (« sources » est obligatoire en base). `cards` existe depuis la migration 0062 :
     // si elle n'est pas encore appliquée, on enregistre sans (la réponse reste affichée avec ses cartes).
-    const rows = (withCards: boolean) => [
-      { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'user', content: question, sources: [], ...(withCards ? { cards: [] } : {}) },
+    const rows = (withCards: boolean, withVoice: boolean) => [
+      {
+        conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'user', content: question, sources: [],
+        ...(withCards ? { cards: [] } : {}),
+        ...(withVoice && audioPath ? { audio_path: audioPath, audio_ms: audioMs, via_voice: true } : {}),
+      },
       { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'assistant', content: answer, sources, ...(withCards ? { cards } : {}) },
     ];
-    let saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(true)));
-    if (saved.error?.code === '42703' || saved.error?.code === 'PGRST204') saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(false)));
+    // Colonnes ajoutées par les migrations 0062 (cartes) et 0063 (vocal) : si l'une manque encore, on enregistre sans.
+    const missing = (code?: string) => code === '42703' || code === 'PGRST204';
+    let saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(true, true)));
+    if (missing(saved.error?.code)) saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(true, false)));
+    if (missing(saved.error?.code)) saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(false, false)));
     if (saved.error) console.error('chat: historique non enregistré', saved.error.code, saved.error.message);
     await withTimeout('save', supabase.from('chat_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId));
   } catch (error) {

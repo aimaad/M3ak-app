@@ -7,6 +7,7 @@ import { ArrowIcon, HText } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { ChatCard, ChatCardItem } from './types';
+import { formatDuration, voiceBars } from './voice-utils';
 
 /** Avatar de BIBIP : carré arrondi graphite avec une étincelle orange. */
 export function ChatAvatar({ size = 28 }: { size?: number }) {
@@ -23,6 +24,54 @@ export function UserBubble({ text }: { text: string }) {
     <View style={{ alignSelf: 'flex-end', maxWidth: 272, backgroundColor: Brand.graphite, borderRadius: 20, borderBottomEndRadius: 6, paddingVertical: 12, paddingHorizontal: 14 }}>
       <HText size={15} color={Brand.white} style={{ lineHeight: 22 }} selectable>
         {text}
+      </HText>
+    </View>
+  );
+}
+
+/**
+ * Message vocal de l'utilisateur : bulle graphite de 236 px (bouton lecture blanc, forme d'onde dont la partie déjà lue est
+ * blanche, durée) et la transcription dessous en italique.
+ */
+export function VoiceBubble({
+  seed,
+  durationMs,
+  transcript,
+  playing,
+  progress,
+  onToggle,
+}: {
+  seed: string;
+  durationMs: number;
+  transcript: string;
+  playing: boolean;
+  progress: number;
+  onToggle: () => void;
+}) {
+  const { t } = useLanguage();
+  const bars = voiceBars(seed);
+  const done = Math.round(progress * bars.length);
+  return (
+    <View style={{ alignSelf: 'flex-end', alignItems: 'flex-end', gap: 6 }}>
+      <View
+        accessible
+        accessibilityLabel={t('chat.voice.voiceMessage', { seconds: Math.max(1, Math.round(durationMs / 1000)) })}
+        style={{ width: 236, backgroundColor: Brand.graphite, borderRadius: 20, borderBottomEndRadius: 6, paddingVertical: 10, paddingStart: 10, paddingEnd: 14, flexDirection: 'row', alignItems: 'center', gap: 10 }}
+      >
+        <Pressable onPress={onToggle} hitSlop={4} accessibilityRole="button" accessibilityLabel={t(playing ? 'chat.voice.pauseMessage' : 'chat.voice.play')} style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Brand.white, alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name={playing ? 'pause' : 'play'} size={14} color={Brand.graphite} />
+        </Pressable>
+        <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 2, height: 28 }}>
+          {bars.map((height, index) => (
+            <View key={index} style={{ width: 3, borderRadius: 2, height, backgroundColor: index < done || (!playing && progress === 0 && index < 9) ? Brand.white : Palette.textSecondary }} />
+          ))}
+        </View>
+        <HText size={12} color={Brand.mutedOnDark}>
+          {formatDuration(durationMs)}
+        </HText>
+      </View>
+      <HText size={12} color={Palette.textSecondary} style={{ fontStyle: 'italic', textAlign: 'right', maxWidth: 260 }}>
+        {`« ${transcript} »`}
       </HText>
     </View>
   );

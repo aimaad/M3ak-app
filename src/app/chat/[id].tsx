@@ -8,11 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, HomeFonts, Palette } from '@/constants/theme';
 import { chatErrorMessageKey } from '@/features/chat/api';
-import { ActionPill, ChatAvatar, DataCardView, DateSeparator, SmallPill, TypingBubble, UserBubble } from '@/features/chat/chat-bubble';
+import { ActionPill, ChatAvatar, DataCardView, DateSeparator, SmallPill, TypingBubble, UserBubble, VoiceBubble } from '@/features/chat/chat-bubble';
 import { useAskChat, useChatMessages, useConversations, useDeleteConversation, useRenameConversation } from '@/features/chat/hooks';
 import { canListen, detectMessageLanguage, type MessageLanguage } from '@/features/chat/language';
 import { RenameDialog } from '@/features/chat/rename-dialog';
 import { useSpeech } from '@/features/chat/speech';
+import { useVoicePlayback } from '@/features/chat/use-voice-playback';
 import { makeTitle } from '@/features/chat/titles';
 import type { ChatCard, ChatCardItem, ChatMessage } from '@/features/chat/types';
 import { newId } from '@/features/chat/uuid';
@@ -74,6 +75,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
   const ask = useAskChat();
   const scrollRef = useRef<ScrollViewInstance>(null);
   const { speakingId, toggle } = useSpeech();
+  const playback = useVoicePlayback();
 
   const serverMessages = messagesQuery.data ?? [];
   const lastServer = serverMessages.slice(-6);
@@ -108,8 +110,8 @@ function Conversation({ id, question }: { id: string; question?: string }) {
             const stamp = new Date().toISOString();
             setLiveMessages((previous) => [
               ...previous,
-              { id: `live-user-${stamp}`, role: 'user', content: message, sources: [], cards: [], createdAt: stamp },
-              { id: `live-answer-${stamp}`, role: 'assistant', content: answer.answer, sources: answer.sources, cards: answer.cards, createdAt: stamp },
+              { id: `live-user-${stamp}`, role: 'user', content: message, sources: [], cards: [], audioPath: null, audioMs: null, viaVoice: false, createdAt: stamp },
+              { id: `live-answer-${stamp}`, role: 'assistant', content: answer.answer, sources: answer.sources, cards: answer.cards, audioPath: null, audioMs: null, viaVoice: false, createdAt: stamp },
             ]);
             setConversationId(answer.conversationId);
           },
@@ -247,7 +249,16 @@ function Conversation({ id, question }: { id: string; question?: string }) {
               return (
                 <View key={message.id} style={{ gap: 14 }}>
                   {newDay ? <DateSeparator label={dayLabel(message.createdAt)} /> : null}
-                  {message.role === 'user' ? (
+                  {message.role === 'user' && message.audioPath && message.viaVoice ? (
+                    <VoiceBubble
+                      seed={message.audioPath}
+                      durationMs={message.audioMs ?? 0}
+                      transcript={message.content}
+                      playing={playback.playingId === message.id}
+                      progress={playback.progress[message.id] ?? 0}
+                      onToggle={() => void playback.toggle(message.id, message.audioPath as string, message.audioMs ?? 0)}
+                    />
+                  ) : message.role === 'user' ? (
                     <UserBubble text={message.content} />
                   ) : (
                     <AssistantMessage
@@ -306,7 +317,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
               />
             </View>
             {VOICE_ENABLED && !canSend ? (
-              <Pressable onPress={() => router.push('/chat/vocal' as never)} accessibilityRole="button" accessibilityLabel={t('chat.convo.mic')} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
+              <Pressable onPress={() => router.push(conversationId ? { pathname: '/chat/vocal', params: { conversation: conversationId } } : '/chat/vocal')} accessibilityRole="button" accessibilityLabel={t('chat.convo.mic')} style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="mic-outline" size={21} color={Brand.white} />
               </Pressable>
             ) : (
