@@ -24,6 +24,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DefaultTheme, router, Stack, ThemeProvider, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useReducedMotion } from 'react-native-reanimated';
 import type { ReactNode } from 'react';
 
@@ -118,7 +119,9 @@ export default function RootLayout() {
     return null;
   }
 
+  // GestureHandlerRootView : requis par les gestes (glisser pour supprimer dans l'historique du chat).
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <QueryClientProvider client={queryClient}>
       <SessionProvider>
         <ThemeProvider value={DefaultTheme}>
@@ -137,5 +140,6 @@ export default function RootLayout() {
         </ThemeProvider>
       </SessionProvider>
     </QueryClientProvider>
+    </GestureHandlerRootView>
   );
 }
