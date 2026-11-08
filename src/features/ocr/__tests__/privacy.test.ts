@@ -68,7 +68,7 @@ describe("confidentialité de l'OCR", () => {
 
   it("les fonctions serveur n'utilisent que la clé de l'entreprise : pas de clé globale, pas d'autre fournisseur", () => {
     const functionsDir = path.resolve(SRC, '../supabase/functions');
-    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'chat-m3ak', 'generate-insights', 'scan-document', 'send-invite', 'send-push']);
+    expect(fs.readdirSync(functionsDir).sort()).toEqual(['_shared', 'analyze-inspection', 'chat-live-token', 'chat-m3ak', 'chat-tools', 'generate-insights', 'scan-document', 'send-invite', 'send-push']);
     const read = (file: string) => fs.readFileSync(path.join(functionsDir, file), 'utf8');
 
     const scan = read('scan-document/index.ts');
@@ -87,6 +87,23 @@ describe("confidentialité de l'OCR", () => {
     expect(chat).toContain('supabase.rpc(call.fn'); // les outils s'exécutent avec le JWT de l'utilisateur (RLS)
     expect(chat).not.toMatch(/admin\.rpc|admin\.from\('(rentals|customers|vehicles|damages)'/);
 
+    // Mode vocal temps réel : jeton éphémère verrouillé (la clé de l'entreprise ne quitte jamais le serveur) et outils avec les droits de l'utilisateur.
+    const liveToken = read('chat-live-token/index.ts');
+    expect(liveToken).toContain("from('agency_ocr_settings')");
+    expect(liveToken).toContain('settings.chat_enabled');
+    expect(liveToken).toContain('liveConnectConstraints'); // modèle, consigne, voix et outils verrouillés dans le jeton
+    expect(liveToken).toContain('uses: 1');
+    expect(liveToken).toContain('liveAllowance'); // limites de minutes
+    expect(liveToken).not.toMatch(/json\(\{[^}]*(apiKey|gemini_api_key)/); // jamais la clé dans une réponse
+    expect(liveToken).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
+
+    const liveTools = read('chat-tools/index.ts');
+    expect(liveTools).toContain('settings?.chat_enabled'); // chat désactivé : aucun outil
+    expect(liveTools).toContain('supabase.rpc(call.fn'); // JWT de l'utilisateur (RLS)
+    expect(liveTools).toContain('resultForRole'); // mêmes filtres de montants que le chat écrit
+    expect(liveTools).toContain('LIVE_TOOLS'); // liste blanche d'outils
+    expect(liveTools).not.toMatch(/admin\.rpc|admin\.from\('(rentals|customers|vehicles|damages)'|gemini_api_key/);
+
     const insights = read('generate-insights/index.ts');
     expect(insights).toContain("from('agency_ocr_settings')");
     expect(insights).toContain('settings.insights_enabled');
@@ -102,7 +119,7 @@ describe("confidentialité de l'OCR", () => {
     expect(gemini).toContain('discoverModels'); // les noms de modèles ne sont pas figés : liste demandée à Google
     expect(gemini).not.toContain('gemini-2.0-flash'); // modèle retiré par Google
 
-    for (const code of [scan, inspection, insights, gemini]) {
+    for (const code of [scan, inspection, insights, gemini, liveToken, liveTools]) {
       expect(code).not.toMatch(/Deno\.env\.get\('(GEMINI|ANTHROPIC|OPENAI)/);
       expect(code).not.toMatch(/api\.anthropic\.com|api\.openai\.com|vision\.googleapis|textract/i);
       expect(code).not.toMatch(/console\.\w+\([^)]*(apiKey|imageBase64|payload)/);

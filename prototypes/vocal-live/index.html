@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://esm.sh https://cdn.jsdelivr.net; style-src 'self'; connect-src 'self' https://*.supabase.co https://esm.sh wss://generativelanguage.googleapis.com https://generativelanguage.googleapis.com; img-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; base-uri 'none'; form-action 'none'" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>BIBIP — Test vocal temps réel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main>
+    <header>
+      <p class="badge">PROTOTYPE · test interne</p>
+      <h1>BIBIP vocal temps réel</h1>
+      <p class="muted">Parlez naturellement, sans appuyer sur Envoyer. Interrompez BIBIP à tout moment. Un casque ou des écouteurs évitent l'écho. L'audio n'est pas enregistré.</p>
+    </header>
+
+    <form id="login" class="card" autocomplete="on">
+      <h2>Connexion</h2>
+      <label>E-mail <input id="email" type="email" autocomplete="username" required /></label>
+      <label>Mot de passe <input id="password" type="password" autocomplete="current-password" required /></label>
+      <p id="login-error" class="error" role="alert" hidden></p>
+      <button class="btn" type="submit">Se connecter</button>
+    </form>
+
+    <section id="panel" hidden>
+      <div class="bar">
+        <span id="who" class="muted"></span>
+        <button id="logout" class="link" type="button">Se déconnecter</button>
+      </div>
+
+      <div class="card">
+        <div class="row">
+          <label>Voix
+            <select id="voice">
+              <option value="Aoede">Aoede</option>
+              <option value="Kore">Kore</option>
+              <option value="Puck">Puck</option>
+              <option value="Charon">Charon</option>
+              <option value="Fenrir">Fenrir</option>
+              <option value="Leda">Leda</option>
+              <option value="Orus">Orus</option>
+              <option value="Zephyr">Zephyr</option>
+            </select>
+          </label>
+          <p class="muted small" id="meta">Modèle : — · Rôle : —</p>
+        </div>
+
+        <div class="stage">
+          <div id="orb" class="orb" data-state="idle" aria-hidden="true"><i></i><i></i><i></i></div>
+          <p id="status" class="status" role="status" aria-live="polite">Prêt</p>
+          <p id="timer" class="muted small" hidden></p>
+        </div>
+
+        <div class="controls">
+          <button id="start" class="btn big" type="button">Parler</button>
+          <button id="mute" class="btn round" type="button" hidden aria-pressed="false">Couper le micro</button>
+          <button id="stop" class="btn danger" type="button" hidden>Terminer</button>
+        </div>
+        <p id="error" class="error" role="alert" hidden></p>
+      </div>
+
+      <div class="card">
+        <h2>Sous-titres</h2>
+        <div id="captions" class="captions" aria-live="polite"></div>
+        <div id="cards" class="cards"></div>
+      </div>
+
+      <div class="card metrics">
+        <h2>Mesures</h2>
+        <dl>
+          <dt>Latence (fin de ma voix → 1er son)</dt><dd id="m-latency">—</dd>
+          <dt>Médiane des latences</dt><dd id="m-median">—</dd>
+          <dt>Interruption (ma voix → arrêt de BIBIP)</dt><dd id="m-interrupt">—</dd>
+          <dt>Durée de la session</dt><dd id="m-duration">—</dd>
+          <dt>Tokens entrée / sortie</dt><dd id="m-tokens">—</dd>
+          <dt>Coût estimé (tarif audio 3 $ / 12 $ par million)</dt><dd id="m-cost">—</dd>
+        </dl>
+        <p class="muted small">La latence comprend la détection de fin de phrase (≈ 0,5 s réglée côté serveur). Le coût applique le tarif audio à tous les tokens : estimation haute. La facture réelle est celle de Google.</p>
+        <pre id="debug" class="debug" hidden></pre>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
