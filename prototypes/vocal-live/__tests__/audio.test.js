@@ -1,4 +1,4 @@
-const { FluencyTracker, base64ToInt16, estimateCostUsd, formatClock, int16ToBase64, liveErrorMessage, median, pcm16ToFloat32, resampleToPcm16, rmsLevel } = require('../audio.js');
+const { FluencyTracker, base64ToInt16, estimateCostUsd, formatClock, int16ToBase64, liveErrorMessage, median, pcm16ToFloat32, resampleToPcm16, rmsLevel, summarizeUsage } = require('../audio.js');
 
 describe('conversion audio', () => {
   it('48 kHz → 16 kHz : trois fois moins d’échantillons, valeurs conservées', () => {
@@ -83,5 +83,17 @@ describe('coût, minuteur, messages', () => {
     expect(liveErrorMessage({ error: 'live_unavailable', detail: 'migration_0064_missing' })).toContain('0064');
     expect(liveErrorMessage({ error: 'chat_disabled' })).toContain('activé');
     expect(liveErrorMessage(null)).toContain('Impossible');
+  });
+});
+
+describe('totaux d’usage (relevés par tour, non cumulés)', () => {
+  const turn = (prompt, response, thoughts, text, audio, out) => ({ promptTokenCount: prompt, responseTokenCount: response, thoughtsTokenCount: thoughts, promptTokensDetails: [{ modality: 'TEXT', tokenCount: text }, { modality: 'AUDIO', tokenCount: audio }], responseTokensDetails: [{ modality: 'AUDIO', tokenCount: out }] });
+  it('additionne les tours, la réflexion compte en sortie, répartition par type', () => {
+    const total = summarizeUsage([turn(4521, 32, 48, 3469, 837, 32), turn(5000, 200, 0, 3900, 1000, 200)]);
+    expect(total).toEqual({ inputTokens: 9521, outputTokens: 280, textIn: 7369, audioIn: 1837, audioOut: 232, thoughts: 48, turns: 2 });
+  });
+  it('tolère des relevés incomplets', () => {
+    expect(summarizeUsage([{}, { promptTokenCount: 10 }])).toEqual({ inputTokens: 10, outputTokens: 0, textIn: 0, audioIn: 0, audioOut: 0, thoughts: 0, turns: 2 });
+    expect(summarizeUsage([]).turns).toBe(0);
   });
 });

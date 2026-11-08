@@ -7,7 +7,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 import { GoogleGenAI, Modality } from 'https://esm.sh/@google/genai@3.0.0';
 
 import { SUPABASE_ANON_KEY, SUPABASE_URL } from './config.js';
-import { base64ToInt16, estimateCostUsd, FluencyTracker, formatClock, int16ToBase64, liveErrorMessage, median, MIC_RATE, OUT_RATE, pcm16ToFloat32, resampleToPcm16, rmsLevel } from './audio.js';
+import { base64ToInt16, estimateCostUsd, FluencyTracker, formatClock, int16ToBase64, liveErrorMessage, median, MIC_RATE, OUT_RATE, pcm16ToFloat32, resampleToPcm16, rmsLevel, summarizeUsage } from './audio.js';
 
 const SILENCE_CUTOFF_MS = 30_000; // coupure après 30 s sans parole (ni de ma part, ni de BIBIP)
 
@@ -203,7 +203,7 @@ function handleMessage(message) {
         const latency = live.tracker.botAudio(now);
         if (latency !== null) {
           el.latency.textContent = `${Math.round(latency)} ms`;
-          el.median.textContent = `${median(live.tracker.latencies)} ms (${live.tracker.latencies.length})`;
+          el.median.textContent = `${Math.round(median(live.tracker.latencies))} ms (${live.tracker.latencies.length} mesures)`;
         }
         live.lastActivity = Date.now();
         playChunk(part.inlineData.data);
@@ -218,14 +218,15 @@ function handleMessage(message) {
   }
   if (message.toolCall) void handleToolCall(message.toolCall);
   if (message.usageMetadata) {
-    const usage = message.usageMetadata;
-    // On suppose des totaux cumulés pour la session : on garde la plus grande valeur vue (voir le relevé brut en bas).
-    live.inputTokens = Math.max(live.inputTokens, Number(usage.promptTokenCount) || 0);
-    live.outputTokens = Math.max(live.outputTokens, Number(usage.responseTokenCount) || 0);
-    el.tokens.textContent = `${live.inputTokens} / ${live.outputTokens}`;
-    el.cost.textContent = `${estimateCostUsd(live.inputTokens, live.outputTokens).toFixed(4)} $`;
+    // Un relevé par tour de parole (pas des totaux cumulés) : on les additionne et on garde la liste pour comparer à la facture de Google.
+    live.usages.push(message.usageMetadata);
+    const total = summarizeUsage(live.usages);
+    live.inputTokens = total.inputTokens;
+    live.outputTokens = total.outputTokens;
+    el.tokens.textContent = `${total.inputTokens} / ${total.outputTokens}`;
+    el.cost.textContent = `${estimateCostUsd(total.inputTokens, total.outputTokens).toFixed(4)} $`;
     el.debug.hidden = false;
-    el.debug.textContent = `Dernier relevé de Google : ${JSON.stringify(usage)}`;
+    el.debug.textContent = `${total.turns} relevé(s) de Google · entrée : texte ${total.textIn}, audio ${total.audioIn} · sortie : audio ${total.audioOut}, réflexion ${total.thoughts}\n` + live.usages.map((u, i) => `#${i + 1} ${JSON.stringify(u)}`).join('\n');
   }
   if (message.goAway) showError('Google va fermer la connexion bientôt (durée maximale atteinte).');
 }
@@ -257,7 +258,7 @@ async function startSession() {
     const node = new AudioWorkletNode(ctx, 'mic-processor');
     source.connect(node);
 
-    live = { ctx, stream, node, session: null, sessionId: token.sessionId, maxSeconds: token.maxSeconds, startedAt: Date.now(), lastActivity: Date.now(), muted: false, playing: new Set(), nextTime: 0, turnDone: false, userLine: null, botLine: null, inputTokens: 0, outputTokens: 0, tracker: new FluencyTracker(), ended: false };
+    live = { ctx, stream, node, session: null, sessionId: token.sessionId, maxSeconds: token.maxSeconds, startedAt: Date.now(), lastActivity: Date.now(), muted: false, playing: new Set(), nextTime: 0, turnDone: false, userLine: null, botLine: null, inputTokens: 0, outputTokens: 0, usages: [], tracker: new FluencyTracker(), ended: false };
 
     const ai = new GoogleGenAI({ apiKey: token.token, httpOptions: { apiVersion: 'v1alpha' } });
     const current = live;

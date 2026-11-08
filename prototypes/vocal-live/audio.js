@@ -144,3 +144,23 @@ export function liveErrorMessage(body) {
       return 'Impossible de démarrer le mode vocal.';
   }
 }
+
+/**
+ * Totaux d'une session à partir des relevés « usageMetadata » reçus de Google (un par tour de parole, pas des totaux cumulés :
+ * constaté en test, la valeur baisse d'un relevé à l'autre). Le contexte (consigne, outils, historique) est recompté à chaque tour.
+ * Sortie = réponse + réflexion. Rend aussi la répartition par type (texte / audio) pour comprendre d'où vient le coût.
+ */
+export function summarizeUsage(list) {
+  const sum = { inputTokens: 0, outputTokens: 0, textIn: 0, audioIn: 0, audioOut: 0, thoughts: 0, turns: list.length };
+  const detail = (items, modality) => (Array.isArray(items) ? items : []).filter((item) => item?.modality === modality).reduce((total, item) => total + (Number(item.tokenCount) || 0), 0);
+  for (const usage of list) {
+    const thoughts = Number(usage?.thoughtsTokenCount) || 0;
+    sum.inputTokens += Number(usage?.promptTokenCount) || 0;
+    sum.outputTokens += (Number(usage?.responseTokenCount) || 0) + thoughts;
+    sum.thoughts += thoughts;
+    sum.textIn += detail(usage?.promptTokensDetails, 'TEXT');
+    sum.audioIn += detail(usage?.promptTokensDetails, 'AUDIO');
+    sum.audioOut += detail(usage?.responseTokensDetails, 'AUDIO');
+  }
+  return sum;
+}
