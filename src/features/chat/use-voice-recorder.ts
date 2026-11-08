@@ -53,11 +53,11 @@ export function useVoiceRecorder() {
   const start = useCallback(async (): Promise<StartResult> => {
     const permission = await AudioModule.requestRecordingPermissionsAsync();
     if (!permission.granted) return permission.canAskAgain ? 'denied' : 'blocked';
-    // Respecte le mode silencieux pour tout ce que l'app lit toute seule ; l'enregistrement, lui, doit être autorisé.
+    // iOS impose « playsInSilentMode: true » dès qu'on enregistre (sinon : « Impossible audio mode »).
     try {
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: false, interruptionMode: 'duckOthers' });
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true, interruptionMode: 'duckOthers' });
     } catch {
-      await setAudioModeAsync({ allowsRecording: true });
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
     }
     try {
       await recorder.prepareToRecordAsync();
