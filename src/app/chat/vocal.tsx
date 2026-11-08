@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -11,6 +12,7 @@ import { Brand, Palette } from '@/constants/theme';
 import { useSession } from '@/features/auth/session-context';
 import { chatErrorMessageKey, transcribeAudio, uploadVoiceMessage } from '@/features/chat/api';
 import { useAskChat } from '@/features/chat/hooks';
+import { Endpointer } from '@/features/chat/endpoint';
 import { detectMessageLanguage } from '@/features/chat/language';
 import { VoiceQueue } from '@/features/chat/natural-voice';
 import { takeSentences } from '@/features/chat/stream';
@@ -53,6 +55,8 @@ export default function VoiceModeScreen() {
   // Lecture à voix naturelle, phrase par phrase ; `turn` change quand l'utilisateur interrompt BIBIP.
   const [voice] = useState(() => new VoiceQueue());
   const turn = useRef(0);
+  // Détection de fin de phrase : un nouveau détecteur à chaque écoute.
+  const endpointer = useRef(new Endpointer());
 
   useEffect(() => {
     AsyncStorage.getItem(SPEAK_KEY).then((v) => v !== null && setSpeakReplies(v === '1')).catch(() => undefined);
@@ -73,6 +77,7 @@ export default function VoiceModeScreen() {
         return;
       }
       setPermission('ok');
+      endpointer.current = new Endpointer();
       setLevels(Array(WAVE_BARS).fill(0));
       setStage('listening');
     } catch (error) {
@@ -175,6 +180,21 @@ export default function VoiceModeScreen() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     if (stage === 'listening' && recorder.ms >= MAX_RECORD_MS) void sendTurn();
   }, [recorder.ms, stage, sendTurn]);
+
+  // Fin de phrase automatique : après la parole, un court silence envoie le message (plus besoin d'appuyer).
+  // Si personne ne parle pendant un moment, l'écoute s'arrête sans rien envoyer.
+  useEffect(() => {
+    if (stage !== 'listening') return;
+    const event = endpointer.current.push(recorder.level, recorder.ms);
+    if (event === 'end') {
+      void Haptics.selectionAsync().catch(() => undefined);
+      void sendTurn();
+    } else if (event === 'no-speech') {
+      void recorder.cancel();
+      setStage('idle');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recorder.level, recorder.ms, stage]);
 
   const cancelRecording = useCallback(async () => {
     await recorder.cancel();
