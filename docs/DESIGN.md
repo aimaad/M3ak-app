@@ -76,3 +76,11 @@ Les captures d'écran ont été prises en exportant l'app en version web (`npx e
 
 - **Boutons d'ajout** : plus de bouton flottant orange sur Flotte et Clients, mais un « + » graphite dans un cercle de 44 px en haut à droite (`HeaderAddButton`) ; le seul bouton orange est le « + » de la barre (nouvelle location). Équipe est un écran empilé (`/equipe`, bouton retour), ouvert depuis le menu du profil.
 - **Données de démonstration** : `scripts/demo-seed/dataset.mjs` (jeu fictif : retards, impayés, document expiré, entretiens en retard, locations à venir) et `scripts/seed-demo.mjs` (insertion dans une base de TEST uniquement ; refuse toute adresse non locale sans `ALLOW_DEMO_SEED=oui`).
+
+## Chat BIBIP : historique et conversation
+Références : `docs/design/chat-historique-reference.html`, `chat-conversation-reference.html`, `chat-vocal-reference.html`.
+- **Historique** (`src/app/chat/index.tsx`) : carte sombre « Bonjour {prénom} » avec champ de question, recherche (titres + messages), conversations groupées (`history.ts`), glisser pour supprimer avec « Annuler » 5 s (`deferred-delete.ts`), appui long = Renommer / Supprimer. Titres générés par `titles.ts`. Les conversations vides sont ignorées.
+- **Conversation** (`src/app/chat/[id].tsx`) : bulles (utilisateur graphite, BIBIP gris), séparateurs de date, **cartes de données** (véhicules libres, locations) construites par le serveur à partir des résultats réels des outils (`buildCards`, jamais du texte du modèle), « Écouter » (voix du téléphone, pas pour la darija en lettres latines) / « Copier », suggestions d'actions déduites de la carte, erreur + « Réessayer ».
+- **Rôles** : le serveur retire tous les champs d'argent des résultats d'outils pour le responsable et l'employé (`resultForRole`, `redactMoney`), masque un montant écrit par le modèle (`redactMoneyText`) et ajoute une consigne au modèle ; l'outil « finance » est réservé au propriétaire.
+- **Doublons** : l'app crée l'identifiant d'une conversation neuve (`uuid.ts`) ; le serveur n'enregistre la conversation qu'avec sa réponse.
+- **Base** : `0061_chat_history.sql` (`chat_search`), `0062_chat_cards.sql` (colonne `cards`) ; nettoyage manuel : `supabase/maintenance/chat-empty-conversations.sql`.

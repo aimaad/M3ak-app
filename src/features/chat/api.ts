@@ -2,7 +2,7 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 
 import { getSupabase } from '@/lib/supabase';
 
-import type { ChatAnswer, ChatConversation, ChatMessage, ChatSource } from './types';
+import type { ChatAnswer, ChatCard, ChatCardItem, ChatConversation, ChatMessage, ChatSource } from './types';
 
 export type ChatErrorCode = 'chat_disabled' | 'ocr_not_configured' | 'ocr_busy' | 'ocr_quota' | 'ocr_timeout' | 'chat_limit' | 'chat_no_answer' | 'ocr_failed' | 'unavailable';
 
@@ -23,6 +23,34 @@ export function parseSources(raw: unknown): ChatSource[] {
     return source.type === 'rental' && typeof source.id === 'string' && typeof source.label === 'string'
       ? [{ type: 'rental' as const, id: source.id, label: source.label }]
       : [];
+  });
+}
+
+const TONES = ['free', 'late', 'rented', 'pending'] as const;
+const text = (value: unknown): string | null => (typeof value === 'string' && value ? value : null);
+
+/** Relit les cartes de données reçues du serveur (défense en profondeur : forme vérifiée avant affichage). */
+export function parseCards(raw: unknown): ChatCard[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry) => {
+    const card = (typeof entry === 'object' && entry !== null ? entry : {}) as Record<string, unknown>;
+    if ((card.type !== 'vehicles' && card.type !== 'rentals') || !Array.isArray(card.items)) return [];
+    const items = card.items.flatMap((item): ChatCardItem[] => {
+      const row = (typeof item === 'object' && item !== null ? item : {}) as Record<string, unknown>;
+      const id = text(row.id);
+      const title = text(row.title);
+      if (!id || !title || (row.kind !== 'vehicle' && row.kind !== 'rental')) return [];
+      return [{
+        kind: row.kind,
+        id,
+        title,
+        plate: text(row.plate),
+        customer: text(row.customer),
+        date: text(row.date),
+        tone: (TONES as readonly unknown[]).includes(row.tone) ? (row.tone as ChatCardItem['tone']) : 'rented',
+      }];
+    });
+    return items.length ? [{ type: card.type, items: items.slice(0, 8) }] : [];
   });
 }
 
@@ -56,9 +84,9 @@ export async function askChat(input: {
     }
     throw new ChatError('unavailable');
   }
-  const body = data as { ok?: boolean; error?: unknown; conversationId?: unknown; answer?: unknown; sources?: unknown } | null;
+  const body = data as { ok?: boolean; error?: unknown; conversationId?: unknown; answer?: unknown; sources?: unknown; cards?: unknown } | null;
   if (body?.ok && typeof body.conversationId === 'string' && typeof body.answer === 'string') {
-    return { conversationId: body.conversationId, answer: body.answer, sources: parseSources(body.sources) };
+    return { conversationId: body.conversationId, answer: body.answer, sources: parseSources(body.sources), cards: parseCards(body.cards) };
   }
   throw new ChatError(asCode(body?.error));
 }
@@ -121,19 +149,20 @@ export async function searchConversationIds(query: string): Promise<string[]> {
   return Array.isArray(data) ? (data as unknown[]).filter((id): id is string => typeof id === 'string') : [];
 }
 
+type MessageRow = { id: string; role: 'user' | 'assistant'; content: string; sources: unknown; cards?: unknown; created_at: string };
+
 export async function listMessages(conversationId: string): Promise<ChatMessage[]> {
-  const { data, error } = await getSupabase()
-    .from('chat_convo_messages')
-    .select('id, role, content, sources, created_at')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
-    .limit(200);
+  const query = (columns: string) => getSupabase().from('chat_convo_messages').select(columns).eq('conversation_id', conversationId).order('created_at', { ascending: true }).limit(200);
+  let { data, error } = await query('id, role, content, sources, cards, created_at');
+  // Colonne « cards » pas encore installée (migration 0062) : on relit sans.
+  if (error && (error.code === '42703' || error.code === 'PGRST204')) ({ data, error } = await query('id, role, content, sources, created_at'));
   if (error) throw error;
-  return ((data ?? []) as { id: string; role: 'user' | 'assistant'; content: string; sources: unknown; created_at: string }[]).map((row) => ({
+  return ((data ?? []) as unknown as MessageRow[]).map((row) => ({
     id: row.id,
     role: row.role,
     content: row.content,
     sources: parseSources(row.sources),
+    cards: parseCards(row.cards),
     createdAt: row.created_at,
   }));
 }

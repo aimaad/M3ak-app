@@ -2667,6 +2667,42 @@
       "retry": "Réessayer",
       "rowA11y": "{{title}}, {{time}}",
       "back": "Retour"
+    },
+    "convo": {
+      "back": "Retour à l'historique",
+      "newConversation": "Nouvelle conversation",
+      "menu": "Plus d'options",
+      "rename": "Renommer",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer cette conversation ?",
+      "deleteBody": "Elle disparaîtra de votre historique.",
+      "respondsIn": {
+        "fr": "BIBIP · répond en français",
+        "ar": "BIBIP · répond en arabe",
+        "darija": "BIBIP · répond en darija"
+      },
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "placeholder": "Écrire à BIBIP…",
+      "send": "Envoyer",
+      "mic": "Parler à BIBIP",
+      "listen": "Écouter",
+      "stopListening": "Arrêter la lecture",
+      "listenA11y": "Écouter la réponse",
+      "copy": "Copier la réponse",
+      "copied": "Réponse copiée",
+      "book": "Réserver",
+      "view": "Voir",
+      "free": "Libre",
+      "late": "En retard",
+      "bookVehicle": "Réserver {{vehicle}}",
+      "planning": "Voir le planning",
+      "rentals": "Voir les locations",
+      "retry": "Réessayer",
+      "you": "Vous",
+      "bibip": "BIBIP",
+      "typing": "BIBIP écrit",
+      "sources": "Locations citées"
     }
   },
   "access": {

@@ -2771,6 +2771,42 @@
       "retry": "عاود جرب",
       "rowA11y": "{{title}}، {{time}}",
       "back": "رجوع"
+    },
+    "convo": {
+      "back": "رجوع للسجل",
+      "newConversation": "محادثة جديدة",
+      "menu": "خيارات أخرى",
+      "rename": "بدّل السمية",
+      "delete": "مسح",
+      "deleteTitle": "مسح هاد المحادثة؟",
+      "deleteBody": "غادي تختفى من السجل ديالك.",
+      "respondsIn": {
+        "fr": "BIBIP · كيجاوب بالفرنسية",
+        "ar": "BIBIP · كيجاوب بالعربية",
+        "darija": "BIBIP · كيجاوب بالدارجة"
+      },
+      "today": "اليوم",
+      "yesterday": "البارح",
+      "placeholder": "كتب ل BIBIP…",
+      "send": "صيفط",
+      "mic": "هضر مع BIBIP",
+      "listen": "سمع",
+      "stopListening": "وقّف القراءة",
+      "listenA11y": "سمع الجواب",
+      "copy": "نسخ الجواب",
+      "copied": "تنسخ الجواب",
+      "book": "احجز",
+      "view": "شوف",
+      "free": "متوفرة",
+      "late": "متأخرة",
+      "bookVehicle": "احجز {{vehicle}}",
+      "planning": "شوف التخطيط",
+      "rentals": "شوف الكراءات",
+      "retry": "عاود جرب",
+      "you": "نتا",
+      "bibip": "BIBIP",
+      "typing": "BIBIP كيكتب",
+      "sources": "الكراءات المذكورة"
     }
   },
   "access": {

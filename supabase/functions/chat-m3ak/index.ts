@@ -13,7 +13,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 import { callGeminiJson, ProviderHttpError, StageTimeoutError, type Usage } from '../_shared/gemini.ts';
-import { MAX_TOOL_STEPS, parseModelStep, pickSources, seenRentals, systemPrompt, toRpcCall } from './logic.ts';
+import { buildCards, MAX_TOOL_STEPS, parseModelStep, pickSources, redactMoneyText, resultForRole, seenRentals, systemPrompt, toRpcCall, type Role } from './logic.ts';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -87,15 +87,18 @@ Deno.serve(async (request: Request) => {
 
   let userId: string;
   let agencyId: string;
+  let role: Role = 'employee';
   let apiKey: string;
   try {
     const { data: userData, error: userError } = await withTimeout('auth', supabase.auth.getUser());
     if (userError || !userData.user) return json({ ok: false, error: 'not_authenticated' }, 401);
     userId = userData.user.id;
 
-    const { data: membership } = await withTimeout('membership', supabase.from('agency_members').select('agency_id').eq('user_id', userId).limit(1).maybeSingle());
+    const { data: membership } = await withTimeout('membership', supabase.from('agency_members').select('agency_id, role').eq('user_id', userId).limit(1).maybeSingle());
     if (!membership) return json({ ok: false, error: 'not_authenticated' }, 401);
     agencyId = membership.agency_id;
+    // Rôle inconnu = le plus restrictif : jamais de montants pour un non-propriétaire.
+    role = membership.role === 'owner' || membership.role === 'manager' ? (membership.role as Role) : 'employee';
 
     const { data: settings } = await withTimeout('settings', admin.from('agency_ocr_settings').select('chat_enabled, gemini_api_key').eq('agency_id', agencyId).maybeSingle());
     if (!settings?.gemini_api_key) return json({ ok: false, error: 'ocr_not_configured' });
@@ -157,8 +160,10 @@ Deno.serve(async (request: Request) => {
 
   const started = Date.now();
   console.log('chat: question reçue', { langue: language, conversation: newConversation ? 'nouvelle' : 'existante' });
-  const prompt = systemPrompt(new Date(), language);
+  const prompt = systemPrompt(new Date(), language, role);
   const results: unknown[] = [];
+  const executed: { tool: string; data: unknown }[] = [];
+  let showHint: string | undefined;
   const transcript: string[] = [];
   let totalUsage: Usage = { inputTokens: 0, outputTokens: 0 };
   let model: string | undefined;
@@ -181,8 +186,9 @@ Deno.serve(async (request: Request) => {
       const next = parseModelStep(result.json);
       console.log('chat: tour', step, next.kind, next.kind === 'tools' ? next.calls.map((c) => c.tool).join(',') : '', `${Date.now() - started} ms`);
       if (next.kind === 'answer') {
-        answer = next.answer;
+        answer = redactMoneyText(next.answer, role);
         sourceIds = next.sourceIds;
+        showHint = next.show;
         break;
       }
       if (next.kind === 'invalid' || step === MAX_TOOL_STEPS) break;
@@ -200,9 +206,12 @@ Deno.serve(async (request: Request) => {
           transcript.push(`Outil ${requested.tool} : indisponible.`);
           continue;
         }
-        results.push(data);
-        console.log('chat: outil', requested.tool, Array.isArray(data) ? `${data.length} lignes` : 'résultat');
-        transcript.push(`Outil ${requested.tool} ${JSON.stringify(requested.args)} → ${JSON.stringify(data).slice(0, 8_000)}`);
+        // Pour le responsable et l'employé : aucun montant ne sort de cette boucle (ni vers le modèle, ni vers l'écran).
+        const visible = resultForRole(requested.tool, data, role);
+        results.push(visible);
+        executed.push({ tool: requested.tool, data: visible });
+        console.log('chat: outil', requested.tool, Array.isArray(visible) ? `${visible.length} lignes` : 'résultat');
+        transcript.push(`Outil ${requested.tool} ${JSON.stringify(requested.args)} → ${JSON.stringify(visible).slice(0, 8_000)}`);
       }
     }
   } catch (error) {
@@ -226,6 +235,8 @@ Deno.serve(async (request: Request) => {
 
   console.log('chat: réponse prête', `${Date.now() - started} ms`);
   const sources = pickSources(sourceIds, seenRentals(results));
+  // Cartes de données : lignes réelles des outils, jamais du texte du modèle.
+  const cards = buildCards(executed, showHint);
   try {
     if (newConversation) {
       const { error: createError } = await withTimeout(
@@ -237,14 +248,14 @@ Deno.serve(async (request: Request) => {
         return json({ ok: false, error: 'chat_save_failed' });
       }
     }
-    // Les deux lignes ont les mêmes colonnes (« sources » est obligatoire en base).
-    const saved = await withTimeout(
-      'save',
-      supabase.from('chat_convo_messages').insert([
-        { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'user', content: question, sources: [] },
-        { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'assistant', content: answer, sources },
-      ])
-    );
+    // Les deux lignes ont les mêmes colonnes (« sources » est obligatoire en base). `cards` existe depuis la migration 0062 :
+    // si elle n'est pas encore appliquée, on enregistre sans (la réponse reste affichée avec ses cartes).
+    const rows = (withCards: boolean) => [
+      { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'user', content: question, sources: [], ...(withCards ? { cards: [] } : {}) },
+      { conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: 'assistant', content: answer, sources, ...(withCards ? { cards } : {}) },
+    ];
+    let saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(true)));
+    if (saved.error?.code === '42703' || saved.error?.code === 'PGRST204') saved = await withTimeout('save', supabase.from('chat_convo_messages').insert(rows(false)));
     if (saved.error) console.error('chat: historique non enregistré', saved.error.code, saved.error.message);
     await withTimeout('save', supabase.from('chat_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId));
   } catch (error) {
@@ -252,5 +263,5 @@ Deno.serve(async (request: Request) => {
     console.error('chat: historique non enregistré', error instanceof Error ? error.message : 'erreur');
   }
   await recordUsage(admin, agencyId, true, undefined, model, totalUsage);
-  return json({ ok: true, conversationId, answer, sources });
+  return json({ ok: true, conversationId, answer, sources, cards });
 });

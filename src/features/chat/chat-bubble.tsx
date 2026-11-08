@@ -2,88 +2,128 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { Animated, Easing, Pressable, View } from 'react-native';
 
-import { ThemedText } from '@/components/themed-text';
-import { Shadows, Brand, Palette } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
+import { ArrowIcon, HText } from '@/features/dashboard/home-ui';
+import { useLanguage } from '@/i18n/use-language';
 
-import type { ChatMessage } from './types';
+import type { ChatCard, ChatCardItem } from './types';
 
-/** Pastille BIBIP : graphite avec une étincelle orange, reconnaissable d'un coup d'œil. */
-export function ChatAvatar({ size = 32 }: { size?: number }) {
+/** Avatar de BIBIP : carré arrondi graphite avec une étincelle orange. */
+export function ChatAvatar({ size = 28 }: { size?: number }) {
   return (
-    <View
-      className="items-center justify-center rounded-full"
-      style={{ width: size, height: size, backgroundColor: Brand.graphite }}
-    >
-      <Ionicons name="sparkles" size={Math.round(size * 0.5)} color={Brand.orangeLight} />
+    <View style={{ width: size, height: size, borderRadius: Math.round(size * 0.32), backgroundColor: Brand.graphite, alignItems: 'center', justifyContent: 'center' }}>
+      <Ionicons name="sparkles-outline" size={Math.round(size * 0.5)} color={Brand.orange} />
     </View>
   );
 }
 
-function formatTime(iso: string): string {
-  if (!iso) return '';
-  const date = new Date(iso);
-  return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+/** Message de l'utilisateur : à droite, graphite, coin bas-droit serré (rayon 20/20/6/20), 272 px au plus. */
+export function UserBubble({ text }: { text: string }) {
+  return (
+    <View style={{ alignSelf: 'flex-end', maxWidth: 272, backgroundColor: Brand.graphite, borderRadius: 20, borderBottomEndRadius: 6, paddingVertical: 12, paddingHorizontal: 14 }}>
+      <HText size={15} color={Brand.white} style={{ lineHeight: 22 }} selectable>
+        {text}
+      </HText>
+    </View>
+  );
 }
+
+/** Séparateur de date centré (« AUJOURD'HUI · 15:42 »). */
+export function DateSeparator({ label }: { label: string }) {
+  return (
+    <View style={{ alignSelf: 'center', backgroundColor: Palette.surface, borderRadius: 10, paddingVertical: 4, paddingHorizontal: 10 }}>
+      <HText weight="semibold" size={11} track={0.1} color={Palette.textSecondary} style={{ lineHeight: 15 }}>
+        {label.toLocaleUpperCase()}
+      </HText>
+    </View>
+  );
+}
+
+const TONE_COLOR: Record<ChatCardItem['tone'], string> = {
+  free: Palette.success,
+  late: Palette.error,
+  rented: Brand.graphite,
+  pending: Brand.parcInspect,
+};
 
 /**
- * Bulle de conversation. Les coins « côté auteur » sont plus serrés (effet de queue) ; les couleurs sont imposées
- * (texte blanc sur violet, texte foncé sur blanc) pour rester lisibles quel que soit le thème du téléphone.
+ * Carte de données dans la bulle : une ligne par véhicule ou location (point de statut, nom, détail, « Réserver → » / « Voir → »).
+ * Les lignes viennent des résultats réels de l'agence, jamais du texte du modèle.
  */
-export function ChatBubble({ message, onOpenSource }: { message: ChatMessage; onOpenSource: (rentalId: string) => void }) {
-  const mine = message.role === 'user';
-  const time = formatTime(message.createdAt);
-
+export function DataCardView({ card, onOpen }: { card: ChatCard; onOpen: (item: ChatCardItem) => void }) {
+  const { t, language } = useLanguage();
+  const locale = language === 'ar' ? 'ar-MA' : 'fr-FR';
   return (
-    <View className={`max-w-[92%] flex-row gap-2 ${mine ? 'items-end self-end' : 'items-start self-start'}`}>
-      {mine ? null : <ChatAvatar size={30} />}
-      <View className="flex-shrink gap-1.5">
-        <View
-          style={[
-            {
-              backgroundColor: mine ? Brand.graphite : Palette.card,
-              borderWidth: mine ? 0 : 1,
-              borderColor: Palette.border,
-              borderRadius: 20,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-            },
-            mine ? { borderBottomEndRadius: 6 } : { borderBottomStartRadius: 6 },
-          ]}
-        >
-          <ThemedText type="default" style={{ color: mine ? Brand.white : Palette.textPrimary }} selectable>
-            {message.content}
-          </ThemedText>
-        </View>
-
-        {!mine && message.sources.length > 0 ? (
-          <View className="flex-row flex-wrap gap-2">
-            {message.sources.map((source) => (
-              <Pressable
-                key={source.id}
-                onPress={() => onOpenSource(source.id)}
-                accessibilityRole="button"
-                className="min-h-8 flex-row items-center gap-1.5 rounded-full border border-border bg-primary-soft px-3 py-1.5"
-              >
-                <Ionicons name="document-text-outline" size={14} color={Brand.graphite} />
-                <ThemedText type="small" style={{ color: Brand.graphite, fontSize: 12, fontWeight: '600' }} numberOfLines={1}>
-                  {source.label}
-                </ThemedText>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-
-        {time ? (
-          <ThemedText type="small" style={{ color: Palette.textMuted, fontSize: 11 }} className={mine ? 'self-end' : 'self-start'}>
-            {time}
-          </ThemedText>
-        ) : null}
-      </View>
+    <View style={{ backgroundColor: Palette.card, borderWidth: 1, borderColor: Palette.border, borderRadius: 14, overflow: 'hidden' }}>
+      {card.items.map((item, index) => {
+        const when = item.date ? new Date(item.date).toLocaleDateString(locale, { weekday: 'short', day: 'numeric', month: 'short' }) : null;
+        const detail = item.kind === 'vehicle' ? [item.plate, t('chat.convo.free')].filter(Boolean).join(' · ') : [item.customer, when].filter(Boolean).join(' · ');
+        return (
+          <Pressable
+            key={item.id}
+            onPress={() => onOpen(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.title}. ${detail}. ${t(item.kind === 'vehicle' ? 'chat.convo.book' : 'chat.convo.view')}`}
+            style={{ minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 12, borderBottomWidth: index === card.items.length - 1 ? 0 : 1, borderBottomColor: Palette.surfaceAlt }}
+          >
+            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: TONE_COLOR[item.tone] }} />
+            <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+              <HText weight="semibold" size={14} numberOfLines={1}>
+                {item.title}
+              </HText>
+              {detail ? (
+                <HText size={12} color={item.tone === 'late' ? Palette.error : Palette.textSecondary} numberOfLines={1}>
+                  {detail}
+                </HText>
+              ) : null}
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <HText weight="semibold" size={13}>
+                {t(item.kind === 'vehicle' ? 'chat.convo.book' : 'chat.convo.view')}
+              </HText>
+              <ArrowIcon color={Palette.primary} size={15} />
+            </View>
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
 
-function Dot({ delay }: { delay: number }) {
+/** Pastille d'action ronde de 32 px (copier) ou allongée (écouter), bordure `border`. */
+export function SmallPill({ icon, label, onPress, a11yLabel, active = false }: { icon: keyof typeof Ionicons.glyphMap; label?: string; onPress: () => void; a11yLabel: string; active?: boolean }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={6}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      style={{ height: 32, minWidth: 32, borderRadius: 16, borderWidth: 1, borderColor: Palette.border, backgroundColor: active ? Palette.surface : Palette.card, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: label ? 10 : 0 }}
+    >
+      <Ionicons name={icon} size={14} color={Brand.graphite} />
+      {label ? (
+        <HText weight="semibold" size={12}>
+          {label}
+        </HText>
+      ) : null}
+    </Pressable>
+  );
+}
+
+/** Pastille de suggestion d'action sous une réponse (34 px). */
+export function ActionPill({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
+      <View style={{ height: 34, borderRadius: 17, borderWidth: 1, borderColor: Palette.border, backgroundColor: Palette.card, paddingHorizontal: 12, justifyContent: 'center' }}>
+        <HText weight="medium" size={13} numberOfLines={1}>
+          {label}
+        </HText>
+      </View>
+    </Pressable>
+  );
+}
+
+function Dot({ delay, shade }: { delay: number; shade: string }) {
   const [progress] = useState(() => new Animated.Value(0));
   useEffect(() => {
     const loop = Animated.loop(
@@ -97,38 +137,23 @@ function Dot({ delay }: { delay: number }) {
     loop.start();
     return () => loop.stop();
   }, [delay, progress]);
-
   return (
     <Animated.View
-      style={{
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: Palette.textMuted,
-        opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.35, 1] }),
-        transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }],
-      }}
+      style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: shade, opacity: progress.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }), transform: [{ translateY: progress.interpolate({ inputRange: [0, 1], outputRange: [0, -4] }) }] }}
     />
   );
 }
 
-/** « M3ak écrit… » : trois points animés dans une bulle, avec le texte d'état à côté. */
-export function TypingBubble({ label }: { label: string }) {
+/** « BIBIP écrit » : avatar + bulle avec trois points animés. */
+export function TypingBubble() {
+  const { t } = useLanguage();
   return (
-    <View className="max-w-[92%] flex-row items-end gap-2 self-start">
-      <ChatAvatar size={30} />
-      <View
-        className="flex-row items-center gap-3 border border-border bg-card px-4 py-3"
-        style={{ borderRadius: 20, borderBottomStartRadius: 6, ...Shadows.card }}
-      >
-        <View className="flex-row items-center gap-1.5">
-          <Dot delay={0} />
-          <Dot delay={160} />
-          <Dot delay={320} />
-        </View>
-        <ThemedText type="small" style={{ color: Palette.textSecondary }}>
-          {label}
-        </ThemedText>
+    <View accessible accessibilityLabel={t('chat.convo.typing')} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-end' }}>
+      <ChatAvatar />
+      <View style={{ backgroundColor: Palette.surface, borderRadius: 20, borderBottomStartRadius: 6, paddingVertical: 14, paddingHorizontal: 16, flexDirection: 'row', gap: 5 }}>
+        <Dot delay={0} shade={Palette.textSecondary} />
+        <Dot delay={160} shade={Palette.textMuted} />
+        <Dot delay={320} shade={Brand.mutedOnDark} />
       </View>
     </View>
   );
