@@ -2027,7 +2027,9 @@
         "error": "Impossible de charger le briefing.",
         "retry": "Réessayer",
         "a11y": "BIBIP, briefing du jour : {{text}}",
-        "openChat": "Demander à BIBIP"
+        "openChat": "Écrire une question à BIBIP",
+        "send": "Envoyer à BIBIP",
+        "chatList": "Ouvrir BIBIP : nouvelle conversation ou historique"
       }
     }
   },

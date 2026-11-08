@@ -2131,7 +2131,9 @@
         "error": "تعذر تحميل الملخص.",
         "retry": "عاود جرب",
         "a11y": "BIBIP، ملخص اليوم : {{text}}",
-        "openChat": "سول BIBIP"
+        "openChat": "كتب سؤال ل BIBIP",
+        "send": "صيفط ل BIBIP",
+        "chatList": "حل BIBIP : محادثة جديدة ولا السجل"
       }
     }
   },

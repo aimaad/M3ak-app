@@ -19,7 +19,7 @@ export function AskBibip({ chatActive, ...card }: { chatActive: boolean } & Reac
     router.push(chatActive ? { pathname: '/chat/[id]', params: { id: 'nouveau', question } } : '/chat');
   return (
     <View style={{ marginTop: -32, gap: 12 }}>
-      <BriefingCard {...card} />
+      <BriefingCard {...card} chatActive={chatActive} />
 
       {/* width 0 + minWidth 100 % : la rangée défile sans jamais élargir l'écran (web). */}
       <View style={{ width: 0, minWidth: '100%' }}>

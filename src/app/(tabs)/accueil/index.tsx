@@ -183,6 +183,7 @@ export default function AccueilScreen() {
       {/* Fond graphite derrière la barre d'état : ses icônes claires restent lisibles même quand l'en-tête a défilé. */}
       <View pointerEvents="none" style={{ position: 'absolute', top: 0, start: 0, end: 0, height: insets.top, backgroundColor: Brand.graphite, zIndex: 10 }} />
       <ScrollView
+        keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ paddingBottom: tabInset }}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetchAll} tintColor={Brand.white} colors={[Palette.primary]} progressViewOffset={insets.top} />}
       >

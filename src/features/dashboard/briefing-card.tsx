@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { Platform, Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Platform, Pressable, TextInput, View } from 'react-native';
 
 import { Brand, HomeFonts, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
@@ -23,14 +24,28 @@ type Props = {
   loading: boolean;
   error: boolean;
   onRetry: () => void;
+  /** L'assistant est actif pour cette entreprise : une question écrite ici est envoyée directement. */
+  chatActive: boolean;
 };
 
 /**
  * Carte « BIBIP » à cheval sur l'en-tête : le briefing du jour en une phrase (construite par des modèles, sans IA), la ligne de
  * priorité, un sélecteur Darija / FR et le champ « Demander à BIBIP… » qui ouvre l'assistant.
  */
-export function BriefingCard({ briefing, lang, onLangChange, updatedAt, loading, error, onRetry }: Props) {
+export function BriefingCard({ briefing, lang, onLangChange, updatedAt, loading, error, onRetry, chatActive }: Props) {
   const { t, language } = useLanguage();
+  const [question, setQuestion] = useState('');
+  const trimmed = question.trim();
+  // Avec une question : on ouvre une nouvelle conversation qui l'envoie tout de suite. Sans question : la page du chat
+  // (nouvelle conversation ou historique).
+  const submit = () => {
+    if (trimmed && chatActive) {
+      router.push({ pathname: '/chat/[id]', params: { id: 'nouveau', question: trimmed } });
+      setQuestion('');
+    } else {
+      router.push('/chat');
+    }
+  };
   const darija = lang === 'darija';
   const time = updatedAt > 0 ? new Date(updatedAt).toLocaleTimeString(language === 'ar' ? 'ar-MA' : 'fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—';
 
@@ -106,20 +121,30 @@ export function BriefingCard({ briefing, lang, onLangChange, updatedAt, loading,
         </View>
       )}
 
-      {/* Champ de question */}
-      <Pressable
-        onPress={() => router.push('/chat')}
-        accessibilityRole="button"
-        accessibilityLabel={t('accueil.home.briefing.openChat')}
-        style={{ height: 48, borderRadius: 14, borderWidth: 1, borderColor: Palette.border, backgroundColor: Palette.surface, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingStart: 14, paddingEnd: 6 }}
-      >
-        <HText size={14} color={Palette.textSecondary} numberOfLines={1} style={{ flexShrink: 1 }}>
-          {t('accueil.home.briefing.ask')}
-        </HText>
-        <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Brand.graphite, alignItems: 'center', justifyContent: 'center' }}>
+      {/* Champ de question : on écrit ici, la flèche (ou « envoyer » du clavier) ouvre le chat. */}
+      <View style={{ height: 48, borderRadius: 14, borderWidth: 1, borderColor: Palette.border, backgroundColor: Palette.surface, flexDirection: 'row', alignItems: 'center', paddingStart: 14, paddingEnd: 6 }}>
+        <TextInput
+          value={question}
+          onChangeText={setQuestion}
+          onSubmitEditing={submit}
+          placeholder={t('accueil.home.briefing.ask')}
+          placeholderTextColor={Palette.textSecondary}
+          returnKeyType="send"
+          maxLength={600}
+          autoCorrect
+          accessibilityLabel={t('accueil.home.briefing.openChat')}
+          style={{ flex: 1, height: 48, fontFamily: language === 'ar' ? HomeFonts.arabic.medium : HomeFonts.text.regular, fontSize: 14, color: Palette.textPrimary, paddingVertical: 0 }}
+        />
+        <Pressable
+          onPress={submit}
+          hitSlop={4}
+          accessibilityRole="button"
+          accessibilityLabel={t(trimmed ? 'accueil.home.briefing.send' : 'accueil.home.briefing.chatList')}
+          style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: Brand.graphite, alignItems: 'center', justifyContent: 'center' }}
+        >
           <ArrowIcon color={Brand.white} size={16} />
-        </View>
-      </Pressable>
+        </Pressable>
+      </View>
     </View>
   );
 }
