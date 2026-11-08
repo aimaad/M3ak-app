@@ -14,6 +14,8 @@ import { AgendaSection } from '@/features/dashboard/agenda-section';
 import { AvailabilitySection } from '@/features/dashboard/availability-section';
 import { buildAvailability, conflicts as availabilityConflicts, freeToday, parcCounts } from '@/features/dashboard/availability';
 import { AskBibip } from '@/features/dashboard/ask-bibip';
+import { buildBriefing } from '@/features/dashboard/briefing';
+import { useBriefingLang } from '@/features/dashboard/use-briefing-lang';
 import { HomeHeader } from '@/features/dashboard/home-header';
 import { HomeNotice, pickNotice, type NoticeKind } from '@/features/dashboard/home-notice';
 import { Skeleton } from '@/features/dashboard/home-ui';
@@ -50,8 +52,9 @@ export default function AccueilScreen() {
   const trialDays = shouldShowTrialBanner(accessQuery.data ?? null) ? daysLeft(accessQuery.data?.accessUntil ?? null) : null;
 
   const [menuOpen, setMenuOpen] = useState(false);
+  const [briefingLang, setBriefingLang] = useBriefingLang(language);
   const [period, setPeriod] = usePersistedPeriod();
-  const { metrics, insightsMetrics, vehicles, customers, maintenanceItems, isError, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics(period);
+  const { metrics, insightsMetrics, vehicles, customers, maintenanceItems, isError, isLoading, updatedAt, isComplete, isRefreshing, refetchAll } = useDashboardMetrics(period);
   const { agencyId: ocrAgencyId, insightsAvailability, chatAvailability } = useOcrSettings();
   const insights = useAiInsights({
     enabled: insightsAvailability === 'active' && isComplete,
@@ -87,6 +90,23 @@ export default function AccueilScreen() {
         stoppedVehicles: metrics.stopped.length,
       }),
     [showMoney, metrics, expiredDocuments, conflictSummary]
+  );
+
+  // Briefing du jour : phrase construite par des modèles à partir des mêmes chiffres que les blocs ci-dessous (aucune IA).
+  const parc = parcCounts(availability);
+  const briefing = useMemo(
+    () =>
+      buildBriefing(briefingLang, {
+        free: freeToday(availability),
+        total: parc.total,
+        late: metrics.activity.lateReturns,
+        insp: availability[0]?.counts.inspectionMaintenance ?? 0,
+        conflicts: conflictSummary.count,
+        unpaid: metrics.outstanding.count,
+        expiredDocs: expiredDocuments,
+        showMoney,
+      }),
+    [briefingLang, availability, parc.total, metrics, conflictSummary, expiredDocuments, showMoney]
   );
 
   // Premiers pas et bandeaux.
@@ -181,7 +201,16 @@ export default function AccueilScreen() {
           onOpenFocus={openFocus}
         />
 
-        <AskBibip chatActive={chatAvailability === 'active'} />
+        <AskBibip
+          chatActive={chatAvailability === 'active'}
+          briefing={briefing}
+          lang={briefingLang}
+          onLangChange={setBriefingLang}
+          updatedAt={updatedAt}
+          loading={isLoading}
+          error={isError || rentalsQuery.isError}
+          onRetry={refetchAll}
+        />
 
         {notice ? (
           <View style={{ marginTop: 12 }}>

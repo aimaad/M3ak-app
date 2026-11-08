@@ -4,14 +4,16 @@
 const DAY = 86400000;
 
 /**
- * @param {{ now?: Date, agencyId: string, branchId?: string|null, id?: (kind: string, n: number) => string, scenario?: 'standard'|'libre' }} options
+ * @param {{ now?: Date, agencyId: string, branchId?: string|null, id?: (kind: string, n: number) => string, scenario?: 'standard'|'libre'|'calme' }} options
  * `scenario: 'libre'` : le parc seul, tout disponible, sans location ni entretien (pour voir un jour sans véhicule occupé).
+ * `scenario: 'calme'` : comme « libre », et sans aucun document expiré (briefing « rien à signaler »).
  * `id(kind, n)` fabrique les identifiants (« v1 » pour des tests lisibles, des UUID pour la vraie base).
  */
 export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, id = (kind, n) => `${kind}${n}`, scenario = 'standard' }) {
   const at = (days) => new Date(now.getTime() + days * DAY).toISOString();
   const day = (days) => at(days).slice(0, 10);
 
+  const empty = scenario === 'libre' || scenario === 'calme';
   const vehicleDefs = [
     ['8921-ب-14', 'Dacia', 'Logan', 2022, 'en_location', 250, 47900],
     ['45123-أ-1', 'Renault', 'Clio 5', 2023, 'en_location', 350, 21200],
@@ -30,13 +32,13 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     marque,
     modele,
     annee,
-    statut: scenario === 'libre' ? 'disponible' : statut,
+    statut: empty ? 'disponible' : statut,
     prix_jour,
     kilometrage,
     carburant: 'diesel',
     // Assurance expirée sur la Peugeot 208 (document expiré à mettre à jour) ; les autres échéances sont lointaines.
     documents: [
-      { type: 'assurance', path: `demo/ass-${i + 1}.png`, uploadedAt: at(-100), expiresAt: i === 2 ? day(-5) : day(60 + i * 20) },
+      { type: 'assurance', path: `demo/ass-${i + 1}.png`, uploadedAt: at(-100), expiresAt: i === 2 && scenario !== 'calme' ? day(-5) : day(60 + i * 20) },
       { type: 'visite_technique', path: `demo/vt-${i + 1}.png`, uploadedAt: at(-100), expiresAt: day(200 + i) },
     ],
   }));
@@ -64,7 +66,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     customer_id: c.id,
     doc_type: 'permis',
     reference: `14/2019/${i + 1}777`,
-    expires_at: i === 2 ? day(-20) : day(400),
+    expires_at: i === 2 && scenario !== 'calme' ? day(-20) : day(400),
   }));
 
   // [numéro, véhicule, client, statut, début (jours), fin (jours), prix total, déjà encaissé]
@@ -84,7 +86,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     [13, 4, 5, 'confirmee', 2, 7, 1400, 0], // Kia Picanto louée à partir de dans 2 jours
     [14, 5, 6, 'confirmee', 1.5, 5, 2600, 0], // Hyundai Tucson louée : avec la Sandero (à confirmer) plus de véhicule libre vers le 3e jour
   ];
-  const rentals = (scenario === 'libre' ? [] : rentalDefs).map(([n, v, c, statut, d1, d2, prix_total, paye]) => {
+  const rentals = (empty ? [] : rentalDefs).map(([n, v, c, statut, d1, d2, prix_total, paye]) => {
     const started = statut === 'en_cours' || statut === 'terminee';
     return {
       id: id('r', n),
@@ -102,7 +104,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
       caution_montant: 2000,
     };
   });
-  const payments = (scenario === 'libre' ? [] : rentalDefs)
+  const payments = (empty ? [] : rentalDefs)
     .filter((d) => d[7] > 0)
     .map(([n, , , , d1, , , paye]) => ({
       id: id('pay', n),
@@ -124,7 +126,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     [2, 'vidange', 'effectuee', -82, 450, -80],
     [5, 'freins', 'effectuee', -62, 950, -60],
   ];
-  const maintenance_items = (scenario === 'libre' ? [] : maintenanceDefs).map(([v, type, statut, ech, cout, interv], i) => ({
+  const maintenance_items = (empty ? [] : maintenanceDefs).map(([v, type, statut, ech, cout, interv], i) => ({
     id: id('m', i + 1),
     agency_id: agencyId,
     vehicle_id: id('v', v),

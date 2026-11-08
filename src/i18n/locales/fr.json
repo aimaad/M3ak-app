@@ -1857,8 +1857,6 @@
       },
       "reports": "Voir tous les rapports",
       "ask": {
-        "title": "Demander à BIBIP",
-        "hint": "Posez une question sur votre agence",
         "late": "Qui est en retard ?",
         "unpaid": "Impayés du mois",
         "tomorrow": "Dispo demain"
@@ -2018,11 +2016,19 @@
         },
         "error": "Impossible de charger les disponibilités.",
         "retry": "Réessayer"
+      },
+      "briefing": {
+        "title": "BIBIP",
+        "updated": "Briefing du jour · {{time}}",
+        "langLabel": "Langue du briefing",
+        "darija": "Darija",
+        "french": "FR",
+        "ask": "Demander à BIBIP…",
+        "error": "Impossible de charger le briefing.",
+        "retry": "Réessayer",
+        "a11y": "BIBIP, briefing du jour : {{text}}",
+        "openChat": "Demander à BIBIP"
       }
-    },
-    "askBibip": {
-      "title": "Demander à BIBIP",
-      "hint": "Qui a pris la voiture ? Quelles voitures reviennent cette semaine ?"
     }
   },
   "maintenance": {

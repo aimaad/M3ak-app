@@ -4,6 +4,7 @@
 //     node scripts/seed-demo.mjs            # crée (ou recrée) l'agence « DEMO — Agence de démonstration »
 //   … node scripts/seed-demo.mjs --reset    # supprime seulement cette agence de démonstration
 //   … node scripts/seed-demo.mjs --scenario=libre   # parc seul, tout disponible (aucune location ni entretien)
+//   … node scripts/seed-demo.mjs --scenario=calme   # idem, sans document expiré (briefing « rien à signaler »)
 //
 // Garde-fous : refuse toute adresse qui n'est pas locale (localhost / 127.0.0.1) sauf si ALLOW_DEMO_SEED=oui est posé
 // explicitement (base de test distante) ; ne touche JAMAIS une autre agence que celle nommée « DEMO — … » ; n'ajoute que des
@@ -62,7 +63,7 @@ const id = (kind, n) => {
   if (!ids.has(key)) ids.set(key, randomUUID());
   return ids.get(key);
 };
-const scenario = process.argv.includes('--scenario=libre') ? 'libre' : 'standard';
+const scenario = process.argv.includes('--scenario=calme') ? 'calme' : process.argv.includes('--scenario=libre') ? 'libre' : 'standard';
 const data = buildDemoDataset({ now: new Date(), agencyId, branchId, id, scenario });
 for (const table of ['vehicles', 'customers', 'customer_documents', 'rentals', 'payments', 'maintenance_items']) {
   check(table, await admin.from(table).insert(data[table]));
