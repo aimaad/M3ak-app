@@ -165,7 +165,10 @@ Deno.serve(async (request: Request) => {
     const hint: VoiceHint = body.hint === 'fr' || body.hint === 'darija' ? body.hint : 'auto';
     try {
       const file = await withTimeout('audio', admin.storage.from('chat-audio').download(path), 20_000);
-      if (file.error || !file.data) return json({ ok: false, error: 'voice_failed' });
+      if (file.error || !file.data) {
+        console.error('Échec de la transcription : audio introuvable dans le stockage', file.error?.message?.slice(0, 160) ?? 'sans données');
+        return json({ ok: false, error: 'voice_failed', detail: 'audio_download' });
+      }
       const bytes = new Uint8Array(await file.data.arrayBuffer());
       if (bytes.length === 0) return json({ ok: false, error: 'voice_unintelligible' });
       if (bytes.length > MAX_AUDIO_BYTES) return json({ ok: false, error: 'voice_too_long' });
