@@ -39,6 +39,7 @@ Elle n'est pas liée à l'app mobile et ne touche ni l'accueil ni Ma Flotte.
 | Durée max d'une session (défaut 600 s) | Secret Supabase `LIVE_SESSION_SECONDS` |
 | Minutes par utilisateur et par jour (défaut 600 s) | Secret `LIVE_USER_DAILY_SECONDS` |
 | Minutes par agence et par jour (défaut 1 800 s) | Secret `LIVE_AGENCY_DAILY_SECONDS` |
+| Niveau de réflexion du modèle (défaut `LOW`) : `MINIMAL`, `LOW`, `MEDIUM` ou `HIGH` | Secret `LIVE_THINKING_LEVEL` (plus bas = plus rapide) |
 | Forcer un modèle Live précis | Secret `LIVE_MODEL` (sinon : le plus récent disponible avec la clé) |
 | Coupure après silence (défaut 30 s) | `SILENCE_CUTOFF_MS` dans `app.js` |
 | Tarif pour le coût estimé | `PRICE_PER_MILLION` dans `audio.js` (et `LIVE_PRICE_PER_MILLION` dans `chat-m3ak/logic.ts`) |

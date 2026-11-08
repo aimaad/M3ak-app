@@ -146,10 +146,11 @@ describe('mode vocal temps réel : modèle, consigne, limites', () => {
     expect(pickLiveModel([model('gemini-2.5-flash', ['generateContent'])])).toBeNull();
     expect(pickLiveModel([])).toBeNull();
   });
-  it('niveau de réflexion : exigé par la famille 3, jamais envoyé aux anciens modèles', () => {
-    expect(liveThinkingConfig('gemini-3.1-flash-live-preview')).toEqual({ thinkingLevel: 'MINIMAL' });
-    expect(liveThinkingConfig('gemini-3-flash-live')).toEqual({ thinkingLevel: 'MINIMAL' });
-    expect(liveThinkingConfig('gemini-2.5-flash-native-audio-preview-12-2025')).toBeUndefined();
+  it('niveau de réflexion : LOW par défaut pour la famille 3 (MINIMAL refusé par Google), réglable, jamais pour les anciens modèles', () => {
+    expect(liveThinkingConfig('gemini-3.1-flash-live-preview')).toEqual({ thinkingLevel: 'LOW' });
+    expect(liveThinkingConfig('gemini-3-flash-live', 'medium')).toEqual({ thinkingLevel: 'MEDIUM' });
+    expect(liveThinkingConfig('gemini-3.1-flash-live-preview', 'nimporte')).toEqual({ thinkingLevel: 'LOW' });
+    expect(liveThinkingConfig('gemini-2.5-flash-native-audio-preview-12-2025', 'HIGH')).toBeUndefined();
     expect(liveThinkingConfig('autre')).toBeUndefined();
   });
   it('n’accepte que les voix de la liste', () => {

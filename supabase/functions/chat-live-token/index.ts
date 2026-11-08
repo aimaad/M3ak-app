@@ -135,7 +135,7 @@ Deno.serve(async (request: Request) => {
   const model = await liveModelFor(apiKey);
   if (!model) return json({ ok: false, error: 'live_unavailable', detail: 'no_live_model' });
   const voice = cleanLiveVoice(body.voice);
-  const thinking = liveThinkingConfig(model);
+  const thinking = liveThinkingConfig(model, Deno.env.get('LIVE_THINKING_LEVEL'));
 
   try {
     const ai = new GoogleGenAI({ apiKey, httpOptions: { apiVersion: 'v1alpha' } });

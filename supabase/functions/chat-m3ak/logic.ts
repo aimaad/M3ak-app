@@ -429,13 +429,20 @@ export function pickLiveModel(models: { name?: string; supportedGenerationMethod
   return names[0] ?? null;
 }
 
+export const THINKING_LEVELS = ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH'] as const;
+export type ThinkingLevelName = (typeof THINKING_LEVELS)[number];
+
 /**
- * Niveau de réflexion à envoyer : les modèles Live de la famille 3 l'exigent (« Thinking level must be specified for this model »).
- * « MINIMAL » = le plus rapide, adapté à la conversation orale. Les modèles plus anciens ne l'acceptent pas : rien n'est envoyé.
+ * Niveau de réflexion à envoyer : les modèles Live de la famille 3 l'exigent (« Thinking level must be specified for this model »)
+ * et refusent « MINIMAL » (« not supported for this model »). Par défaut « LOW » (le plus rapide accepté) ; réglable sans redéployer
+ * par le secret LIVE_THINKING_LEVEL (valeur de la liste) si Google change d'avis. Les modèles plus anciens ne l'acceptent pas : rien n'est envoyé.
  */
-export function liveThinkingConfig(model: string): { thinkingLevel: 'MINIMAL' } | undefined {
+export function liveThinkingConfig(model: string, override?: string): { thinkingLevel: ThinkingLevelName } | undefined {
   const version = Number(/^gemini-(\d+(?:\.\d+)?)/.exec(model)?.[1] ?? 0);
-  return version >= 3 ? { thinkingLevel: 'MINIMAL' } : undefined;
+  if (version < 3) return undefined;
+  const wanted = (override ?? '').trim().toUpperCase();
+  const level = (THINKING_LEVELS as readonly string[]).includes(wanted) ? (wanted as ThinkingLevelName) : 'LOW';
+  return { thinkingLevel: level };
 }
 
 /** Outils du mode vocal (prototype : un seul, la liste des voitures libres). Mêmes noms que le chat écrit. */
