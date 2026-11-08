@@ -1901,7 +1901,13 @@
           "action": "Mettre en avant"
         },
         "a11y_one": "{{count}} {{label}}",
-        "a11y_other": "{{count}} {{label}}"
+        "a11y_other": "{{count}} {{label}}",
+        "conflict": {
+          "label": "CONFLIT",
+          "desc_one": "réservation menacée",
+          "desc_other": "réservations menacées",
+          "action": "Réaffecter un véhicule"
+        }
       },
       "parc": {
         "title": "Parc",
@@ -1965,6 +1971,53 @@
         "signOutTitle": "Se déconnecter ?",
         "signOutBody": "Vous devrez vous reconnecter pour accéder à votre agence.",
         "close": "Fermer le menu"
+      },
+      "avail": {
+        "title": "Disponibilités",
+        "planning": "Planning",
+        "todayShort": "AUJ.",
+        "todayTitle": "Aujourd'hui",
+        "free_one": "{{count}} libre",
+        "free_other": "{{count}} libres",
+        "a11y_one": "{{day}}, {{count}} véhicule libre",
+        "a11y_other": "{{day}}, {{count}} véhicules libres",
+        "legend": {
+          "free": "Libres",
+          "rented": "Louées",
+          "late": "En retard",
+          "inspection": "Inspection / entretien",
+          "unavailable": "Indisponibles"
+        },
+        "freeTitle": "Libres · {{day}}",
+        "busyTitle": "Occupés · {{day}}",
+        "vehicles_one": "{{count}} véhicule",
+        "vehicles_other": "{{count}} véhicules",
+        "freeUntil": "Libre jusqu'au {{day}}",
+        "freeOpen": "Libre, aucune réservation",
+        "book": "Réserver",
+        "noneFree": "Aucun véhicule libre ce jour",
+        "noneBusy": "Tous les véhicules sont libres ce jour",
+        "sub": {
+          "late": "Retour dépassé · client à appeler",
+          "conflict": "Conflit · location prévue le {{day}}",
+          "inspection": "Contrôle avant remise en location",
+          "garage": "Au garage",
+          "planned": "Entretien prévu",
+          "unavailable": "Hors service",
+          "return": "Retour {{day}}",
+          "returnAfter": "Retour après le {{day}}",
+          "toConfirm": "Départ {{day}} · à confirmer"
+        },
+        "chip": {
+          "late": "Retard",
+          "inspection": "Inspection",
+          "maintenance": "Entretien",
+          "unavailable": "Indisponible",
+          "rented": "Louée",
+          "toConfirm": "À confirmer"
+        },
+        "error": "Impossible de charger les disponibilités.",
+        "retry": "Réessayer"
       }
     },
     "askBibip": {

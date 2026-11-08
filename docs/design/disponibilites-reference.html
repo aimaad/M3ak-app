@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Disponibilités vue par jour</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 860px; background: #FFFFFF; font-family: 'Inter', sans-serif; color: #202527; box-sizing: border-box; padding: 28px 20px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+
+<div style="display: flex; justify-content: space-between; align-items: center">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em">DISPONIBILITÉS</span>
+<span style="font-size: 12px; color: #5E6466">Novembre</span>
+</div>
+<a href="#" style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Planning <span style="color: #CA531D">→</span></a>
+</div>
+
+<div style="display: flex; gap: 8px; overflow: hidden; margin-right: -20px">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+<button onClick="{{d.pick}}" aria-pressed="{{d.pressed}}" aria-label="{{d.aria}}" style="{{d.style}}">
+<span style="{{d.letterStyle}}">{{d.letter}}</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 600; line-height: 1">{{d.num}}</span>
+<span style="{{d.countStyle}}">{{d.free}} libres</span>
+</button>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 3px; height: 8px">
+<sc-for list="{{segments}}" as="s" hint-placeholder-count="4">
+<span style="{{s.style}}"></span>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 14px">
+<sc-for list="{{segments}}" as="s" hint-placeholder-count="4">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5E6466"><span style="{{s.dot}}"></span>{{s.label}} <span style="font-weight: 600; color: #202527">{{s.count}}</span></span>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: #1A7F53">LIBRES · {{dayLabel}}</span>
+<span style="font-size: 12px; color: #5E6466">{{freeCount}} véhicules</span>
+</div>
+<div style="display: flex; gap: 10px; overflow: hidden; margin-right: -20px">
+<sc-for list="{{freeCars}}" as="c" hint-placeholder-count="3">
+<a href="#" style="flex-shrink: 0; width: 158px; box-sizing: border-box; border: 1px solid #E2E4E5; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<span style="width: 36px; height: 36px; border-radius: 12px; background: #E3F3EB; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A7F53" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16l1.5-5a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 16"></path><rect x="3" y="16" width="18" height="4" rx="1"></rect></svg>
+</span>
+<span style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+<span style="font-size: 12px; color: #5E6466">{{c.sub}}</span>
+</span>
+<span style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Réserver <span style="color: #CA531D">→</span></span>
+</a>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: #202527">OCCUPÉS · {{dayLabel}}</span>
+<span style="font-size: 12px; color: #5E6466">{{busyCount}} véhicules</span>
+</div>
+<div style="border: 1px solid #E2E4E5; border-radius: 18px; overflow: hidden">
+<sc-for list="{{busyCars}}" as="c" hint-placeholder-count="4">
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid #EDEEEE">
+<span style="{{c.iconBox}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{c.iconColor}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16l1.5-5a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 16"></path><rect x="3" y="16" width="18" height="4" rx="1"></rect></svg>
+</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+<span style="font-size: 12px; color: #5E6466">{{c.sub}}</span>
+</span>
+<span style="{{c.chip}}">{{c.chipLabel}}</span>
+</a>
+</sc-for>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":860}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { day: 0 };
+}
+renderVals() {
+const letters = ['SAM', 'DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN'];
+const nums = [7, 8, 9, 10, 11, 12, 13];
+const longDays = ['sam. 7', 'dim. 8', 'lun. 9', 'mar. 10', 'mer. 11', 'jeu. 12', 'ven. 13'];
+const fleet = [
+{ name: 'Dacia Logan', bars: [{ s: 0, l: 2, t: 'late' }] },
+{ name: 'Troc 2025', bars: [] },
+{ name: 'F1 F1', bars: [] },
+{ name: '[Véhicule 4]', bars: [{ s: 0, l: 1, t: 'insp' }, { s: 3, l: 4, t: 'rent' }] },
+{ name: '[Véhicule 5]', bars: [{ s: 0, l: 3, t: 'rent' }] },
+{ name: '[Véhicule 6]', bars: [{ s: 1, l: 4, t: 'rent' }] },
+{ name: '[Véhicule 7]', bars: [] },
+{ name: '[Véhicule 8]', bars: [{ s: 0, l: 7, t: 'rent' }] },
+{ name: '[Véhicule 9]', bars: [{ s: 0, l: 1, t: 'late' }] },
+{ name: '[Véhicule 10]', bars: [{ s: 2, l: 1, t: 'insp' }] }
+];
+const statusAt = (v, i) => {
+const b = v.bars.find((x) => i >= x.s && i < x.s + x.l);
+return b ? b : null;
+};
+const freeAt = (i) => fleet.filter((v) => !statusAt(v, i)).length;
+const sel = this.state.day;
+const days = nums.map((n, i) => {
+const on = sel === i;
+return {
+letter: i === 0 ? "AUJ." : letters[i],
+num: String(n),
+free: String(freeAt(i)),
+aria: longDays[i] + ', ' + freeAt(i) + ' véhicules libres',
+pressed: on ? 'true' : 'false',
+style: 'flex-shrink: 0; width: 64px; height: 84px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0; ' + (on ? 'background: #202527; color: #FFFFFF; border: 1px solid #202527;' : 'background: #FFFFFF; color: #202527; border: 1px solid #E2E4E5;'),
+letterStyle: 'font-size: 10px; font-weight: 600; letter-spacing: 0.1em; ' + (on ? 'color: #B4BABC;' : (i === 0 ? 'color: #CA531D;' : 'color: #5E6466;')),
+countStyle: 'font-size: 10px; font-weight: 600; border-radius: 8px; padding: 2px 6px; ' + (on ? 'background: #CA531D; color: #FFFFFF;' : 'background: #E3F3EB; color: #1A7F53;'),
+pick: () => this.setState({ day: i })
+};
+});
+const freeCars = [];
+const busy = [];
+fleet.forEach((v) => {
+const st = statusAt(v, sel);
+if (!st) {
+let j = sel;
+while (j < 7 && !statusAt(v, j)) j++;
+freeCars.push({ name: v.name, sub: j >= 7 ? 'Libre toute la semaine' : "Libre jusqu'au " + longDays[j - 1] });
+} else {
+const end = st.s + st.l - 1;
+const kind = st.t;
+const sub = kind === 'late' ? 'Retour dépassé · client à appeler' : kind === 'insp' ? 'Contrôle avant remise en location' : (end >= 6 ? 'Retour après le ven. 13' : 'Retour ' + longDays[end]);
+const look = {
+late: { box: '#FBE6EA', ic: '#C42B4B', chipBg: '#FBE6EA', chipFg: '#C42B4B', label: 'Retard', rank: 0 },
+insp: { box: '#FFF6D6', ic: '#7A5A00', chipBg: '#FFF6D6', chipFg: '#7A5A00', label: 'Inspection', rank: 1 },
+rent: { box: '#F6F6F5', ic: '#202527', chipBg: '#202527', chipFg: '#FFFFFF', label: 'Louée', rank: 2 }
+}[kind];
+busy.push({
+rank: look.rank,
+name: v.name,
+sub,
+iconBox: 'width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: ' + look.box,
+iconColor: look.ic,
+chip: 'font-size: 11px; font-weight: 600; border-radius: 8px; padding: 4px 8px; flex-shrink: 0; background: ' + look.chipBg + '; color: ' + look.chipFg,
+chipLabel: look.label
+});
+}
+});
+busy.sort((a, b) => a.rank - b.rank);
+const counts = { free: freeCars.length, rent: busy.filter((b) => b.rank === 2).length, late: busy.filter((b) => b.rank === 0).length, insp: busy.filter((b) => b.rank === 1).length };
+const segDefs = [['free', 'Libres', '#1A7F53'], ['rent', 'Louées', '#202527'], ['late', 'En retard', '#C42B4B'], ['insp', 'Inspection', '#E0B000']];
+const segments = segDefs.filter(([k]) => counts[k] > 0).map(([k, label, col]) => ({
+label,
+count: String(counts[k]),
+style: 'flex: ' + counts[k] + '; border-radius: 4px; background: ' + col,
+dot: 'width: 8px; height: 8px; border-radius: 4px; background: ' + col
+}));
+return {
+days,
+segments,
+dayLabel: sel === 0 ? "AUJOURD'HUI" : longDays[sel].toUpperCase(),
+freeCount: String(freeCars.length),
+busyCount: String(busy.length),
+freeCars,
+busyCars: busy
+};
+}
+}
+</script>
+</body>
+</html>

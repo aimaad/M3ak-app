@@ -47,6 +47,8 @@ export function useDashboardMetrics(period: DashboardPeriod = 'today') {
     maintenanceItems: maintenance.data ?? EMPTY,
     customers: customers.data ?? EMPTY,
     isLoading: vehicles.isLoading,
+    /** Une des sources de l'accueil n'a pas pu être chargée. */
+    isError: queries.some((q) => q.isError),
     /** Toutes les sources sont chargées : les statistiques sont complètes (utile avant d'appeler l'IA). */
     isComplete: queries.every((q) => q.isSuccess),
     isRefreshing: queries.some((q) => q.isFetching),

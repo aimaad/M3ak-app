@@ -5,7 +5,6 @@ import Animated, { Easing, useAnimatedProps, useReducedMotion, useSharedValue, w
 import Svg, { Circle, G, Line, Path } from 'react-native-svg';
 
 import { Brand, Palette } from '@/constants/theme';
-import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
 
 import { ArrowLink, HText, MicroLabel } from './home-ui';
@@ -66,15 +65,16 @@ export function OccupancyGauge({ rate, label }: { rate: number; label: string })
   );
 }
 
-/** « Parc » : jauge d'occupation, taux, et répartition Disponibles / En location / À inspecter. */
-export function ParcSection({ vehicles, occupancyPct }: { vehicles: Vehicle[]; occupancyPct: number }) {
+/**
+ * « Parc » : jauge d'occupation, taux, et répartition d'AUJOURD'HUI calculée comme le bloc Disponibilités (`parcCounts`) :
+ * Disponibles = libres ; En location = louées, en retard et à confirmer ; À inspecter = inspection, entretien et indisponibles.
+ */
+export function ParcSection({ counts, occupancyPct }: { counts: { free: number; rented: number; toInspect: number; total: number }; occupancyPct: number }) {
   const { t } = useLanguage();
-  const fleet = vehicles.filter((v) => !v.archivedAt);
-  const count = (status: Vehicle['statut']) => fleet.filter((v) => v.statut === status).length;
   const rows = [
-    { key: 'available', color: Palette.success, value: count('disponible') },
-    { key: 'rented', color: Brand.graphite, value: count('en_location') },
-    { key: 'toInspect', color: Brand.parcInspect, value: count('a_inspecter') },
+    { key: 'available', color: Palette.success, value: counts.free },
+    { key: 'rented', color: Brand.graphite, value: counts.rented },
+    { key: 'toInspect', color: Brand.parcInspect, value: counts.toInspect },
   ] as const;
   return (
     <View style={{ gap: 14, paddingHorizontal: 20 }}>
@@ -84,7 +84,7 @@ export function ParcSection({ vehicles, occupancyPct }: { vehicles: Vehicle[]; o
             {t('accueil.home.parc.title')}
           </MicroLabel>
           <HText size={12} color={Palette.textSecondary} numberOfLines={1}>
-            {t('accueil.home.parc.count', { count: fleet.length })}
+            {t('accueil.home.parc.count', { count: counts.total })}
           </HText>
         </View>
         <ArrowLink label={t('accueil.home.parc.see')} onPress={() => router.push('/flotte')} />

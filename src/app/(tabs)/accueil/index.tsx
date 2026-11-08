@@ -11,6 +11,8 @@ import { useAgencyAccess, useAgencyDetails, useMyAgency, useMyProfile } from '@/
 import { useSession } from '@/features/auth/session-context';
 import { customerDocumentAlerts } from '@/features/customers/document-alerts';
 import { AgendaSection } from '@/features/dashboard/agenda-section';
+import { AvailabilitySection } from '@/features/dashboard/availability-section';
+import { buildAvailability, conflicts as availabilityConflicts, freeToday, parcCounts } from '@/features/dashboard/availability';
 import { AskBibip } from '@/features/dashboard/ask-bibip';
 import { HomeHeader } from '@/features/dashboard/home-header';
 import { HomeNotice, pickNotice, type NoticeKind } from '@/features/dashboard/home-notice';
@@ -49,7 +51,7 @@ export default function AccueilScreen() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [period, setPeriod] = usePersistedPeriod();
-  const { metrics, insightsMetrics, vehicles, customers, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics(period);
+  const { metrics, insightsMetrics, vehicles, customers, maintenanceItems, isError, isLoading, isComplete, isRefreshing, refetchAll } = useDashboardMetrics(period);
   const { agencyId: ocrAgencyId, insightsAvailability, chatAvailability } = useOcrSettings();
   const insights = useAiInsights({
     enabled: insightsAvailability === 'active' && isComplete,
@@ -67,17 +69,24 @@ export default function AccueilScreen() {
       [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles)].filter((alert) => alert.urgency === 'expire').length,
     [customers, vehicles]
   );
+  // Disponibilités sur 7 jours : UN SEUL calcul alimente la pastille de l'en-tête, le Parc et le bloc Disponibilités.
+  const availability = useMemo(
+    () => buildAvailability({ vehicles, rentals: rentalsQuery.data ?? [], maintenance: maintenanceItems, now: new Date() }),
+    [vehicles, rentalsQuery.data, maintenanceItems]
+  );
+  const conflictSummary = useMemo(() => availabilityConflicts(availability), [availability]);
   const priorities = useMemo(
     () =>
       buildPriorities({
         showMoney,
         lateReturns: metrics.activity.lateReturns,
+        conflicts: conflictSummary,
         unpaid: metrics.outstanding,
         expiredDocuments,
         overdueMaintenance: metrics.maintenance.overdue,
         stoppedVehicles: metrics.stopped.length,
       }),
-    [showMoney, metrics, expiredDocuments]
+    [showMoney, metrics, expiredDocuments, conflictSummary]
   );
 
   // Premiers pas et bandeaux.
@@ -162,7 +171,7 @@ export default function AccueilScreen() {
           initials={getInitials(fullName ?? prenom)}
           agencyName={agencyQuery.data.agencyName}
           avatarPath={profileQuery.data?.photoPath}
-          availableNow={metrics.availableNow}
+          availableNow={freeToday(availability)}
           period={period}
           onPeriodChange={setPeriod}
           metrics={metrics}
@@ -183,13 +192,15 @@ export default function AccueilScreen() {
         {isLoading ? (
           <View style={{ marginTop: 30, paddingHorizontal: 20, gap: 30 }}>
             <Skeleton height={168} radius={22} />
+            <Skeleton height={84} radius={18} />
             <Skeleton height={116} radius={22} />
             <Skeleton height={68} radius={18} />
           </View>
         ) : (
           <View style={{ marginTop: 30, gap: 30 }}>
             <PrioritiesSection priorities={priorities} aiTime={aiTime} />
-            <ParcSection vehicles={vehicles} occupancyPct={metrics.occupancyPct} />
+            <AvailabilitySection days={availability} error={isError || rentalsQuery.isError} onRetry={refetchAll} />
+            <ParcSection counts={parcCounts(availability)} occupancyPct={metrics.occupancyPct} />
             <AgendaSection
               rentals={rentalsQuery.data ?? []}
               customers={customers}

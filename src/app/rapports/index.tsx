@@ -8,11 +8,13 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
+import { buildAvailability, conflicts as availabilityConflicts } from '@/features/dashboard/availability';
+import { useRentals } from '@/features/rentals/hooks';
 import { AiInsightsSection } from '@/features/dashboard/ai-insights-section';
 import { formatAmount, HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useAiInsights, useDashboardMetrics } from '@/features/dashboard/hooks';
 import { DASHBOARD_PERIODS, type DashboardPeriod } from '@/features/dashboard/kpis';
-import { buildPriorities, PRIORITY_ROUTE } from '@/features/dashboard/priorities';
+import { buildPriorities, priorityHref } from '@/features/dashboard/priorities';
 import { canSeeMoney, canUseAiInsights } from '@/features/dashboard/role-layout';
 import { FinancialSection, FleetSection, MaintenanceSummaryRow, OperationsSection, PerformanceSection } from '@/features/dashboard/sections';
 import { usePersistedPeriod } from '@/features/dashboard/use-persisted-period';
@@ -58,9 +60,15 @@ export default function RapportsScreen() {
     () => [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles)].filter((a) => a.urgency === 'expire').length,
     [customers, vehicles]
   );
+  const rentalsQuery = useRentals();
+  const conflicts = useMemo(
+    () => availabilityConflicts(buildAvailability({ vehicles, rentals: rentalsQuery.data ?? [], maintenance: maintenanceItems, now: new Date() })),
+    [vehicles, rentalsQuery.data, maintenanceItems]
+  );
   const priorities = buildPriorities({
     showMoney: canSeeMoney(role),
     lateReturns: metrics.activity.lateReturns,
+    conflicts,
     unpaid: metrics.outstanding,
     expiredDocuments,
     overdueMaintenance: metrics.maintenance.overdue,
@@ -170,7 +178,7 @@ export default function RapportsScreen() {
                     return (
                       <Pressable
                         key={p.kind}
-                        onPress={() => router.push(PRIORITY_ROUTE[p.kind] as never)}
+                        onPress={() => router.push(priorityHref(p) as never)}
                         accessibilityRole="button"
                         style={{ minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, borderColor: Palette.border, borderRadius: 18, padding: 14, backgroundColor: Palette.card }}
                       >

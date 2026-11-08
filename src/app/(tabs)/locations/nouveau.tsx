@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -42,12 +42,17 @@ export default function NouvelleLocationScreen() {
   const customersQuery = useCustomers();
   const createRental = useCreateRental();
 
-  const [pickedVehicle, setPickedVehicle] = useState<Vehicle | null>(null);
+  // Venu des Disponibilités de l'accueil : ?vehicleId=…&date=AAAA-MM-JJ pré-remplit le véhicule et le jour de départ. Sans ces
+  // paramètres (ou s'ils sont invalides), rien ne change. `undefined` = pas encore choisi à la main : on prend le pré-remplissage.
+  const params = useLocalSearchParams<{ vehicleId?: string; date?: string }>();
+  const [pickedState, setPickedVehicle] = useState<Vehicle | null | undefined>(undefined);
+  const prefillVehicle = params.vehicleId ? vehiclesQuery.data?.find((v) => v.id === params.vehicleId && !v.archivedAt) : undefined;
+  const pickedVehicle = pickedState === undefined ? (prefillVehicle ?? null) : pickedState;
   const [vehicleQuery, setVehicleQuery] = useState('');
   const [showUnavailable, setShowUnavailable] = useState(false);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [driversSelection, setDriversSelection] = useState<RentalDriversSelection>(EMPTY_DRIVERS_SELECTION);
-  const [range, setRange] = useState<DateRangeValue>({ start: null, end: null });
+  const [range, setRange] = useState<DateRangeValue>(() => ({ start: /^\d{4}-\d{2}-\d{2}$/.test(params.date ?? '') ? (params.date as string) : null, end: null }));
   const [heureDepart, setHeureDepart] = useState('09:00');
   const [heureRetour, setHeureRetour] = useState('18:00');
   const [lieuDepart, setLieuDepart] = useState('');

@@ -5,7 +5,7 @@ import { Brand, Palette } from '@/constants/theme';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { Priority, PriorityKind } from './priorities';
-import { PRIORITY_ROUTE, visiblePriorities } from './priorities';
+import { priorityHref, visiblePriorities } from './priorities';
 import { ArrowIcon, ArrowLink, formatAmount, HText, MicroLabel } from './home-ui';
 
 const CARD_WIDTH = 236;
@@ -13,6 +13,7 @@ const GAP = 12;
 
 const COLOR: Record<PriorityKind, string> = {
   late: Brand.errorOnDark,
+  conflict: Brand.errorOnDark,
   unpaid: Brand.warningOnDark,
   documents: Brand.warningOnDark,
   maintenance: Brand.warningOnDark,
@@ -143,7 +144,7 @@ function PriorityCard({ priority }: { priority: Priority }) {
   });
   return (
     <Pressable
-      onPress={() => router.push(PRIORITY_ROUTE[priority.kind] as never)}
+      onPress={() => router.push(priorityHref(priority) as never)}
       accessibilityRole="button"
       accessibilityLabel={`${priority.count} ${desc}. ${t(`${base}.action`)}`}
       style={cardStyle}

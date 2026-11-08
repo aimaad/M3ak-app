@@ -15,7 +15,7 @@ a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
 button{font-family:inherit;cursor:pointer}
 </style>
 </helmet>
-<div style="width: 390px; height: 1540px; background: #FFFFFF; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+<div style="width: 390px; height: 2400px; background: #FFFFFF; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
 
 <div style="background: #202527; padding: 58px 20px 58px 20px; display: flex; flex-direction: column; gap: 20px">
 <div style="display: flex; align-items: center; justify-content: space-between">
@@ -46,7 +46,7 @@ button{font-family:inherit;cursor:pointer}
 <img src="/_blob/ab3bbb69b29dbeaa471de020a7a96ea9" alt="Voiture aux phares allumés" style="width: 390px; height: 150px; object-fit: cover; display: block">
 <div style="position: absolute; left: 20px; bottom: 10px; display: flex; align-items: center; gap: 8px; background: rgba(32,37,39,0.9); border: 1px solid #40484B; border-radius: 20px; padding: 6px 12px 6px 10px">
 <span style="width: 7px; height: 7px; border-radius: 4px; background: #4CC38A"></span>
-<span style="font-size: 12px; color: #F4F5F5; font-weight: 500">2 véhicules disponibles</span>
+<span style="font-size: 12px; color: #F4F5F5; font-weight: 500">5 véhicules disponibles</span>
 </div>
 </div>
 
@@ -155,11 +155,86 @@ button{font-family:inherit;cursor:pointer}
 
 <div style="padding: 30px 20px 0 20px; display: flex; flex-direction: column; gap: 30px">
 
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: center">
+<div style="display: flex; align-items: center; gap: 10px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em">DISPONIBILITÉS</span>
+<span style="font-size: 12px; color: #5E6466">Novembre</span>
+</div>
+<a href="#" style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Planning <span style="color: #CA531D">→</span></a>
+</div>
+
+<div style="display: flex; gap: 8px; overflow: hidden; margin-right: -20px">
+<sc-for list="{{dayPills}}" as="d" hint-placeholder-count="7">
+<button onClick="{{d.pick}}" aria-pressed="{{d.pressed}}" aria-label="{{d.aria}}" style="{{d.style}}">
+<span style="{{d.letterStyle}}">{{d.letter}}</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 600; line-height: 1">{{d.num}}</span>
+<span style="{{d.countStyle}}">{{d.free}} libres</span>
+</button>
+</sc-for>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; gap: 3px; height: 8px">
+<sc-for list="{{segments}}" as="s" hint-placeholder-count="4">
+<span style="{{s.style}}"></span>
+</sc-for>
+</div>
+<div style="display: flex; flex-wrap: wrap; gap: 14px">
+<sc-for list="{{segments}}" as="s" hint-placeholder-count="4">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5E6466"><span style="{{s.dot}}"></span>{{s.label}} <span style="font-weight: 600; color: #202527">{{s.count}}</span></span>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: #1A7F53">LIBRES · {{dayLabel}}</span>
+<span style="font-size: 12px; color: #5E6466">{{freeCount}} véhicules</span>
+</div>
+<div style="display: flex; gap: 10px; overflow: hidden; margin-right: -20px">
+<sc-for list="{{freeCars}}" as="c" hint-placeholder-count="3">
+<a href="#" style="flex-shrink: 0; width: 158px; box-sizing: border-box; border: 1px solid #E2E4E5; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+<span style="width: 36px; height: 36px; border-radius: 12px; background: #E3F3EB; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A7F53" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16l1.5-5a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 16"></path><rect x="3" y="16" width="18" height="4" rx="1"></rect></svg>
+</span>
+<span style="display: flex; flex-direction: column; gap: 3px">
+<span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+<span style="font-size: 12px; color: #5E6466">{{c.sub}}</span>
+</span>
+<span style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Réserver <span style="color: #CA531D">→</span></span>
+</a>
+</sc-for>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; justify-content: space-between; align-items: baseline">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: #202527">OCCUPÉS · {{dayLabel}}</span>
+<span style="font-size: 12px; color: #5E6466">{{busyCount}} véhicules</span>
+</div>
+<div style="border: 1px solid #E2E4E5; border-radius: 18px; overflow: hidden">
+<sc-for list="{{busyCars}}" as="c" hint-placeholder-count="4">
+<a href="#" style="display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid #EDEEEE">
+<span style="{{c.iconBox}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{c.iconColor}}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 16l1.5-5a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 16"></path><rect x="3" y="16" width="18" height="4" rx="1"></rect></svg>
+</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{c.name}}</span>
+<span style="font-size: 12px; color: #5E6466">{{c.sub}}</span>
+</span>
+<span style="{{c.chip}}">{{c.chipLabel}}</span>
+</a>
+</sc-for>
+</div>
+</div>
+</div>
+
 <div style="display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; justify-content: space-between; align-items: center">
 <div style="display: flex; align-items: center; gap: 10px">
 <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em">PARC</span>
-<span style="font-size: 12px; color: #5E6466">5 véhicules</span>
+<span style="font-size: 12px; color: #5E6466">10 véhicules</span>
 </div>
 <a href="#" style="font-size: 13px; font-weight: 600; display: flex; gap: 6px">Voir <span style="color: #CA531D">→</span></a>
 </div>
@@ -190,9 +265,9 @@ button{font-family:inherit;cursor:pointer}
 <span style="font-size: 12px; color: #5E6466">occupation</span>
 </div>
 <div style="display: flex; flex-direction: column; gap: 6px">
-<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1A7F53"></span>Disponibles</span><span style="font-size: 14px; font-weight: 600">2</span></div>
-<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #202527"></span>En location</span><span style="font-size: 14px; font-weight: 600">1</span></div>
-<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #E0B000"></span>À inspecter</span><span style="font-size: 14px; font-weight: 600">2</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #1A7F53"></span>Disponibles</span><span style="font-size: 14px; font-weight: 600">5</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #202527"></span>En location</span><span style="font-size: 14px; font-weight: 600">4</span></div>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #5E6466"><span style="width: 8px; height: 8px; border-radius: 4px; background: #E0B000"></span>À inspecter</span><span style="font-size: 14px; font-weight: 600">1</span></div>
 </div>
 </div>
 </div>
@@ -250,11 +325,11 @@ button{font-family:inherit;cursor:pointer}
 </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#CA531D","options":["#CA531D","#E46A32","#D4AF6A"]},"$preview":{"width":390,"height":1540}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#CA531D","options":["#CA531D","#E46A32","#D4AF6A"]},"$preview":{"width":390,"height":2400}}'>
 class Component extends DCLogic {
 constructor(props) {
 super(props);
-this.state = { period: 'today' };
+this.state = { period: 'today', day: 0 };
 }
 renderVals() {
 const data = {
@@ -271,6 +346,79 @@ pressed: this.state.period === k ? 'true' : 'false',
 style: this.state.period === k ? on : off,
 pick: () => this.setState({ period: k })
 }));
+
+const letters = ['SAM', 'DIM', 'LUN', 'MAR', 'MER', 'JEU', 'VEN'];
+const nums = [7, 8, 9, 10, 11, 12, 13];
+const longDays = ['sam. 7', 'dim. 8', 'lun. 9', 'mar. 10', 'mer. 11', 'jeu. 12', 'ven. 13'];
+const fleet = [
+{ name: 'Dacia Logan', bars: [{ s: 0, l: 2, t: 'late' }] },
+{ name: 'Troc 2025', bars: [] },
+{ name: 'F1 F1', bars: [] },
+{ name: '[Véhicule 4]', bars: [{ s: 0, l: 1, t: 'insp' }, { s: 3, l: 4, t: 'rent' }] },
+{ name: '[Véhicule 5]', bars: [{ s: 0, l: 3, t: 'rent' }] },
+{ name: '[Véhicule 6]', bars: [{ s: 1, l: 4, t: 'rent' }] },
+{ name: '[Véhicule 7]', bars: [] },
+{ name: '[Véhicule 8]', bars: [{ s: 0, l: 7, t: 'rent' }] },
+{ name: '[Véhicule 9]', bars: [{ s: 0, l: 1, t: 'late' }] },
+{ name: '[Véhicule 10]', bars: [{ s: 2, l: 1, t: 'insp' }] }
+];
+const statusAt = (v, i) => {
+const b = v.bars.find((x) => i >= x.s && i < x.s + x.l);
+return b ? b : null;
+};
+const freeAt = (i) => fleet.filter((v) => !statusAt(v, i)).length;
+const sel = this.state.day;
+const days = nums.map((n, i) => {
+const on = sel === i;
+return {
+letter: i === 0 ? "AUJ." : letters[i],
+num: String(n),
+free: String(freeAt(i)),
+aria: longDays[i] + ', ' + freeAt(i) + ' véhicules libres',
+pressed: on ? 'true' : 'false',
+style: 'flex-shrink: 0; width: 64px; height: 84px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 0; ' + (on ? 'background: #202527; color: #FFFFFF; border: 1px solid #202527;' : 'background: #FFFFFF; color: #202527; border: 1px solid #E2E4E5;'),
+letterStyle: 'font-size: 10px; font-weight: 600; letter-spacing: 0.1em; ' + (on ? 'color: #B4BABC;' : (i === 0 ? 'color: #CA531D;' : 'color: #5E6466;')),
+countStyle: 'font-size: 10px; font-weight: 600; border-radius: 8px; padding: 2px 6px; ' + (on ? 'background: #CA531D; color: #FFFFFF;' : 'background: #E3F3EB; color: #1A7F53;'),
+pick: () => this.setState({ day: i })
+};
+});
+const freeCars = [];
+const busy = [];
+fleet.forEach((v) => {
+const st = statusAt(v, sel);
+if (!st) {
+let j = sel;
+while (j < 7 && !statusAt(v, j)) j++;
+freeCars.push({ name: v.name, sub: j >= 7 ? 'Libre toute la semaine' : "Libre jusqu'au " + longDays[j - 1] });
+} else {
+const end = st.s + st.l - 1;
+const kind = st.t;
+const sub = kind === 'late' ? 'Retour dépassé · client à appeler' : kind === 'insp' ? 'Contrôle avant remise en location' : (end >= 6 ? 'Retour après le ven. 13' : 'Retour ' + longDays[end]);
+const look = {
+late: { box: '#FBE6EA', ic: '#C42B4B', chipBg: '#FBE6EA', chipFg: '#C42B4B', label: 'Retard', rank: 0 },
+insp: { box: '#FFF6D6', ic: '#7A5A00', chipBg: '#FFF6D6', chipFg: '#7A5A00', label: 'Inspection', rank: 1 },
+rent: { box: '#F6F6F5', ic: '#202527', chipBg: '#202527', chipFg: '#FFFFFF', label: 'Louée', rank: 2 }
+}[kind];
+busy.push({
+rank: look.rank,
+name: v.name,
+sub,
+iconBox: 'width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: ' + look.box,
+iconColor: look.ic,
+chip: 'font-size: 11px; font-weight: 600; border-radius: 8px; padding: 4px 8px; flex-shrink: 0; background: ' + look.chipBg + '; color: ' + look.chipFg,
+chipLabel: look.label
+});
+}
+});
+busy.sort((a, b) => a.rank - b.rank);
+const counts = { free: freeCars.length, rent: busy.filter((b) => b.rank === 2).length, late: busy.filter((b) => b.rank === 0).length, insp: busy.filter((b) => b.rank === 1).length };
+const segDefs = [['free', 'Libres', '#1A7F53'], ['rent', 'Louées', '#202527'], ['late', 'En retard', '#C42B4B'], ['insp', 'Inspection', '#E0B000']];
+const segments = segDefs.filter(([k]) => counts[k] > 0).map(([k, label, col]) => ({
+label,
+count: String(counts[k]),
+style: 'flex: ' + counts[k] + '; border-radius: 4px; background: ' + col,
+dot: 'width: 8px; height: 8px; border-radius: 4px; background: ' + col
+}));
 return {
 accent: this.props.accent ?? '#CA531D',
 periods,
@@ -279,7 +427,14 @@ enc: cur.enc,
 encNote: cur.encNote,
 actives: cur.actives,
 departs: cur.departs,
-retours: cur.retours
+retours: cur.retours,
+dayPills: days,
+segments,
+dayLabel: sel === 0 ? "AUJOURD'HUI" : longDays[sel].toUpperCase(),
+freeCount: String(freeCars.length),
+busyCount: String(busy.length),
+freeCars,
+busyCars: busy
 };
 }
 }

@@ -4,10 +4,11 @@
 const DAY = 86400000;
 
 /**
- * @param {{ now?: Date, agencyId: string, branchId?: string|null, id?: (kind: string, n: number) => string }} options
+ * @param {{ now?: Date, agencyId: string, branchId?: string|null, id?: (kind: string, n: number) => string, scenario?: 'standard'|'libre' }} options
+ * `scenario: 'libre'` : le parc seul, tout disponible, sans location ni entretien (pour voir un jour sans véhicule occupé).
  * `id(kind, n)` fabrique les identifiants (« v1 » pour des tests lisibles, des UUID pour la vraie base).
  */
-export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, id = (kind, n) => `${kind}${n}` }) {
+export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, id = (kind, n) => `${kind}${n}`, scenario = 'standard' }) {
   const at = (days) => new Date(now.getTime() + days * DAY).toISOString();
   const day = (days) => at(days).slice(0, 10);
 
@@ -29,7 +30,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     marque,
     modele,
     annee,
-    statut,
+    statut: scenario === 'libre' ? 'disponible' : statut,
     prix_jour,
     kilometrage,
     carburant: 'diesel',
@@ -80,8 +81,10 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     [10, 7, 4, 'confirmee', 6, 9, 810, 0],
     [11, 8, 5, 'annulee', -3, -1, 825, 0],
     [12, 7, 6, 'terminee', -20, -17, 810, 810],
+    [13, 4, 5, 'confirmee', 2, 7, 1400, 0], // Kia Picanto louée à partir de dans 2 jours
+    [14, 5, 6, 'confirmee', 1.5, 5, 2600, 0], // Hyundai Tucson louée : avec la Sandero (à confirmer) plus de véhicule libre vers le 3e jour
   ];
-  const rentals = rentalDefs.map(([n, v, c, statut, d1, d2, prix_total, paye]) => {
+  const rentals = (scenario === 'libre' ? [] : rentalDefs).map(([n, v, c, statut, d1, d2, prix_total, paye]) => {
     const started = statut === 'en_cours' || statut === 'terminee';
     return {
       id: id('r', n),
@@ -99,7 +102,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
       caution_montant: 2000,
     };
   });
-  const payments = rentalDefs
+  const payments = (scenario === 'libre' ? [] : rentalDefs)
     .filter((d) => d[7] > 0)
     .map(([n, , , , d1, , , paye]) => ({
       id: id('pay', n),
@@ -121,7 +124,7 @@ export function buildDemoDataset({ now = new Date(), agencyId, branchId = null, 
     [2, 'vidange', 'effectuee', -82, 450, -80],
     [5, 'freins', 'effectuee', -62, 950, -60],
   ];
-  const maintenance_items = maintenanceDefs.map(([v, type, statut, ech, cout, interv], i) => ({
+  const maintenance_items = (scenario === 'libre' ? [] : maintenanceDefs).map(([v, type, statut, ech, cout, interv], i) => ({
     id: id('m', i + 1),
     agency_id: agencyId,
     vehicle_id: id('v', v),

@@ -1977,7 +1977,17 @@
         "a11y_two": "{{count}} {{label}}",
         "a11y_few": "{{count}} {{label}}",
         "a11y_many": "{{count}} {{label}}",
-        "a11y_other": "{{count}} {{label}}"
+        "a11y_other": "{{count}} {{label}}",
+        "conflict": {
+          "label": "تعارض",
+          "desc_zero": "حجوزات مهدَّدة",
+          "desc_one": "حجز مهدَّد",
+          "desc_two": "حجوزات مهدَّدة",
+          "desc_few": "حجوزات مهدَّدة",
+          "desc_many": "حجوزات مهدَّدة",
+          "desc_other": "حجوزات مهدَّدة",
+          "action": "أعِد تعيين سيارة"
+        }
       },
       "parc": {
         "title": "الأسطول",
@@ -2053,6 +2063,65 @@
         "signOutTitle": "تسجيل الخروج؟",
         "signOutBody": "ستحتاج إلى تسجيل الدخول من جديد للوصول إلى وكالتك.",
         "close": "إغلاق القائمة"
+      },
+      "avail": {
+        "title": "التوفّر",
+        "planning": "التخطيط",
+        "todayShort": "اليوم",
+        "todayTitle": "اليوم",
+        "free_zero": "{{count}} متاحة",
+        "free_one": "{{count}} متاحة",
+        "free_two": "{{count}} متاحة",
+        "free_few": "{{count}} متاحة",
+        "free_many": "{{count}} متاحة",
+        "free_other": "{{count}} متاحة",
+        "a11y_zero": "{{day}}، {{count}} سيارات متاحة",
+        "a11y_one": "{{day}}، سيارة واحدة متاحة",
+        "a11y_two": "{{day}}، {{count}} سيارات متاحة",
+        "a11y_few": "{{day}}، {{count}} سيارات متاحة",
+        "a11y_many": "{{day}}، {{count}} سيارات متاحة",
+        "a11y_other": "{{day}}، {{count}} سيارات متاحة",
+        "legend": {
+          "free": "متاحة",
+          "rented": "مكتراة",
+          "late": "متأخرة",
+          "inspection": "فحص / صيانة",
+          "unavailable": "غير متوفرة"
+        },
+        "freeTitle": "المتاحة · {{day}}",
+        "busyTitle": "المشغولة · {{day}}",
+        "vehicles_zero": "{{count}} سيارات",
+        "vehicles_one": "سيارة واحدة",
+        "vehicles_two": "{{count}} سيارات",
+        "vehicles_few": "{{count}} سيارات",
+        "vehicles_many": "{{count}} سيارات",
+        "vehicles_other": "{{count}} سيارات",
+        "freeUntil": "متاحة حتى {{day}}",
+        "freeOpen": "متاحة، بدون حجز",
+        "book": "احجز",
+        "noneFree": "لا توجد سيارة متاحة هذا اليوم",
+        "noneBusy": "كل السيارات متاحة هذا اليوم",
+        "sub": {
+          "late": "تجاوزت موعد الإرجاع · اتصل بالعميل",
+          "conflict": "تعارض · كراء مبرمج يوم {{day}}",
+          "inspection": "فحص قبل إعادة الكراء",
+          "garage": "في الكاراج",
+          "planned": "صيانة مبرمجة",
+          "unavailable": "خارج الخدمة",
+          "return": "الإرجاع {{day}}",
+          "returnAfter": "الإرجاع بعد {{day}}",
+          "toConfirm": "الانطلاق {{day}} · للتأكيد"
+        },
+        "chip": {
+          "late": "متأخرة",
+          "inspection": "فحص",
+          "maintenance": "صيانة",
+          "unavailable": "غير متوفرة",
+          "rented": "مكتراة",
+          "toConfirm": "للتأكيد"
+        },
+        "error": "تعذّر تحميل التوفّر.",
+        "retry": "إعادة المحاولة"
       }
     },
     "askBibip": {

@@ -6,6 +6,7 @@ import type { Rental } from '@/features/rentals/types';
 import type { Vehicle } from '@/features/vehicles/types';
 import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
 
+import { buildAvailability, conflicts } from '../availability';
 import { computeDashboardMetrics } from '../kpis';
 import { buildPriorities } from '../priorities';
 
@@ -17,7 +18,7 @@ const path = require('node:path');
 const source: string = fs
   .readFileSync(path.resolve(__dirname, '../../../../scripts/demo-seed/dataset.mjs'), 'utf8')
   .replace('export function buildDemoDataset', 'function buildDemoDataset');
-const buildDemoDataset = new Function(`${source}\nreturn buildDemoDataset;`)() as (o: { now: Date; agencyId: string }) => Record<string, Record<string, unknown>[]>;
+const buildDemoDataset = new Function(`${source}\nreturn buildDemoDataset;`)() as (o: { now: Date; agencyId: string; scenario?: string }) => Record<string, Record<string, unknown>[]>;
 
 const camel = (row: Record<string, unknown>) =>
   Object.fromEntries(Object.entries(row).map(([k, v]) => [k.replace(/_([a-z])/g, (_, c) => c.toUpperCase()), v]));
@@ -56,7 +57,29 @@ describe('jeu de données de démonstration', () => {
   });
   it('des véhicules à l’arrêt, et toutes les priorités se déclenchent', () => {
     expect(metrics.stopped.length).toBeGreaterThan(0);
-    const kinds = buildPriorities({ showMoney: true, lateReturns: metrics.activity.lateReturns, unpaid: metrics.outstanding, expiredDocuments: 2, overdueMaintenance: metrics.maintenance.overdue, stoppedVehicles: metrics.stopped.length }).map((p) => p.kind);
+    const kinds = buildPriorities({ showMoney: true, lateReturns: metrics.activity.lateReturns, conflicts: { count: 0, firstRentalId: null }, unpaid: metrics.outstanding, expiredDocuments: 2, overdueMaintenance: metrics.maintenance.overdue, stoppedVehicles: metrics.stopped.length }).map((p) => p.kind);
     expect(kinds).toEqual(['late', 'unpaid', 'documents', 'maintenance', 'stopped']);
+  });
+});
+
+describe('jeu de démonstration : disponibilités', () => {
+  const now = new Date(2026, 10, 7, 15, 0, 0);
+  const days = (scenario?: string) => {
+    const data = buildDemoDataset({ now, agencyId: 'a1', scenario });
+    const rows = (t: string) => data[t].map(camel);
+    return buildAvailability({ vehicles: rows('vehicles') as never, rentals: rows('rentals') as never, maintenance: rows('maintenance_items') as never, now });
+  };
+
+  it('standard : des retards, un jour sans véhicule libre et des conflits à réaffecter', () => {
+    const d = days();
+    expect(d[0].counts.late).toBeGreaterThanOrEqual(3);
+    expect(d[0].counts.free).toBe(2);
+    expect(d.some((day) => day.counts.free === 0)).toBe(true);
+    expect(conflicts(d).count).toBeGreaterThanOrEqual(2);
+  });
+
+  it('scénario « libre » : aucun véhicule occupé, tout le parc libre chaque jour', () => {
+    const d = days('libre');
+    expect(d.every((day) => day.counts.free === 8 && day.vehicles.every((v) => v.status === 'free'))).toBe(true);
   });
 });
