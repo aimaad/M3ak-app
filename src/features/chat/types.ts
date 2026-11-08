@@ -8,6 +8,7 @@ export type ChatMessage = {
   createdAt: string;
 };
 
-export type ChatConversation = { id: string; title: string; updatedAt: string };
+/** `preview` : début de la dernière réponse de BIBIP (null si aucune). */
+export type ChatConversation = { id: string; title: string; updatedAt: string; preview: string | null };
 
 export type ChatAnswer = { conversationId: string; answer: string; sources: ChatSource[] };

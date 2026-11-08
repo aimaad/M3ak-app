@@ -9,6 +9,8 @@ import { ThemedView } from '@/components/themed-view';
 import { Brand, Palette, Shadows } from '@/constants/theme';
 import { chatErrorMessageKey } from '@/features/chat/api';
 import { ChatAvatar, ChatBubble, TypingBubble } from '@/features/chat/chat-bubble';
+import { makeTitle } from '@/features/chat/titles';
+import { newId } from '@/features/chat/uuid';
 import { useAskChat, useChatMessages } from '@/features/chat/hooks';
 import type { ChatMessage } from '@/features/chat/types';
 import { isRTL } from '@/i18n';
@@ -26,6 +28,7 @@ export default function ChatConversationScreen() {
   const { id, question } = useLocalSearchParams<{ id: string; question?: string }>();
   const { t, language } = useLanguage();
   const [conversationId, setConversationId] = useState<string | null>(id && id !== 'nouveau' ? id : null);
+  const [draftId] = useState(() => newId());
   const [text, setText] = useState('');
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +59,13 @@ export default function ChatConversationScreen() {
     setPendingQuestion(message);
     setText('');
     ask.mutate(
-      { message, conversationId, language: language === 'ar' ? 'ar' : 'fr' },
+      {
+        message,
+        conversationId,
+        language: language === 'ar' ? 'ar' : 'fr',
+        // Conversation neuve : même identifiant à chaque essai, donc jamais de doublon si l'envoi est réessayé.
+        ...(conversationId ? {} : { newConversationId: draftId, title: makeTitle(message) }),
+      },
       {
         onSuccess: (answer) => {
           const stamp = new Date().toISOString();

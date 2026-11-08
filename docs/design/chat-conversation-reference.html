@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Chat BIBIP conversation</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #FFFFFF; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+
+<div style="padding: 54px 16px 12px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #EDEEEE">
+<a href="Main.dc.html" aria-label="Retour à l'historique" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #E2E4E5; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"></path></svg>
+</a>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Voitures dispo la semaine prochaine</span>
+<span style="font-size: 11px; color: #5E6466; display: flex; align-items: center; gap: 6px"><span style="width: 6px; height: 6px; border-radius: 3px; background: #1A7F53"></span>BIBIP · répond en darija</span>
+</div>
+<button aria-label="Nouvelle conversation" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #E2E4E5; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"></path></svg>
+</button>
+<button aria-label="Plus d'options" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #E2E4E5; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="#202527" aria-hidden="true"><circle cx="5" cy="12" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="19" cy="12" r="1.8"></circle></svg>
+</button>
+</div>
+
+<div style="padding: 16px 16px 0 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="align-self: center; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; color: #5E6466; background: #F6F6F5; border-radius: 10px; padding: 4px 10px">AUJOURD'HUI · 15:42</div>
+
+<div style="align-self: flex-end; max-width: 272px; background: #202527; color: #FFFFFF; border-radius: 20px 20px 6px 20px; padding: 12px 14px; font-size: 15px; line-height: 1.45">Chnohoma les voitures li aykono dispo simana jaya ?</div>
+
+<div style="display: flex; gap: 8px; align-items: flex-end">
+<span style="width: 28px; height: 28px; border-radius: 9px; background: #202527; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path></svg>
+</span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<div style="background: #F6F6F5; border-radius: 20px 20px 20px 6px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 15px; line-height: 1.45; padding: 0 2px">Simana jaya <b>3 tomobilat</b> ghadi ykouno dispo :</span>
+<div style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 14px; overflow: hidden">
+<sc-for list="{{cars}}" as="c" hint-placeholder-count="3">
+<a href="#" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #EDEEEE">
+<span style="width: 8px; height: 8px; border-radius: 4px; background: #1A7F53; flex-shrink: 0"></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 14px; font-weight: 600">{{c.name}}</span>
+<span style="font-size: 12px; color: #5E6466">{{c.when}}</span>
+</span>
+<span style="font-size: 13px; font-weight: 600; display: flex; gap: 4px; flex-shrink: 0">Réserver <span style="color: #CA531D">→</span></span>
+</a>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<button aria-label="Écouter la réponse" style="height: 32px; border-radius: 16px; border: 1px solid #E2E4E5; background: #FFFFFF; display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: 12px; font-weight: 600; color: #202527">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4z"></path><path d="M15.5 8.5a5 5 0 0 1 0 7"></path><path d="M19 5a10 10 0 0 1 0 14"></path></svg>
+Écouter
+</button>
+<button aria-label="Copier la réponse" style="width: 32px; height: 32px; border-radius: 16px; border: 1px solid #E2E4E5; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg>
+</button>
+</div>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<button style="height: 34px; border-radius: 17px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 13px; font-weight: 500; padding: 0 12px">Réserver la Troc 2025</button>
+<button style="height: 34px; border-radius: 17px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 13px; font-weight: 500; padding: 0 12px">Voir le planning</button>
+</div>
+</div>
+</div>
+
+<div style="align-self: flex-end; display: flex; flex-direction: column; align-items: flex-end; gap: 6px">
+<div style="width: 236px; background: #202527; border-radius: 20px 20px 6px 20px; padding: 10px 14px 10px 10px; display: flex; align-items: center; gap: 10px; box-sizing: border-box">
+<button aria-label="Lire le message vocal" style="width: 36px; height: 36px; border-radius: 18px; border: none; background: #FFFFFF; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="#202527" aria-hidden="true"><path d="M7 5l12 7-12 7z"></path></svg>
+</button>
+<span style="flex: 1; display: flex; align-items: center; gap: 2px; height: 28px">
+<sc-for list="{{wave}}" as="w" hint-placeholder-count="24">
+<span style="{{w.style}}"></span>
+</sc-for>
+</span>
+<span style="font-size: 12px; color: #B4BABC; flex-shrink: 0">0:07</span>
+</div>
+<span style="font-size: 12px; color: #5E6466; font-style: italic; max-width: 260px; text-align: right">« Ou chkoun li ma rje3ch tomobil f lwe9t ? »</span>
+</div>
+
+<div style="display: flex; gap: 8px; align-items: flex-end">
+<span style="width: 28px; height: 28px; border-radius: 9px; background: #202527; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{accent}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"></path></svg>
+</span>
+<div style="background: #F6F6F5; border-radius: 20px 20px 20px 6px; padding: 14px 16px; display: flex; gap: 5px" aria-label="BIBIP écrit">
+<span style="width: 7px; height: 7px; border-radius: 4px; background: #5E6466"></span>
+<span style="width: 7px; height: 7px; border-radius: 4px; background: #8A9092"></span>
+<span style="width: 7px; height: 7px; border-radius: 4px; background: #B4BABC"></span>
+</div>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; background: #FFFFFF; border-top: 1px solid #EDEEEE; padding: 10px 16px 30px 16px; display: flex; align-items: center; gap: 10px">
+<div style="flex: 1; display: flex; align-items: center; height: 48px; border-radius: 24px; background: #F6F6F5; border: 1px solid #E2E4E5; padding: 0 16px">
+<label for="message" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Message</label>
+<input id="message" placeholder="Écrire à BIBIP…" style="flex: 1; border: none; background: transparent; font-size: 15px; font-family: inherit; color: #202527; outline: none">
+</div>
+<a href="Vocal.dc.html" aria-label="Parler à BIBIP" style="width: 48px; height: 48px; border-radius: 24px; background: {{accent}}; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0 0 14 0"></path><line x1="12" y1="18" x2="12" y2="21"></line></svg>
+</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#CA531D","options":["#CA531D","#E46A32","#D4AF6A"]},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+renderVals() {
+const h = [8, 14, 22, 12, 26, 18, 10, 24, 16, 28, 12, 20, 8, 18, 26, 14, 10, 22, 16, 12, 24, 10, 14, 8];
+return {
+accent: this.props.accent ?? '#CA531D',
+cars: [
+{ name: 'Troc 2025', when: 'Libre toute la semaine' },
+{ name: 'F1 F1', when: 'Libre toute la semaine' },
+{ name: 'Dacia Logan', when: 'Libre à partir du lun. 9' }
+],
+wave: h.map((v, i) => ({ style: 'width: 3px; border-radius: 2px; height: ' + v + 'px; background: ' + (i < 9 ? '#FFFFFF' : '#5E6466') }))
+};
+}
+}
+</script>
+</body>
+</html>

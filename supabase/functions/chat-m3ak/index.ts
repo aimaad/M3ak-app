@@ -125,33 +125,38 @@ Deno.serve(async (request: Request) => {
   if (!question) return json({ ok: false, error: 'invalid_request' }, 400);
   const language = body.language === 'ar' ? 'ar' : 'fr';
 
-  // Conversation : celle de l'utilisateur (RLS) ou une nouvelle.
-  let conversationId = typeof body.conversationId === 'string' && UUID.test(body.conversationId) ? body.conversationId : null;
+  // Conversation : celle de l'utilisateur (RLS) ou une nouvelle. Une conversation NEUVE n'est enregistrée qu'avec sa réponse
+  // (plus de conversation vide si l'IA échoue) ; son identifiant peut venir de l'app (`newConversationId`), ce qui rend
+  // l'envoi réessayable sans doublon.
+  const requestedId = typeof body.conversationId === 'string' && UUID.test(body.conversationId) ? body.conversationId : null;
+  const proposedId = typeof body.newConversationId === 'string' && UUID.test(body.newConversationId) ? body.newConversationId : null;
+  const proposedTitle = typeof body.title === 'string' ? body.title.replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+  const wantedId = requestedId ?? proposedId;
+  const conversationId: string = wantedId ?? crypto.randomUUID();
+  let newConversation: { id: string; title: string } | null = null;
   const history: { role: string; content: string }[] = [];
   try {
-    if (conversationId) {
-      const { data: conversation } = await withTimeout('conversation', supabase.from('chat_conversations').select('id').eq('id', conversationId).maybeSingle());
-      if (!conversation) return json({ ok: false, error: 'invalid_request' }, 400);
-      const { data: previous } = await withTimeout(
-        'history',
-        supabase.from('chat_convo_messages').select('role, content').eq('conversation_id', conversationId).order('created_at', { ascending: false }).limit(HISTORY_MESSAGES)
-      );
-      history.push(...((previous ?? []) as { role: string; content: string }[]).reverse());
-    } else {
-      const { data: created, error: createError } = await withTimeout(
-        'conversation',
-        supabase.from('chat_conversations').insert({ agency_id: agencyId, user_id: userId, title: question.slice(0, 80) }).select('id').single()
-      );
-      if (createError || !created) return json({ ok: false, error: 'chat_save_failed' });
-      conversationId = created.id as string;
+    let found = false;
+    if (wantedId) {
+      const { data: conversation } = await withTimeout('conversation', supabase.from('chat_conversations').select('id').eq('id', wantedId).maybeSingle());
+      found = !!conversation;
+      if (found) {
+        const { data: previous } = await withTimeout(
+          'history',
+          supabase.from('chat_convo_messages').select('role, content').eq('conversation_id', wantedId).order('created_at', { ascending: false }).limit(HISTORY_MESSAGES)
+        );
+        history.push(...((previous ?? []) as { role: string; content: string }[]).reverse());
+      }
     }
+    // Pas encore enregistrée (premier message, ou envoi précédent resté sans réponse) : elle est créée avec la réponse.
+    if (!found) newConversation = { id: conversationId, title: proposedTitle || question.slice(0, 80) };
   } catch (error) {
     if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });
     throw error;
   }
 
   const started = Date.now();
-  console.log('chat: question reçue', { langue: language, conversation: history.length > 0 ? 'existante' : 'nouvelle' });
+  console.log('chat: question reçue', { langue: language, conversation: newConversation ? 'nouvelle' : 'existante' });
   const prompt = systemPrompt(new Date(), language);
   const results: unknown[] = [];
   const transcript: string[] = [];
@@ -222,6 +227,16 @@ Deno.serve(async (request: Request) => {
   console.log('chat: réponse prête', `${Date.now() - started} ms`);
   const sources = pickSources(sourceIds, seenRentals(results));
   try {
+    if (newConversation) {
+      const { error: createError } = await withTimeout(
+        'save',
+        supabase.from('chat_conversations').insert({ id: newConversation.id, agency_id: agencyId, user_id: userId, title: newConversation.title })
+      );
+      if (createError) {
+        console.error('chat: conversation non enregistrée', createError.code, createError.message);
+        return json({ ok: false, error: 'chat_save_failed' });
+      }
+    }
     // Les deux lignes ont les mêmes colonnes (« sources » est obligatoire en base).
     const saved = await withTimeout(
       'save',

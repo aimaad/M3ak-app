@@ -30,7 +30,14 @@ export function parseSources(raw: unknown): ChatSource[] {
  * Pose une question à la fonction serveur `chat-m3ak` (IA avec la clé de l'entreprise, données de l'agence lues
  * avec les droits de l'utilisateur). Le serveur refuse tant que le propriétaire n'a pas activé le chat.
  */
-export async function askChat(input: { message: string; conversationId: string | null; language: 'fr' | 'ar' }): Promise<ChatAnswer> {
+export async function askChat(input: {
+  message: string;
+  conversationId: string | null;
+  language: 'fr' | 'ar';
+  /** Conversation neuve : identifiant créé par l'app (le même à chaque nouvel essai : jamais de doublon) et titre court. */
+  newConversationId?: string;
+  title?: string;
+}): Promise<ChatAnswer> {
   let outcome: Awaited<ReturnType<ReturnType<typeof getSupabase>['functions']['invoke']>> | 'timeout';
   try {
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), TIMEOUT_MS));
@@ -80,10 +87,38 @@ export function chatErrorMessageKey(error: unknown): string {
   }
 }
 
+const flatten = (text: string) => text.replace(/\s+/g, ' ').trim();
+
+/**
+ * Historique : les conversations qui ont au moins un message (les conversations vides laissées par un envoi échoué sont
+ * ignorées), avec l'aperçu de la dernière réponse de BIBIP.
+ */
 export async function listConversations(): Promise<ChatConversation[]> {
-  const { data, error } = await getSupabase().from('chat_conversations').select('id, title, updated_at').order('updated_at', { ascending: false }).limit(50);
+  const { data, error } = await getSupabase()
+    .from('chat_conversations')
+    .select('id, title, updated_at, chat_convo_messages!inner(role, content, created_at)')
+    .order('updated_at', { ascending: false })
+    .order('created_at', { ascending: false, referencedTable: 'chat_convo_messages' })
+    .limit(2, { referencedTable: 'chat_convo_messages' })
+    .limit(100);
   if (error) throw error;
-  return ((data ?? []) as { id: string; title: string; updated_at: string }[]).map((row) => ({ id: row.id, title: row.title, updatedAt: row.updated_at }));
+  type Row = { id: string; title: string; updated_at: string; chat_convo_messages: { role: string; content: string }[] };
+  return ((data ?? []) as unknown as Row[]).map((row) => {
+    const answer = row.chat_convo_messages?.find((m) => m.role === 'assistant');
+    return { id: row.id, title: row.title, updatedAt: row.updated_at, preview: answer ? flatten(answer.content).slice(0, 160) : null };
+  });
+}
+
+export async function renameConversation(input: { id: string; title: string }): Promise<void> {
+  const { error } = await getSupabase().from('chat_conversations').update({ title: input.title.trim().slice(0, 120) }).eq('id', input.id);
+  if (error) throw error;
+}
+
+/** Identifiants des conversations dont le titre ou un message contient le texte (fonction `chat_search`, migration 0061). */
+export async function searchConversationIds(query: string): Promise<string[]> {
+  const { data, error } = await getSupabase().rpc('chat_search', { p_query: query });
+  if (error) throw error;
+  return Array.isArray(data) ? (data as unknown[]).filter((id): id is string => typeof id === 'string') : [];
 }
 
 export async function listMessages(conversationId: string): Promise<ChatMessage[]> {
