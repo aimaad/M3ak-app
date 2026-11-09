@@ -1,4 +1,4 @@
-import { cleanDate, cleanLiveVoice, cleanSpeechText, cleanCount, cleanText, DEFAULT_LIVE_LIMITS, liveAllowance, liveCostUsd, liveLimitsFrom, liveSystemPrompt, liveThinkingConfig, liveToolDeclarations, LIVE_TOOLS, parseModelStep, partialAnswer, pcmToWav, pickLiveModel, pickSources, seenRentals, sessionSeconds, streamableText, systemPrompt, toRpcCall } from '../../../../supabase/functions/chat-m3ak/logic';
+import { cleanDate, cleanLiveProfile, cleanLiveVoice, cleanSavedCards, cleanSavedLines, cleanSpeechText, cleanCount, cleanText, DEFAULT_LIVE_LIMITS, liveAllowance, liveCostUsd, liveLimitsFrom, liveSystemPrompt, liveThinkingConfig, liveToolDeclarations, LIVE_TOOLS, parseModelStep, partialAnswer, pcmToWav, pickLiveModel, pickSources, seenRentals, sessionSeconds, streamableText, systemPrompt, toRpcCall } from '../../../../supabase/functions/chat-m3ak/logic';
 
 const ID1 = '11111111-1111-4111-8111-111111111111';
 const ID2 = '22222222-2222-4222-8222-222222222222';
@@ -168,10 +168,46 @@ describe('mode vocal temps réel : modèle, consigne, limites', () => {
     expect(owner).not.toContain('INTERDIT pour cet utilisateur');
     for (const role of ['manager', 'employee'] as const) expect(liveSystemPrompt(new Date(), role)).toContain('INTERDIT pour cet utilisateur');
   });
-  it('un seul outil, le même nom que le chat écrit', () => {
-    const names = liveToolDeclarations().flatMap((tool) => tool.functionDeclarations.map((f) => f.name));
-    expect(names).toEqual(['available_vehicles']);
-    expect(LIVE_TOOLS.every((tool) => toRpcCall(tool, {}))).toBe(true);
+  const names = (profile: 'prototype' | 'app', role: 'owner' | 'manager' | 'employee' = 'owner') => liveToolDeclarations(profile, role).flatMap((tool) => tool.functionDeclarations.map((f) => f.name));
+  it('profil prototype : un seul outil (inchangé) ; profil app : tous les outils du chat écrit', () => {
+    expect(names('prototype')).toEqual(['available_vehicles']);
+    expect(cleanLiveProfile('app')).toBe('app');
+    expect(cleanLiveProfile('n importe quoi')).toBe('prototype');
+    expect(names('app').sort()).toEqual([...LIVE_TOOLS].sort());
+    // chaque outil déclaré est accepté par le serveur (validation des arguments) ; ceux qui exigent un argument le déclarent obligatoire
+    for (const tool of LIVE_TOOLS) expect(toRpcCall(tool, { vehicle: 'Logan', customer: 'Karim' })).not.toBeNull();
+    const required = liveToolDeclarations('app').flatMap((t) => t.functionDeclarations).filter((f) => (f.parameters as { required?: string[] }).required);
+    expect(required.map((f) => f.name).sort()).toEqual(['customer_history', 'vehicle_damages', 'vehicle_maintenance']);
+  });
+  it('la finance n’est proposée qu’au propriétaire', () => {
+    expect(names('app', 'owner')).toContain('finance');
+    expect(names('app', 'manager')).not.toContain('finance');
+    expect(names('app', 'employee')).not.toContain('finance');
+  });
+  it('sous-titres enregistrés : rôles valides, montants retirés pour un non-propriétaire, bornés', () => {
+    const lines = [
+      { role: 'user', content: '  Quelles voitures sont libres ?  ' },
+      { role: 'assistant', content: 'La Logan est à 350 MAD par jour. Il y en a trois.' },
+      { role: 'system', content: 'ignorée' },
+      { role: 'assistant', content: '   ' },
+      { role: 'user', content: 42 },
+    ];
+    const employee = cleanSavedLines(lines, 'employee');
+    expect(employee.map((l) => l.role)).toEqual(['user', 'assistant']);
+    expect(employee[0].content).toBe('Quelles voitures sont libres ?');
+    expect(employee[1].content).not.toContain('350');
+    expect(cleanSavedLines(lines, 'owner')[1].content).toContain('350 MAD');
+    expect(cleanSavedLines('x', 'owner')).toEqual([]);
+    expect(cleanSavedLines(Array(200).fill({ role: 'user', content: 'a' }), 'owner')).toHaveLength(60);
+    expect(cleanSavedLines([{ role: 'assistant', content: 'a'.repeat(5000) }], 'owner')[0].content).toHaveLength(1500);
+  });
+  it('cartes enregistrées : forme revérifiée, identifiants valides, 8 lignes au plus', () => {
+    const item = (n: number) => ({ kind: 'vehicle', id: `11111111-1111-4111-8111-1111111111${String(10 + n)}`, title: `Voiture ${n}`, plate: '8921', tone: 'free', price: 999 });
+    const cards = cleanSavedCards([{ type: 'vehicles', items: Array.from({ length: 12 }, (_, n) => item(n)) }, { type: 'autre', items: [] }, { type: 'rentals', items: [{ kind: 'rental', id: 'pas-un-uuid', title: 'x' }] }]) as { type: string; items: Record<string, unknown>[] }[];
+    expect(cards).toHaveLength(1);
+    expect(cards[0].items).toHaveLength(8);
+    expect(cards[0].items[0]).not.toHaveProperty('price');
+    expect(cleanSavedCards('x')).toEqual([]);
   });
   const now = new Date('2030-06-10T12:00:00Z');
   const row = (user: string, seconds: number | null, ended = true, minutesAgo = 60) => ({ user_id: user, started_at: new Date(now.getTime() - minutesAgo * 60_000).toISOString(), ended_at: ended ? now.toISOString() : null, seconds });

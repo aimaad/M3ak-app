@@ -7,14 +7,17 @@
 //     détection de parole ne peuvent pas être changés par l'app ;
 //   * limites : durée d'une session, minutes par utilisateur et par jour, minutes par agence et par jour (secrets réglables) ;
 //   * la clé Gemini n'est jamais renvoyée ni journalisée ; l'audio ne passe pas par nos serveurs et n'est pas enregistré.
-// Deux actions : « start » (par défaut) et « end » (clôture : durée et tokens, pour les limites et le coût).
+// Trois actions : « start » (par défaut), « end » (clôture : durée et tokens, pour les limites et le coût) et « save »
+// (enregistre les sous-titres de la conversation dans l'historique du chat, sans audio).
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 import { GoogleGenAI, Modality } from 'npm:@google/genai@3.0.0';
 
 import {
   cleanCount,
+  cleanLiveProfile,
   cleanLiveVoice,
+  cleanSavedLines,
   liveAllowance,
   liveCostUsd,
   liveLimitsFrom,
@@ -82,7 +85,7 @@ Deno.serve(async (request: Request) => {
   let body: Record<string, unknown> = {};
   try {
     const raw = await request.text();
-    if (raw.length > 2_000) return json({ ok: false, error: 'invalid_request' }, 400);
+    if (raw.length > 60_000) return json({ ok: false, error: 'invalid_request' }, 400);
     body = raw ? (JSON.parse(raw) as Record<string, unknown>) : {};
   } catch {
     return json({ ok: false, error: 'invalid_request' }, 400);
@@ -116,6 +119,44 @@ Deno.serve(async (request: Request) => {
     return json({ ok: true, costUsd: liveCostUsd(inputTokens, outputTokens) });
   }
 
+  // ---- Historique : les sous-titres de la session (texte seulement, jamais d'audio) deviennent une conversation du chat.
+  if (body.action === 'save') {
+    const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const conversationId = typeof body.conversationId === 'string' && UUID.test(body.conversationId) ? body.conversationId : null;
+    const lines = cleanSavedLines(body.lines, role);
+    if (!conversationId || !lines.some((line) => line.role === 'user') || !lines.some((line) => line.role === 'assistant')) return json({ ok: true, saved: false });
+    const title = typeof body.title === 'string' ? body.title.replace(/[\u0000-\u001f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120) : '';
+    const missing = (code?: string) => code === '42703' || code === 'PGRST204';
+    try {
+      // Conversation de l'utilisateur (RLS) ou nouvelle.
+      const { data: existing } = await supabase.from('chat_conversations').select('id').eq('id', conversationId).maybeSingle();
+      if (!existing) {
+        const base = { id: conversationId, agency_id: agencyId, user_id: userId, title: title || lines.find((line) => line.role === 'user')!.content.slice(0, 80) };
+        let { error } = await supabase.from('chat_conversations').insert({ ...base, via_voice: true });
+        if (error && missing(error.code)) ({ error } = await supabase.from('chat_conversations').insert(base));
+        if (error) throw error;
+      }
+      // Dates croissantes : l'ordre des phrases est conservé à l'affichage.
+      const first = Date.now() - lines.length * 1000;
+      const rows = (withCards: boolean, withVoice: boolean) =>
+        lines.map((line, index) => ({
+          conversation_id: conversationId, agency_id: agencyId, user_id: userId, role: line.role, content: line.content, sources: [],
+          created_at: new Date(first + index * 1000).toISOString(),
+          ...(withCards ? { cards: line.cards } : {}),
+          ...(withVoice && line.role === 'user' ? { via_voice: true } : {}),
+        }));
+      let saved = await supabase.from('chat_convo_messages').insert(rows(true, true));
+      if (missing(saved.error?.code)) saved = await supabase.from('chat_convo_messages').insert(rows(true, false));
+      if (missing(saved.error?.code)) saved = await supabase.from('chat_convo_messages').insert(rows(false, false));
+      if (saved.error) throw saved.error;
+      await supabase.from('chat_conversations').update({ updated_at: new Date().toISOString() }).eq('id', conversationId);
+      return json({ ok: true, saved: true, conversationId });
+    } catch (error) {
+      console.error('live: conversation non enregistrée', (error as { code?: string })?.code ?? 'erreur');
+      return json({ ok: false, error: 'chat_save_failed' });
+    }
+  }
+
   // ---- Ouverture : chat activé, clé de l'entreprise, limites, puis jeton verrouillé.
   const { data: settings } = await admin.from('agency_ocr_settings').select('chat_enabled, gemini_api_key').eq('agency_id', agencyId).maybeSingle();
   if (!settings?.gemini_api_key) return json({ ok: false, error: 'ocr_not_configured' });
@@ -135,6 +176,7 @@ Deno.serve(async (request: Request) => {
   const model = await liveModelFor(apiKey);
   if (!model) return json({ ok: false, error: 'live_unavailable', detail: 'no_live_model' });
   const voice = cleanLiveVoice(body.voice);
+  const profile = cleanLiveProfile(body.profile);
   const thinking = liveThinkingConfig(model, Deno.env.get('LIVE_THINKING_LEVEL'));
 
   try {
@@ -150,7 +192,7 @@ Deno.serve(async (request: Request) => {
             responseModalities: [Modality.AUDIO],
             ...(thinking ? { thinkingConfig: thinking } : {}),
             systemInstruction: liveSystemPrompt(now, role),
-            tools: liveToolDeclarations(),
+            tools: liveToolDeclarations(profile, role),
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voice } } },
             inputAudioTranscription: {},
             outputAudioTranscription: {},
@@ -177,7 +219,7 @@ Deno.serve(async (request: Request) => {
 
     console.log('live: jeton délivré', { modele: model, voix: voice, secondes: allowance.allowed });
     // Le jeton est la seule chose sensible renvoyée (courte durée, usage unique) : jamais la clé de l'entreprise.
-    return json({ ok: true, token: token.name, model, voice, sessionId: session.id, maxSeconds: allowance.allowed, role, thinkingLevel: thinking?.thinkingLevel ?? null });
+    return json({ ok: true, token: token.name, model, voice, sessionId: session.id, maxSeconds: allowance.allowed, role, profile, thinkingLevel: thinking?.thinkingLevel ?? null });
   } catch (error) {
     const detail = error instanceof Error ? error.message.split(apiKey).join('[clé]') : 'unknown';
     console.error('live: jeton non créé', detail.slice(0, 200));

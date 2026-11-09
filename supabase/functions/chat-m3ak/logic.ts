@@ -446,26 +446,45 @@ export function liveThinkingConfig(model: string, override?: string): { thinking
 }
 
 /** Outils du mode vocal (prototype : un seul, la liste des voitures libres). Mêmes noms que le chat écrit. */
-export const LIVE_TOOLS = ['available_vehicles'] as const;
+/** Outils acceptés par `chat-tools` : exactement ceux du chat écrit (le modèle n'en connaît que ceux déclarés dans son profil). */
+export const LIVE_TOOLS: readonly ToolName[] = TOOL_NAMES;
 
-export function liveToolDeclarations() {
-  return [
-    {
-      functionDeclarations: [
-        {
-          name: 'available_vehicles',
-          description: "Liste les voitures libres de l'agence sur une période (de « from » à « to »). Sans dates : libres maintenant. À utiliser pour toute question sur les voitures disponibles.",
-          parameters: {
-            type: 'OBJECT',
-            properties: {
-              from: { type: 'STRING', description: 'Début de la période, date ISO 8601 (facultatif).' },
-              to: { type: 'STRING', description: 'Fin de la période, date ISO 8601 (facultatif).' },
-            },
-          },
-        },
-      ],
-    },
+export type LiveProfile = 'prototype' | 'app';
+export function cleanLiveProfile(value: unknown): LiveProfile {
+  return value === 'app' ? 'app' : 'prototype';
+}
+
+const PERIOD = {
+  from: { type: 'STRING', description: 'Début de la période, date ISO 8601 (facultatif).' },
+  to: { type: 'STRING', description: 'Fin de la période, date ISO 8601 (facultatif).' },
+};
+const tool = (name: string, description: string, properties: Record<string, unknown> = {}, required: string[] = []) => ({
+  name,
+  description,
+  parameters: { type: 'OBJECT', properties, ...(required.length ? { required } : {}) },
+});
+
+/** Outils déclarés au modèle Live. « prototype » : un seul (voitures libres). « app » : ceux du chat écrit ; la finance seulement pour le propriétaire. */
+export function liveToolDeclarations(profile: LiveProfile = 'prototype', role: Role = 'owner') {
+  const available = tool('available_vehicles', "Liste les voitures libres de l'agence sur une période (de « from » à « to »). Sans dates : libres maintenant. À utiliser pour toute question sur les voitures disponibles.", PERIOD);
+  if (profile === 'prototype') return [{ functionDeclarations: [available] }];
+  const declarations = [
+    available,
+    tool('rentals', 'Locations (en cours, passées ou à venir) filtrables par période, véhicule ou client.', { ...PERIOD, vehicle: { type: 'STRING', description: 'Nom ou plaque du véhicule.' }, customer: { type: 'STRING', description: 'Nom du client.' } }),
+    tool('returns_due', 'Retours de voitures attendus sur une période (par défaut aujourd’hui), avec les retards.', PERIOD),
+    tool('departures_due', 'Départs de voitures attendus sur une période (par défaut aujourd’hui).', PERIOD),
+    tool('vehicle_damages', "Dommages connus d'un véhicule.", { vehicle: { type: 'STRING', description: 'Nom ou plaque du véhicule.' } }, ['vehicle']),
+    tool('vehicle_maintenance', "Entretien et échéances (vidange, assurance, visite technique) d'un véhicule.", { vehicle: { type: 'STRING', description: 'Nom ou plaque du véhicule.' } }, ['vehicle']),
+    tool('customer_history', "Historique des locations d'un client.", { customer: { type: 'STRING', description: 'Nom du client.' } }, ['customer']),
+    tool('customers', 'Recherche de clients par nom.', { search: { type: 'STRING', description: 'Nom ou début de nom.' } }),
+    tool('fleet', "Vue d'ensemble de la flotte : nombre de véhicules par état."),
+    tool('fleet_alerts', 'Alertes de la flotte à venir (assurance, visite technique, vidange…).', { days: { type: 'NUMBER', description: 'Nombre de jours à regarder (1 à 365, défaut 30).' } }),
+    tool('fleet_stats', 'Statistiques de la flotte (taux d’occupation, véhicules sous-utilisés) sur une période.', PERIOD),
+    tool('activity', "Journal d'activité de l'équipe.", { ...PERIOD, actor: { type: 'STRING', description: 'Nom du membre de l’équipe.' }, category: { type: 'STRING', description: 'Catégorie d’action.' } }),
+    tool('contracts', 'Contrats de location.', { ...PERIOD, status: { type: 'STRING', description: 'Statut du contrat.' }, search: { type: 'STRING', description: 'Nom du client ou numéro.' } }),
   ];
+  if (role === 'owner') declarations.push(tool('finance', "Chiffres de l'agence (chiffre d'affaires, paiements, impayés) sur une période. Réservé au propriétaire.", PERIOD));
+  return [{ functionDeclarations: declarations }];
 }
 
 /** Consigne du mode vocal temps réel : oral, darija, aucune invention, aucun montant hors propriétaire. Verrouillée dans le jeton. */
@@ -539,4 +558,40 @@ export function liveCostUsd(inputTokens: number, outputTokens: number): number {
 /** Nombre entier borné venant du téléphone (secondes, tokens) : jamais négatif, jamais absurde. */
 export function cleanCount(value: unknown, max: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? Math.min(Math.max(Math.round(value), 0), max) : 0;
+}
+
+// ---------------------------------------------------------------- enregistrement d'une conversation vocale (historique)
+
+export type SavedLine = { role: 'user' | 'assistant'; content: string; cards: unknown[] };
+export const MAX_SAVED_LINES = 60;
+const SAVED_TONES = ['free', 'late', 'rented', 'pending'];
+
+/** Cartes envoyées par l'app (venues de `chat-tools`) : forme revérifiée, 8 lignes au plus, identifiants valides, jamais de montant. */
+export function cleanSavedCards(raw: unknown): unknown[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 3).flatMap((entry) => {
+    const card = asObject(entry);
+    if ((card.type !== 'vehicles' && card.type !== 'rentals') || !Array.isArray(card.items)) return [];
+    const items = card.items.slice(0, 8).flatMap((item) => {
+      const row = asObject(item);
+      const text = (value: unknown, max: number) => (typeof value === 'string' && value ? value.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max) : null);
+      const id = typeof row.id === 'string' && UUID.test(row.id) ? row.id : null;
+      const title = text(row.title, 120);
+      if (!id || !title || (row.kind !== 'vehicle' && row.kind !== 'rental')) return [];
+      return [{ kind: row.kind, id, title, plate: text(row.plate, 30), customer: text(row.customer, 80), date: text(row.date, 40), tone: SAVED_TONES.includes(row.tone as string) ? row.tone : 'rented' }];
+    });
+    return items.length ? [{ type: card.type, items }] : [];
+  });
+}
+
+/** Sous-titres d'une session vocale : rôle valide, texte nettoyé et borné, montants retirés pour un non-propriétaire (comme le chat écrit). */
+export function cleanSavedLines(raw: unknown, role: Role): SavedLine[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, MAX_SAVED_LINES).flatMap((entry) => {
+    const line = asObject(entry);
+    if (line.role !== 'user' && line.role !== 'assistant') return [];
+    const content = cleanAnswer(line.content).replace(/[\u0000-\u0008\u000b-\u001f]/g, ' ').replace(/[ \t]+/g, ' ').trim();
+    if (!content) return [];
+    return [{ role: line.role, content: line.role === 'assistant' ? redactMoneyText(content, role) : content, cards: line.role === 'assistant' ? cleanSavedCards(line.cards) : [] }];
+  });
 }

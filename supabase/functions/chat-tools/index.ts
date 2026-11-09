@@ -2,7 +2,7 @@
 //
 // Mêmes règles que le chat écrit (chat-m3ak), avec LE MÊME CODE (`../chat-m3ak/logic.ts`) pour qu'elles ne divergent jamais :
 //   * l'appelant est authentifié, membre d'une entreprise, chat activé ;
-//   * seul un outil de la liste blanche du mode vocal est accepté ; ses arguments sont validés (`toRpcCall`) ;
+//   * seul un outil de la liste blanche (ceux du chat écrit) est accepté ; ses arguments sont validés (`toRpcCall`) ;
 //   * l'outil s'exécute avec le JWT de l'utilisateur : la RLS (entreprise + filiale) s'applique, lecture seule ;
 //   * AUCUN montant pour un responsable ou un employé (`resultForRole`) ; les cartes viennent des vrais résultats (`buildCards`).
 
