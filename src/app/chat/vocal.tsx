@@ -254,9 +254,12 @@ export default function VoiceModeScreen() {
           <Pressable onPress={() => void close()} accessibilityRole="button" accessibilityLabel={t('chat.voice.close')} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: Brand.strokeOnDark, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="close" size={18} color={Brand.white} />
           </Pressable>
-          <MicroLabel size={11} track={0.16} color={Brand.mutedOnDark}>
-            {t('chat.voice.title')}
-          </MicroLabel>
+          {/* Appui long (1,2 s) sur le titre : test caché du vocal temps réel. */}
+          <Pressable onLongPress={() => router.push('/chat/vocal-live')} delayLongPress={1200} accessible={false} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <MicroLabel size={11} track={0.16} color={Brand.mutedOnDark}>
+              {t('chat.voice.title')}
+            </MicroLabel>
+          </Pressable>
           <Pressable
             onPress={() => setHint(HINTS[(HINTS.indexOf(hint) + 1) % HINTS.length])}
             accessibilityRole="button"

@@ -2742,6 +2742,13 @@
       "tooShort": "Message trop court : parlez un peu plus longtemps.",
       "orb": "Micro",
       "levelA11y": "Niveau sonore"
+    },
+    "voiceLive": {
+      "title": "Vocal temps réel · test",
+      "loading": "Chargement du moteur vocal…",
+      "loadFailed": "Impossible de charger le moteur vocal. Vérifiez la connexion.",
+      "retry": "Réessayer",
+      "close": "Fermer"
     }
   },
   "access": {
