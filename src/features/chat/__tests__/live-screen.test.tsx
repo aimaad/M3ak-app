@@ -43,6 +43,11 @@ jest.mock('@/i18n/use-language', () => ({ useLanguage: () => ({ t: (key: string)
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(async () => null), setItem: jest.fn(async () => undefined) }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }: { children: React.ReactNode }) => children }));
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
+const mockKeepAwake = { activate: jest.fn(async (_tag: string) => undefined), deactivate: jest.fn(async (_tag: string) => undefined) };
+jest.mock('expo-keep-awake', () => ({
+  activateKeepAwakeAsync: (tag: string) => mockKeepAwake.activate(tag),
+  deactivateKeepAwake: (tag: string) => mockKeepAwake.deactivate(tag),
+}));
 // Animations : version simple (l'orbe et l'apparition des cartes ne sont pas l'objet du test).
 jest.mock('react-native-reanimated', () => {
   const { View } = require('react-native');
@@ -128,6 +133,22 @@ describe('écran du mode vocal temps réel (moteur et serveur simulés)', () => 
       { role: 'assistant', content: 'Il y a la Dacia Logan.', cards: [expect.objectContaining({ type: 'vehicles' })] },
     ]);
     expect(mockRouter.replace).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/chat/[id]' }));
+  });
+
+  it('garde l’écran allumé pendant la session, et le libère quand elle est finie', async () => {
+    await render(
+      <QueryClientProvider client={new QueryClient()}>
+        <VoiceLiveScreen />
+      </QueryClientProvider>
+    );
+    await flush();
+    await act(async () => engine.emit({ t: 'ready' }));
+    await flush();
+    expect(mockKeepAwake.activate).toHaveBeenCalledWith('bibip-live-voice');
+    // Panne : la session est finie, l'écran peut se verrouiller de nouveau.
+    await act(async () => engine.emit({ t: 'error', code: 'connect_failed', message: '' }));
+    await flush();
+    expect(mockKeepAwake.deactivate).toHaveBeenCalledWith('bibip-live-voice');
   });
 
   it('micro refusé : message clair, bouton pour ouvrir les réglages', async () => {

@@ -40,7 +40,7 @@ Si le moteur ne démarre pas, si la limite de minutes est atteinte ou si le micr
 (`/chat/vocal-turns`, l'ancien mode : enregistrer, envoyer, réponse lue) et **« Passer à l'écrit »**.
 
 ## Limites connues
-- La conversation s'arrête si l'écran se verrouille ou si l'app passe en arrière-plan (limite de la fenêtre web interne). Mettre le verrouillage automatique à 5 minutes pour les essais.
+- L'écran reste allumé pendant une session (`expo-keep-awake`), donc le verrouillage automatique ne coupe plus la conversation. En revanche, la conversation s'arrête si l'écran est verrouillé à la main (bouton latéral) ou si l'app passe en arrière-plan (limite de la fenêtre web interne).
 - La suppression d'écho dépend du navigateur du téléphone : des écouteurs donnent le meilleur résultat.
 - Les montants ne sont retirés qu'au niveau des outils et de la consigne : à l'oral, le texte prononcé ne peut pas être filtré. Les sous-titres enregistrés, eux, sont filtrés.
 - La version « tout natif » (build de développement, compte Apple Developer) pourra ajouter l'arrière-plan et l'appel entrant ; l'écran, l'historique et les limites resteront les mêmes.

@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -19,6 +20,7 @@ import { formatDuration } from '@/features/chat/voice-utils';
 import { HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
+const KEEP_AWAKE_TAG = 'bibip-live-voice';
 const VOICE_KEY = 'bibip.chat.live.voice.v1';
 const CAPTIONS_KEY = 'bibip.chat.live.captions.v1';
 
@@ -114,6 +116,17 @@ function LiveBody({ t, existing, voice, setVoice, captionsOn, setCaptionsOn, red
 
   const active = phase === 'listening' || phase === 'thinking' || phase === 'tool' || phase === 'speaking' || phase === 'muted';
   const finished = phase === 'error' || phase === 'ended';
+
+  // L'écran reste allumé tant que la session est ouverte (connexion comprise) : on ne touche pas l'écran en parlant, il se
+  // verrouillerait sinon au bout du délai de verrouillage automatique du téléphone et couperait la conversation.
+  const keepAwake = !finished;
+  useEffect(() => {
+    if (!keepAwake) return;
+    void activateKeepAwakeAsync(KEEP_AWAKE_TAG).catch(() => undefined);
+    return () => {
+      void deactivateKeepAwake(KEEP_AWAKE_TAG).catch(() => undefined);
+    };
+  }, [keepAwake]);
 
   // ---- Orbe : pulse au rythme du volume (voix de l'utilisateur ou de BIBIP), respiration lente pendant la connexion et la réflexion
   const pulse = useSharedValue(0);
