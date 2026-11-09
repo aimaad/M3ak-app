@@ -3,7 +3,7 @@ import type { EngineErrorCode, EngineMessage, UsageMeta } from './protocol';
 
 export type LivePhase = 'connecting' | 'listening' | 'thinking' | 'tool' | 'speaking' | 'muted' | 'error' | 'ended';
 export type LiveLine = { id: number; role: 'user' | 'assistant'; text: string; cards: ChatCard[] };
-export type LiveFailure = EngineErrorCode | 'live_limit' | 'not_configured' | 'disabled' | 'unavailable' | 'timeout' | 'silence';
+export type LiveFailure = EngineErrorCode | 'live_limit' | 'not_configured' | 'disabled' | 'unavailable' | 'timeout' | 'engine';
 
 export type LiveState = {
   /** Phase du moteur (sans le micro coupé) ; l'écran affiche `displayPhase`. */

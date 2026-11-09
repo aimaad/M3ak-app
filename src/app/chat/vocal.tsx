@@ -1,230 +1,123 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
-import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
+import { Linking, Pressable, ScrollView, View, type ScrollViewInstance } from 'react-native';
+import Animated, { cancelAnimation, Easing, FadeInDown, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withSequence, withTiming } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Brand, Palette } from '@/constants/theme';
-import { useSession } from '@/features/auth/session-context';
-import { chatErrorMessageKey, transcribeAudio, uploadVoiceMessage } from '@/features/chat/api';
-import { useAskChat } from '@/features/chat/hooks';
-import { Endpointer } from '@/features/chat/endpoint';
-import { detectMessageLanguage } from '@/features/chat/language';
-import { VoiceQueue } from '@/features/chat/natural-voice';
-import { takeSentences } from '@/features/chat/stream';
-import { makeTitle } from '@/features/chat/titles';
-import { openMicrophoneSettings, useVoiceRecorder } from '@/features/chat/use-voice-recorder';
-import { newId } from '@/features/chat/uuid';
-import { audioContentType, audioExtension, formatDuration, MAX_RECORD_MS, MIN_RECORD_MS, pushLevel, voicePath, WAVE_BARS } from '@/features/chat/voice-utils';
+import { DataCardView } from '@/features/chat/chat-bubble';
+import { LIVE_VOICES } from '@/features/chat/live/api';
+import { EngineView, type EngineHandle } from '@/features/chat/live/engine-view';
+import type { EngineCommand } from '@/features/chat/live/protocol';
+import { displayPhase, type LiveFailure, type LivePhase } from '@/features/chat/live/state';
+import { useLiveSession } from '@/features/chat/live/use-live-session';
+import type { ChatCardItem } from '@/features/chat/types';
+import { formatDuration } from '@/features/chat/voice-utils';
 import { HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
-const SPEAK_KEY = 'bibip.chat.voice.speak.v1';
-type Stage = 'idle' | 'listening' | 'paused' | 'transcribing' | 'thinking' | 'speaking' | 'error';
-type Hint = 'auto' | 'darija' | 'fr';
-const HINTS: Hint[] = ['auto', 'darija', 'fr'];
+const VOICE_KEY = 'bibip.chat.live.voice.v1';
+const CAPTIONS_KEY = 'bibip.chat.live.captions.v1';
+
+const todayKey = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+};
+
+/** Message clair pour chaque panne (jamais de texte technique). */
+function failureKey(failure: LiveFailure, limitReason: string | null): string {
+  switch (failure) {
+    case 'mic_denied':
+      return 'chat.voice.permBody';
+    case 'mic_unavailable':
+      return 'chat.live.errors.micUnavailable';
+    case 'connect_failed':
+      return 'chat.live.errors.connect';
+    case 'closed':
+      return 'chat.live.errors.closed';
+    case 'live_limit':
+      return limitReason === 'agency_daily' ? 'chat.live.errors.limitAgency' : 'chat.live.errors.limitUser';
+    case 'not_configured':
+    case 'disabled':
+      return 'chat.errors.inactive';
+    case 'engine':
+      return 'chat.live.errors.engine';
+    case 'timeout':
+      return 'chat.errors.timeout';
+    default:
+      return 'chat.live.errors.unavailable';
+  }
+}
+
+/** Vrai quand `active` dure depuis plus de `delay` ms : « BIBIP réfléchit » ne s'affiche qu'au-delà de 600 ms. */
+function useDelayedFlag(active: boolean, delay: number): boolean {
+  const [flag, setFlag] = useState(false);
+  useEffect(() => {
+    if (!active) {
+      const reset = setTimeout(() => setFlag(false), 0);
+      return () => clearTimeout(reset);
+    }
+    const timer = setTimeout(() => setFlag(true), delay);
+    return () => clearTimeout(timer);
+  }, [active, delay]);
+  return flag;
+}
 
 /**
- * Mode vocal plein écran : l'utilisateur parle, envoie, BIBIP transcrit (côté serveur), répond (lue à voix haute si
- * l'interrupteur est actif, en darija écrite en lettres arabes), puis l'écoute reprend. Le message vocal et la réponse sont ajoutés
- * à la conversation. Pas de texte en direct : la transcription apparaît après l'envoi.
+ * Mode vocal temps réel : une vraie conversation à voix haute avec BIBIP, sans bouton Envoyer. BIBIP répond presque tout de suite,
+ * on peut l'interrompre en parlant, il consulte les données de l'agence (mêmes outils et règles que le chat écrit) et toute la
+ * conversation est enregistrée dans l'historique. Le moteur audio tourne dans une fenêtre web interne invisible (Expo Go).
  */
-export default function VoiceModeScreen() {
-  const { t, language } = useLanguage();
-  const { session } = useSession();
+export default function VoiceLiveScreen() {
+  const { t } = useLanguage();
   const { conversation: existingConversation } = useLocalSearchParams<{ conversation?: string }>();
-  const recorder = useVoiceRecorder();
-  const ask = useAskChat();
   const reduceMotion = useReducedMotion();
 
-  const [stage, setStage] = useState<Stage>('idle');
-  const [conversationId, setConversationId] = useState<string | null>(existingConversation ?? null);
-  const [draftId] = useState(() => newId());
-  const [hint, setHint] = useState<Hint>('auto');
-  const [speakReplies, setSpeakReplies] = useState(true);
-  const [transcript, setTranscript] = useState<string | null>(null);
-  const [reply, setReply] = useState<string | null>(null);
-  const [errorKey, setErrorKey] = useState<string | null>(null);
-  const [permission, setPermission] = useState<'ok' | 'denied' | 'blocked'>('ok');
-  const [levels, setLevels] = useState<number[]>(() => Array(WAVE_BARS).fill(0));
-  const closed = useRef(false);
-  // Lecture à voix naturelle, phrase par phrase ; `turn` change quand l'utilisateur interrompt BIBIP.
-  const [voice] = useState(() => new VoiceQueue());
-  const turn = useRef(0);
-  // Détection de fin de phrase : un nouveau détecteur à chaque écoute.
-  const endpointer = useRef(new Endpointer());
-
+  const [voice, setVoice] = useState<string>(LIVE_VOICES[0]);
+  const [captionsOn, setCaptionsOn] = useState(true);
+  const prefsLoaded = useRef(false);
+  // Les préférences (voix, sous-titres) sont lues avant le démarrage : la session utilise la voix choisie.
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    AsyncStorage.getItem(SPEAK_KEY).then((v) => v !== null && setSpeakReplies(v === '1')).catch(() => undefined);
+    let alive = true;
+    Promise.all([AsyncStorage.getItem(VOICE_KEY), AsyncStorage.getItem(CAPTIONS_KEY)])
+      .then(([savedVoice, savedCaptions]) => {
+        if (!alive) return;
+        if (savedVoice && (LIVE_VOICES as readonly string[]).includes(savedVoice)) setVoice(savedVoice);
+        if (savedCaptions !== null) setCaptionsOn(savedCaptions === '1');
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        prefsLoaded.current = true;
+        if (alive) setReady(true);
+      });
     return () => {
-      closed.current = true;
-      voice.stop();
+      alive = false;
     };
-  }, [voice]);
-
-  const startListening = useCallback(async () => {
-    if (closed.current) return;
-    setErrorKey(null);
-    try {
-      const result = await recorder.start();
-      if (result !== 'ok') {
-        setPermission(result);
-        setStage('idle');
-        return;
-      }
-      setPermission('ok');
-      endpointer.current = new Endpointer();
-      setLevels(Array(WAVE_BARS).fill(0));
-      setStage('listening');
-    } catch (error) {
-      console.warn('Mode vocal : démarrage du micro impossible.', error instanceof Error ? error.message : error);
-      setErrorKey('chat.errors.voiceFailed');
-      setStage('error');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recorder.start]);
-
-  // Dès l'ouverture : on écoute.
-  useEffect(() => {
-    const timer = setTimeout(() => void startListening(), 0);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Forme d'onde en temps réel.
-  useEffect(() => {
-    // Abonnement au niveau du micro (mis à jour ~12 fois par seconde par l'enregistreur) : le décalage de la forme d'onde.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stage === 'listening') setLevels((previous) => pushLevel(previous, recorder.level));
-  }, [recorder.level, recorder.ms, stage]);
+  if (!ready) return <View style={{ flex: 1, backgroundColor: Brand.graphite }} />;
+  return <LiveBody key="live" t={t} existing={existingConversation ?? null} voice={voice} setVoice={setVoice} captionsOn={captionsOn} setCaptionsOn={setCaptionsOn} reduceMotion={reduceMotion} />;
+}
 
-  const sendTurn = useCallback(async () => {
-    if (stage !== 'listening' && stage !== 'paused') return;
-    const file = await recorder.stop();
-    if (!file || file.ms < MIN_RECORD_MS) {
-      setErrorKey('chat.voice.tooShort');
-      setStage('idle');
-      return;
-    }
-    setStage('transcribing');
-    setErrorKey(null);
-    try {
-      const userId = session?.user.id;
-      if (!userId) throw new Error('no_session');
-      const path = voicePath(userId, conversationId ?? draftId, audioExtension(file.uri));
-      await uploadVoiceMessage(file.uri, path, audioContentType(file.uri));
-      const text = await transcribeAudio({ audioPath: path, hint });
-      if (closed.current) return;
-      setTranscript(text);
-      setReply(null);
-      setStage('thinking');
-      const myTurn = ++turn.current;
-      // Voix par phrases : dès qu'une phrase du flux est terminée, elle est lue ; la suite se prépare pendant ce temps.
-      let consumed = 0;
-      let spokenPrefix = '';
-      const feed = (text: string, final: boolean) => {
-        if (!speakReplies || turn.current !== myTurn || detectMessageLanguage(text) === 'darija-latin') return;
-        // Le serveur a recommencé la réponse (autre modèle) : on repart de zéro plutôt que de lire deux versions.
-        if (!text.startsWith(spokenPrefix)) {
-          voice.stop();
-          consumed = 0;
-        }
-        const { sentences, next } = takeSentences(text, consumed, final);
-        consumed = next;
-        spokenPrefix = text.slice(0, consumed);
-        if (sentences.length > 0) {
-          sentences.forEach((sentence) => voice.enqueue(sentence));
-          setStage('speaking');
-        }
-      };
-      const answer = await ask.mutateAsync({
-        message: text,
-        conversationId,
-        language: language === 'ar' ? 'ar' : 'fr',
-        voice: true,
-        audioPath: path,
-        audioMs: file.ms,
-        onText: (partial) => {
-          if (closed.current || turn.current !== myTurn) return;
-          setReply(partial);
-          feed(partial, false);
-        },
-        ...(conversationId ? {} : { newConversationId: draftId, title: makeTitle(text) }),
-      });
-      if (closed.current) return;
-      setConversationId(answer.conversationId);
-      if (turn.current !== myTurn) return;
-      setReply(answer.answer);
-      if (speakReplies && detectMessageLanguage(answer.answer) !== 'darija-latin') {
-        feed(answer.answer, true);
-        setStage('speaking');
-        await voice.idle();
-        // Terminé sans interruption : l'écoute reprend toute seule.
-        if (!closed.current && turn.current === myTurn) void startListening();
-      } else {
-        setStage('idle');
-      }
-    } catch (error) {
-      if (closed.current) return;
-      setErrorKey(chatErrorMessageKey(error));
-      setStage('error');
-    }
-  }, [ask, conversationId, draftId, hint, language, recorder, session, speakReplies, stage, startListening, voice]);
+function LiveBody({ t, existing, voice, setVoice, captionsOn, setCaptionsOn, reduceMotion }: { t: (key: string, options?: Record<string, unknown>) => string; existing: string | null; voice: string; setVoice: (voice: string) => void; captionsOn: boolean; setCaptionsOn: (on: boolean) => void; reduceMotion: boolean }) {
+  const engine = useRef<EngineHandle>(null);
+  const send = useCallback((command: EngineCommand) => engine.current?.send(command), []);
+  const session = useLiveSession({ existingConversationId: existing, voice, send });
+  const { state } = session;
+  const phase: LivePhase = displayPhase(state);
+  const slowThinking = useDelayedFlag(phase === 'thinking', 600);
+  const scroll = useRef<ScrollViewInstance>(null);
 
-  // Durée maximale (2 minutes) : l'envoi part tout seul.
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (stage === 'listening' && recorder.ms >= MAX_RECORD_MS) void sendTurn();
-  }, [recorder.ms, stage, sendTurn]);
+  const active = phase === 'listening' || phase === 'thinking' || phase === 'tool' || phase === 'speaking' || phase === 'muted';
+  const finished = phase === 'error' || phase === 'ended';
 
-  // Fin de phrase automatique : après la parole, un court silence envoie le message (plus besoin d'appuyer).
-  // Si personne ne parle pendant un moment, l'écoute s'arrête sans rien envoyer.
-  useEffect(() => {
-    if (stage !== 'listening') return;
-    const event = endpointer.current.push(recorder.level, recorder.ms);
-    if (event === 'end') {
-      void Haptics.selectionAsync().catch(() => undefined);
-      void sendTurn();
-    } else if (event === 'no-speech') {
-      void recorder.cancel();
-      setStage('idle');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recorder.level, recorder.ms, stage]);
-
-  const cancelRecording = useCallback(async () => {
-    await recorder.cancel();
-    turn.current += 1;
-    voice.stop();
-    setStage('idle');
-    setErrorKey(null);
-  }, [recorder, voice]);
-
-  const close = useCallback(async () => {
-    closed.current = true;
-    voice.stop();
-    await recorder.cancel();
-    if (existingConversation || !conversationId) router.back();
-    else router.replace({ pathname: '/chat/[id]', params: { id: conversationId } });
-  }, [conversationId, existingConversation, recorder, voice]);
-
-  const toggleSpeak = () => {
-    const next = !speakReplies;
-    setSpeakReplies(next);
-    AsyncStorage.setItem(SPEAK_KEY, next ? '1' : '0').catch(() => undefined);
-    if (!next) {
-      turn.current += 1;
-      voice.stop();
-    }
-  };
-
-  // ---- Orbe : pulse au rythme de la voix (écoute), respiration lente pendant le traitement
+  // ---- Orbe : pulse au rythme du volume (voix de l'utilisateur ou de BIBIP), respiration lente pendant la connexion et la réflexion
   const pulse = useSharedValue(0);
-  const breathe = stage === 'transcribing' || stage === 'thinking' || stage === 'speaking';
+  const breathe = phase === 'connecting' || phase === 'tool' || (phase === 'thinking' && slowThinking);
   useEffect(() => {
     cancelAnimation(pulse);
     if (reduceMotion) {
@@ -232,49 +125,108 @@ export default function VoiceModeScreen() {
       return;
     }
     if (breathe) pulse.value = withRepeat(withSequence(withTiming(0.55, { duration: 700, easing: Easing.inOut(Easing.quad) }), withTiming(0.1, { duration: 700, easing: Easing.inOut(Easing.quad) })), -1);
-    else if (stage === 'listening') pulse.value = withTiming(recorder.level, { duration: 90 });
+    else if (phase === 'listening') pulse.value = withTiming(state.micLevel, { duration: 90 });
+    else if (phase === 'speaking') pulse.value = withTiming(state.botLevel, { duration: 90 });
     else pulse.value = withTiming(0, { duration: 200 });
-  }, [stage, breathe, recorder.level, reduceMotion, pulse]);
+  }, [phase, breathe, state.micLevel, state.botLevel, reduceMotion, pulse]);
   const ring1 = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.1 }] }));
   const ring2 = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.18 }] }));
   const core = useAnimatedStyle(() => ({ transform: [{ scale: 1 + pulse.value * 0.12 }] }));
 
-  const status = { idle: t('chat.voice.idle'), listening: t('chat.voice.listening'), paused: t('chat.voice.paused'), transcribing: t('chat.voice.transcribing'), thinking: t('chat.voice.thinking'), speaking: t('chat.voice.speaking'), error: t('chat.voice.idle') }[stage];
-  const listening = stage === 'listening' || stage === 'paused';
-  const langLabel = hint === 'auto' ? t('chat.voice.langAuto') : hint === 'darija' ? `${t('chat.voice.langDarija')}` : t('chat.voice.langFr');
+  const speaking = phase === 'speaking';
+  const coreColor = speaking ? Brand.orangeLight : phase === 'listening' || phase === 'thinking' || phase === 'tool' ? Brand.orange : Brand.strokeOnDark;
+  const ringColor = speaking ? Brand.orangeLight : phase === 'listening' ? Brand.orange : Brand.borderOnDark;
+  const status = {
+    connecting: t('chat.live.connecting'),
+    listening: t('chat.voice.listening'),
+    thinking: slowThinking ? t('chat.live.thinking') : t('chat.voice.listening'),
+    tool: t('chat.live.tool'),
+    speaking: t('chat.voice.speaking'),
+    muted: t('chat.live.muted'),
+    error: t('chat.live.ended'),
+    ended: t('chat.live.ended'),
+  }[phase];
+
+  const lines = state.lines.slice(-4);
+  const lastAssistant = [...state.lines].reverse().find((line) => line.role === 'assistant');
+  useEffect(() => {
+    const timer = setTimeout(() => scroll.current?.scrollToEnd({ animated: true }), 60);
+    return () => clearTimeout(timer);
+  }, [state.lines]);
+
+  // ---- Navigation : on termine toujours la session (enregistrée dans l'historique) avant de quitter l'écran.
+  const goToConversation = useCallback(
+    async (replace: boolean) => {
+      const saved = await session.stop('user');
+      if (replace && (saved || session.saved)) router.replace({ pathname: '/chat/[id]', params: { id: session.conversationId } });
+      else if (!replace && !saved && !session.saved) router.replace({ pathname: '/chat/[id]', params: { id: 'nouveau' } });
+      else router.back();
+    },
+    [session]
+  );
+  const close = async () => {
+    const saved = await session.stop('user');
+    if (existing || !(saved || session.saved)) router.back();
+    else router.replace({ pathname: '/chat/[id]', params: { id: session.conversationId } });
+  };
+  const toWritten = async () => {
+    const saved = await session.stop('user');
+    router.replace({ pathname: '/chat/[id]', params: { id: saved || session.saved || existing ? session.conversationId : 'nouveau' } });
+  };
+  const openItem = async (item: ChatCardItem) => {
+    await session.stop('user');
+    if (item.kind === 'vehicle') router.push({ pathname: '/locations/nouveau', params: { vehicleId: item.id, date: todayKey() } });
+    else router.push({ pathname: '/locations/[id]', params: { id: item.id } });
+  };
+
+  const cycleVoice = () => {
+    const next = LIVE_VOICES[(LIVE_VOICES.indexOf(voice as (typeof LIVE_VOICES)[number]) + 1) % LIVE_VOICES.length];
+    setVoice(next);
+    AsyncStorage.setItem(VOICE_KEY, next).catch(() => undefined);
+    // Nouvelle voix : la session redémarre avec elle (les phrases déjà dites sont enregistrées).
+    if (active || finished) void session.restart(next);
+  };
+  const toggleCaptions = () => {
+    const next = !captionsOn;
+    setCaptionsOn(next);
+    AsyncStorage.setItem(CAPTIONS_KEY, next ? '1' : '0').catch(() => undefined);
+  };
 
   const circle = { width: 56, height: 56, borderRadius: 28, backgroundColor: Brand.surfaceOnDark, borderWidth: 1, borderColor: Brand.strokeOnDark, alignItems: 'center' as const, justifyContent: 'center' as const };
+  const micDenied = state.failure === 'mic_denied';
+  const endedNote = session.endedReason === 'silence' ? t('chat.live.silenceEnded') : session.endedReason === 'time_limit' ? t('chat.live.timeEnded') : null;
 
   return (
     <View style={{ flex: 1, backgroundColor: Brand.graphite }}>
       <StatusBar style="light" />
-      <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 12 }} edges={['top', 'left', 'right', 'bottom']}>
+      {/* Moteur audio : fenêtre web interne invisible */}
+      <EngineView ref={engine} interactive={state.gestureNeeded} onMessage={session.onEngineMessage} onLoadError={session.onLoadError} />
+      <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingBottom: 12 }} edges={['top', 'left', 'right', 'bottom']} pointerEvents={state.gestureNeeded ? 'none' : 'auto'}>
         {/* Haut */}
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingTop: 8 }}>
           <Pressable onPress={() => void close()} accessibilityRole="button" accessibilityLabel={t('chat.voice.close')} style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: Brand.strokeOnDark, alignItems: 'center', justifyContent: 'center' }}>
             <Ionicons name="close" size={18} color={Brand.white} />
           </Pressable>
-          {/* Appui long (1,2 s) sur le titre : test caché du vocal temps réel. */}
-          <Pressable onLongPress={() => router.push('/chat/vocal-live')} delayLongPress={1200} accessible={false} style={{ minHeight: 44, justifyContent: 'center' }}>
+          <View style={{ alignItems: 'center' }}>
             <MicroLabel size={11} track={0.16} color={Brand.mutedOnDark}>
               {t('chat.voice.title')}
             </MicroLabel>
-          </Pressable>
-          <Pressable
-            onPress={() => setHint(HINTS[(HINTS.indexOf(hint) + 1) % HINTS.length])}
-            accessibilityRole="button"
-            accessibilityLabel={t('chat.voice.langA11y', { lang: langLabel })}
-            style={{ height: 36, borderRadius: 18, borderWidth: 1, borderColor: Brand.strokeOnDark, backgroundColor: Brand.surfaceOnDark, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-          >
-            <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: Brand.successOnDark }} />
+            {active ? (
+              <HText size={12} color={Brand.mutedOnDark}>
+                {formatDuration(session.elapsed * 1000)} / {formatDuration(session.maxSeconds * 1000)}
+              </HText>
+            ) : null}
+          </View>
+          <Pressable onPress={cycleVoice} accessibilityRole="button" accessibilityLabel={t('chat.live.voiceA11y', { voice })} style={{ height: 36, borderRadius: 18, borderWidth: 1, borderColor: Brand.strokeOnDark, backgroundColor: Brand.surfaceOnDark, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="volume-medium-outline" size={14} color={Brand.white} />
             <HText weight="semibold" size={12} color={Brand.white}>
-              {langLabel}
+              {voice}
             </HText>
           </Pressable>
         </View>
 
-        <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
-          {permission !== 'ok' ? (
+        <ScrollView ref={scroll} contentContainerStyle={{ alignItems: 'center', paddingBottom: 12 }} showsVerticalScrollIndicator={false}>
+          {micDenied ? (
             <View style={{ marginTop: 56, alignItems: 'center', gap: 14, paddingHorizontal: 16 }}>
               <View style={{ width: 104, height: 104, borderRadius: 52, backgroundColor: Brand.orangeDeep, borderWidth: 2, borderColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
                 <Ionicons name="mic-off-outline" size={40} color={Brand.orangeLight} />
@@ -283,132 +235,137 @@ export default function VoiceModeScreen() {
                 {t('chat.voice.permTitle')}
               </HText>
               <HText size={14} color={Brand.mutedOnDark} style={{ textAlign: 'center' }}>
-                {t(permission === 'blocked' ? 'chat.voice.permBlocked' : 'chat.voice.permBody')}
+                {t('chat.voice.permBlocked')}
               </HText>
-              <Pressable onPress={() => (permission === 'blocked' ? openMicrophoneSettings() : void startListening())} accessibilityRole="button" style={{ minHeight: 48, borderRadius: 24, backgroundColor: Brand.orange, paddingHorizontal: 24, justifyContent: 'center' }}>
+              <Pressable onPress={() => void Linking.openSettings()} accessibilityRole="button" style={{ minHeight: 48, borderRadius: 24, backgroundColor: Brand.orange, paddingHorizontal: 24, justifyContent: 'center' }}>
                 <HText weight="semibold" size={15} color={Brand.white}>
-                  {t(permission === 'blocked' ? 'chat.voice.openSettings' : 'chat.voice.allow')}
+                  {t('chat.voice.openSettings')}
                 </HText>
               </Pressable>
             </View>
           ) : (
             <>
               {/* Orbe */}
-              <Pressable
-                disabled={stage !== 'idle' && stage !== 'error'}
-                onPress={() => void startListening()}
-                accessibilityRole="button"
-                accessibilityLabel={t('chat.voice.orb')}
-                style={{ marginTop: 36, width: 260, height: 260, alignItems: 'center', justifyContent: 'center' }}
-              >
-                <Animated.View style={[{ position: 'absolute', width: 260, height: 260, borderRadius: 130, borderWidth: 1, borderColor: Brand.borderOnDark }, ring2]} />
-                <Animated.View style={[{ position: 'absolute', width: 204, height: 204, borderRadius: 102, borderWidth: 1, borderColor: Brand.strokeOnDark }, ring1]} />
-                <View style={{ width: 152, height: 152, borderRadius: 76, backgroundColor: Brand.orangeDeep, borderWidth: 2, borderColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
-                  <Animated.View style={[{ width: 104, height: 104, borderRadius: 52, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }, core]}>
-                    <Ionicons name="mic-outline" size={40} color={Brand.white} />
+              <View accessible accessibilityLabel={status} style={{ marginTop: 28, width: 220, height: 220, alignItems: 'center', justifyContent: 'center' }}>
+                <Animated.View style={[{ position: 'absolute', width: 220, height: 220, borderRadius: 110, borderWidth: speaking ? 2 : 1, borderColor: ringColor }, ring2]} />
+                <Animated.View style={[{ position: 'absolute', width: 172, height: 172, borderRadius: 86, borderWidth: 1, borderColor: speaking ? Brand.orangeLight : Brand.strokeOnDark }, ring1]} />
+                <View style={{ width: 128, height: 128, borderRadius: 64, backgroundColor: Brand.orangeDeep, borderWidth: 2, borderColor: coreColor, alignItems: 'center', justifyContent: 'center' }}>
+                  <Animated.View style={[{ width: 88, height: 88, borderRadius: 44, backgroundColor: coreColor, alignItems: 'center', justifyContent: 'center' }, core]}>
+                    <Ionicons name={phase === 'muted' ? 'mic-off-outline' : speaking ? 'volume-high-outline' : 'mic-outline'} size={34} color={Brand.white} />
                   </Animated.View>
                 </View>
-              </Pressable>
-
-              {/* Forme d'onde */}
-              <View accessibilityLabel={t('chat.voice.levelA11y')} style={{ marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 3, height: 34 }}>
-                {levels.map((level, index) => (
-                  <View key={index} style={{ width: 4, borderRadius: 2, height: 6 + level * 28, backgroundColor: listening && index >= levels.length - 12 ? Brand.orangeLight : Palette.textSecondary }} />
-                ))}
               </View>
 
-              {/* État et durée */}
-              <View accessibilityLiveRegion="polite" style={{ marginTop: 18, alignItems: 'center', gap: 4 }}>
+              {/* État */}
+              <View accessibilityLiveRegion="polite" style={{ marginTop: 14, alignItems: 'center', gap: 6 }}>
                 <HText font="display" weight="semibold" size={24} color={Brand.white}>
                   {status}
                 </HText>
-                {listening ? (
-                  <HText size={14} color={Brand.mutedOnDark}>
-                    {formatDuration(recorder.ms)}
+                {active && phase !== 'muted' ? (
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Brand.successOnDark }} />
+                    <HText size={12} color={Brand.mutedOnDark}>
+                      {t('chat.live.micActive')}
+                    </HText>
+                  </View>
+                ) : null}
+                {state.gestureNeeded ? (
+                  <HText size={13} color={Brand.orangeLight} style={{ marginTop: 4 }}>
+                    {t('chat.live.tapToEnable')}
                   </HText>
                 ) : null}
               </View>
 
-              {errorKey ? (
+              {state.failure ? (
                 <HText size={13} color={Brand.errorOnDark} style={{ marginTop: 12, textAlign: 'center' }}>
-                  {t(errorKey)}
+                  {t(failureKey(state.failure, session.limitReason))}
+                </HText>
+              ) : endedNote ? (
+                <HText size={13} color={Brand.mutedOnDark} style={{ marginTop: 12, textAlign: 'center' }}>
+                  {endedNote}
                 </HText>
               ) : null}
 
-              {/* Transcription (après l'envoi) et réponse */}
-              <View style={{ marginTop: 20, width: '100%', backgroundColor: Brand.surfaceOnDark, borderWidth: 1, borderColor: Brand.borderOnDark, borderRadius: 20, padding: 16, gap: 8 }}>
-                <MicroLabel size={10} track={0.16} color={Brand.mutedOnDark}>
-                  {t('chat.voice.transcriptionLabel')}
-                </MicroLabel>
-                <HText size={18} weight="medium" color={transcript ? Brand.white : Brand.mutedOnDark} style={{ lineHeight: 26 }}>
-                  {transcript ?? t('chat.voice.transcriptionHint')}
-                </HText>
-              </View>
-              {reply ? (
-                <View style={{ marginTop: 12, width: '100%', backgroundColor: Brand.surfaceOnDark, borderWidth: 1, borderColor: Brand.borderOnDark, borderRadius: 20, padding: 16, gap: 8 }}>
-                  <MicroLabel size={10} track={0.16} color={Brand.orangeLight}>
-                    {t('chat.voice.replyLabel')}
+              {/* Sous-titres en direct */}
+              {captionsOn ? (
+                <View style={{ marginTop: 18, width: '100%', backgroundColor: Brand.surfaceOnDark, borderWidth: 1, borderColor: Brand.borderOnDark, borderRadius: 20, padding: 16, gap: 10 }}>
+                  <MicroLabel size={10} track={0.16} color={Brand.mutedOnDark}>
+                    {t('chat.live.captions')}
                   </MicroLabel>
-                  <HText size={16} color={Brand.white} style={{ lineHeight: 24 }} selectable>
-                    {reply}
-                  </HText>
+                  {lines.length === 0 ? (
+                    <HText size={15} color={Brand.mutedOnDark}>
+                      {t('chat.live.captionsEmpty')}
+                    </HText>
+                  ) : (
+                    lines.map((line, index) => {
+                      const current = index >= lines.length - 2;
+                      return (
+                        <HText key={line.id} size={line.role === 'user' ? 17 : 16} weight={line.role === 'user' ? 'medium' : 'regular'} color={current ? (line.role === 'user' ? Brand.white : '#F4F5F5') : Brand.mutedOnDark} style={{ lineHeight: 24, writingDirection: 'auto' }}>
+                          {line.text}
+                        </HText>
+                      );
+                    })
+                  )}
                 </View>
+              ) : null}
+
+              {/* Cartes de données : glissent depuis le bas quand BIBIP donne des voitures ou des locations */}
+              {lastAssistant && lastAssistant.cards.length > 0 ? (
+                <Animated.View key={lastAssistant.id} entering={reduceMotion ? undefined : FadeInDown.duration(320)} style={{ marginTop: 12, width: '100%', gap: 8 }}>
+                  {lastAssistant.cards.map((card, index) => (
+                    <DataCardView key={index} card={card} onOpen={(item) => void openItem(item)} />
+                  ))}
+                </Animated.View>
               ) : null}
             </>
           )}
         </ScrollView>
 
-        {/* Bas */}
-        <View style={{ gap: 16 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 }}>
-            <HText size={13} color={Brand.textOnDark} style={{ flex: 1 }}>
-              {t('chat.voice.speakToggle')}
+        {/* Commandes */}
+        <View style={{ gap: 14 }}>
+          {finished ? (
+            <View style={{ gap: 10 }}>
+              <Pressable onPress={() => void session.restart(voice)} accessibilityRole="button" style={{ minHeight: 52, borderRadius: 26, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
+                <HText weight="semibold" size={16} color={Brand.white}>
+                  {t(state.failure ? 'chat.live.retry' : 'chat.live.resume')}
+                </HText>
+              </Pressable>
+              <View style={{ flexDirection: 'row', gap: 10 }}>
+                <Pressable onPress={() => void toWritten()} accessibilityRole="button" style={{ flex: 1, minHeight: 48, borderRadius: 24, borderWidth: 1, borderColor: Brand.strokeOnDark, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
+                  <HText weight="semibold" size={13} color={Brand.white} style={{ textAlign: 'center' }}>
+                    {t('chat.live.toWritten')}
+                  </HText>
+                </Pressable>
+                {state.failure ? (
+                  <Pressable onPress={() => router.replace({ pathname: '/chat/vocal-turns', params: existing ? { conversation: existing } : {} })} accessibilityRole="button" style={{ flex: 1, minHeight: 48, borderRadius: 24, borderWidth: 1, borderColor: Brand.strokeOnDark, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 }}>
+                    <HText weight="semibold" size={13} color={Brand.white} style={{ textAlign: 'center' }}>
+                      {t('chat.live.simpleMode')}
+                    </HText>
+                  </Pressable>
+                ) : null}
+              </View>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }}>
+              <View style={{ alignItems: 'center', gap: 4 }}>
+                <Pressable onPress={() => session.mute(!state.muted)} disabled={!active} accessibilityRole="button" accessibilityState={{ selected: state.muted }} accessibilityLabel={t(state.muted ? 'chat.live.unmute' : 'chat.live.mute')} style={[circle, { opacity: active ? 1 : 0.4, backgroundColor: state.muted ? Brand.white : Brand.surfaceOnDark }]}>
+                  <Ionicons name={state.muted ? 'mic-off' : 'mic-outline'} size={22} color={state.muted ? Brand.graphite : Brand.white} />
+                </Pressable>
+              </View>
+              <Pressable onPress={() => void goToConversation(true)} accessibilityRole="button" accessibilityLabel={t('chat.live.end')} style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#C42B4B', alignItems: 'center', justifyContent: 'center' }}>
+                <Ionicons name="call" size={26} color={Brand.white} style={{ transform: [{ rotate: '135deg' }] }} />
+              </Pressable>
+              <Pressable onPress={() => void toWritten()} accessibilityRole="button" accessibilityLabel={t('chat.live.toWritten')} style={circle}>
+                <Ionicons name="create-outline" size={22} color={Brand.white} />
+              </Pressable>
+            </View>
+          )}
+          <Pressable onPress={toggleCaptions} accessibilityRole="switch" accessibilityState={{ checked: captionsOn }} accessibilityLabel={t(captionsOn ? 'chat.live.captionsHide' : 'chat.live.captionsShow')} style={{ minHeight: 44, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Ionicons name={captionsOn ? 'chatbox-ellipses' : 'chatbox-ellipses-outline'} size={16} color={Palette.textMuted} />
+            <HText size={12} color={Brand.mutedOnDark}>
+              {t('chat.live.captions')} · {captionsOn ? 'ON' : 'OFF'}
             </HText>
-            <Pressable
-              onPress={toggleSpeak}
-              accessibilityRole="switch"
-              accessibilityState={{ checked: speakReplies }}
-              accessibilityLabel={t('chat.voice.speakToggle')}
-              style={{ width: 48, height: 28, borderRadius: 14, padding: 3, backgroundColor: speakReplies ? Brand.successOnDark : Brand.strokeOnDark, alignItems: speakReplies ? 'flex-end' : 'flex-start', justifyContent: 'center' }}
-            >
-              <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: Brand.white }} />
-            </Pressable>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 12 }}>
-            <Pressable onPress={() => void cancelRecording()} accessibilityRole="button" accessibilityLabel={t('chat.voice.cancel')} style={circle}>
-              <Ionicons name="trash-outline" size={20} color={Brand.white} />
-            </Pressable>
-            <Pressable
-              onPress={() => (listening ? void sendTurn() : stage === 'speaking' ? (turn.current++, voice.stop(), void startListening()) : stage === 'idle' || stage === 'error' ? void startListening() : undefined)}
-              disabled={stage === 'transcribing' || stage === 'thinking'}
-              accessibilityRole="button"
-              accessibilityLabel={t('chat.voice.send')}
-              accessibilityState={{ disabled: stage === 'transcribing' || stage === 'thinking' }}
-              style={{ width: 76, height: 76, borderRadius: 38, backgroundColor: Brand.white, alignItems: 'center', justifyContent: 'center', opacity: stage === 'transcribing' || stage === 'thinking' ? 0.5 : 1 }}
-            >
-              <Ionicons name={listening ? 'arrow-up' : 'mic-outline'} size={28} color={Brand.graphite} />
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                if (stage === 'listening') {
-                  recorder.pause();
-                  setStage('paused');
-                } else if (stage === 'paused') {
-                  recorder.resume();
-                  setStage('listening');
-                }
-              }}
-              disabled={!listening}
-              accessibilityRole="button"
-              accessibilityLabel={t(stage === 'paused' ? 'chat.voice.resume' : 'chat.voice.pause')}
-              style={[circle, { opacity: listening ? 1 : 0.4 }]}
-            >
-              <Ionicons name={stage === 'paused' ? 'play' : 'pause'} size={18} color={Brand.white} />
-            </Pressable>
-          </View>
-          <HText size={12} color={Brand.mutedOnDark} style={{ textAlign: 'center' }}>
-            {t('chat.voice.hint')} · {t('chat.voice.limit')}
-          </HText>
+          </Pressable>
         </View>
       </SafeAreaView>
     </View>

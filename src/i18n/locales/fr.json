@@ -2743,12 +2743,37 @@
       "orb": "Micro",
       "levelA11y": "Niveau sonore"
     },
-    "voiceLive": {
-      "title": "Vocal temps réel · test",
-      "loading": "Chargement du moteur vocal…",
-      "loadFailed": "Impossible de charger le moteur vocal. Vérifiez la connexion.",
+    "live": {
+      "connecting": "Connexion…",
+      "thinking": "BIBIP réfléchit…",
+      "tool": "Je consulte vos données…",
+      "muted": "Micro coupé",
+      "micActive": "Micro actif",
+      "captions": "Sous-titres",
+      "captionsHide": "Masquer les sous-titres",
+      "captionsShow": "Afficher les sous-titres",
+      "captionsEmpty": "Parlez : vos mots et la réponse de BIBIP s'affichent ici.",
+      "mute": "Couper le micro",
+      "unmute": "Activer le micro",
+      "end": "Terminer",
+      "toWritten": "Passer à l'écrit",
+      "resume": "Reprendre",
+      "simpleMode": "Mode simple (tour par tour)",
       "retry": "Réessayer",
-      "close": "Fermer"
+      "voiceA11y": "Voix de BIBIP : {{voice}}. Touchez pour changer.",
+      "tapToEnable": "Touchez l'écran pour activer le son",
+      "ended": "Session terminée",
+      "silenceEnded": "Session terminée après 30 secondes de silence.",
+      "timeEnded": "Durée maximale de la session atteinte.",
+      "errors": {
+        "micUnavailable": "Le micro n'est pas disponible sur ce téléphone.",
+        "connect": "Connexion impossible. Vérifiez votre connexion internet.",
+        "closed": "La connexion a été coupée.",
+        "limitUser": "Votre limite de minutes du mode vocal est atteinte pour aujourd'hui.",
+        "limitAgency": "La limite de minutes de l'agence est atteinte pour aujourd'hui.",
+        "unavailable": "Le mode vocal temps réel est indisponible pour le moment.",
+        "engine": "Le moteur vocal n'a pas pu démarrer. Vérifiez votre connexion."
+      }
     }
   },
   "access": {
