@@ -416,7 +416,52 @@
     "subtitle_two": "دبر {{count}} ديال السيارات",
     "subtitle_few": "دبر {{count}} ديال السيارات",
     "subtitle_many": "دبر {{count}} ديال السيارات",
-    "addVehicleA11y": "إضافة سيارة"
+    "addVehicleA11y": "إضافة سيارة",
+    "header": {
+      "vehiclesOne": "طوموبيل",
+      "vehiclesMany": "طوموبيلات",
+      "readyNone": "ما كاين حتى طوموبيل واجدة للخروج",
+      "readyOne": "1 واجدة للخروج دابا",
+      "readyMany": "{{count}} واجدين للخروج دابا",
+      "enRoute": "فالطريق",
+      "ringA11y": "توزيع الأسطول: {{free}} متاحة، {{rented}} مكراية، {{immobilized}} موقوفة",
+      "gallery": "عرض فالمعرض",
+      "list": "عرض فاللائحة",
+      "filtersAndSort": "الفلاتر والترتيب",
+      "searchA11y": "قلب على طوموبيل",
+      "tileA11y": "{{label}}: {{count}}",
+      "groups": {
+        "free": "متاحة",
+        "rented": "مكراية",
+        "immobilized": "موقوفة"
+      },
+      "titleAll": "جميع الطوموبيلات",
+      "countOne": "{{count}} طوموبيل",
+      "countMany": "{{count}} طوموبيلات"
+    },
+    "advice": {
+      "label": "نصيحة BIBIP",
+      "noBookingPrefix": "",
+      "noBookingSuffix": " ما فيها حتى حجز هاد الجمعة. شنو رأيك فعرض نهاية الأسبوع؟",
+      "waitingPrefix": "",
+      "waitingSuffix": " كتسنا المعاينة من {{days}} أيام.",
+      "createOffer": "دير العرض",
+      "inspect": "عاين",
+      "later": "من بعد"
+    },
+    "offer": {
+      "title": "دير العرض",
+      "vehicle": "الطوموبيل",
+      "discount": "التخفيض",
+      "percent": "{{percent}} %",
+      "days": "الأيام",
+      "weekend": "نهاية هاد الأسبوع",
+      "week": "7 أيام جاية",
+      "preview": "الرسالة واجدة للإرسال",
+      "share": "شارك",
+      "close": "سدّ",
+      "priceMissing": "ثمن هاد الطوموبيل ما مسجلش."
+    }
   },
   "vehicle": {
     "detailsTitle": "بطاقة السيارة",

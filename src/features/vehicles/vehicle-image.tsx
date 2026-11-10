@@ -9,7 +9,7 @@ import { VEHICLE_PHOTOS_BUCKET } from './api';
 import type { Vehicle } from './types';
 
 // Image par défaut : l'avant d'une voiture de nuit, feux allumés, sur fond graphite. Affichée quand le véhicule n'a pas de photo.
-const DEFAULT_IMAGE = require('../../../assets/images/voiture-par-defaut.png');
+export const DEFAULT_VEHICLE_IMAGE = require('../../../assets/images/voiture-par-defaut.png');
 
 export type VehicleImageSource = Pick<Vehicle, 'marque' | 'modele' | 'photos'>;
 
@@ -54,7 +54,7 @@ export function VehicleImage({
       {/* Position absolue : la taille d'origine de l'image n'élargit jamais la carte (important sur le web). */}
       <Image
         testID="vehicle-image"
-        source={useRemote ? { uri: photoUrl } : DEFAULT_IMAGE}
+        source={useRemote ? { uri: photoUrl } : DEFAULT_VEHICLE_IMAGE}
         style={{ position: 'absolute', width: '100%', height: '100%' }}
         resizeMode="cover"
         onError={() => photoUrl && setFailedUrl(photoUrl)}

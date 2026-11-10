@@ -412,7 +412,52 @@
       "kilometrage": "Kilométrage"
     },
     "emptyNone": "Aucune voiture pour l'instant. Touchez « + Ajouter véhicule » pour créer la première.",
-    "addVehicleA11y": "Ajouter un véhicule"
+    "addVehicleA11y": "Ajouter un véhicule",
+    "header": {
+      "vehiclesOne": "véhicule",
+      "vehiclesMany": "véhicules",
+      "readyNone": "Aucun véhicule prêt à partir",
+      "readyOne": "1 prêt à partir maintenant",
+      "readyMany": "{{count}} prêts à partir maintenant",
+      "enRoute": "En route",
+      "ringA11y": "Répartition de la flotte : {{free}} disponibles, {{rented}} en location, {{immobilized}} immobilisés",
+      "gallery": "Afficher en galerie",
+      "list": "Afficher en liste",
+      "filtersAndSort": "Filtres et tri",
+      "searchA11y": "Rechercher un véhicule",
+      "tileA11y": "{{label}} : {{count}}",
+      "groups": {
+        "free": "Disponibles",
+        "rented": "En location",
+        "immobilized": "Immobilisés"
+      },
+      "titleAll": "Tous les véhicules",
+      "countOne": "{{count}} véhicule",
+      "countMany": "{{count}} véhicules"
+    },
+    "advice": {
+      "label": "Conseil BIBIP",
+      "noBookingPrefix": "La ",
+      "noBookingSuffix": " n'a aucune réservation cette semaine. Une offre week-end ?",
+      "waitingPrefix": "La ",
+      "waitingSuffix": " attend son inspection depuis {{days}} jours.",
+      "createOffer": "Créer l'offre",
+      "inspect": "Inspecter",
+      "later": "Plus tard"
+    },
+    "offer": {
+      "title": "Créer l'offre",
+      "vehicle": "Véhicule",
+      "discount": "Remise",
+      "percent": "{{percent}} %",
+      "days": "Jours",
+      "weekend": "Ce week-end",
+      "week": "7 prochains jours",
+      "preview": "Message prêt à envoyer",
+      "share": "Partager",
+      "close": "Fermer",
+      "priceMissing": "Le prix de ce véhicule n'est pas renseigné."
+    }
   },
   "vehicle": {
     "detailsTitle": "Fiche véhicule",

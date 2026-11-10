@@ -71,6 +71,19 @@ Référence visuelle : `docs/design/accueil-reference.html` (maquette « premium
 - Écran d'accueil du chat : avatar, phrase d'accueil et cartes de questions suggérées (état vide utile).
 - Champ de saisie en bas, bouton d'envoi rond (émeraude quand il y a du texte, grisé sinon).
 
+## Ma Flotte (liste et galerie)
+Références : `docs/design/flotte-liste-reference.html` (vue liste, référence visuelle absolue) et `flotte-galerie-reference.html`. Image par défaut : `assets/images/voiture-par-defaut.png`, affichée par le composant partagé `VehicleImage` quand un véhicule n'a pas de photo.
+
+**Exceptions aux règles ci-dessus, limitées à Ma Flotte et à ces quatre cas, et pas d'autres :**
+1. une **ombre orange douce** est autorisée uniquement sous un bouton orange plein (bouton « + » de l'en-tête, tuile de statut active, bouton « Louer ») ;
+2. un **voile radial sombre** est autorisé uniquement par-dessus une photo (l'en-tête) ;
+3. l'**orange plein** est autorisé pour l'action principale de chaque carte véhicule (« Louer ») en plus du bouton principal de l'écran ; tout le reste reste graphite ;
+4. une **ombre très légère et neutre** est autorisée sur les cartes posées sur le fond `#F6F6F5`.
+
+Ces exceptions ne changent rien aux autres écrans. Jetons ajoutés : `orangeDeepBorder` (`#6B3A22`, bordure du conseil BIBIP) et `orangeUrgentText` (`#B5481A`, échéance urgente).
+
+**Statuts** : trois groupes affichés (tuiles, anneau, compteurs) : Disponibles (vert), En location (blanc / graphite, plus de bleu), Immobilisés (ambre). La liste détaille les immobilisés : À inspecter (à inspecter + en préparation), Entretien, Indisponibles. Le statut d'un véhicule est celui d'aujourd'hui dans « Disponibilités » (`buildAvailability`, lecture seule) : mêmes chiffres que le bloc Parc de l'accueil.
+
 ## Vérification
 Les captures d'écran ont été prises en exportant l'app en version web (`npx expo export -p web`) et en l'ouvrant dans un navigateur. Le rendu sur iPhone n'a pas été vérifié par l'équipe de développement.
 

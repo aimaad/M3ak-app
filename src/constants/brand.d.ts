@@ -14,6 +14,8 @@ export declare const brand: {
   readonly errorOnDark: string;
   readonly gaugeTrack: string;
   readonly parcInspect: string;
+  readonly orangeDeepBorder: string;
+  readonly orangeUrgentText: string;
 };
 
 export type ThemeTokens = {

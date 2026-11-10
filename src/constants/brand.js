@@ -38,6 +38,10 @@ const brand = {
   gaugeTrack: '#EDEEEE',
   /** « À inspecter » dans le parc. */
   parcInspect: '#E0B000',
+  /** Ma Flotte : bordure de la carte « Conseil BIBIP » (sur orangeDeep). */
+  orangeDeepBorder: '#6B3A22',
+  /** Ma Flotte : texte d'une échéance urgente sur fond clair (orange foncé, contraste suffisant). */
+  orangeUrgentText: '#B5481A',
 };
 
 const light = {
