@@ -1,7 +1,8 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
@@ -20,12 +21,16 @@ import { adviceCandidates, pickAdvice } from '@/features/vehicles/fleet-advice';
 import { actionFor, canAddVehiclePhoto, canSeePrices, contextOf, type FleetAction } from '@/features/vehicles/fleet-card';
 import { FleetVehicleCard } from '@/features/vehicles/fleet-vehicle-card';
 import { FleetLegend, FleetMessage, FleetSectionHeader, FleetSkeleton } from '@/features/vehicles/fleet-sections';
-import { buildFleetItems, buildSections, groupCounts, groupFromStatusParam, matchesGroup, toggleGroup, type FleetGroup } from '@/features/vehicles/fleet-model';
+import { buildFleetItems, buildSections, type FleetItem, groupCounts, groupFromStatusParam, matchesGroup, toggleGroup, type FleetGroup } from '@/features/vehicles/fleet-model';
 import { FleetHeader } from '@/features/vehicles/fleet-header';
 import { buildWatchItems } from '@/features/vehicles/fleet-watch';
 import { FleetWatchSection } from '@/features/vehicles/fleet-watch-section';
 import { inspectionHref } from '@/features/vehicles/fleet-routes';
-import { DEFAULT_VEHICLE_FILTERS, filterVehicles, sortVehicles, uniqueBrands, type VehicleFilters, type VehicleSort } from '@/features/vehicles/filters';
+import { activeFilterCount, DEFAULT_FLEET_SORT, DEFAULT_VEHICLE_FILTERS, filterOptions, filterVehicles, sortFleet, type FleetSort, type VehicleFilters } from '@/features/vehicles/filters';
+import { FiltersSheet } from '@/features/vehicles/filters-sheet';
+import { GalleryCard, GalleryHeader } from '@/features/vehicles/fleet-gallery';
+import { useFleetView } from '@/features/vehicles/use-fleet-view';
+import { HText } from '@/features/dashboard/home-ui';
 import { useVehicles } from '@/features/vehicles/hooks';
 import { OfferSheet } from '@/features/vehicles/offer-sheet';
 import { useAdviceSnooze } from '@/features/vehicles/use-advice-snooze';
@@ -36,13 +41,12 @@ import type { Customer } from '@/features/customers/types';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 import type { Vehicle } from '@/features/vehicles/types';
-import { Palette, Brand } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 
 const EMPTY_VEHICLES: Vehicle[] = [];
 const EMPTY_RENTALS: Rental[] = [];
 const EMPTY_MAINTENANCE: MaintenanceItem[] = [];
 const EMPTY_CUSTOMERS: Customer[] = [];
-const SORT_OPTIONS: VehicleSort[] = ['recent', 'marque', 'immatriculation', 'prixJour', 'kilometrage'];
 
 export default function FlotteScreen() {
   const { t } = useLanguage();
@@ -57,8 +61,9 @@ export default function FlotteScreen() {
   const [filters, setFilters] = useState<VehicleFilters>(DEFAULT_VEHICLE_FILTERS);
   // Groupe actif (tuiles de l'en-tête) : un lien de l'accueil (?statut=…) ouvre le groupe correspondant.
   const [group, setGroup] = useState<FleetGroup | null>(() => groupFromStatusParam(initialStatut));
-  const [sort, setSort] = useState<VehicleSort>('recent');
-  const [showFilters, setShowFilters] = useState(false);
+  const [sort, setSort] = useState<FleetSort>(DEFAULT_FLEET_SORT);
+  const [showSheet, setShowSheet] = useState(false);
+  const { view, setView } = useFleetView();
   const [offerVehicleId, setOfferVehicleId] = useState<string | null>(null);
   const { snoozed, loaded: snoozeLoaded, snooze } = useAdviceSnooze();
 
@@ -74,9 +79,9 @@ export default function FlotteScreen() {
   const items = useMemo(() => buildFleetItems({ vehicles, rentals, maintenance, now: new Date() }), [vehicles, rentals, maintenance]);
   const counts = useMemo(() => groupCounts(items), [items]);
   const itemById = useMemo(() => new Map(items.map((item) => [item.vehicle.id, item])), [items]);
-  const brands = useMemo(() => uniqueBrands(activeVehicles), [activeVehicles]);
+  const options = useMemo(() => filterOptions(activeVehicles), [activeVehicles]);
   const filtered = useMemo(() => {
-    const base = sortVehicles(filterVehicles(vehicles, filters), sort);
+    const base = sortFleet(filterVehicles(vehicles, filters), sort);
     return filters.includeArchived || group === null ? base : base.filter((v) => itemById.get(v.id)?.group === group);
   }, [vehicles, filters, sort, group, itemById]);
   const pagination = usePagination(filtered, `${JSON.stringify(filters)}${sort}${group}`);
@@ -155,7 +160,8 @@ export default function FlotteScreen() {
       onToggleGroup={(tapped) => setGroup((current) => toggleGroup(current, tapped))}
       query={filters.query}
       onQueryChange={(query) => setFilters((prev) => ({ ...prev, query }))}
-      onOpenFilters={() => setShowFilters((prev) => !prev)}
+      onOpenFilters={() => setShowSheet(true)}
+      onGallery={() => setView('gallery')}
       onAdd={() => router.push('/flotte/nouveau')}
     >
       {advice ? (
@@ -170,70 +176,36 @@ export default function FlotteScreen() {
 
   const watch = <FleetWatchSection items={watchItems} onOpen={(item) => router.push({ pathname: '/flotte/[id]', params: { id: item.vehicleId, section: item.target } })} />;
 
+  const filterCount = activeFilterCount(filters);
+  const titleKey = filters.includeArchived ? 'flotte.showingArchived' : group ? `flotte.header.groups.${group}` : 'flotte.header.titleAll';
+  const resultCount = filtered.length;
+  // Ligne de titre de la liste : filtre actif, nombre de véhicules et bouton « Statut ⌄ » qui ouvre Filtres et tri.
   const controls = (
-    <View>
-      <View className="flex-row items-center justify-between px-6 pb-4 pt-4">
-        <Pressable onPress={() => setShowFilters((prev) => !prev)}>
-          <ThemedText type="small" themeColor="primary">
-            {showFilters ? t('flotte.hideFilters') : t('flotte.moreFilters')}
-          </ThemedText>
-        </Pressable>
-        <Pressable onPress={() => setFilters((prev) => ({ ...prev, includeArchived: !prev.includeArchived }))}>
-          <ThemedText type="small" themeColor={filters.includeArchived ? 'primary' : 'textSecondary'}>
-            {filters.includeArchived ? t('flotte.showingArchived') : t('flotte.showArchived')}
-          </ThemedText>
-        </Pressable>
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 20, paddingBottom: 6, gap: 12 }}>
+      <View style={{ flex: 1, minWidth: 0, gap: 2 }}>
+        <HText font="display" weight="bold" size={18} numberOfLines={1} accessibilityRole="header">
+          {t(titleKey)}
+        </HText>
+        <HText size={13} color={Palette.textSecondary}>
+          {t(resultCount === 1 ? 'flotte.header.countOne' : 'flotte.header.countMany', { count: resultCount })}
+        </HText>
       </View>
-
-      {showFilters ? (
-        <View className="gap-3 px-6 pb-4">
-          <View className="gap-1.5">
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('flotte.filterByBrand')}
-            </ThemedText>
-            <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
-              <Pressable
-                onPress={() => setFilters((prev) => ({ ...prev, marque: 'toutes' }))}
-                className={`rounded-full border px-4 py-2 ${filters.marque === 'toutes' ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
-              >
-                <ThemedText type="small" style={{ color: filters.marque === 'toutes' ? Brand.white : Palette.textPrimary }}>
-                  {t('flotte.allBrands')}
-                </ThemedText>
-              </Pressable>
-              {brands.map((marque) => (
-                <Pressable
-                  key={marque}
-                  onPress={() => setFilters((prev) => ({ ...prev, marque }))}
-                  className={`rounded-full border px-4 py-2 ${filters.marque === marque ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
-                >
-                  <ThemedText type="small" style={{ color: filters.marque === marque ? Brand.white : Palette.textPrimary }}>
-                    {marque}
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-
-          <View className="gap-1.5">
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('flotte.sortBy')}
-            </ThemedText>
-            <ScrollView horizontal className="grow-0 shrink-0" showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
-              {SORT_OPTIONS.map((option) => (
-                <Pressable
-                  key={option}
-                  onPress={() => setSort(option)}
-                  className={`rounded-full border px-4 py-2 ${sort === option ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}
-                >
-                  <ThemedText type="small" style={{ color: sort === option ? Brand.white : Palette.textPrimary }}>
-                    {t(`flotte.sort.${option}`)}
-                  </ThemedText>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
-        </View>
-      ) : null}
+      <Pressable
+        onPress={() => setShowSheet(true)}
+        accessibilityRole="button"
+        accessibilityLabel={t('flotte.listTitle.filterA11y', { sort: t(`flotte.sheet.sorts.${sort}`) })}
+        style={{ height: 34, borderRadius: 17, paddingHorizontal: 14, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: Palette.card, borderWidth: 1, borderColor: filterCount > 0 ? Palette.primary : Palette.border }}
+      >
+        <HText weight="semibold" size={13}>
+          {t(`flotte.sheet.sorts.${sort}`)}
+        </HText>
+        {filterCount > 0 ? (
+          <HText weight="semibold" size={12} color={Palette.primary}>
+            {`· ${filterCount}`}
+          </HText>
+        ) : null}
+        <Ionicons name="chevron-down" size={14} color={Palette.textPrimary} />
+      </Pressable>
     </View>
   );
 
@@ -245,6 +217,10 @@ export default function FlotteScreen() {
   };
   const runAction = (action: FleetAction) => router.push(action.href as Parameters<typeof router.push>[0]);
   const archivedMode = filters.includeArchived;
+  // Galerie : mêmes éléments que la liste, à plat (ordre des sections) ; un vide complète la dernière ligne si le nombre est impair.
+  const galleryData = sections.flatMap((section) => section.data);
+  const galleryCells: (FleetItem | null)[] = galleryData.length % 2 === 1 ? [...galleryData, null] : galleryData;
+  const galleryMode = view === 'gallery' && !isDesktop && !archivedMode;
   const noVehicle = vehicles.length === 0;
 
   return (
@@ -291,6 +267,33 @@ export default function FlotteScreen() {
               )}
             </View>
           </ScrollView>
+        ) : galleryMode ? (
+          <FlatList
+            data={galleryCells}
+            numColumns={2}
+            keyExtractor={(cell, index) => cell?.vehicle.id ?? `spacer-${index}`}
+            columnWrapperStyle={{ gap: 12, paddingHorizontal: 20 }}
+            contentContainerStyle={{ paddingBottom: tabInset + 8 }}
+            ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+            refreshControl={<RefreshControl refreshing={vehiclesQuery.isFetching} onRefresh={refetchAll} tintColor={Palette.primary} />}
+            ListHeaderComponent={
+              <View>
+                <GalleryHeader counts={counts} group={group} onToggleGroup={(tapped) => setGroup((current) => toggleGroup(current, tapped))} onList={() => setView('list')} onAdd={() => router.push('/flotte/nouveau')} />
+                {controls}
+                <View style={{ height: 8 }} />
+              </View>
+            }
+            renderItem={({ item: cell }) =>
+              cell ? <GalleryCard item={cell} showPrice={showPrice} onOpen={() => router.push(`/flotte/${cell.vehicle.id}`)} /> : <View style={{ flex: 1 }} />
+            }
+            ListEmptyComponent={
+              noVehicle ? (
+                <FleetMessage title={t('flotte.card.states.emptyTitle')} body={t('flotte.card.states.emptyBody')} actionLabel={t('flotte.card.states.emptyAction')} onAction={() => router.push('/flotte/nouveau')} />
+              ) : (
+                <FleetMessage title={t('flotte.card.states.noResultTitle')} body={t('flotte.card.states.noResultBody')} />
+              )
+            }
+          />
         ) : (
           <SectionList
             sections={sections}
@@ -332,6 +335,23 @@ export default function FlotteScreen() {
           />
         )}
       </SafeAreaView>
+
+      <FiltersSheet
+        visible={showSheet}
+        onClose={() => setShowSheet(false)}
+        filters={filters}
+        onChange={(patch) => setFilters((prev) => ({ ...prev, ...patch }))}
+        sort={sort}
+        onSort={setSort}
+        options={options}
+        showPrice={showPrice}
+        resultCount={filtered.length}
+        onReset={() => {
+          setFilters((prev) => ({ ...DEFAULT_VEHICLE_FILTERS, query: prev.query }));
+          setSort(DEFAULT_FLEET_SORT);
+          setGroup(null);
+        }}
+      />
 
       <OfferSheet
         visible={!!offerVehicle}

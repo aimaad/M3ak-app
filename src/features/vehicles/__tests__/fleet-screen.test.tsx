@@ -47,7 +47,13 @@ jest.mock('expo-router', () => ({
   useLocalSearchParams: () => ({}),
 }));
 jest.mock('@/i18n/use-language', () => ({ useLanguage: () => ({ language: 'fr', t: (key: string, o?: Record<string, unknown>) => mockTranslate(key, o) }) }));
-jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(async () => null), setItem: jest.fn(async () => undefined) }));
+const mockStorage = { view: null as string | null, saved: [] as string[][] };
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  getItem: jest.fn(async (key: string) => (key.includes('.view.') ? mockStorage.view : null)),
+  setItem: jest.fn(async (key: string, value: string) => {
+    mockStorage.saved.push([key, value]);
+  }),
+}));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }: { children: React.ReactNode }) => children, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
@@ -65,6 +71,8 @@ describe('écran Ma Flotte (données simulées)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.role = 'owner';
+    mockStorage.view = null;
+    mockStorage.saved = [];
   });
 
   it('liste groupée : À inspecter, Entretien, En location, Disponibles (sections vides masquées)', async () => {
@@ -132,5 +140,43 @@ describe('écran Ma Flotte (données simulées)', () => {
     await render(<FlotteScreen />);
     await fireEvent.press(screen.getByLabelText('Prolonger : Dacia Sandero'));
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/locations/[id]', params: { id: 'r1', prolonger: '1' } });
+  });
+
+  it('la feuille « Filtres et tri » filtre par carburant/catégorie et se réinitialise', async () => {
+    await render(<FlotteScreen />);
+    await fireEvent.press(screen.getByLabelText(/^Filtres et tri : /));
+    expect(screen.getByText('CATÉGORIE', hidden)).toBeTruthy();
+    expect(screen.getByText('MARQUE', hidden)).toBeTruthy();
+    await fireEvent.press(screen.getByText('Renault', hidden));
+    expect(screen.getByText('Afficher 1 véhicule', hidden)).toBeTruthy();
+    await fireEvent.press(screen.getByText('Réinitialiser', hidden));
+    expect(screen.getByText('Afficher 4 véhicules', hidden)).toBeTruthy();
+  });
+
+  it('le tri par prix n’est proposé qu’au propriétaire', async () => {
+    mockState.role = 'employee';
+    await render(<FlotteScreen />);
+    await fireEvent.press(screen.getByLabelText(/^Filtres et tri : /));
+    expect(screen.queryByText('Prix', hidden)).toBeNull();
+    expect(screen.getByText('Kilométrage', hidden)).toBeTruthy();
+  });
+
+  it('galerie : choix mémorisé, cartes avec statut, prix propriétaire seulement', async () => {
+    mockStorage.view = 'gallery';
+    await render(<FlotteScreen />);
+    expect(await screen.findByLabelText(/^Dacia Troc, Disponibles, immatriculation /, hidden)).toBeTruthy();
+    expect(screen.getByLabelText('Afficher en liste')).toBeTruthy();
+    expect(screen.queryAllByText(/\/j/, hidden).length).toBeGreaterThan(0);
+  });
+
+  it('galerie : l’employé ne voit aucun prix ; le bouton liste mémorise le choix', async () => {
+    mockStorage.view = 'gallery';
+    mockState.role = 'employee';
+    await render(<FlotteScreen />);
+    await screen.findByLabelText(/^Dacia Troc, /, hidden);
+    expect(screen.queryAllByText(/\/j/, hidden)).toHaveLength(0);
+    await fireEvent.press(screen.getByLabelText('Afficher en liste'));
+    expect(mockStorage.saved).toContainEqual(['bibip.flotte.view.v1', 'list']);
+    expect(screen.queryByLabelText('Afficher en liste')).toBeNull();
   });
 });

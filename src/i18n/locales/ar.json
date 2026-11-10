@@ -545,6 +545,37 @@
         "retry": "عاود جرب",
         "archived": "المؤرشفة"
       }
+    },
+    "gallery": {
+      "all": "الكل",
+      "countOne": "{{count}} مركبة",
+      "countMany": "{{count}} مركبات",
+      "perDay": "/يوم",
+      "cardA11y": "{{name}}، {{status}}، لوحة التسجيل {{plate}}"
+    },
+    "sheet": {
+      "title": "التصفية والترتيب",
+      "close": "إغلاق",
+      "reset": "إعادة الضبط",
+      "all": "الكل",
+      "category": "الفئة",
+      "brand": "العلامة",
+      "fuel": "الوقود",
+      "transmission": "ناقل الحركة",
+      "sort": "ترتيب حسب",
+      "hideArchived": "العودة إلى الأسطول",
+      "showOne": "عرض مركبة واحدة",
+      "showMany": "عرض {{count}} مركبات",
+      "sorts": {
+        "statut": "الحالة",
+        "nom": "الاسم",
+        "prix": "السعر",
+        "km": "المسافة المقطوعة",
+        "recent": "الأحدث إضافة"
+      }
+    },
+    "listTitle": {
+      "filterA11y": "التصفية والترتيب: {{sort}}"
     }
   },
   "vehicle": {

@@ -541,6 +541,37 @@
         "retry": "Réessayer",
         "archived": "Archivés"
       }
+    },
+    "gallery": {
+      "all": "Tous",
+      "countOne": "{{count}} VÉHICULE",
+      "countMany": "{{count}} VÉHICULES",
+      "perDay": "/j",
+      "cardA11y": "{{name}}, {{status}}, immatriculation {{plate}}"
+    },
+    "sheet": {
+      "title": "Filtres et tri",
+      "close": "Fermer",
+      "reset": "Réinitialiser",
+      "all": "Tous",
+      "category": "Catégorie",
+      "brand": "Marque",
+      "fuel": "Carburant",
+      "transmission": "Boîte",
+      "sort": "Trier par",
+      "hideArchived": "Revenir à la flotte",
+      "showOne": "Afficher 1 véhicule",
+      "showMany": "Afficher {{count}} véhicules",
+      "sorts": {
+        "statut": "Statut",
+        "nom": "Nom",
+        "prix": "Prix",
+        "km": "Kilométrage",
+        "recent": "Ajout récent"
+      }
+    },
+    "listTitle": {
+      "filterA11y": "Filtres et tri : {{sort}}"
     }
   },
   "vehicle": {

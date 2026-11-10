@@ -84,6 +84,8 @@ Ces exceptions ne changent rien aux autres écrans. Jetons ajoutés : `orangeDee
 
 **Statuts** : trois groupes affichés (tuiles, anneau, compteurs) : Disponibles (vert), En location (blanc / graphite, plus de bleu), Immobilisés (ambre). La liste détaille les immobilisés : À inspecter (à inspecter + en préparation), Entretien, Indisponibles. Le statut d'un véhicule est celui d'aujourd'hui dans « Disponibilités » (`buildAvailability`, lecture seule) : mêmes chiffres que le bloc Parc de l'accueil.
 
+**Galerie et Filtres et tri** : le bouton liste/galerie de l'en-tête bascule la vue, et le choix est gardé sur le téléphone (`use-fleet-view.ts`). Galerie : en-tête compact « N VÉHICULES » + « Ma flotte », pastilles Tous + 3 groupes (défilement horizontal), grille de 2 colonnes (`fleet-gallery.tsx`), prix visible du propriétaire seulement. Le bouton « Statut ⌄ » (liste et galerie) ouvre la feuille « Filtres et tri » (`filters-sheet.tsx`) : catégorie, marque, carburant, boîte (valeurs existantes seulement), tri (statut, nom, prix [propriétaire], kilométrage, ajout récent) et « Voir les archivés ».
+
 ## Vérification
 Les captures d'écran ont été prises en exportant l'app en version web (`npx expo export -p web`) et en l'ouvrant dans un navigateur. Le rendu sur iPhone n'a pas été vérifié par l'équipe de développement.
 

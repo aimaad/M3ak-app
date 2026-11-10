@@ -1,9 +1,13 @@
 import {
+  activeFilterCount,
+  availableSorts,
   countByStatus,
   countExpiringSoonDocuments,
   countImmobilized,
   DEFAULT_VEHICLE_FILTERS,
+  filterOptions,
   filterVehicles,
+  sortFleet,
   sortVehicles,
   uniqueBrands,
   type VehicleFilters,
@@ -204,5 +208,55 @@ describe('uniqueBrands', () => {
       makeVehicle({ id: '3', marque: 'Renault' }),
     ];
     expect(uniqueBrands(vehicles)).toEqual(['Dacia', 'Renault']);
+  });
+});
+
+describe('filtres de la feuille « Filtres et tri » et tri de Ma Flotte', () => {
+  const vehicles = [
+    makeVehicle({ id: 'a', marque: 'Dacia', modele: 'Logan', carburant: 'diesel', transmission: 'manuelle', categorie: 'economique', prixJour: 300, kilometrage: 50000, createdAt: '2030-01-01T00:00:00Z' }),
+    makeVehicle({ id: 'b', marque: 'Renault', modele: 'Clio', carburant: 'essence', transmission: 'automatique', categorie: 'compacte', prixJour: 400, kilometrage: 10000, createdAt: '2030-03-01T00:00:00Z' }),
+    makeVehicle({ id: 'c', marque: 'Dacia', modele: 'Sandero', carburant: 'diesel', transmission: 'automatique', categorie: 'economique', prixJour: 350, kilometrage: 20000, createdAt: '2030-02-01T00:00:00Z' }),
+    makeVehicle({ id: 'z', marque: 'Kia', modele: 'Picanto', archivedAt: '2030-01-01T00:00:00Z' }),
+  ];
+  const ids = (list: Vehicle[]) => list.map((v) => v.id);
+
+  it('filtre par carburant et par boîte', () => {
+    expect(ids(filterVehicles(vehicles, { ...DEFAULT_VEHICLE_FILTERS, carburant: 'diesel' }))).toEqual(['a', 'c']);
+    expect(ids(filterVehicles(vehicles, { ...DEFAULT_VEHICLE_FILTERS, transmission: 'automatique' }))).toEqual(['b', 'c']);
+    expect(ids(filterVehicles(vehicles, { ...DEFAULT_VEHICLE_FILTERS, carburant: 'diesel', transmission: 'automatique' }))).toEqual(['c']);
+  });
+
+  it('les filtres par défaut ne filtrent rien', () => {
+    expect(ids(filterVehicles(vehicles, DEFAULT_VEHICLE_FILTERS))).toEqual(['a', 'b', 'c']);
+  });
+
+  it('tri : statut et nom rangent par nom ; prix, kilométrage et récents rangent comme demandé', () => {
+    const active = vehicles.slice(0, 3);
+    expect(ids(sortFleet(active, 'statut'))).toEqual(['a', 'c', 'b']);
+    expect(ids(sortFleet(active, 'nom'))).toEqual(['a', 'c', 'b']);
+    expect(ids(sortFleet(active, 'prix'))).toEqual(['a', 'c', 'b']);
+    expect(ids(sortFleet(active, 'km'))).toEqual(['b', 'c', 'a']);
+    expect(ids(sortFleet(active, 'recent'))).toEqual(['b', 'c', 'a']);
+  });
+
+  it('le tri ne modifie pas la liste d’origine', () => {
+    const copy = [...vehicles];
+    sortFleet(vehicles, 'prix');
+    expect(vehicles).toEqual(copy);
+  });
+
+  it('le tri par prix n’est proposé qu’au propriétaire', () => {
+    expect(availableSorts(true)).toEqual(['statut', 'nom', 'prix', 'km', 'recent']);
+    expect(availableSorts(false)).toEqual(['statut', 'nom', 'km', 'recent']);
+  });
+
+  it('la feuille ne propose que des valeurs qui existent (archivés exclus)', () => {
+    expect(filterOptions(vehicles)).toEqual({ categories: ['compacte', 'economique'], brands: ['Dacia', 'Renault'], fuels: ['diesel', 'essence'], transmissions: ['automatique', 'manuelle'] });
+  });
+
+  it('compte les filtres actifs', () => {
+    expect(activeFilterCount(DEFAULT_VEHICLE_FILTERS)).toBe(0);
+    expect(activeFilterCount({ ...DEFAULT_VEHICLE_FILTERS, marque: 'Dacia', carburant: 'diesel', includeArchived: true })).toBe(3);
+    expect(activeFilterCount({ ...DEFAULT_VEHICLE_FILTERS, query: 'logan' })).toBe(0); // la recherche a son propre champ
   });
 });
