@@ -1,5 +1,7 @@
 # Mode vocal temps réel (chat BIBIP)
 
+> **État actuel : désactivé.** Le micro n'apparaît plus nulle part, le chat est écrit seulement. Le code est conservé. Pour le réactiver : `EXPO_PUBLIC_VOICE_ENABLED=1` dans `.env`, puis `npx expo start --clear`.
+
 Une vraie conversation à voix haute avec BIBIP : on parle sans appuyer sur Envoyer, BIBIP répond presque tout de suite avec une voix
 naturelle, on peut l'interrompre en parlant, il consulte les données de l'agence (mêmes outils et mêmes règles que le chat écrit) et
 toute la conversation est enregistrée dans l'historique (texte seulement, **jamais d'audio**).
