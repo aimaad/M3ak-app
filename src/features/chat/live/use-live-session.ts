@@ -108,7 +108,11 @@ export function useLiveSession({ existingConversationId, voice, send }: { existi
       if (message.t === 'toolcall') void handleTool(message);
       dispatch({ type: 'engine', message });
       if (message.t === 'ended') void finish(message.reason || 'user');
-      if (message.t === 'error') void finish('error');
+      if (message.t === 'error') {
+        // Cause visible dans le terminal de développement (jamais montrée telle quelle à l'utilisateur).
+        console.warn('Vocal temps réel :', message.code, message.message);
+        void finish('error');
+      }
     },
     [finish, handleTool]
   );

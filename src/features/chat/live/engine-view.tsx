@@ -30,7 +30,7 @@ export const EngineView = forwardRef<EngineHandle, { interactive: boolean; onMes
       ref={web}
       source={{ uri: ENGINE_PAGE_URL }}
       style={interactive ? FULL : HIDDEN}
-      originWhitelist={['https://*']}
+      originWhitelist={['https://*', 'about:*']}
       onShouldStartLoadWithRequest={(request) => isAllowedEngineUrl(request.url, origin)}
       javaScriptEnabled
       domStorageEnabled
@@ -43,8 +43,14 @@ export const EngineView = forwardRef<EngineHandle, { interactive: boolean; onMes
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       onMessage={handle}
-      onError={onLoadError}
-      onHttpError={onLoadError}
+      onError={(event) => {
+        console.warn('Moteur vocal : chargement impossible.', event.nativeEvent.description);
+        onLoadError();
+      }}
+      onHttpError={(event) => {
+        console.warn('Moteur vocal : réponse HTTP', event.nativeEvent.statusCode, event.nativeEvent.url);
+        onLoadError();
+      }}
     />
   );
 });

@@ -13,7 +13,8 @@ export function engineOrigin(url: string = VOCAL_ENGINE_URL): string {
 
 /** Vrai si la fenêtre peut charger cette adresse : le moteur lui-même (ou une page vide interne). */
 export function isAllowedEngineUrl(target: string, origin: string = engineOrigin()): boolean {
-  if (target === 'about:blank') return true;
+  // Pages internes vides (cadres créés par la page elle-même) : sans danger, elles n'ont aucune adresse extérieure.
+  if (target === 'about:blank' || target === 'about:srcdoc') return true;
   if (origin === '') return false;
   const lower = target.toLowerCase();
   // Même origine EXACTE : après le nom de domaine, seulement la fin, « / », « ? » ou « # » (jamais « .evil.com » ni un port inattendu).

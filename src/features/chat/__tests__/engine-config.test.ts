@@ -12,6 +12,9 @@ describe('moteur vocal (fenêtre web interne)', () => {
     expect(isAllowedEngineUrl('https://bibip-vocal.netlify.app/', origin)).toBe(true);
     expect(isAllowedEngineUrl('https://bibip-vocal.netlify.app/app.js', origin)).toBe(true);
     expect(isAllowedEngineUrl('about:blank', origin)).toBe(true);
+    expect(isAllowedEngineUrl('about:srcdoc', origin)).toBe(true);
+    expect(isAllowedEngineUrl('javascript:alert(1)', origin)).toBe(false);
+    expect(isAllowedEngineUrl('about:config', origin)).toBe(false);
     expect(isAllowedEngineUrl('https://autre-site.com/', origin)).toBe(false);
     expect(isAllowedEngineUrl('https://bibip-vocal.netlify.app.evil.com/', origin)).toBe(false);
     expect(isAllowedEngineUrl('http://bibip-vocal.netlify.app/', origin)).toBe(false);
