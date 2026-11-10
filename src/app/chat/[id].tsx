@@ -10,9 +10,8 @@ import { Brand, HomeFonts, Palette } from '@/constants/theme';
 import { chatErrorMessageKey } from '@/features/chat/api';
 import { ActionPill, ChatAvatar, DataCardView, DateSeparator, SmallPill, StreamingBubble, TypingBubble, UserBubble, VoiceBubble } from '@/features/chat/chat-bubble';
 import { useAskChat, useChatMessages, useConversations, useDeleteConversation, useRenameConversation } from '@/features/chat/hooks';
-import { canListen, detectMessageLanguage, type MessageLanguage } from '@/features/chat/language';
+import { detectMessageLanguage, type MessageLanguage } from '@/features/chat/language';
 import { RenameDialog } from '@/features/chat/rename-dialog';
-import { useListen } from '@/features/chat/natural-voice';
 import { useVoicePlayback } from '@/features/chat/use-voice-playback';
 import { makeTitle } from '@/features/chat/titles';
 import type { ChatCard, ChatCardItem, ChatMessage } from '@/features/chat/types';
@@ -74,7 +73,6 @@ function Conversation({ id, question }: { id: string; question?: string }) {
   const { mutate: removeConversation } = useDeleteConversation();
   const ask = useAskChat();
   const scrollRef = useRef<ScrollViewInstance>(null);
-  const { speakingId, toggle } = useListen();
   // Réponse en cours d'écriture (flux) : texte reçu jusqu'ici.
   const [streaming, setStreaming] = useState('');
   const playback = useVoicePlayback();
@@ -270,9 +268,7 @@ function Conversation({ id, question }: { id: string; question?: string }) {
                     <AssistantMessage
                       message={message}
                       isLast={index === lastIndex}
-                      speaking={speakingId === message.id}
                       copied={copiedId === message.id}
-                      onListen={() => toggle(message.id, message.content)}
                       onCopy={() => void copy(message)}
                       onOpenSource={(sourceId) => router.push({ pathname: '/locations/[id]', params: { id: sourceId } })}
                       t={t}
@@ -357,27 +353,22 @@ function Conversation({ id, question }: { id: string; question?: string }) {
   );
 }
 
-/** Réponse de BIBIP : avatar, bulle (texte + carte de données), « Écouter » / « Copier », puis suggestions d'actions. */
+/** Réponse de BIBIP : avatar, bulle (texte + carte de données), « Copier », puis suggestions d'actions. */
 function AssistantMessage({
   message,
   isLast,
-  speaking,
   copied,
-  onListen,
   onCopy,
   onOpenSource,
   t,
 }: {
   message: ChatMessage;
   isLast: boolean;
-  speaking: boolean;
   copied: boolean;
-  onListen: (language: MessageLanguage) => void;
   onCopy: () => void;
   onOpenSource: (rentalId: string) => void;
   t: (key: string, o?: Record<string, unknown>) => string;
 }) {
-  const language = detectMessageLanguage(message.content);
   const actions = isLast ? actionsFor(message.cards, t) : [];
   return (
     <View style={{ gap: 8 }}>
@@ -405,18 +396,9 @@ function AssistantMessage({
         </View>
       </View>
 
-      {/* Sous la bulle (alignées avec elle) : écouter / copier, puis les suggestions d'actions */}
+      {/* Sous la bulle (alignées avec elle) : copier, puis les suggestions d'actions */}
       <View style={{ marginStart: 36, gap: 8 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {canListen(language) ? (
-            <SmallPill
-              icon={speaking ? 'stop-outline' : 'volume-high-outline'}
-              label={t(speaking ? 'chat.convo.stopListening' : 'chat.convo.listen')}
-              a11yLabel={t(speaking ? 'chat.convo.stopListening' : 'chat.convo.listenA11y')}
-              onPress={() => onListen(language)}
-              active={speaking}
-            />
-          ) : null}
           <SmallPill icon={copied ? 'checkmark' : 'copy-outline'} a11yLabel={t(copied ? 'chat.convo.copied' : 'chat.convo.copy')} onPress={onCopy} />
         </View>
         {actions.length > 0 ? (
