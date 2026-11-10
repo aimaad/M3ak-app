@@ -457,6 +457,16 @@
       "share": "Partager",
       "close": "Fermer",
       "priceMissing": "Le prix de ce véhicule n'est pas renseigné."
+    },
+    "watch": {
+      "title": "À surveiller",
+      "seeAll": "Tout voir",
+      "collapse": "Réduire",
+      "dueDays": "J-{{days}}",
+      "dueToday": "Aujourd'hui",
+      "dueKm": "{{km}} km",
+      "expired": "Expirée",
+      "cardA11y": "{{title}}, {{vehicle}}, échéance : {{due}}"
     }
   },
   "vehicle": {

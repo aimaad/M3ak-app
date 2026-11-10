@@ -25,6 +25,7 @@ import {
 } from '@/features/vehicles/hooks';
 import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
 import { VEHICLE_DOCUMENT_TYPES, type VehiclePhoto } from '@/features/vehicles/types';
+import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-section-scroll';
 import { VehicleImage } from '@/features/vehicles/vehicle-image';
 import { VehiclePhotoGallery } from '@/features/vehicles/vehicle-photo-gallery';
 import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
@@ -37,8 +38,9 @@ const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
 };
 
 export default function VehicleDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, section: sectionParam } = useLocalSearchParams<{ id: string; section?: string }>();
   const { t } = useLanguage();
+  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll(parseVehicleSection(sectionParam));
   const agencyQuery = useMyAgency();
   const { data: vehicle, isLoading, isError } = useVehicle(id);
   const updatePhotos = useUpdateVehiclePhotos();
@@ -129,7 +131,7 @@ export default function VehicleDetailScreen() {
             </ThemedText>
           </View>
         ) : (
-          <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
+          <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerClassName="gap-6 px-6 pb-10">
             <VehicleImage vehicle={vehicle} height={176} radius={24} />
 
             <View className="flex-row items-center gap-2">
@@ -218,7 +220,7 @@ export default function VehicleDetailScreen() {
               </View>
             ) : null}
 
-            <View className="gap-3">
+            <View className="gap-3" onLayout={onSectionLayout('photos')}>
               <ThemedText type="smallBold">{t('vehicle.sections.photos')}</ThemedText>
               <VehiclePhotoGallery
                 photos={vehicle.photos}
@@ -228,7 +230,7 @@ export default function VehicleDetailScreen() {
               />
             </View>
 
-            <View className="gap-4">
+            <View className="gap-4" onLayout={onSectionLayout('documents')}>
               <ThemedText type="smallBold">{t('vehicle.documentsSection')}</ThemedText>
               {VEHICLE_DOCUMENT_TYPES.map((type) => {
                 const doc = findDocument(vehicle.documents, type);
@@ -255,7 +257,7 @@ export default function VehicleDetailScreen() {
               })}
             </View>
 
-            <View className="gap-2">
+            <View className="gap-2" onLayout={onSectionLayout('entretien')}>
               <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
               {totalMaintenanceCost > 0 ? (
                 <View className="flex-row items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">

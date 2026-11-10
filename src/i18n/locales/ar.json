@@ -461,6 +461,16 @@
       "share": "شارك",
       "close": "سدّ",
       "priceMissing": "ثمن هاد الطوموبيل ما مسجلش."
+    },
+    "watch": {
+      "title": "خاصك تتبع",
+      "seeAll": "شوف الكل",
+      "collapse": "قلّص",
+      "dueDays": "باقي {{days}} أيام",
+      "dueToday": "اليوم",
+      "dueKm": "{{km}} كلم",
+      "expired": "سالات",
+      "cardA11y": "{{title}}، {{vehicle}}، الأجل: {{due}}"
     }
   },
   "vehicle": {

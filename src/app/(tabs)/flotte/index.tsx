@@ -18,6 +18,8 @@ import { AdviceCard } from '@/features/vehicles/advice-card';
 import { adviceCandidates, pickAdvice } from '@/features/vehicles/fleet-advice';
 import { buildFleetItems, groupCounts, groupFromStatusParam, toggleGroup, type FleetGroup } from '@/features/vehicles/fleet-model';
 import { FleetHeader } from '@/features/vehicles/fleet-header';
+import { buildWatchItems } from '@/features/vehicles/fleet-watch';
+import { FleetWatchSection } from '@/features/vehicles/fleet-watch-section';
 import { inspectionHref } from '@/features/vehicles/fleet-routes';
 import { DEFAULT_VEHICLE_FILTERS, filterVehicles, sortVehicles, uniqueBrands, type VehicleFilters, type VehicleSort } from '@/features/vehicles/filters';
 import { useVehicles } from '@/features/vehicles/hooks';
@@ -74,6 +76,8 @@ export default function FlotteScreen() {
     () => (isOwner && snoozeLoaded ? pickAdvice(adviceCandidates({ items, rentals, now: new Date() }), snoozed, new Date()) : null),
     [isOwner, snoozeLoaded, items, rentals, snoozed]
   );
+  // « À surveiller » : documents et entretiens à échéance, un seul calcul pour toute la flotte.
+  const watchItems = useMemo(() => buildWatchItems({ vehicles, maintenance, now: new Date() }), [vehicles, maintenance]);
   const offerVehicle = offerVehicleId ? vehicles.find((v) => v.id === offerVehicleId) : undefined;
 
   if (agencyQuery.isPending) {
@@ -139,6 +143,8 @@ export default function FlotteScreen() {
       ) : null}
     </FleetHeader>
   );
+
+  const watch = <FleetWatchSection items={watchItems} onOpen={(item) => router.push({ pathname: '/flotte/[id]', params: { id: item.vehicleId, section: item.target } })} />;
 
   const controls = (
     <View>
@@ -233,6 +239,7 @@ export default function FlotteScreen() {
         ) : isDesktop ? (
           <ScrollView contentContainerStyle={{ paddingBottom: tabInset + 24 }}>
             {header}
+            {watch}
             {controls}
             <View className="px-6">
               <DataTable
@@ -266,6 +273,7 @@ export default function FlotteScreen() {
             ListHeaderComponent={
               <View>
                 {header}
+                {watch}
                 {controls}
               </View>
             }
