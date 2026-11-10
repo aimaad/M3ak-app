@@ -25,6 +25,7 @@ import {
 } from '@/features/vehicles/hooks';
 import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
 import { VEHICLE_DOCUMENT_TYPES, type VehiclePhoto } from '@/features/vehicles/types';
+import { VehicleImage } from '@/features/vehicles/vehicle-image';
 import { VehiclePhotoGallery } from '@/features/vehicles/vehicle-photo-gallery';
 import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { useLanguage } from '@/i18n/use-language';
@@ -129,6 +130,8 @@ export default function VehicleDetailScreen() {
           </View>
         ) : (
           <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
+            <VehicleImage vehicle={vehicle} height={176} radius={24} />
+
             <View className="flex-row items-center gap-2">
               <VehicleStatusBadge status={vehicle.statut} />
               {vehicle.archivedAt ? (

@@ -589,6 +589,10 @@
       "view": "Voir le véhicule existant",
       "reactivate": "Réactiver ce véhicule",
       "continueToFix": "Continuer pour corriger"
+    },
+    "image": {
+      "photo": "Photo de la {{name}}",
+      "none": "Aucune photo pour la {{name}}"
     }
   },
   "clients": {

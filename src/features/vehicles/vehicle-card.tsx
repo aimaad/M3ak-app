@@ -1,18 +1,15 @@
-import { Image, View } from 'react-native';
+import { View } from 'react-native';
 
 import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
-import { useSignedUrl } from '@/features/storage/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
-import { VEHICLE_PHOTOS_BUCKET } from './api';
+import { VehicleImage } from './vehicle-image';
 import { VehicleStatusBadge } from './vehicle-status-badge';
 import type { Vehicle } from './types';
 
 export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: () => void }) {
   const { t } = useLanguage();
-  const firstPhoto = vehicle.photos[0]?.path;
-  const { data: photoUrl } = useSignedUrl(VEHICLE_PHOTOS_BUCKET, firstPhoto);
 
   return (
     <PressableCard onPress={onPress} className="gap-3">
@@ -35,18 +32,7 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
         </View>
       </View>
 
-      {photoUrl ? (
-        // Image en position absolue : sa taille d'origine n'élargit jamais la carte (important sur le web).
-        <View className="h-28 w-full overflow-hidden rounded-2xl">
-          <Image source={{ uri: photoUrl }} style={{ position: 'absolute', width: '100%', height: '100%' }} resizeMode="cover" />
-        </View>
-      ) : (
-        <View className="h-28 items-center justify-center rounded-2xl bg-primary-soft">
-          <ThemedText type="small" themeColor="textSecondary">
-            {vehicle.marque} {vehicle.modele}
-          </ThemedText>
-        </View>
-      )}
+      <VehicleImage vehicle={vehicle} height={112} radius={16} />
 
       <View className="flex-row justify-between">
         <View className="gap-0.5">
