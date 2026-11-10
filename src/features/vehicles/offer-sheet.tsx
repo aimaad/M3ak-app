@@ -5,6 +5,7 @@ import { Brand, Palette } from '@/constants/theme';
 import { HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
+import { withAlpha } from './fleet-style';
 import { buildOfferMessage, discountedPrice, OFFER_DAYS, OFFER_PERCENTS, type OfferDays, type OfferPercent } from './offer';
 
 /**
@@ -30,7 +31,7 @@ export function OfferSheet({ visible, onClose, vehicleName, price, agencyName }:
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(32,37,39,0.55)' }} onPress={onClose} accessibilityLabel={t('flotte.offer.close')} />
+      <Pressable style={{ flex: 1, backgroundColor: withAlpha(Brand.graphite, 0.55) }} onPress={onClose} accessibilityLabel={t('flotte.offer.close')} />
       <View style={{ backgroundColor: Palette.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32, maxHeight: '85%' }}>
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -10,7 +10,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { FleetRing } from './fleet-ring';
 import { FLEET_GROUPS, type FleetCounts, type FleetGroup } from './fleet-model';
-import { GROUP_ON_DARK } from './fleet-style';
+import { GROUP_ON_DARK, withAlpha } from './fleet-style';
 import { DEFAULT_VEHICLE_IMAGE } from './vehicle-image';
 
 function Tile({ group, count, selected, onPress }: { group: FleetGroup; count: number; selected: boolean; onPress: () => void }) {
@@ -32,7 +32,7 @@ function Tile({ group, count, selected, onPress }: { group: FleetGroup; count: n
         paddingBottom: 12,
         justifyContent: 'flex-end',
         gap: 6,
-        backgroundColor: selected ? Brand.borderOnDark : 'rgba(42,48,51,0.88)',
+        backgroundColor: selected ? Brand.borderOnDark : withAlpha(Brand.surfaceOnDark, 0.88),
         borderWidth: selected ? 1.5 : 1,
         borderColor: selected ? Brand.orange : Brand.strokeOnDark,
         ...(selected ? { shadowColor: Brand.orange, shadowOpacity: 0.28, shadowRadius: 11, shadowOffset: { width: 0, height: 8 } } : {}),
@@ -112,7 +112,7 @@ export function FleetHeader({
         </View>
         <View style={{ flexDirection: 'row', gap: 10 }}>
           {onGallery ? (
-            <Pressable onPress={onGallery} accessibilityRole="button" accessibilityLabel={t('flotte.header.gallery')} style={[circle, { borderWidth: 1, borderColor: Brand.strokeOnDark, backgroundColor: 'rgba(42,48,51,0.7)' }]}>
+            <Pressable onPress={onGallery} accessibilityRole="button" accessibilityLabel={t('flotte.header.gallery')} style={[circle, { borderWidth: 1, borderColor: Brand.strokeOnDark, backgroundColor: withAlpha(Brand.surfaceOnDark, 0.7) }]}>
               <Ionicons name="grid-outline" size={18} color={Brand.white} />
             </Pressable>
           ) : null}

@@ -11,6 +11,7 @@ import {
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 
+import { occupancyByVehicle } from './fleet-card';
 import type { Vehicle } from './types';
 
 /** Les 3 groupes affichés : tuiles, anneau et compteurs. */
@@ -57,11 +58,14 @@ export type FleetItem = {
   group: FleetGroup;
   /** Les 7 prochains jours, aujourd'hui en premier. */
   week: WeekDay[];
+  /** Occupation sur les 30 derniers jours, en % (jours loués ÷ 30). */
+  occupancy: number;
 };
 
 /** Un élément par véhicule ACTIF (les archivés ne sont pas dans la flotte affichée). Un seul calcul pour toute la flotte. */
 export function buildFleetItems(input: { vehicles: Vehicle[]; rentals: Rental[]; maintenance: MaintenanceItem[]; now: Date }): FleetItem[] {
   const days = buildAvailability(input);
+  const occupancy = occupancyByVehicle(input.rentals, input.now);
   const byVehicle = new Map<string, WeekDay[]>();
   const todayOf = new Map<string, VehicleDay>();
   for (const [index, day] of days.entries()) {
@@ -76,7 +80,7 @@ export function buildFleetItems(input: { vehicles: Vehicle[]; rentals: Rental[];
       const today = todayOf.get(vehicle.id);
       if (!today) return [];
       const section = sectionOfStatus(today.status);
-      return [{ vehicle, today, section, group: groupOfSection(section), week: byVehicle.get(vehicle.id) ?? [] }];
+      return [{ vehicle, today, section, group: groupOfSection(section), week: byVehicle.get(vehicle.id) ?? [], occupancy: occupancy.get(vehicle.id) ?? 0 }];
     });
 }
 

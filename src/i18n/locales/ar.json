@@ -471,6 +471,80 @@
       "dueKm": "{{km}} كلم",
       "expired": "سالات",
       "cardA11y": "{{title}}، {{vehicle}}، الأجل: {{due}}"
+    },
+    "card": {
+      "status": {
+        "free": "متاحة",
+        "rented": "مكراية",
+        "inspect": "خاصها معاينة",
+        "maintenance": "فالصيانة",
+        "unavailable": "ماشي متاحة"
+      },
+      "statusPhrase": {
+        "free": "متاحة",
+        "rented": "مكراية",
+        "inspect": "خاصها معاينة",
+        "maintenance": "فالصيانة",
+        "unavailable": "ماشي متاحة"
+      },
+      "context": {
+        "rentedWith": "{{name}} · الرجوع {{date}}",
+        "rentedNoName": "الرجوع {{date}}",
+        "freeUntil": "خاوية حتى {{date}}",
+        "freeAll": "خاوية الأسبوع كامل",
+        "inspect": "معاينة قبل التسليم",
+        "maintenanceReturn": "كترجع من الورشة {{date}}",
+        "garage": "فالكراج",
+        "maintenancePlanned": "صيانة مبرمجة اليوم",
+        "unavailable": "ماشي متاحة"
+      },
+      "spoken": {
+        "rentedWith": "عند {{name}}، الرجوع {{date}}",
+        "rentedLate": "عند {{name}}، متأخرة، الرجوع المنتظر {{date}}",
+        "rentedLateNoName": "متأخرة، الرجوع المنتظر {{date}}"
+      },
+      "sevenDays": "7 أيام جاية",
+      "occupancy": "الاستغلال 30 يوم",
+      "occupancyA11y": "الاستغلال {{percent}} فالمية",
+      "action": {
+        "rent": "كري",
+        "extend": "مدّد",
+        "inspect": "عاين",
+        "maintenance": "شوف الصيانة"
+      },
+      "actionA11y": "{{action}}: {{name}}",
+      "addPhoto": "زيد تصويرة ل {{name}}",
+      "perDay": "درهم/نهار",
+      "weekState": {
+        "free": "خاوية",
+        "rented": "مكراية",
+        "immobilized": "موقوفة"
+      },
+      "weekUntil": "{{state}} حتى {{date}}",
+      "weekAllWeek": "{{state}} الأسبوع كامل",
+      "weekThen": " من بعد ",
+      "weekA11y": "7 أيام جاية: {{summary}}",
+      "legend": {
+        "free": "خاوية",
+        "rented": "مكراية",
+        "immobilized": "موقوفة"
+      },
+      "sections": {
+        "inspect": "خاصها معاينة",
+        "maintenance": "الصيانة",
+        "unavailable": "ماشي متاحة",
+        "rented": "مكراية",
+        "free": "متاحة"
+      },
+      "states": {
+        "emptyTitle": "زيد أول طوموبيل ديالك",
+        "emptyBody": "الأسطول ديالك خاوي. زيد أول طوموبيل باش تتبع التوفر ديالها.",
+        "emptyAction": "زيد طوموبيل",
+        "noResultTitle": "ما لقينا والو",
+        "noResultBody": "ما كاينة حتى طوموبيل كتوافق البحث ولا الفلاتر ديالك.",
+        "retry": "عاود جرب",
+        "archived": "المؤرشفة"
+      }
     }
   },
   "vehicle": {

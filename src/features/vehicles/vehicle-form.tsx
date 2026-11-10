@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
+import { useSectionScroll } from './use-section-scroll';
 
 import { Button } from '@/components/button';
 import { ChipGroup } from '@/components/chip-group';
@@ -37,6 +38,8 @@ type VehicleFormProps = {
   initialValues?: VehicleFormValues;
   existingDocuments?: VehicleDocument[];
   existingPhotosCount?: number;
+  /** Ouvre le formulaire directement sur la section Photos (rond appareil photo de la carte véhicule). */
+  scrollToPhotos?: boolean;
   initialBranchId?: string | null;
   submitLabel: string;
   submittingLabel: string;
@@ -84,6 +87,7 @@ export function VehicleForm({
   initialValues,
   existingDocuments = [],
   existingPhotosCount = 0,
+  scrollToPhotos = false,
   initialBranchId = null,
   submitLabel,
   submittingLabel,
@@ -92,6 +96,7 @@ export function VehicleForm({
   onSubmit,
 }: VehicleFormProps) {
   const { t } = useLanguage();
+  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll<'photos'>(scrollToPhotos ? 'photos' : null);
   const [values, setValues] = useState<VehicleFormValues>(initialValues ?? EMPTY_VALUES);
   const [touched, setTouched] = useState(false);
   const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>([]);
@@ -136,7 +141,7 @@ export function VehicleForm({
   }
 
   return (
-    <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
+    <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
       <SectionTitle>{t('vehicle.sections.general')}</SectionTitle>
       <TextField
         label={t('vehicle.fields.marque')}
@@ -307,18 +312,20 @@ export function VehicleForm({
         error={showErrors && errors.prixMois ? t(`vehicle.form.errors.${errors.prixMois}`) : undefined}
       />
 
-      <SectionTitle>{t('vehicle.sections.photos')}</SectionTitle>
-      <VehiclePhotoPicker
-        label={t('vehicle.photosHint')}
-        localUris={pendingPhotos}
-        onAdd={(uri) => setPendingPhotos((prev) => [...prev, uri])}
-        onRemove={(uri) => setPendingPhotos((prev) => prev.filter((u) => u !== uri))}
-      />
-      {existingPhotosCount > 0 ? (
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('vehicle.existingPhotosHint', { count: existingPhotosCount })}
-        </ThemedText>
-      ) : null}
+      <View className="gap-4" onLayout={onSectionLayout('photos')}>
+        <SectionTitle>{t('vehicle.sections.photos')}</SectionTitle>
+        <VehiclePhotoPicker
+          label={t('vehicle.photosHint')}
+          localUris={pendingPhotos}
+          onAdd={(uri) => setPendingPhotos((prev) => [...prev, uri])}
+          onRemove={(uri) => setPendingPhotos((prev) => prev.filter((u) => u !== uri))}
+        />
+        {existingPhotosCount > 0 ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('vehicle.existingPhotosHint', { count: existingPhotosCount })}
+          </ThemedText>
+        ) : null}
+      </View>
 
       <SectionTitle>{t('vehicle.sections.documents')}</SectionTitle>
       {VEHICLE_DOCUMENT_TYPES.map((type) => {

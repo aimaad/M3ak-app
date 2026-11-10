@@ -9,7 +9,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { rentedPercent, type FleetCounts } from './fleet-model';
 import { RING_CIRCUMFERENCE, RING_RADIUS, RING_SIZE, RING_STROKE, ringSegments, type RingSegment } from './ring-geometry';
-import { GROUP_ON_DARK } from './fleet-style';
+import { GROUP_ON_DARK, withAlpha } from './fleet-style';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -51,7 +51,7 @@ export function FleetRing({ counts }: { counts: FleetCounts }) {
       style={{ width: RING_SIZE, height: RING_SIZE }}
     >
       <Svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} style={{ transform: [{ rotate: '-90deg' }] }}>
-        <Circle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} fill="rgba(32,37,39,0.75)" stroke={Brand.borderOnDark} strokeWidth={RING_STROKE} />
+        <Circle cx={RING_SIZE / 2} cy={RING_SIZE / 2} r={RING_RADIUS} fill={withAlpha(Brand.graphite, 0.75)} stroke={Brand.borderOnDark} strokeWidth={RING_STROKE} />
         {segments.map((segment) => (
           <Segment key={segment.key} segment={segment} progress={progress} />
         ))}

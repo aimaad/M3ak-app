@@ -1,7 +1,7 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
@@ -12,11 +12,15 @@ import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { useMyAgency } from '@/features/agency/hooks';
+import { useCustomers } from '@/features/customers/hooks';
 import { useMaintenanceItems } from '@/features/maintenance/hooks';
 import { useRentals } from '@/features/rentals/hooks';
 import { AdviceCard } from '@/features/vehicles/advice-card';
 import { adviceCandidates, pickAdvice } from '@/features/vehicles/fleet-advice';
-import { buildFleetItems, groupCounts, groupFromStatusParam, toggleGroup, type FleetGroup } from '@/features/vehicles/fleet-model';
+import { actionFor, canAddVehiclePhoto, canSeePrices, contextOf, type FleetAction } from '@/features/vehicles/fleet-card';
+import { FleetVehicleCard } from '@/features/vehicles/fleet-vehicle-card';
+import { FleetLegend, FleetMessage, FleetSectionHeader, FleetSkeleton } from '@/features/vehicles/fleet-sections';
+import { buildFleetItems, buildSections, groupCounts, groupFromStatusParam, matchesGroup, toggleGroup, type FleetGroup } from '@/features/vehicles/fleet-model';
 import { FleetHeader } from '@/features/vehicles/fleet-header';
 import { buildWatchItems } from '@/features/vehicles/fleet-watch';
 import { FleetWatchSection } from '@/features/vehicles/fleet-watch-section';
@@ -28,6 +32,7 @@ import { useAdviceSnooze } from '@/features/vehicles/use-advice-snooze';
 import { VehicleCard } from '@/features/vehicles/vehicle-card';
 import { usePagination } from '@/lib/pagination';
 import { useLanguage } from '@/i18n/use-language';
+import type { Customer } from '@/features/customers/types';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 import type { Vehicle } from '@/features/vehicles/types';
@@ -36,6 +41,7 @@ import { Palette, Brand } from '@/constants/theme';
 const EMPTY_VEHICLES: Vehicle[] = [];
 const EMPTY_RENTALS: Rental[] = [];
 const EMPTY_MAINTENANCE: MaintenanceItem[] = [];
+const EMPTY_CUSTOMERS: Customer[] = [];
 const SORT_OPTIONS: VehicleSort[] = ['recent', 'marque', 'immatriculation', 'prixJour', 'kilometrage'];
 
 export default function FlotteScreen() {
@@ -46,6 +52,7 @@ export default function FlotteScreen() {
   const vehiclesQuery = useVehicles();
   const rentalsQuery = useRentals();
   const maintenanceQuery = useMaintenanceItems();
+  const customersQuery = useCustomers();
   const { statut: initialStatut } = useLocalSearchParams<{ statut?: string }>();
   const [filters, setFilters] = useState<VehicleFilters>(DEFAULT_VEHICLE_FILTERS);
   // Groupe actif (tuiles de l'en-tête) : un lien de l'accueil (?statut=…) ouvre le groupe correspondant.
@@ -58,7 +65,10 @@ export default function FlotteScreen() {
   const vehicles = vehiclesQuery.data ?? EMPTY_VEHICLES;
   const rentals = rentalsQuery.data ?? EMPTY_RENTALS;
   const maintenance = maintenanceQuery.data ?? EMPTY_MAINTENANCE;
-  const isOwner = agencyQuery.data?.role === 'owner';
+  const role = agencyQuery.data?.role;
+  const isOwner = role === 'owner';
+  const showPrice = canSeePrices(role);
+  const customers = customersQuery.data ?? EMPTY_CUSTOMERS;
   const activeVehicles = useMemo(() => vehicles.filter((v) => !v.archivedAt), [vehicles]);
   // Statut d'aujourd'hui et frise de chaque véhicule : UN calcul pour toute la flotte, même source que les Disponibilités de l'accueil.
   const items = useMemo(() => buildFleetItems({ vehicles, rentals, maintenance, now: new Date() }), [vehicles, rentals, maintenance]);
@@ -70,6 +80,20 @@ export default function FlotteScreen() {
     return filters.includeArchived || group === null ? base : base.filter((v) => itemById.get(v.id)?.group === group);
   }, [vehicles, filters, sort, group, itemById]);
   const pagination = usePagination(filtered, `${JSON.stringify(filters)}${sort}${group}`);
+
+  // Liste groupée par statut : mêmes filtres (recherche, catégorie, marque) et tuile active ; l'ordre dans une section suit le tri choisi.
+  const sections = useMemo(() => {
+    if (filters.includeArchived) return [];
+    const visible = new Set(filtered.map((v) => v.id));
+    const order = new Map(filtered.map((v, index) => [v.id, index]));
+    const shown = items.filter((item) => visible.has(item.vehicle.id) && matchesGroup(item, group));
+    return buildSections(shown).map((section) => ({ key: section.key, data: [...section.items].sort((a, b) => (order.get(a.vehicle.id) ?? 0) - (order.get(b.vehicle.id) ?? 0)) }));
+  }, [items, filtered, group, filters.includeArchived]);
+  // Données des cartes (client, retour, locations) : une seule préparation pour toute la flotte.
+  const cardData = useMemo(
+    () => ({ customers: new Map(customers.map((c) => [c.id, c])), rentals: new Map(rentals.map((r) => [r.id, r])), maintenance }),
+    [customers, rentals, maintenance]
+  );
 
   // Conseil BIBIP : propriétaire seulement, un seul à la fois, « Plus tard » le masque 24 h.
   const advice = useMemo(
@@ -118,8 +142,8 @@ export default function FlotteScreen() {
         </ThemedText>
       ),
     },
-    { key: 'price', label: t('desktop.dailyPrice'), align: 'end', render: (v) => <ThemedText type="smallBold">{v.prixJour} MAD</ThemedText> },
   ];
+  if (showPrice) columns.push({ key: 'price', label: t('desktop.dailyPrice'), align: 'end', render: (v) => <ThemedText type="smallBold">{v.prixJour} MAD</ThemedText> });
 
   const agencyName = agencyQuery.data.agencyName;
 
@@ -213,6 +237,16 @@ export default function FlotteScreen() {
     </View>
   );
 
+  const refetchAll = () => {
+    void vehiclesQuery.refetch();
+    void rentalsQuery.refetch();
+    void maintenanceQuery.refetch();
+    void customersQuery.refetch();
+  };
+  const runAction = (action: FleetAction) => router.push(action.href as Parameters<typeof router.push>[0]);
+  const archivedMode = filters.includeArchived;
+  const noVehicle = vehicles.length === 0;
+
   return (
     <ThemedView className="flex-1" style={{ backgroundColor: Palette.surface }}>
       <StatusBar style="light" />
@@ -220,21 +254,12 @@ export default function FlotteScreen() {
         {vehiclesQuery.isLoading ? (
           <ScrollView contentContainerStyle={{ paddingBottom: tabInset }}>
             {header}
-            <View className="items-center pt-12">
-              <ActivityIndicator color={Palette.primary} />
-              <ThemedText type="small" themeColor="textSecondary" className="mt-2">
-                {t('flotte.loading')}
-              </ThemedText>
-            </View>
+            <FleetSkeleton />
           </ScrollView>
         ) : vehiclesQuery.isError ? (
           <ScrollView contentContainerStyle={{ paddingBottom: tabInset }}>
             {header}
-            <View className="items-center px-8 pt-12">
-              <ThemedText type="default" themeColor="textSecondary" className="text-center">
-                {t('flotte.loadError')}
-              </ThemedText>
-            </View>
+            <FleetMessage title={t('flotte.loadError')} actionLabel={t('flotte.card.states.retry')} onAction={refetchAll} />
           </ScrollView>
         ) : isDesktop ? (
           <ScrollView contentContainerStyle={{ paddingBottom: tabInset + 24 }}>
@@ -247,29 +272,33 @@ export default function FlotteScreen() {
                 rows={pagination.items}
                 rowKey={(item) => item.id}
                 onRowPress={(item) => router.push(`/flotte/${item.id}`)}
-                exportCsv={{ filename: 'flotte', rows: filtered, cells: (v) => [`${v.marque} ${v.modele}`, v.immatriculation, v.annee, t(`flotte.status.${v.statut}`), v.kilometrage, v.prixJour] }}
-                emptyLabel={vehicles.length === 0 ? t('flotte.emptyNone') : t('flotte.empty')}
+                exportCsv={{ filename: 'flotte', rows: filtered, cells: (v) => [`${v.marque} ${v.modele}`, v.immatriculation, v.annee, t(`flotte.status.${v.statut}`), v.kilometrage, ...(showPrice ? [v.prixJour] : [])] }}
+                emptyLabel={noVehicle ? t('flotte.emptyNone') : t('flotte.empty')}
               />
               <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
             </View>
           </ScrollView>
+        ) : archivedMode ? (
+          // Véhicules archivés : liste simple (pas de statut du jour ni de frise : ils ne sont plus dans la flotte).
+          <ScrollView contentContainerStyle={{ paddingBottom: tabInset }} refreshControl={<RefreshControl refreshing={vehiclesQuery.isFetching} onRefresh={refetchAll} tintColor={Palette.primary} />}>
+            {header}
+            {controls}
+            <View style={{ paddingHorizontal: 24, gap: 12 }}>
+              {filtered.length === 0 ? (
+                <FleetMessage title={t('flotte.card.states.noResultTitle')} body={t('flotte.card.states.noResultBody')} />
+              ) : (
+                filtered.map((vehicle) => <VehicleCard key={vehicle.id} vehicle={vehicle} showPrice={showPrice} onPress={() => router.push(`/flotte/${vehicle.id}`)} />)
+              )}
+            </View>
+          </ScrollView>
         ) : (
-          <FlatList
-            data={pagination.items}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ paddingBottom: tabInset }}
-            ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-            refreshControl={
-              <RefreshControl
-                refreshing={vehiclesQuery.isFetching}
-                onRefresh={() => {
-                  void vehiclesQuery.refetch();
-                  void rentalsQuery.refetch();
-                  void maintenanceQuery.refetch();
-                }}
-                tintColor={Palette.primary}
-              />
-            }
+          <SectionList
+            sections={sections}
+            keyExtractor={(item) => item.vehicle.id}
+            stickySectionHeadersEnabled={false}
+            contentContainerStyle={{ paddingBottom: tabInset + 8 }}
+            ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+            refreshControl={<RefreshControl refreshing={vehiclesQuery.isFetching} onRefresh={refetchAll} tintColor={Palette.primary} />}
             ListHeaderComponent={
               <View>
                 {header}
@@ -277,23 +306,29 @@ export default function FlotteScreen() {
                 {controls}
               </View>
             }
+            renderSectionHeader={({ section }) => <FleetSectionHeader section={section.key} count={section.data.length} />}
             renderItem={({ item }) => (
-              <View className="px-6">
-                <VehicleCard vehicle={item} onPress={() => router.push(`/flotte/${item.id}`)} />
+              <View style={{ paddingHorizontal: 20 }}>
+                <FleetVehicleCard
+                  item={item}
+                  context={contextOf(item, cardData)}
+                  action={actionFor(item, role, rentals, new Date())}
+                  showPrice={showPrice}
+                  canAddPhoto={canAddVehiclePhoto(role)}
+                  onOpen={() => router.push(`/flotte/${item.vehicle.id}`)}
+                  onAction={runAction}
+                  onAddPhoto={() => router.push({ pathname: '/flotte/[id]/modifier', params: { id: item.vehicle.id, section: 'photos' } })}
+                />
               </View>
             )}
-            ListFooterComponent={
-              <View className="px-6">
-                <Pager page={pagination.page} pageCount={pagination.pageCount} onChange={pagination.setPage} />
-              </View>
-            }
             ListEmptyComponent={
-              <View className="items-center pt-12">
-                <ThemedText type="default" themeColor="textSecondary">
-                  {vehicles.length === 0 ? t('flotte.emptyNone') : t('flotte.empty')}
-                </ThemedText>
-              </View>
+              noVehicle ? (
+                <FleetMessage title={t('flotte.card.states.emptyTitle')} body={t('flotte.card.states.emptyBody')} actionLabel={t('flotte.card.states.emptyAction')} onAction={() => router.push('/flotte/nouveau')} />
+              ) : (
+                <FleetMessage title={t('flotte.card.states.noResultTitle')} body={t('flotte.card.states.noResultBody')} />
+              )
             }
+            ListFooterComponent={sections.length > 0 ? <FleetLegend /> : undefined}
           />
         )}
       </SafeAreaView>

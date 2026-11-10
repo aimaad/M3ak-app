@@ -51,7 +51,7 @@ function WatchCard({ item, width, onOpen }: { item: WatchItem; width: number | '
         </HText>
       </View>
       {/* Barre d'urgence : d'autant plus pleine que l'échéance est proche. */}
-      <View style={{ height: 5, borderRadius: 3, backgroundColor: '#EEF0F0', overflow: 'hidden', flexDirection: 'row' }}>
+      <View style={{ height: 5, borderRadius: 3, backgroundColor: Brand.gaugeTrack, overflow: 'hidden', flexDirection: 'row' }}>
         <View style={{ width: `${Math.round(item.fill * 100)}%`, borderRadius: 3, backgroundColor: accent }} />
       </View>
     </Pressable>

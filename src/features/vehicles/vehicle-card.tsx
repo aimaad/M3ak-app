@@ -8,7 +8,7 @@ import { VehicleImage } from './vehicle-image';
 import { VehicleStatusBadge } from './vehicle-status-badge';
 import type { Vehicle } from './types';
 
-export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: () => void }) {
+export function VehicleCard({ vehicle, onPress, showPrice = true }: { vehicle: Vehicle; onPress: () => void; /** Le prix par jour n'est montré qu'au propriétaire (l'écran le décide). */ showPrice?: boolean }) {
   const { t } = useLanguage();
 
   return (
@@ -43,14 +43,16 @@ export function VehicleCard({ vehicle, onPress }: { vehicle: Vehicle; onPress: (
             {vehicle.kilometrage.toLocaleString('fr-FR')} {t('flotte.km')}
           </ThemedText>
         </View>
-        <View className="items-end gap-0.5">
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('vehicle.fields.prixJour')}
-          </ThemedText>
-          <ThemedText type="smallBold" themeColor="primary">
-            {vehicle.prixJour.toLocaleString('fr-FR')} {t('flotte.perDay')}
-          </ThemedText>
-        </View>
+        {showPrice ? (
+          <View className="items-end gap-0.5">
+            <ThemedText type="small" themeColor="textSecondary">
+              {t('vehicle.fields.prixJour')}
+            </ThemedText>
+            <ThemedText type="smallBold" themeColor="primary">
+              {vehicle.prixJour.toLocaleString('fr-FR')} {t('flotte.perDay')}
+            </ThemedText>
+          </View>
+        ) : null}
       </View>
     </PressableCard>
   );

@@ -1,3 +1,4 @@
+import { useSectionScroll } from '@/features/vehicles/use-section-scroll';
 import { useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -39,7 +40,10 @@ function rentalConfirmedId(rental: { id: string; statut: string } | null | undef
 }
 
 export default function LocationDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, prolonger } = useLocalSearchParams<{ id: string; prolonger?: string }>();
+  // « Prolonger » depuis Ma Flotte : la section de prolongation s'ouvre d'elle-même et la page défile jusqu'à elle.
+  const openExtend = prolonger === '1';
+  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll<'prolonger'>(openExtend ? 'prolonger' : null);
   const { t } = useLanguage();
   const { data: rental, isLoading, isError } = useRental(id);
   const { data: vehicle } = useVehicle(rental?.vehicleId);
@@ -113,7 +117,7 @@ export default function LocationDetailScreen() {
           showBack
         />
 
-        <ScrollView contentContainerClassName="gap-6 px-6 pb-10">
+        <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerClassName="gap-6 px-6 pb-10">
           {overlappingRentalIds(vehicleRentalsQuery.data ?? []).has(rental.id) ? (
             <View className="gap-1 rounded-2xl border border-error/30 bg-error-soft p-4">
               <OverlapBadge />
@@ -189,9 +193,11 @@ export default function LocationDetailScreen() {
             </CollapsibleSection>
 
             {canExtend ? (
-              <CollapsibleSection title={t('locations.extend.title')}>
-                <ExtendRentalForm rental={rental} />
-              </CollapsibleSection>
+              <View onLayout={onSectionLayout('prolonger')}>
+                <CollapsibleSection title={t('locations.extend.title')} defaultOpen={openExtend}>
+                  <ExtendRentalForm rental={rental} />
+                </CollapsibleSection>
+              </View>
             ) : null}
 
             {deposit ? (

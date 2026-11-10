@@ -24,3 +24,12 @@ export const SECTION_DOT: Record<FleetSection, string> = {
   rented: Brand.graphite,
   free: Palette.success,
 };
+
+/** Un jeton de couleur avec une transparence (« #202527 » + 0,88 → rgba) : jamais de couleur en dur. */
+export function withAlpha(hex: string, alpha: number): string {
+  const value = hex.replace('#', '');
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}

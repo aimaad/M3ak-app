@@ -467,6 +467,80 @@
       "dueKm": "{{km}} km",
       "expired": "Expirée",
       "cardA11y": "{{title}}, {{vehicle}}, échéance : {{due}}"
+    },
+    "card": {
+      "status": {
+        "free": "Disponible",
+        "rented": "En location",
+        "inspect": "À inspecter",
+        "maintenance": "Entretien",
+        "unavailable": "Indisponible"
+      },
+      "statusPhrase": {
+        "free": "disponible",
+        "rented": "en location",
+        "inspect": "à inspecter",
+        "maintenance": "à l'entretien",
+        "unavailable": "indisponible"
+      },
+      "context": {
+        "rentedWith": "{{name}} · retour {{date}}",
+        "rentedNoName": "Retour {{date}}",
+        "freeUntil": "Libre jusqu'au {{date}}",
+        "freeAll": "Libre toute la semaine",
+        "inspect": "Inspection avant remise",
+        "maintenanceReturn": "Retour d'atelier {{date}}",
+        "garage": "Au garage",
+        "maintenancePlanned": "Entretien prévu aujourd'hui",
+        "unavailable": "Indisponible"
+      },
+      "spoken": {
+        "rentedWith": "chez {{name}}, retour {{date}}",
+        "rentedLate": "chez {{name}}, en retard, retour prévu {{date}}",
+        "rentedLateNoName": "en retard, retour prévu {{date}}"
+      },
+      "sevenDays": "7 prochains jours",
+      "occupancy": "Occupation 30 j",
+      "occupancyA11y": "occupation {{percent}} pour cent",
+      "action": {
+        "rent": "Louer",
+        "extend": "Prolonger",
+        "inspect": "Inspecter",
+        "maintenance": "Voir l'entretien"
+      },
+      "actionA11y": "{{action}} : {{name}}",
+      "addPhoto": "Ajouter une photo pour la {{name}}",
+      "perDay": "MAD/j",
+      "weekState": {
+        "free": "libre",
+        "rented": "loué",
+        "immobilized": "immobilisé"
+      },
+      "weekUntil": "{{state}} jusqu'au {{date}}",
+      "weekAllWeek": "{{state}} toute la semaine",
+      "weekThen": " puis ",
+      "weekA11y": "7 prochains jours : {{summary}}",
+      "legend": {
+        "free": "Libre",
+        "rented": "Loué",
+        "immobilized": "Immobilisé"
+      },
+      "sections": {
+        "inspect": "À inspecter",
+        "maintenance": "Entretien",
+        "unavailable": "Indisponibles",
+        "rented": "En location",
+        "free": "Disponibles"
+      },
+      "states": {
+        "emptyTitle": "Ajoutez votre premier véhicule",
+        "emptyBody": "Votre flotte est vide. Créez votre premier véhicule pour suivre ses disponibilités.",
+        "emptyAction": "Ajouter un véhicule",
+        "noResultTitle": "Aucun résultat",
+        "noResultBody": "Aucun véhicule ne correspond à votre recherche ou à vos filtres.",
+        "retry": "Réessayer",
+        "archived": "Archivés"
+      }
     }
   },
   "vehicle": {

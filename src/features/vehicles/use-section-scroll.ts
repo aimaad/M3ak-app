@@ -14,12 +14,12 @@ export function parseVehicleSection(value: string | string[] | undefined): Vehic
  * Fait défiler la fiche jusqu'à la section demandée dès qu'elle est mise en page. Si le contenu au-dessus grandit ensuite (photos qui
  * se chargent), la section est rattrapée, jusqu'à ce que l'utilisateur fasse défiler lui-même.
  */
-export function useSectionScroll(section: VehicleSection | null) {
+export function useSectionScroll<T extends string = VehicleSection>(section: T | null) {
   const scrollRef = useRef<ScrollViewInstance>(null);
   const userScrolled = useRef(false);
 
   const onSectionLayout = useCallback(
-    (name: VehicleSection) => (event: LayoutChangeEvent) => {
+    (name: T) => (event: LayoutChangeEvent) => {
       if (section !== name || userScrolled.current) return;
       scrollRef.current?.scrollTo({ y: Math.max(0, event.nativeEvent.layout.y - 12), animated: true });
     },

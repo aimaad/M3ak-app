@@ -8,6 +8,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { mergeDocuments } from '@/features/storage/documents';
 import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
+import { parseVehicleSection } from '@/features/vehicles/use-section-scroll';
 import { useUpdateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicle } from '@/features/vehicles/hooks';
 import type { PendingVehicleDocument, VehicleInput } from '@/features/vehicles/types';
 import { duplicateVehicleField, fromIsoDate } from '@/features/vehicles/validation';
@@ -17,7 +18,7 @@ import { useLanguage } from '@/i18n/use-language';
 import { Palette } from '@/constants/theme';
 
 export default function ModifierVehiculeScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
   const { t } = useLanguage();
   const { data: vehicle, isLoading, isError } = useVehicle(id);
   const updateVehicle = useUpdateVehicle();
@@ -131,6 +132,7 @@ export default function ModifierVehiculeScreen() {
             initialValues={initialValues}
             existingDocuments={vehicle.documents}
             existingPhotosCount={vehicle.photos.length}
+            scrollToPhotos={parseVehicleSection(section) === 'photos'}
             initialBranchId={vehicle.branchId}
             submitLabel={t('vehicle.form.save')}
             submittingLabel={t('vehicle.form.saving')}
