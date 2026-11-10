@@ -21,7 +21,7 @@ Une location **ne peut pas démarrer** tant que l'inspection de départ n'est pa
 Le **propriétaire décide** (écran Entreprise → Politique de départ → exigences) si les employés peuvent ignorer la prise de photos (`allow_skip_inspection`) et refuser l'analyse M3ak (`allow_decline_ai`) — migration 0051, appliqué aussi par le serveur (`inspection_skip_not_allowed`, `inspection_decline_not_allowed`). Le gérant et le propriétaire peuvent toujours. Par défaut : autorisé, comme avant.
 
 ## Confidentialité et sécurité
-- Même règle que la lecture de documents : clé Gemini **de l'entreprise** uniquement, accord du propriétaire obligatoire (sinon `ocr_disabled` / `ocr_not_configured`, rien n'est envoyé).
+- Mêmes règles que la lecture de documents : clé Gemini **de l'entreprise** uniquement, accord du propriétaire obligatoire (sinon `ocr_disabled` / `ocr_not_configured`, rien n'est envoyé). L'accord est **propre à l'analyse des inspections** (« Mon entreprise → Analyse IA des inspections », `inspection_enabled`, migration 0065), distinct de celui de la lecture des permis et cartes grises : le propriétaire choisit chaque outil. Les agences qui avaient déjà activé la lecture des documents ont gardé l'analyse des inspections à la mise à jour ; elles peuvent la désactiver seule.
 - La fonction vérifie d'abord, avec le droit de l'appelant (RLS), qu'il peut voir l'inspection (entreprise et filiale). Les photos ne sont lues avec le rôle service qu'ensuite. Ni images ni résultats ne sont journalisés.
 - L'IA propose, l'humain décide : rien n'est retenu sans validation.
 

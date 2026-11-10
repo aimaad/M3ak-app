@@ -3,7 +3,7 @@
 import { scanLicence } from '@/features/customers/licence-ocr';
 import { scanVehicleDocument } from '@/features/vehicles/ocr';
 
-import { chatAvailability, inactiveMessageKey, insightsAvailability, ocrAvailability, scanErrorMessageKey } from '../availability';
+import { chatAvailability, inactiveMessageKey, insightsAvailability, inspectionAvailability, ocrAvailability, scanErrorMessageKey } from '../availability';
 import { parseOcrSettings } from '../settings-api';
 
 const mockInvoke = jest.fn();
@@ -22,17 +22,42 @@ beforeEach(() => mockInvoke.mockReset());
 
 describe("réglage OCR de l'entreprise", () => {
   it('ne renvoie jamais de clé et ignore un accord sans clé', () => {
-    expect(parseOcrSettings({ cloud_available: false, cloud_enabled: true })).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false });
-    expect(parseOcrSettings({ cloud_available: true, cloud_enabled: true, insights_enabled: true, gemini_api_key: 'secret' })).toEqual({ cloudAvailable: true, cloudEnabled: true, insightsEnabled: true, chatEnabled: false });
+    expect(parseOcrSettings({ cloud_available: false, cloud_enabled: true })).toEqual({ cloudAvailable: false, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false });
+    expect(parseOcrSettings({ cloud_available: true, cloud_enabled: true, insights_enabled: true, gemini_api_key: 'secret' })).toEqual({ cloudAvailable: true, cloudEnabled: true, inspectionEnabled: false, insightsEnabled: true, chatEnabled: false });
     expect(parseOcrSettings({ cloud_available: false, insights_enabled: true }).insightsEnabled).toBe(false);
-    expect(parseOcrSettings(null)).toEqual({ cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false });
+    expect(parseOcrSettings(null)).toEqual({ cloudAvailable: false, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false });
+  });
+});
+
+describe("accords du propriétaire : un par outil, indépendants", () => {
+  const settings = (overrides: object) => parseOcrSettings({ cloud_available: true, ...overrides });
+
+  it("l'analyse des inspections a son propre accord, distinct de la lecture des documents", () => {
+    expect(settings({ cloud_enabled: true }).inspectionEnabled).toBe(false);
+    expect(settings({ inspection_enabled: true }).cloudEnabled).toBe(false);
+    expect(settings({ cloud_enabled: true, inspection_enabled: true })).toMatchObject({ cloudEnabled: true, inspectionEnabled: true, insightsEnabled: false, chatEnabled: false });
+  });
+  it("ignore l'accord de l'inspection sans clé", () => {
+    expect(parseOcrSettings({ cloud_available: false, inspection_enabled: true }).inspectionEnabled).toBe(false);
+  });
+  it("l'analyse des inspections est active seulement avec une clé ET l'accord du propriétaire pour CET outil", () => {
+    const none = parseOcrSettings(null);
+    const keyOnly = settings({ cloud_enabled: true }); // la lecture des documents ne suffit pas
+    const on = settings({ inspection_enabled: true });
+    expect(inspectionAvailability(on, false, 'employee')).toBe('active');
+    expect(inspectionAvailability(none, false, 'owner')).toBe('no_key');
+    expect(inspectionAvailability(keyOnly, false, 'owner')).toBe('owner_can_enable');
+    expect(inspectionAvailability(keyOnly, false, 'manager')).toBe('ask_owner');
+    expect(inspectionAvailability(on, true, 'owner')).toBe('loading');
+    // et inversement : activer l'inspection n'active pas la lecture des documents
+    expect(ocrAvailability(on, false, 'owner')).toBe('owner_can_enable');
   });
 });
 
 describe('disponibilité de la lecture automatique', () => {
-  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
-  const keyOnly = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
-  const on = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false, chatEnabled: false };
+  const none = { cloudAvailable: false, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const keyOnly = { cloudAvailable: true, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const on = { cloudAvailable: true, cloudEnabled: true, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false };
 
   it('active seulement avec une clé ET l\'accord du propriétaire', () => {
     expect(ocrAvailability(on, false, 'employee')).toBe('active');
@@ -60,9 +85,9 @@ describe('disponibilité de la lecture automatique', () => {
 });
 
 describe("disponibilité des recommandations IA", () => {
-  const none = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
-  const keyOnly = { cloudAvailable: true, cloudEnabled: true, insightsEnabled: false, chatEnabled: false };
-  const on = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: true, chatEnabled: false };
+  const none = { cloudAvailable: false, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const keyOnly = { cloudAvailable: true, cloudEnabled: true, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false };
+  const on = { cloudAvailable: true, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: true, chatEnabled: false };
 
   it('réservées au propriétaire et au responsable, avec clé ET accord du propriétaire', () => {
     expect(insightsAvailability(on, false, 'owner')).toBe('active');
@@ -150,7 +175,7 @@ describe('carte grise : lecture', () => {
 });
 
 describe('disponibilité du chat', () => {
-  const base = { cloudAvailable: true, cloudEnabled: false, insightsEnabled: false };
+  const base = { cloudAvailable: true, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false };
   it('ouvert à tout le personnel dès que le propriétaire l\'a activé', () => {
     const on = { ...base, chatEnabled: true };
     expect(chatAvailability(on, false, 'employee')).toBe('active');

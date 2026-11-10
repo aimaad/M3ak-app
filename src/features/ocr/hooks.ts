@@ -2,8 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useMyAgency } from '@/features/agency/hooks';
 
-import { chatAvailability, insightsAvailability, ocrAvailability, type ChatAvailability, type InsightsAvailability, type OcrAvailability } from './availability';
-import { NO_OCR_SETTINGS, getOcrSettings, setAiChatEnabled, setAiInsightsEnabled, setOcrCloudEnabled, type OcrSettings } from './settings-api';
+import { chatAvailability, insightsAvailability, inspectionAvailability, ocrAvailability, type ChatAvailability, type InsightsAvailability, type InspectionAvailability, type OcrAvailability } from './availability';
+import { NO_OCR_SETTINGS, getOcrSettings, setAiChatEnabled, setAiInsightsEnabled, setAiInspectionEnabled, setOcrCloudEnabled, type OcrSettings } from './settings-api';
 
 const key = (agencyId: string | undefined) => ['ocr-settings', agencyId] as const;
 
@@ -13,6 +13,7 @@ export function useOcrSettings(): {
   isLoading: boolean;
   agencyId: string | undefined;
   availability: OcrAvailability;
+  inspectionAvailability: InspectionAvailability;
   insightsAvailability: InsightsAvailability;
   chatAvailability: ChatAvailability;
 } {
@@ -26,6 +27,7 @@ export function useOcrSettings(): {
     isLoading,
     agencyId,
     availability: ocrAvailability(settings, isLoading, agency.data?.role),
+    inspectionAvailability: inspectionAvailability(settings, isLoading, agency.data?.role),
     insightsAvailability: insightsAvailability(settings, isLoading, agency.data?.role),
     chatAvailability: chatAvailability(settings, isLoading, agency.data?.role),
   };
@@ -35,6 +37,14 @@ export function useSetOcrCloudEnabled(agencyId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (enabled: boolean) => setOcrCloudEnabled(agencyId as string, enabled),
+    onSuccess: (data) => queryClient.setQueryData(key(agencyId), data),
+  });
+}
+
+export function useSetAiInspectionEnabled(agencyId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (enabled: boolean) => setAiInspectionEnabled(agencyId as string, enabled),
     onSuccess: (data) => queryClient.setQueryData(key(agencyId), data),
   });
 }

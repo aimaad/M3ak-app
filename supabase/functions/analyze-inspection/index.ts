@@ -225,10 +225,11 @@ Deno.serve(async (request) => {
 
     const { data: settings } = await withTimeout(
       'settings',
-      admin.from('agency_ocr_settings').select('cloud_enabled, gemini_api_key').eq('agency_id', inspection.agency_id).maybeSingle()
+      admin.from('agency_ocr_settings').select('inspection_enabled, gemini_api_key').eq('agency_id', inspection.agency_id).maybeSingle()
     );
     if (!settings?.gemini_api_key) return json({ ok: false, error: 'ocr_not_configured' });
-    if (!settings.cloud_enabled) return json({ ok: false, error: 'ocr_disabled' });
+    // Accord du propriétaire propre à l'analyse des inspections (distinct de la lecture automatique des documents).
+    if (!settings.inspection_enabled) return json({ ok: false, error: 'ocr_disabled' });
     apiKey = settings.gemini_api_key;
   } catch (error) {
     if (error instanceof StageTimeoutError) return json({ ok: false, error: 'ocr_timeout', detail: `stage:${error.stage}` });

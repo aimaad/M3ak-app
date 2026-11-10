@@ -2291,6 +2291,7 @@
       "inspection_completed": "{{actor}} a terminé l'inspection ({{inspectionType}}) de {{target}}",
       "departure_check_confirmed": "{{actor}} a confirmé les documents avant départ de la location {{target}}",
       "ocr_cloud_toggled": "{{actor}} a modifié la lecture automatique des documents : {{state}}",
+      "ai_inspection_toggled": "{{actor}} a modifié l'analyse IA des inspections : {{state}}",
       "ai_insights_toggled": "{{actor}} a modifié les analyses et recommandations de l'accueil : {{state}}",
       "unknown": "{{actor}} a effectué une action",
       "contract_template_saved": "{{actor}} a enregistré le modèle de contrat de l'agence",
@@ -2348,6 +2349,16 @@
       "disable": "Désactiver le Chat BIBIP",
       "confirmTitle": "Activer le Chat BIBIP ?",
       "confirmBody": "Pour répondre, BIBIP transmet à l'IA (Google Gemini) les résultats de la recherche : noms et téléphones des clients concernés, voitures, dates. Jamais le CIN, le numéro de permis ni les photos. Chaque employé ne voit que ce que ses droits (filiale) lui permettent."
+    },
+    "inspection": {
+      "title": "Analyse IA des inspections",
+      "unavailable": "Indisponible : aucune clé IA n'est configurée pour votre entreprise (BIBIP la configure).",
+      "on": "Activée. Les photos d'inspection d'un véhicule peuvent être analysées par l'IA pour repérer les dommages. Les employés peuvent toujours ajouter les dommages à la main.",
+      "off": "Désactivée. Les dommages se saisissent à la main ; activez l'analyse pour que l'IA les repère sur les photos.",
+      "enable": "Activer l'analyse des inspections",
+      "disable": "Désactiver l'analyse des inspections",
+      "confirmTitle": "Activer l'analyse IA des inspections ?",
+      "confirmBody": "Les photos d'inspection du véhicule seront envoyées à l'IA (Google Gemini), avec la clé d'API de votre entreprise, pour repérer les dommages. Jamais de photo de document ni de donnée client. Avec une clé gratuite, Google peut utiliser les images ; préférez une clé avec facturation activée."
     }
   },
   "errors": {

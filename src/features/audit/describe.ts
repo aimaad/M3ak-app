@@ -15,7 +15,7 @@ const KNOWN_ACTIONS = new Set([
   'inspection_created', 'inspection_completed', 'departure_check_confirmed',
   'branch_created', 'branch_updated', 'branch_deleted', 'invite_created', 'invite_resent', 'invite_revoked',
   'member_joined', 'member_role_changed', 'member_removed',
-  'ocr_key_set', 'ocr_key_cleared', 'ocr_cloud_toggled', 'ai_insights_toggled',
+  'ocr_key_set', 'ocr_key_cleared', 'ocr_cloud_toggled', 'ai_inspection_toggled', 'ai_insights_toggled',
 ]);
 
 /** Champs de fiche client dont on peut citer le NOM (jamais la valeur) ; les autres colonnes sont ignorées. */

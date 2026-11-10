@@ -6,13 +6,15 @@ export type OcrSettings = {
   cloudAvailable: boolean;
   /** Le propriétaire a autorisé l'analyse par Gemini (impossible sans clé). */
   cloudEnabled: boolean;
+  /** Le propriétaire a autorisé l'analyse IA des photos d'inspection (accord distinct de la lecture des documents, impossible sans clé). */
+  inspectionEnabled: boolean;
   /** Le propriétaire a autorisé les recommandations IA de l'accueil (accord distinct, impossible sans clé). */
   insightsEnabled: boolean;
   /** Le propriétaire a autorisé le Chat M3ak (accord distinct : des noms de clients peuvent être transmis à l'IA). */
   chatEnabled: boolean;
 };
 
-export const NO_OCR_SETTINGS: OcrSettings = { cloudAvailable: false, cloudEnabled: false, insightsEnabled: false, chatEnabled: false };
+export const NO_OCR_SETTINGS: OcrSettings = { cloudAvailable: false, cloudEnabled: false, inspectionEnabled: false, insightsEnabled: false, chatEnabled: false };
 
 export function parseOcrSettings(raw: unknown): OcrSettings {
   const source = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
@@ -21,6 +23,7 @@ export function parseOcrSettings(raw: unknown): OcrSettings {
   return {
     cloudAvailable,
     cloudEnabled: cloudAvailable && source.cloud_enabled === true,
+    inspectionEnabled: cloudAvailable && source.inspection_enabled === true,
     insightsEnabled: cloudAvailable && source.insights_enabled === true,
     chatEnabled: cloudAvailable && source.chat_enabled === true,
   };
@@ -35,6 +38,13 @@ export async function getOcrSettings(agencyId: string): Promise<OcrSettings> {
 /** Réservé au propriétaire (contrôlé côté serveur). Refusé tant qu'aucune clé n'est configurée. */
 export async function setOcrCloudEnabled(agencyId: string, enabled: boolean): Promise<OcrSettings> {
   const { data, error } = await getSupabase().rpc('set_ocr_cloud_enabled', { p_agency_id: agencyId, p_enabled: enabled });
+  if (error) throw error;
+  return parseOcrSettings(data);
+}
+
+/** Réservé au propriétaire (contrôlé côté serveur). Refusé tant qu'aucune clé n'est configurée. */
+export async function setAiInspectionEnabled(agencyId: string, enabled: boolean): Promise<OcrSettings> {
+  const { data, error } = await getSupabase().rpc('set_ai_inspection_enabled', { p_agency_id: agencyId, p_enabled: enabled });
   if (error) throw error;
   return parseOcrSettings(data);
 }

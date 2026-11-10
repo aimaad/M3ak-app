@@ -21,7 +21,7 @@ import {
   validateAgencyDetailsForm,
   type AgencyDetailsFormValues,
 } from '@/features/agency/validation';
-import { useOcrSettings, useSetAiChatEnabled, useSetAiInsightsEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
+import { useOcrSettings, useSetAiChatEnabled, useSetAiInsightsEnabled, useSetAiInspectionEnabled, useSetOcrCloudEnabled } from '@/features/ocr/hooks';
 import { LogoField } from '@/features/agency/logo-field';
 import { AgencyStampSettings } from '@/features/agency/stamp-settings';
 import type { AgencyDetails } from '@/features/agency/types';
@@ -178,6 +178,53 @@ function AiInsightsSettings({ agencyId, isOwner }: { agencyId: string; isOwner: 
           <Button
             label={settings.insightsEnabled ? t('ocr.insights.disable') : t('ocr.insights.enable')}
             variant={settings.insightsEnabled ? 'danger' : 'primary'}
+            size="sm"
+            disabled={setEnabled.isPending}
+            loading={setEnabled.isPending}
+            onPress={handleToggle}
+          />
+        ) : (
+          <ThemedText type="small" themeColor="textSecondary">
+            {t('ocr.ownerOnly')}
+          </ThemedText>
+        )
+      ) : null}
+    </View>
+  );
+}
+
+/** Analyse IA des inspections : accord distinct de la lecture des documents (ce sont les photos du véhicule qui sont envoyées à l'IA). */
+function AiInspectionSettings({ agencyId, isOwner }: { agencyId: string; isOwner: boolean }) {
+  const { t } = useLanguage();
+  const { settings } = useOcrSettings();
+  const setEnabled = useSetAiInspectionEnabled(agencyId);
+
+  function fail() {
+    Alert.alert(t('common.appName'), t('ocr.settingsError'));
+  }
+
+  function handleToggle() {
+    if (settings.inspectionEnabled) {
+      setEnabled.mutate(false, { onError: fail });
+      return;
+    }
+    Alert.alert(t('ocr.inspection.confirmTitle'), t('ocr.inspection.confirmBody'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('ocr.inspection.enable'), onPress: () => setEnabled.mutate(true, { onError: fail }) },
+    ]);
+  }
+
+  return (
+    <View className="gap-2 rounded-2xl border border-border bg-card p-4">
+      <ThemedText type="smallBold">{t('ocr.inspection.title')}</ThemedText>
+      <ThemedText type="small" themeColor="textSecondary">
+        {!settings.cloudAvailable ? t('ocr.inspection.unavailable') : settings.inspectionEnabled ? t('ocr.inspection.on') : t('ocr.inspection.off')}
+      </ThemedText>
+      {settings.cloudAvailable ? (
+        isOwner ? (
+          <Button
+            label={settings.inspectionEnabled ? t('ocr.inspection.disable') : t('ocr.inspection.enable')}
+            variant={settings.inspectionEnabled ? 'danger' : 'primary'}
             size="sm"
             disabled={setEnabled.isPending}
             loading={setEnabled.isPending}
@@ -367,6 +414,7 @@ function EntrepriseForm({
 
       <AgencyStampSettings key={`${details.stampPath ?? ''}|${JSON.stringify(details.stampConfig)}`} agencyId={agencyId} isOwner={isOwner} details={details} />
       <DocumentReadingSettings agencyId={agencyId} isOwner={isOwner} />
+      <AiInspectionSettings agencyId={agencyId} isOwner={isOwner} />
       <AiInsightsSettings agencyId={agencyId} isOwner={isOwner} />
       <AiChatSettings agencyId={agencyId} isOwner={isOwner} />
 

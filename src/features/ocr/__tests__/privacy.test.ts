@@ -77,7 +77,8 @@ describe("confidentialité de l'OCR", () => {
 
     const inspection = read('analyze-inspection/index.ts');
     expect(inspection).toContain("from('agency_ocr_settings')");
-    expect(inspection).toContain('settings.cloud_enabled');
+    expect(inspection).toContain('settings.inspection_enabled'); // accord propre à l'analyse des inspections
+    expect(inspection).not.toContain('settings.cloud_enabled'); // plus lié à la lecture des documents
     expect(inspection).toContain('RLS'); // l'inspection est d'abord lue avec le droit de l'appelant
     expect(inspection).toContain("supabase.from('inspections')");
 

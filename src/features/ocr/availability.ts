@@ -41,6 +41,16 @@ export function scanErrorMessageKey(code: string | null): string {
   }
 }
 
+/** Disponibilité de l'analyse IA des inspections : clé de l'entreprise + accord du propriétaire, accord distinct de la lecture des documents. */
+export type InspectionAvailability = 'loading' | 'active' | 'no_key' | 'owner_can_enable' | 'ask_owner';
+
+export function inspectionAvailability(settings: OcrSettings, isLoading: boolean, role: AgencyRole | null | undefined): InspectionAvailability {
+  if (isLoading) return 'loading';
+  if (settings.inspectionEnabled) return 'active';
+  if (!settings.cloudAvailable) return 'no_key';
+  return role === 'owner' ? 'owner_can_enable' : 'ask_owner';
+}
+
 /**
  * Disponibilité des recommandations IA de l'accueil : mêmes règles que la lecture des documents (clé de l'entreprise
  * configurée par M3AK + accord du propriétaire), et réservées au propriétaire et au responsable.
