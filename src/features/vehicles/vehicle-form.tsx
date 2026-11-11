@@ -40,6 +40,8 @@ type VehicleFormProps = {
   existingPhotosCount?: number;
   /** Ouvre le formulaire directement sur la section Photos (rond appareil photo de la carte véhicule). */
   scrollToPhotos?: boolean;
+  /** Ouvre le formulaire directement sur ce champ (tuile « À compléter » de la fiche technique). */
+  scrollToField?: string | null;
   initialBranchId?: string | null;
   submitLabel: string;
   submittingLabel: string;
@@ -88,6 +90,7 @@ export function VehicleForm({
   existingDocuments = [],
   existingPhotosCount = 0,
   scrollToPhotos = false,
+  scrollToField = null,
   initialBranchId = null,
   submitLabel,
   submittingLabel,
@@ -96,7 +99,7 @@ export function VehicleForm({
   onSubmit,
 }: VehicleFormProps) {
   const { t } = useLanguage();
-  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll<'photos'>(scrollToPhotos ? 'photos' : null);
+  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll<string>(scrollToPhotos ? 'photos' : scrollToField);
   const [values, setValues] = useState<VehicleFormValues>(initialValues ?? EMPTY_VALUES);
   const [touched, setTouched] = useState(false);
   const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>([]);
@@ -165,13 +168,15 @@ export function VehicleForm({
             : undefined
         }
       />
-      <TextField
-        label={t('vehicle.fields.annee')}
-        value={values.annee}
-        onChangeText={(v) => update('annee', v)}
-        keyboardType="number-pad"
-        error={showErrors && errors.annee ? t(`vehicle.form.errors.${errors.annee}`) : undefined}
-      />
+      <View onLayout={onSectionLayout('annee')}>
+        <TextField
+          label={t('vehicle.fields.annee')}
+          value={values.annee}
+          onChangeText={(v) => update('annee', v)}
+          keyboardType="number-pad"
+          error={showErrors && errors.annee ? t(`vehicle.form.errors.${errors.annee}`) : undefined}
+        />
+      </View>
       <TextField
         label={t('vehicle.fields.dateMiseEnCirculation')}
         value={values.dateMiseEnCirculation ?? ''}
@@ -179,34 +184,42 @@ export function VehicleForm({
         placeholder={t('vehicle.fields.datePlaceholder')}
         error={showErrors && errors.dateMiseEnCirculation ? t(`vehicle.form.errors.${errors.dateMiseEnCirculation}`) : undefined}
       />
-      <TextField
-        label={t('vehicle.fields.puissanceFiscale')}
-        value={values.puissanceFiscale ?? ''}
-        onChangeText={(v) => update('puissanceFiscale', v)}
-        keyboardType="number-pad"
-        error={showErrors && errors.puissanceFiscale ? t(`vehicle.form.errors.${errors.puissanceFiscale}`) : undefined}
-      />
-      <TextField
-        label={t('vehicle.fields.finition')}
-        value={values.finition}
-        onChangeText={(v) => update('finition', v)}
-        optional
-      />
-      <TextField
-        label={t('vehicle.fields.vin')}
-        value={values.vin}
-        onChangeText={(v) => update('vin', v)}
-        autoCapitalize="characters"
-        optional
-      />
-      <TextField
-        label={t('vehicle.fields.couleur')}
-        value={values.couleur}
-        onChangeText={(v) => update('couleur', v)}
-      />
+      <View onLayout={onSectionLayout('puissanceFiscale')}>
+        <TextField
+          label={t('vehicle.fields.puissanceFiscale')}
+          value={values.puissanceFiscale ?? ''}
+          onChangeText={(v) => update('puissanceFiscale', v)}
+          keyboardType="number-pad"
+          error={showErrors && errors.puissanceFiscale ? t(`vehicle.form.errors.${errors.puissanceFiscale}`) : undefined}
+        />
+      </View>
+      <View onLayout={onSectionLayout('finition')}>
+        <TextField
+          label={t('vehicle.fields.finition')}
+          value={values.finition}
+          onChangeText={(v) => update('finition', v)}
+          optional
+        />
+      </View>
+      <View onLayout={onSectionLayout('vin')}>
+        <TextField
+          label={t('vehicle.fields.vin')}
+          value={values.vin}
+          onChangeText={(v) => update('vin', v)}
+          autoCapitalize="characters"
+          optional
+        />
+      </View>
+      <View onLayout={onSectionLayout('couleur')}>
+        <TextField
+          label={t('vehicle.fields.couleur')}
+          value={values.couleur}
+          onChangeText={(v) => update('couleur', v)}
+        />
+      </View>
 
       <SectionTitle>{t('vehicle.sections.caracteristiques')}</SectionTitle>
-      <View className="gap-1.5">
+      <View className="gap-1.5" onLayout={onSectionLayout('categorie')}>
         <ThemedText type="small" themeColor="textSecondary">
           {t('vehicle.fields.categorie')}
         </ThemedText>
@@ -217,7 +230,7 @@ export function VehicleForm({
           onSelect={(c) => update('categorie', c)}
         />
       </View>
-      <View className="gap-1.5">
+      <View className="gap-1.5" onLayout={onSectionLayout('transmission')}>
         <ThemedText type="small" themeColor="textSecondary">
           {t('vehicle.fields.transmission')}
         </ThemedText>
@@ -263,29 +276,33 @@ export function VehicleForm({
           </View>
         </View>
       ) : null}
-      <View className="gap-1.5">
+      <View className="gap-1.5" onLayout={onSectionLayout('carburant')}>
         <ThemedText type="small" themeColor="textSecondary">
           {t('vehicle.fields.carburant')}
         </ThemedText>
         <ChipGroup options={FUEL_TYPES} selected={values.carburant} getLabel={(f) => t(`vehicle.fuel.${f}`)} onSelect={(f) => update('carburant', f)} />
       </View>
-      <TextField
-        label={t('vehicle.fields.nombrePlaces')}
-        value={values.nombrePlaces}
-        onChangeText={(v) => update('nombrePlaces', v)}
-        keyboardType="number-pad"
-        error={showErrors && errors.nombrePlaces ? t(`vehicle.form.errors.${errors.nombrePlaces}`) : undefined}
-      />
-      <TextField
-        label={t('vehicle.fields.niveauCarburant')}
-        value={values.niveauCarburant}
-        onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))}
-        keyboardType="number-pad"
-        placeholder={t('vehicle.fields.niveauCarburantPlaceholder')}
-        error={
-          showErrors && errors.niveauCarburant ? t(`vehicle.form.errors.${errors.niveauCarburant}`) : undefined
-        }
-      />
+      <View onLayout={onSectionLayout('nombrePlaces')}>
+        <TextField
+          label={t('vehicle.fields.nombrePlaces')}
+          value={values.nombrePlaces}
+          onChangeText={(v) => update('nombrePlaces', v)}
+          keyboardType="number-pad"
+          error={showErrors && errors.nombrePlaces ? t(`vehicle.form.errors.${errors.nombrePlaces}`) : undefined}
+        />
+      </View>
+      <View onLayout={onSectionLayout('niveauCarburant')}>
+        <TextField
+          label={t('vehicle.fields.niveauCarburant')}
+          value={values.niveauCarburant}
+          onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))}
+          keyboardType="number-pad"
+          placeholder={t('vehicle.fields.niveauCarburantPlaceholder')}
+          error={
+            showErrors && errors.niveauCarburant ? t(`vehicle.form.errors.${errors.niveauCarburant}`) : undefined
+          }
+        />
+      </View>
 
       <SectionTitle>{t('vehicle.sections.tarification')}</SectionTitle>
       <TextField
@@ -349,15 +366,17 @@ export function VehicleForm({
       })}
 
       <SectionTitle>{t('vehicle.sections.operationnel')}</SectionTitle>
-      <TextField
-        label={t('vehicle.fields.kilometrage')}
-        value={values.kilometrage}
-        onChangeText={(v) => update('kilometrage', v)}
-        keyboardType="number-pad"
-        error={
-          showErrors && errors.kilometrage ? t(`vehicle.form.errors.${errors.kilometrage}`) : undefined
-        }
-      />
+      <View onLayout={onSectionLayout('kilometrage')}>
+        <TextField
+          label={t('vehicle.fields.kilometrage')}
+          value={values.kilometrage}
+          onChangeText={(v) => update('kilometrage', v)}
+          keyboardType="number-pad"
+          error={
+            showErrors && errors.kilometrage ? t(`vehicle.form.errors.${errors.kilometrage}`) : undefined
+          }
+        />
+      </View>
 
       <View className="gap-1.5">
         <ThemedText type="small" themeColor="textSecondary">

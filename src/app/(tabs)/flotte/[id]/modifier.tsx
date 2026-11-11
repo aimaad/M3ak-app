@@ -18,7 +18,7 @@ import { useLanguage } from '@/i18n/use-language';
 import { Palette } from '@/constants/theme';
 
 export default function ModifierVehiculeScreen() {
-  const { id, section } = useLocalSearchParams<{ id: string; section?: string }>();
+  const { id, section, field } = useLocalSearchParams<{ id: string; section?: string; field?: string }>();
   const { t } = useLanguage();
   const { data: vehicle, isLoading, isError } = useVehicle(id);
   const updateVehicle = useUpdateVehicle();
@@ -133,6 +133,7 @@ export default function ModifierVehiculeScreen() {
             existingDocuments={vehicle.documents}
             existingPhotosCount={vehicle.photos.length}
             scrollToPhotos={parseVehicleSection(section) === 'photos'}
+            scrollToField={typeof field === 'string' ? field : null}
             initialBranchId={vehicle.branchId}
             submitLabel={t('vehicle.form.save')}
             submittingLabel={t('vehicle.form.saving')}

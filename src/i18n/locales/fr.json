@@ -3419,6 +3419,65 @@
       "summaryRun": "{{state}} du {{from}} au {{to}}",
       "summaryDay": "{{state}} le {{day}}",
       "summaryAll": "{{state}} pendant les 14 jours"
+    },
+    "dues": {
+      "title": "Échéances",
+      "add": "+ Ajouter",
+      "today": "Aujourd'hui",
+      "daysLeft": "J-{{n}}",
+      "kmLeft": "{{km}} km",
+      "expired": "Expirée",
+      "none": "Aucune date",
+      "subDate": "Fin le {{date}}",
+      "subDateOverdue": "Dépassée depuis le {{date}}",
+      "subKm": "Prochaine à {{km}} km",
+      "subKmOverdue": "Prévue à {{km}} km",
+      "subNoDate": "Date à renseigner",
+      "addPhoto": "Ajouter la photo",
+      "a11y": "{{label}} : {{due}}. {{sub}}"
+    },
+    "specs": {
+      "title": "Fiche technique",
+      "edit": "Modifier",
+      "toComplete": "À compléter",
+      "categorie": "Catégorie",
+      "transmission": "Boîte",
+      "carburant": "Carburant",
+      "kilometrage": "Kilométrage",
+      "couleur": "Couleur",
+      "annee": "Année",
+      "nombrePlaces": "Places",
+      "puissanceFiscale": "Puissance",
+      "power": "{{n}} CV",
+      "a11yMissing": "{{label}} : à compléter. Appuyez pour le renseigner",
+      "a11yValue": "{{label}} : {{value}}"
+    },
+    "history": {
+      "title": "Historique",
+      "seeAll": "Tout voir",
+      "empty": "Aucun historique pour l'instant.",
+      "rental": "Location · {{name}}",
+      "rentalNoName": "Location",
+      "rentalSub": "{{from}} → {{to}} · {{days}} jours",
+      "rentalSubOne": "{{from}} → {{to}} · 1 jour",
+      "rentalSubNoDays": "{{from}} → {{to}}",
+      "inspectionDepart": "Inspection de départ",
+      "inspectionRetour": "Inspection de retour",
+      "noDamage": "{{date}} · aucun dommage",
+      "damageOne": "{{date}} · 1 dommage",
+      "damageMany": "{{date}} · {{count}} dommages",
+      "maintenanceSub": "{{date}}",
+      "maintenanceSubGarage": "{{date}} · {{garage}}",
+      "amount": "{{amount}} MAD",
+      "screenTitle": "Historique du véhicule",
+      "a11y": "{{title}}. {{sub}}"
+    },
+    "documents": {
+      "title": "Documents",
+      "add": "Ajouter",
+      "missing": "Ajouter la photo",
+      "open": "Voir {{label}}",
+      "viewerClose": "Fermer le document"
     }
   }
 }

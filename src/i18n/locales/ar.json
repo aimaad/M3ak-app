@@ -3523,6 +3523,65 @@
       "summaryRun": "{{state}} من {{from}} إلى {{to}}",
       "summaryDay": "{{state}} يوم {{day}}",
       "summaryAll": "{{state}} طوال الأيام الـ14"
+    },
+    "dues": {
+      "title": "المواعيد المقبلة",
+      "add": "+ إضافة",
+      "today": "اليوم",
+      "daysLeft": "بعد {{n}} يومًا",
+      "kmLeft": "{{km}} كم",
+      "expired": "منتهية",
+      "none": "بدون تاريخ",
+      "subDate": "تنتهي في {{date}}",
+      "subDateOverdue": "انتهت منذ {{date}}",
+      "subKm": "القادمة عند {{km}} كم",
+      "subKmOverdue": "كانت مقررة عند {{km}} كم",
+      "subNoDate": "التاريخ غير مُدخل",
+      "addPhoto": "إضافة الصورة",
+      "a11y": "{{label}}: {{due}}. {{sub}}"
+    },
+    "specs": {
+      "title": "البطاقة التقنية",
+      "edit": "تعديل",
+      "toComplete": "للإكمال",
+      "categorie": "الفئة",
+      "transmission": "ناقل الحركة",
+      "carburant": "الوقود",
+      "kilometrage": "المسافة المقطوعة",
+      "couleur": "اللون",
+      "annee": "السنة",
+      "nombrePlaces": "المقاعد",
+      "puissanceFiscale": "القوة",
+      "power": "{{n}} حصان",
+      "a11yMissing": "{{label}}: للإكمال. اضغط لإدخاله",
+      "a11yValue": "{{label}}: {{value}}"
+    },
+    "history": {
+      "title": "السجل",
+      "seeAll": "عرض الكل",
+      "empty": "لا يوجد سجل حتى الآن.",
+      "rental": "كراء · {{name}}",
+      "rentalNoName": "كراء",
+      "rentalSub": "{{from}} ← {{to}} · {{days}} أيام",
+      "rentalSubOne": "{{from}} ← {{to}} · يوم واحد",
+      "rentalSubNoDays": "{{from}} ← {{to}}",
+      "inspectionDepart": "معاينة الخروج",
+      "inspectionRetour": "معاينة الإرجاع",
+      "noDamage": "{{date}} · بدون أضرار",
+      "damageOne": "{{date}} · ضرر واحد",
+      "damageMany": "{{date}} · {{count}} أضرار",
+      "maintenanceSub": "{{date}}",
+      "maintenanceSubGarage": "{{date}} · {{garage}}",
+      "amount": "{{amount}} درهم",
+      "screenTitle": "سجل السيارة",
+      "a11y": "{{title}}. {{sub}}"
+    },
+    "documents": {
+      "title": "الوثائق",
+      "add": "إضافة",
+      "missing": "إضافة الصورة",
+      "open": "عرض {{label}}",
+      "viewerClose": "إغلاق الوثيقة"
     }
   }
 }

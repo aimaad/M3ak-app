@@ -21,6 +21,7 @@ const mockState = {
   archived: [] as string[],
   reactivated: [] as string[],
   payments: [] as unknown[],
+  inspections: [] as unknown[],
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true };
 const base = { id: 'v1', agencyId: 'a1', branchId: null, marque: 'DACIA', modele: 'LOGAN', immatriculation: '8921 | ب | 14', vin: null, categorie: 'economique', carburant: 'diesel', annee: 2021, kilometrage: 40000, prixJour: 500, prixSemaine: null, prixMois: null, finition: null, niveauCarburant: null, description: null, photoUrl: null, photos: [], documents: [], archivedAt: null, createdAt: at(-100), updatedAt: at(-1), transmission: null, couleur: 'Blanc', nombrePlaces: 5 };
@@ -37,6 +38,7 @@ jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { agen
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => ({ data: [{ id: 'c1', nomComplet: 'FOUAD BENNANI', telephone: '+212 6 11 22 33 44' }] }) }));
 jest.mock('@/features/rentals/hooks', () => ({ useVehicleRentals: () => ({ data: mockState.rentals, refetch: jest.fn() }) }));
 jest.mock('@/features/maintenance/hooks', () => ({ useVehicleMaintenanceItems: () => ({ data: mockState.maintenance, refetch: jest.fn() }) }));
+jest.mock('@/features/inspections/hooks', () => ({ useVehicleInspections: () => ({ data: mockState.inspections }) }));
 jest.mock('@/features/payments/hooks', () => ({ useAllPayments: (enabled = true) => ({ data: enabled ? mockState.payments : undefined }) }));
 jest.mock('@/features/vehicles/hooks', () => ({
   useVehicle: () => ({ data: mockState.vehicle, isLoading: false, isError: false, refetch: jest.fn() }),
@@ -61,7 +63,7 @@ const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -192,7 +194,7 @@ describe('fiche véhicule', () => {
     mockState.role = 'employee';
     await render(<VehicleDetailScreen />);
     await fireEvent.press(screen.getByLabelText("Plus d'actions : modifier, archiver"));
-    expect(await screen.findByText('Modifier', hidden)).toBeTruthy();
+    expect((await screen.findAllByText('Modifier', hidden)).length).toBeGreaterThan(0);
     expect(screen.queryByText('Archiver ce véhicule', hidden)).toBeNull();
   });
 
@@ -258,6 +260,76 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getAllByLabelText(/: Loué$/)[0]);
       expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/locations/[id]', params: { id: 'res' } });
       expect(screen.getByLabelText(/^Libre du .* au .*\. Loué du .* au .*\. Libre du .* au /)).toBeTruthy();
+    });
+  });
+
+  describe('échéances, fiche technique, historique, documents', () => {
+    it('fiche technique : boîte et puissance « À compléter » ; appui → formulaire sur ce champ', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getAllByText('À compléter')).toHaveLength(2);
+      await fireEvent.press(screen.getByLabelText('Boîte : à compléter. Appuyez pour le renseigner'));
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', field: 'transmission' } });
+    });
+
+    it('description : affichée seulement si elle existe', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText('Très propre, climatisation neuve')).toBeNull();
+    });
+
+    it('description présente : texte simple sous la fiche technique', async () => {
+      mockState.vehicle = { ...base, statut: 'disponible', description: 'Très propre, climatisation neuve' };
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Très propre, climatisation neuve')).toBeTruthy();
+    });
+
+    it('échéances : assurance et visite technique sans date, « Ajouter la photo »', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Échéances')).toBeTruthy();
+      expect(screen.getAllByText('Aucune date')).toHaveLength(2);
+      expect(screen.getAllByText('Ajouter la photo').length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('échéances : une vidange proche s’affiche en jours et ouvre l’entretien', async () => {
+      mockState.maintenance = [{ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/maintenance/[id]', params: { id: 'm9' } });
+    });
+
+    it('historique : aucune ligne → message ; avec une location terminée → ligne et montant (propriétaire)', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText("Aucun historique pour l'instant.")).toBeTruthy();
+    });
+
+    it('historique : location terminée avec montant pour le propriétaire, « Tout voir » ouvre l’écran complet', async () => {
+      mockState.rentals = [rentalRow({ id: 'h1', statut: 'terminee', dateRetourReel: at(-1), prixTotal: 3500 })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Location · Fouad B.')).toBeTruthy();
+      expect(screen.getByText(/^3.?500 MAD$/)).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Tout voir'));
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/historique', params: { id: 'v1' } });
+    });
+
+    it('historique, employé : la ligne est là, le montant n’y est pas', async () => {
+      mockState.role = 'employee';
+      mockState.rentals = [rentalRow({ id: 'h1', statut: 'terminee', dateRetourReel: at(-1), prixTotal: 3500 })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Location · Fouad B.')).toBeTruthy();
+      expect(screen.queryByText(/3.?500/)).toBeNull();
+    });
+
+    it('historique : inspection de départ sans dommage', async () => {
+      mockState.inspections = [{ id: 'i1', rentalId: 'r1', type: 'depart', statut: 'terminee', skipped: false, dateInspection: at(-2), damageCount: 0 }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Inspection de départ')).toBeTruthy();
+      expect(screen.getByText(/aucun dommage$/)).toBeTruthy();
+    });
+
+    it('documents : quatre vignettes « Ajouter la photo » sans fichier et un bouton « Ajouter »', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Documents')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Ajouter'));
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', section: 'documents' } });
     });
   });
 });

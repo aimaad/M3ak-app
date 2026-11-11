@@ -9,6 +9,7 @@ import {
   resumeInspection,
   skipInspection,
   getInspectionForRental,
+  listInspectionsForVehicle,
   getPhotoSignedUrl,
   listDamages,
   listInspectionPhotos,
@@ -27,6 +28,14 @@ export function useInspectionForRental(rentalId: string | undefined, type: Inspe
     queryKey: inspectionKey(rentalId ?? '', type),
     queryFn: () => getInspectionForRental(rentalId as string, type),
     enabled: !!rentalId,
+  });
+}
+
+export function useVehicleInspections(vehicleId: string | undefined) {
+  return useQuery({
+    queryKey: ['inspections', 'vehicle', vehicleId ?? ''] as const,
+    queryFn: () => listInspectionsForVehicle(vehicleId as string),
+    enabled: !!vehicleId,
   });
 }
 

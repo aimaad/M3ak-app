@@ -67,6 +67,21 @@ function photoFromRow(row: InspectionPhotoRow): InspectionPhoto {
   };
 }
 
+/** Inspections d'un véhicule (toutes ses locations) avec le nombre de dommages retenus (non rejetés) de chacune. */
+export async function listInspectionsForVehicle(vehicleId: string): Promise<(Inspection & { damageCount: number })[]> {
+  const { data, error } = await getSupabase().from('inspections').select('*').eq('vehicle_id', vehicleId).order('date_inspection', { ascending: false });
+  if (error) throw error;
+  const inspections = (data as InspectionRow[]).map(fromRow);
+  if (inspections.length === 0) return [];
+  const damages = await getSupabase().from('damages').select('inspection_id, statut').in('inspection_id', inspections.map((inspection) => inspection.id));
+  if (damages.error) throw damages.error;
+  const counts = new Map<string, number>();
+  for (const row of damages.data as { inspection_id: string; statut: DamageStatus }[]) {
+    if (row.statut !== 'rejete') counts.set(row.inspection_id, (counts.get(row.inspection_id) ?? 0) + 1);
+  }
+  return inspections.map((inspection) => ({ ...inspection, damageCount: counts.get(inspection.id) ?? 0 }));
+}
+
 export async function getInspectionForRental(
   rentalId: string,
   type: InspectionType

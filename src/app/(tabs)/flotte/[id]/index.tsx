@@ -7,15 +7,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card, PressableCard } from '@/components/card';
-import { DocumentPreview } from '@/components/document-preview';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Palette } from '@/constants/theme';
 import { HText } from '@/features/dashboard/home-ui';
-import { findDocument } from '@/features/storage/documents';
-import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
-import { deleteVehiclePhotoFile, VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
+import { deleteVehiclePhotoFile } from '@/features/vehicles/api';
 import { useAllPayments } from '@/features/payments/hooks';
 import { canSeePrices, formatDayLabel, occupancyByVehicle } from '@/features/vehicles/fleet-card';
 import { lateBadgeText, lateDurationText } from '@/features/vehicles/fleet-card-text';
@@ -23,6 +20,11 @@ import { useArchiveVehicle, useReactivateVehicle, useUpdateVehiclePhotos, useUpd
 import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
 import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-view';
+import { useVehicleInspections } from '@/features/inspections/hooks';
+import { buildDues, type DueRow } from '@/features/vehicles/detail/dues';
+import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
+import { DocumentsRow, DuesCard, HistoryCard, SpecsGrid } from '@/features/vehicles/detail/sections-view';
+import { buildSpecs } from '@/features/vehicles/detail/specs';
 import { DetailHeader } from '@/features/vehicles/detail/detail-header';
 import { displayName } from '@/features/vehicles/detail/names';
 import { shareMessage } from '@/features/vehicles/detail/share';
@@ -30,16 +32,10 @@ import { MoreMenu, ReasonSheet } from '@/features/vehicles/detail/sheets';
 import { StateCardView } from '@/features/vehicles/detail/state-card-view';
 import { buildStateCard, statusBadge, type StateAction } from '@/features/vehicles/detail/state-card';
 import { useVehicleDetail } from '@/features/vehicles/detail/use-vehicle-detail';
-import { VEHICLE_DOCUMENT_TYPES, type VehiclePhoto } from '@/features/vehicles/types';
+import { type VehiclePhoto } from '@/features/vehicles/types';
 import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-section-scroll';
 import { VehiclePhotoGallery } from '@/features/vehicles/vehicle-photo-gallery';
 import { useLanguage } from '@/i18n/use-language';
-
-const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
-  ok: Palette.textSecondary,
-  bientot: Palette.warning,
-  expire: Palette.error,
-};
 
 export default function VehicleDetailScreen() {
   const { id, section: sectionParam } = useLocalSearchParams<{ id: string; section?: string }>();
@@ -65,8 +61,14 @@ export default function VehicleDetailScreen() {
       cashed: cashedLast30(paymentsQuery.data ?? [], rentals, now),
       cashedKnown: paymentsQuery.data !== undefined,
       days: vehicle.archivedAt ? [] : calendarDays({ vehicle, rentals, maintenance: maintenanceItems, now }),
+      dues: buildDues({ vehicle, maintenance: maintenanceItems, now }),
     };
   }, [vehicle, rentals, maintenanceItems, now, paymentsQuery.data]);
+  const inspectionsQuery = useVehicleInspections(id);
+  const history = useMemo(
+    () => buildHistory({ rentals, inspections: inspectionsQuery.data ?? [], maintenance: maintenanceItems, customers, showAmounts: showPrice }),
+    [rentals, inspectionsQuery.data, maintenanceItems, customers, showPrice]
+  );
   const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentals);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
@@ -164,6 +166,17 @@ export default function VehicleDetailScreen() {
     void Share.share({ message: shareMessage(vehicle, { showPrice, perDay: t('flotte.perDay') }) }).catch(() => undefined);
   }
 
+  function openDue(row: DueRow) {
+    if (!vehicle) return;
+    if (row.maintenanceId) router.push({ pathname: '/maintenance/[id]', params: { id: row.maintenanceId } });
+    else router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'documents' } });
+  }
+
+  function openEvent(event: HistoryEvent) {
+    if (event.kind === 'maintenance') router.push({ pathname: '/maintenance/[id]', params: { id: event.maintenanceId } });
+    else router.push({ pathname: '/locations/[id]', params: { id: event.rentalId } });
+  }
+
   function openCalendarTap(tap: NonNullable<CalendarTap>) {
     if (!vehicle) return;
     if (tap.type === 'rental') router.push({ pathname: '/locations/[id]', params: { id: tap.rentalId } });
@@ -235,48 +248,14 @@ export default function VehicleDetailScreen() {
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>
             ) : null}
-            <View>
-              <ThemedText type="smallBold" className="mb-2">
-                {t('vehicle.infoSection')}
-              </ThemedText>
-              <Card padded={false} className="px-4">
-                <InfoRow label={t('vehicle.fields.immatriculation')} value={vehicle.immatriculation} />
-                <InfoRow label={t('vehicle.fields.marque')} value={vehicle.marque} />
-                <InfoRow label={t('vehicle.fields.modele')} value={vehicle.modele} />
-                <InfoRow label={t('vehicle.fields.annee')} value={vehicle.annee ? String(vehicle.annee) : '—'} />
-                <InfoRow label={t('vehicle.fields.couleur')} value={vehicle.couleur ?? '—'} />
-                <InfoRow
-                  label={t('vehicle.fields.kilometrage')}
-                  value={`${vehicle.kilometrage.toLocaleString('fr-FR')} ${t('flotte.km')}`}
-                />
-              </Card>
-            </View>
-
-            <View>
-              <ThemedText type="smallBold" className="mb-2">
-                {t('vehicle.sections.caracteristiques')}
-              </ThemedText>
-              <Card padded={false} className="px-4">
-                <InfoRow
-                  label={t('vehicle.fields.categorie')}
-                  value={vehicle.categorie ? t(`vehicle.category.${vehicle.categorie}`) : '—'}
-                />
-                <InfoRow
-                  label={t('vehicle.fields.transmission')}
-                  value={vehicle.transmission ? t(`vehicle.transmission.${vehicle.transmission}`) : '—'}
-                />
-                <InfoRow label={t('vehicle.fields.carburant')} value={t(`vehicle.fuel.${vehicle.carburant}`)} />
-                <InfoRow
-                  label={t('vehicle.fields.nombrePlaces')}
-                  value={vehicle.nombrePlaces ? String(vehicle.nombrePlaces) : '—'}
-                />
-                <InfoRow
-                  label={t('vehicle.fields.niveauCarburant')}
-                  value={vehicle.niveauCarburant !== null ? `${vehicle.niveauCarburant}%` : '—'}
-                />
-              </Card>
-            </View>
-
+            <DuesCard rows={figures?.dues ?? []} onOpen={openDue} onAdd={() => router.push('/maintenance/nouveau')} />
+            <SpecsGrid
+              tiles={buildSpecs(vehicle)}
+              description={vehicle.description?.trim() || null}
+              onEdit={goEdit}
+              onTile={(tile) => router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, field: tile.field } })}
+            />
+            <HistoryCard events={history.slice(0, 4)} onOpen={openEvent} onSeeAll={() => router.push({ pathname: '/flotte/[id]/historique', params: { id: vehicle.id } })} />
             {showPrice ? (
             <View>
               <ThemedText type="smallBold" className="mb-2">
@@ -303,17 +282,6 @@ export default function VehicleDetailScreen() {
             </View>
             ) : null}
 
-            {vehicle.description ? (
-              <View>
-                <ThemedText type="smallBold" className="mb-2">
-                  {t('vehicle.fields.description')}
-                </ThemedText>
-                <Card>
-                  <ThemedText type="default">{vehicle.description}</ThemedText>
-                </Card>
-              </View>
-            ) : null}
-
             <View className="gap-3" onLayout={onSectionLayout('photos')}>
               <ThemedText type="smallBold">{t('vehicle.sections.photos')}</ThemedText>
               <VehiclePhotoGallery
@@ -324,33 +292,9 @@ export default function VehicleDetailScreen() {
               />
             </View>
 
-            <View className="gap-4" onLayout={onSectionLayout('documents')}>
-              <ThemedText type="smallBold">{t('vehicle.documentsSection')}</ThemedText>
-              {VEHICLE_DOCUMENT_TYPES.map((type) => {
-                const doc = findDocument(vehicle.documents, type);
-                return (
-                  <View key={type} className="gap-1">
-                    <DocumentPreview
-                      label={t(`vehicle.documents.${type}`)}
-                      bucket={VEHICLE_DOCUMENTS_BUCKET}
-                      path={doc?.path}
-                      emptyLabel={t('vehicle.noDocuments')}
-                    />
-                    {doc?.expiresAt ? (
-                      <ThemedText
-                        type="small"
-                        style={{ color: URGENCY_COLOR[computeExpiryUrgency(doc.expiresAt) ?? 'ok'] }}
-                      >
-                        {t('vehicle.documentExpiry', {
-                          date: new Date(doc.expiresAt).toLocaleDateString('fr-FR'),
-                        })}
-                      </ThemedText>
-                    ) : null}
-                  </View>
-                );
-              })}
+            <View onLayout={onSectionLayout('documents')}>
+              <DocumentsRow vehicle={vehicle} onAdd={() => router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'documents' } })} />
             </View>
-
             <View className="gap-2" onLayout={onSectionLayout('entretien')}>
               <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
               {totalMaintenanceCost > 0 ? (
