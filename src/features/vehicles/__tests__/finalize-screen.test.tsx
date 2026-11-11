@@ -16,6 +16,7 @@ const mockState = {
   documents: [] as Record<string, unknown>[],
   photos: [] as unknown[],
   uploaded: [] as unknown[],
+  remote: null as { found: boolean; branchName: string | null } | null,
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
 const base = { agencyId: 'a1', branchId: null, kilometrage: 1000, photos: [], documents: [], archivedAt: null, createdAt: '2029-01-01T00:00:00.000Z', updatedAt: '2029-01-01T00:00:00.000Z', vin: null };
@@ -49,7 +50,6 @@ jest.mock('@/features/vehicles/hooks', () => ({
   useReactivateVehicle: () => ({ mutate: jest.fn() }),
 }));
 jest.mock('@/features/vehicles/api', () => ({
-  findDuplicateVehicle: async () => null,
   uploadVehicleDocument: async (...args: unknown[]) => {
     mockState.uploaded.push(args);
     return { type: args[2], path: 'p', uploadedAt: 'now', expiresAt: args[4] };
@@ -57,6 +57,7 @@ jest.mock('@/features/vehicles/api', () => ({
   uploadVehiclePhoto: async (_a: unknown, _b: unknown, uri: string) => ({ path: uri, uploadedAt: 'now' }),
   VEHICLE_PHOTOS_BUCKET: 'vehicle-photos',
 }));
+jest.mock('@/features/vehicles/add/use-remote-exists', () => ({ useRemoteExists: () => mockState.remote }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
 jest.mock('@/features/vehicles/creation-draft', () => ({ takeVehicleCreationDraft: () => mockState.draft }));
 jest.mock('@/features/vehicles/duplicate-vehicle-card', () => ({ DuplicateVehicleCard: () => null }));
@@ -83,7 +84,7 @@ async function fillManualIdentity() {
 describe('écran Finaliser', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { role: 'owner', connected: true, draft: null, vehicles: [], created: [], documents: [], photos: [], uploaded: [] });
+    Object.assign(mockState, { role: 'owner', connected: true, draft: null, vehicles: [], created: [], documents: [], photos: [], uploaded: [], remote: null });
   });
 
   it('à la main : 0/3, carburant à choisir en un tap, prix obligatoire ; création avec plaque normalisée et statut Disponible', async () => {
@@ -193,6 +194,27 @@ describe('écran Finaliser', () => {
     await render(<FinaliserVehiculeScreen />);
     await fireEvent.changeText(screen.getByLabelText('Prix par jour en dirhams'), '400');
     expect(screen.getByText('Ce véhicule est déjà dans votre flotte.')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+    expect(mockState.created).toHaveLength(0);
+  });
+
+  it('véhicule d’une autre filiale (invisible pour l’employé) : ajout bloqué avec le nom de la filiale', async () => {
+    mockState.role = 'employee';
+    mockState.draft = scanDraft;
+    mockState.remote = { found: true, branchName: 'Rabat' };
+    await render(<FinaliserVehiculeScreen />);
+    expect(screen.getAllByText('Ce véhicule existe déjà dans la filiale Rabat.').length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+    expect(mockState.created).toHaveLength(0);
+  });
+
+  it('saisie à la main : la plaque tapée est contrôlée comme pour le scan', async () => {
+    mockState.remote = { found: true, branchName: null };
+    await render(<FinaliserVehiculeScreen />);
+    await fillManualIdentity();
+    expect(screen.getAllByText('Ce véhicule existe déjà dans votre agence.').length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByText('Diesel'));
+    await fireEvent.press(screen.getByLabelText('Plus 50 dirhams'));
     await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
     expect(mockState.created).toHaveLength(0);
   });

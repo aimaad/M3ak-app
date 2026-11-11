@@ -12,6 +12,9 @@ import { useMyAgency } from '@/features/agency/hooks';
 import { ArrowIcon, HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { AddHeader, BackButton } from '@/features/vehicles/add/add-ui';
 import { findExistingVehicle } from '@/features/vehicles/add/lookup';
+import { RemoteDuplicateNotice } from '@/features/vehicles/add/remote-duplicate';
+import { combineDuplicate } from '@/features/vehicles/add/remote-exists';
+import { useRemoteExists } from '@/features/vehicles/add/use-remote-exists';
 import { PlateDisplay } from '@/features/vehicles/add/plate-display';
 import { ConfirmCard, FieldEditor, ReviewRow } from '@/features/vehicles/add/review-parts';
 import { buildReview, confirmField, initialReviewState, pendingFields, readCount, REVIEW_GROUPS, validateReviewValue, type ReviewKey, type ReviewState } from '@/features/vehicles/add/review';
@@ -45,19 +48,22 @@ export default function CarteLueScreen() {
   const insets = useSafeAreaInsets();
   const session = getScanSession();
   const vehiclesQuery = useVehicles();
-  const role = useMyAgency().data?.role;
+  const agency = useMyAgency().data;
+  const role = agency?.role;
   const reactivate = useReactivateVehicle();
   const fields = useMemo(() => (session ? buildReview(session.merged) : []), [session]);
   const [state, setState] = useState<ReviewState>(() => initialReviewState(fields));
   const [editing, setEditing] = useState<ReviewKey | null>(null);
   const [editValue, setEditValue] = useState('');
+  // Doublon : véhicules visibles (on peut ouvrir leur fiche) puis contrôle serveur (autre filiale : on dit seulement où il existe).
+  const remote = useRemoteExists(agency?.agencyId, state.immatriculation?.value ?? '', state.vin?.value ?? '');
   const [editIssue, setEditIssue] = useState<ReturnType<typeof validateReviewValue>>(null);
 
   if (!session) return <Redirect href="/flotte/nouveau" />;
 
   const labelOf = (key: ReviewKey) => t(`vehicleAdd.read.labels.${key}`);
   const pending = pendingFields(fields, state);
-  const duplicate = findExistingVehicle(vehiclesQuery.data ?? [], { plate: state.immatriculation.value, vin: state.vin.value });
+  const duplicate = combineDuplicate(findExistingVehicle(vehiclesQuery.data ?? [], { plate: state.immatriculation.value, vin: state.vin.value }), remote);
   const fieldOf = (key: ReviewKey) => fields.find((field) => field.key === key)!;
   const seconds = Math.max(1, Math.round(session.durationMs / 1000));
   const fuel = state.carburant.value ? t(`vehicle.fuel.${state.carburant.value}`) : '';
@@ -94,16 +100,16 @@ export default function CarteLueScreen() {
   }
 
   function openDuplicate() {
-    if (duplicate) router.push(`/flotte/${duplicate.vehicle.id}`);
+    if (duplicate?.kind === 'visible') router.push(`/flotte/${duplicate.vehicle.id}`);
   }
 
   function handleReactivate() {
-    if (!duplicate) return;
+    if (duplicate?.kind !== 'visible') return;
     reactivate.mutate(duplicate.vehicle.id, { onSuccess: openDuplicate, onError: () => Alert.alert(t('common.appName'), t('vehicleAdd.read.reactivateError')) });
   }
 
   const faces = (['recto', 'verso'] as const).filter((face) => session.photos[face]);
-  const canReactivate = !!duplicate?.archived && (role === 'owner' || role === 'manager');
+  const canReactivate = duplicate?.kind === 'visible' && duplicate.archived && (role === 'owner' || role === 'manager');
   const cta = pending.length > 0 ? t('vehicleAdd.read.ctaConfirmFirst', { field: t(`vehicleAdd.read.ctaFields.${pending[0]}`) }) : duplicate ? t('vehicleAdd.read.ctaDuplicate') : t('vehicleAdd.read.ctaGo');
   const ctaReady = pending.length === 0 && !duplicate;
 
@@ -168,7 +174,9 @@ export default function CarteLueScreen() {
             />
           ))}
 
-          {duplicate ? (
+          {duplicate?.kind === 'elsewhere' ? (
+            <RemoteDuplicateNotice branchName={duplicate.branchName} />
+          ) : duplicate ? (
             <View style={{ backgroundColor: Palette.warningSoft, borderWidth: 1, borderColor: Brand.parcInspect, borderRadius: 18, padding: 14, gap: 12 }} accessibilityLiveRegion="polite">
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <Ionicons name="alert-circle" size={22} color={Palette.warning} />

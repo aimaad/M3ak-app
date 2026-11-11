@@ -111,7 +111,7 @@ export function FoundCard({ info, onOpen }: { info: FoundInfo; onOpen: () => voi
 }
 
 /** Résultat « non trouvé » : coche verte, et « L'ajouter à ma flotte » qui ouvre le choix de la méthode avec la saisie gardée. */
-export function NotFoundCard({ valueText, vin, onAdd }: { valueText: string; vin: boolean; onAdd: () => void }) {
+export function NotFoundCard({ valueText, vin, onAdd, limited = false }: { valueText: string; vin: boolean; onAdd: () => void; /** Le contrôle des autres filiales n'a pas pu se faire : on le dit. */ limited?: boolean }) {
   const { t } = useLanguage();
   return (
     <View style={[CARD, { padding: 18, paddingTop: 22, alignItems: 'center', gap: 12 }]} accessibilityLiveRegion="polite">
@@ -124,12 +124,42 @@ export function NotFoundCard({ valueText, vin, onAdd }: { valueText: string; vin
       <HText size={13} color={Palette.textSecondary} style={{ textAlign: 'center', lineHeight: 19 }}>
         {t(vin ? 'vehicleAdd.verify.notFoundVin' : 'vehicleAdd.verify.notFoundPlate', { value: valueText })}
       </HText>
+      {limited ? (
+        <HText size={12} color={Palette.warning} style={{ textAlign: 'center', lineHeight: 17 }} accessibilityLiveRegion="polite">
+          {t('vehicleAdd.verify.limited')}
+        </HText>
+      ) : null}
       <Pressable onPress={onAdd} accessibilityRole="button" style={{ minHeight: 44, borderRadius: 22, borderWidth: 1, borderColor: Palette.border, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
         <HText weight="semibold" size={13}>
           {t('vehicleAdd.verify.addIt')}
         </HText>
         <ArrowIcon color={Brand.graphite} size={14} />
       </Pressable>
+    </View>
+  );
+}
+
+/** Résultat « existe dans une autre filiale » : on dit où, sans rien montrer d'autre (la fiche n'est pas visible), et rien ne peut être ajouté. */
+export function ElsewhereCard({ branchName }: { branchName: string | null }) {
+  const { t } = useLanguage();
+  return (
+    <View style={[CARD, { overflow: 'hidden' }]} accessibilityLiveRegion="polite">
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: Brand.graphite }}>
+        <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: Brand.warningOnDark, alignItems: 'center', justifyContent: 'center' }}>
+          <Ionicons name="alert" size={14} color={Brand.graphite} />
+        </View>
+        <HText weight="semibold" size={13} color={Brand.white}>
+          {t('vehicleAdd.verify.elsewhereTitle')}
+        </HText>
+      </View>
+      <View style={{ padding: 16, gap: 6 }}>
+        <HText weight="semibold" size={15} style={{ lineHeight: 21 }}>
+          {branchName ? t('vehicleAdd.verify.elsewhereBranch', { branch: branchName }) : t('vehicleAdd.verify.elsewhereAgency')}
+        </HText>
+        <HText size={12} color={Palette.textSecondary} style={{ lineHeight: 17 }}>
+          {t('vehicleAdd.verify.elsewhereHint')}
+        </HText>
+      </View>
     </View>
   );
 }

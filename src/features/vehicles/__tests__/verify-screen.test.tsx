@@ -12,6 +12,8 @@ const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth
 const base = { agencyId: 'a1', branchId: null, kilometrage: 1000, prixJour: 400, photos: [], documents: [], categorie: 'economique', createdAt: '2029-03-10T10:00:00.000Z', updatedAt: at(-1), vin: null };
 const mockState = {
   failed: false,
+  remote: { found: false, branchName: null } as { found: boolean; branchName: string | null } | null,
+  remoteCalls: [] as unknown[],
   vehicles: [
     { ...base, id: 'sandero', marque: 'Dacia', modele: 'Sandero', immatriculation: '68013 | ب | 72', statut: 'en_location', archivedAt: null },
     { ...base, id: 'vieille', marque: 'Fiat', modele: 'Punto', immatriculation: '1234-هـ-5', statut: 'disponible', archivedAt: at(-30), vin: '1HGCM82633A004352' },
@@ -26,6 +28,13 @@ const mockState = {
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true };
 const mockQuery = (data: unknown) => (mockState.failed ? { data: undefined, isError: true, isLoading: false, isFetching: false } : { data, isError: false, isLoading: false, isFetching: false });
 
+jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { agencyId: 'a1', role: 'employee' } }) }));
+jest.mock('@/features/vehicles/add/remote-exists', () => ({
+  checkVehicleExists: async (agencyId: string, candidate: unknown) => {
+    mockState.remoteCalls.push([agencyId, candidate]);
+    return mockState.remote;
+  },
+}));
 jest.mock('@/features/vehicles/hooks', () => ({ useVehicles: () => mockQuery(mockState.vehicles) }));
 jest.mock('@/features/rentals/hooks', () => ({ useRentals: () => mockQuery(mockState.rentals) }));
 jest.mock('@/features/maintenance/hooks', () => ({ useMaintenanceItems: () => mockQuery([]) }));
@@ -67,6 +76,8 @@ describe('outil « Vérifier une plaque »', () => {
     jest.clearAllMocks();
     mockState.failed = false;
     mockState.saved = [];
+    mockState.remote = { found: false, branchName: null };
+    mockState.remoteCalls = [];
   });
 
   it('plaque trouvée : « Déjà dans votre flotte », contexte, 3 chiffres, et le bouton ouvre sa fiche (rien n’est créé)', async () => {
@@ -132,6 +143,48 @@ describe('outil « Vérifier une plaque »', () => {
     expect(screen.getByText('Pas chez vous')).toBeTruthy();
     await fireEvent.press(screen.getByLabelText('Relancer la vérification : 11111 | د | 9'));
     expect(screen.getAllByText('Pas dans votre flotte').length).toBeGreaterThan(0);
+  });
+
+  it('véhicule d’une AUTRE filiale (invisible pour l’employé) : « Déjà dans votre flotte », le nom de la filiale, rien d’autre, rien à ajouter', async () => {
+    mockState.remote = { found: true, branchName: 'Rabat' };
+    await checkPlate('11111', '9', 'د');
+    expect(await screen.findByText('Déjà dans votre flotte')).toBeTruthy();
+    expect(screen.getByText('Ce véhicule est dans la filiale Rabat.')).toBeTruthy();
+    expect(screen.getByText('Vous ne voyez pas sa fiche : elle appartient à une autre filiale.')).toBeTruthy();
+    expect(screen.queryByText('Ouvrir sa fiche')).toBeNull();
+    expect(screen.queryByText("L'ajouter à ma flotte")).toBeNull();
+    expect(screen.queryByText('Pas dans votre flotte')).toBeNull();
+    expect(mockState.remoteCalls).toEqual([['a1', { plate: '11111 | د | 9' }]]);
+    expect(JSON.parse(mockState.saved.at(-1)?.[1] ?? '[]')[0]).toMatchObject({ found: true }); // mémorisé comme « dans la flotte »
+  });
+
+  it('véhicule d’une autre filiale, sans filiale (agence entière) : le dit', async () => {
+    mockState.remote = { found: true, branchName: null };
+    await checkPlate('11111', '9', 'د');
+    expect(await screen.findByText('Ce véhicule est dans votre agence, sans filiale.')).toBeTruthy();
+  });
+
+  it('VIN : le serveur est interrogé avec le VIN normalisé', async () => {
+    mockState.remote = { found: true, branchName: 'Tanger' };
+    await render(<VerifierPlaqueScreen />);
+    await fireEvent.press(screen.getByText('VIN'));
+    await fireEvent.changeText(screen.getByLabelText('Numéro VIN'), 'jtdkn3du0a0123456');
+    await fireEvent.press(screen.getByText('Vérifier'));
+    expect(await screen.findByText('Ce véhicule est dans la filiale Tanger.')).toBeTruthy();
+    expect(mockState.remoteCalls[0]).toEqual(['a1', { vin: 'JTDKN3DU0A0123456' }]);
+  });
+
+  it('véhicule visible : trouvé sans interroger le serveur', async () => {
+    await checkPlate('68013', '72');
+    await screen.findByText('Déjà dans votre flotte');
+    expect(mockState.remoteCalls).toHaveLength(0);
+  });
+
+  it('contrôle des autres filiales indisponible : « pas dans votre flotte » avec la limite dite clairement', async () => {
+    mockState.remote = null;
+    await checkPlate('11111', '9', 'د');
+    expect(await screen.findByText('Pas dans votre flotte')).toBeTruthy();
+    expect(screen.getByText(/Vérification limitée à ce que vous voyez/)).toBeTruthy();
   });
 
   it('flotte impossible à charger : message clair, pas de faux « pas chez vous »', async () => {

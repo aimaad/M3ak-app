@@ -5,15 +5,17 @@ import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, TextInput, View } from 'react-native';
 
 import { ThemedView } from '@/components/themed-view';
+import { useMyAgency } from '@/features/agency/hooks';
 import { Brand, HomeFonts, Palette } from '@/constants/theme';
 import { HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useCustomers } from '@/features/customers/hooks';
 import { useMaintenanceItems } from '@/features/maintenance/hooks';
 import { useRentals } from '@/features/rentals/hooks';
 import { AddHeader, BackButton } from '@/features/vehicles/add/add-ui';
-import { FoundCard, NotFoundCard, type FoundInfo } from '@/features/vehicles/add/check-result';
+import { ElsewhereCard, FoundCard, NotFoundCard, type FoundInfo } from '@/features/vehicles/add/check-result';
 import { findExistingVehicle, rentalCount, type ExistingVehicle } from '@/features/vehicles/add/lookup';
 import { PlateInput, WwInput } from '@/features/vehicles/add/plate-input';
+import { checkVehicleExists } from '@/features/vehicles/add/remote-exists';
 import { formatPlate, isValidVin, joinPlate, joinWw, splitPlate, vinKey, type PlateParts } from '@/features/vehicles/add/plate';
 import type { RecentCheck } from '@/features/vehicles/add/recent-checks';
 import { useRecentChecks } from '@/features/vehicles/add/use-recent-checks';
@@ -29,7 +31,8 @@ const TABS: Tab[] = ['plate', 'ww', 'vin'];
 const EMPTY_PARTS: PlateParts = { number: '', letter: '', region: '' };
 const TONE_OF = { free: 'free', rented: 'rented', inspect: 'inspect', maintenance: 'inspect', unavailable: 'unavailable' } as const;
 
-type Outcome = { kind: Tab; query: string; existing: ExistingVehicle | null };
+/** `elsewhere` : un véhicule d'une autre filiale (nom seulement). `limited` : le contrôle des autres filiales n'a pas pu se faire. */
+type Outcome = { kind: Tab; query: string; existing: ExistingVehicle | null; elsewhere: { branchName: string | null } | null; limited: boolean };
 
 /**
  * Outil « Vérifier une plaque » : dit seulement si un véhicule (plaque marocaine, WW ou VIN) est déjà dans la flotte, archivés compris.
@@ -41,6 +44,7 @@ export default function VerifierPlaqueScreen() {
   const rentalsQuery = useRentals();
   const maintenanceQuery = useMaintenanceItems();
   const customersQuery = useCustomers();
+  const agencyId = useMyAgency().data?.agencyId;
   const { checks, remember } = useRecentChecks();
 
   const [tab, setTab] = useState<Tab>('plate');
@@ -50,6 +54,7 @@ export default function VerifierPlaqueScreen() {
   const [error, setError] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
   const [scanning, setScanning] = useState(false);
+  const [checking, setChecking] = useState(false);
 
   const vehicles = vehiclesQuery.data;
   const loadFailed = vehiclesQuery.isError && !vehicles;
@@ -59,30 +64,42 @@ export default function VerifierPlaqueScreen() {
     setError(null);
   }
 
-  /** Lance la vérification d'une plaque ou d'un VIN déjà écrit sous sa forme complète. */
-  function run(kind: Tab, query: string) {
+  /**
+   * Lance la vérification d'une plaque ou d'un VIN déjà écrit sous sa forme complète : d'abord les véhicules visibles (fiche à ouvrir),
+   * puis le serveur, qui voit aussi les autres filiales (il ne dit que « existe » et la filiale).
+   */
+  async function run(kind: Tab, query: string) {
     if (!vehicles) {
       setError(t(vehiclesQuery.isError ? 'vehicleAdd.verify.loadError' : 'vehicleAdd.verify.loading'));
       return;
     }
-    const existing = findExistingVehicle(vehicles, kind === 'vin' ? { vin: query } : { plate: query });
     setError(null);
-    setOutcome({ kind, query, existing });
-    remember({ query, kind, found: !!existing });
+    setChecking(true);
+    const existing = findExistingVehicle(vehicles, kind === 'vin' ? { vin: query } : { plate: query });
+    let elsewhere: Outcome['elsewhere'] = null;
+    let limited = false;
+    if (!existing && agencyId) {
+      const remote = await checkVehicleExists(agencyId, kind === 'vin' ? { vin: query } : { plate: query });
+      if (!remote) limited = true;
+      else if (remote.found) elsewhere = { branchName: remote.branchName };
+    }
+    setChecking(false);
+    setOutcome({ kind, query, existing, elsewhere, limited });
+    remember({ query, kind, found: !!existing || !!elsewhere });
   }
 
   function submit() {
     if (tab === 'plate') {
       const plate = joinPlate(parts);
       if (!plate) return setError(t('vehicleAdd.verify.invalidPlate'));
-      run('plate', plate);
+      void run('plate', plate);
     } else if (tab === 'ww') {
       const plate = joinWw(ww);
       if (!plate) return setError(t('vehicleAdd.verify.invalidWw'));
-      run('ww', plate);
+      void run('ww', plate);
     } else {
       if (!isValidVin(vin)) return setError(t('vehicleAdd.verify.invalidVin'));
-      run('vin', vinKey(vin));
+      void run('vin', vinKey(vin));
     }
   }
 
@@ -91,7 +108,7 @@ export default function VerifierPlaqueScreen() {
     if (check.kind === 'plate') setParts(splitPlate(check.query));
     else if (check.kind === 'ww') setWw(check.query.replace(/\D/g, ''));
     else setVin(check.query);
-    run(check.kind, check.query);
+    void run(check.kind, check.query);
   }
 
   // Détails du véhicule trouvé : statut du jour et ligne de contexte (mêmes calculs que Ma Flotte), ancienneté, locations, occupation.
@@ -217,12 +234,13 @@ export default function VerifierPlaqueScreen() {
           ) : null}
           <Pressable
             onPress={submit}
+            disabled={checking}
             accessibilityRole="button"
-            style={{ height: 54, borderRadius: 27, backgroundColor: Brand.orange, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: Brand.orange, shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 8 } }}
+            style={{ opacity: checking ? 0.7 : 1, height: 54, borderRadius: 27, backgroundColor: Brand.orange, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: Brand.orange, shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 8 } }}
           >
             <Ionicons name="search" size={17} color={Brand.white} />
             <HText weight="semibold" size={15} color={Brand.white}>
-              {t('vehicleAdd.verify.check')}
+              {checking ? t('vehicleAdd.verify.checking') : t('vehicleAdd.verify.check')}
             </HText>
           </Pressable>
         </AddHeader>
@@ -234,8 +252,10 @@ export default function VerifierPlaqueScreen() {
             </HText>
           ) : null}
           {outcome && outcome.existing && info ? <FoundCard info={info} onOpen={() => router.push(`/flotte/${outcome.existing?.vehicle.id}`)} /> : null}
-          {outcome && !outcome.existing ? (
+          {outcome && !outcome.existing && outcome.elsewhere ? <ElsewhereCard branchName={outcome.elsewhere.branchName} /> : null}
+          {outcome && !outcome.existing && !outcome.elsewhere ? (
             <NotFoundCard
+              limited={outcome.limited}
               valueText={outcome.kind === 'vin' ? outcome.query : formatPlate(outcome.query)}
               vin={outcome.kind === 'vin'}
               onAdd={() => router.push({ pathname: '/flotte/nouveau', params: outcome.kind === 'vin' ? { vin: outcome.query } : { plate: formatPlate(outcome.query) } })}

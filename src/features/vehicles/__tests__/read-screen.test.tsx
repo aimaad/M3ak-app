@@ -12,6 +12,7 @@ const mockState = {
   role: 'owner',
   drafts: [] as Record<string, unknown>[],
   reactivate: jest.fn(),
+  remote: null as { found: boolean; branchName: string | null } | null,
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
 
@@ -27,7 +28,8 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('expo-haptics', () => ({ selectionAsync: async () => undefined }));
 jest.mock('@/features/vehicles/hooks', () => ({ useVehicles: () => ({ data: mockState.vehicles }), useReactivateVehicle: () => ({ mutate: mockState.reactivate }) }));
-jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { role: mockState.role } }) }));
+jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { agencyId: 'a1', role: mockState.role } }) }));
+jest.mock('@/features/vehicles/add/use-remote-exists', () => ({ useRemoteExists: () => mockState.remote }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
 jest.mock('@/features/vehicles/api', () => ({ VEHICLE_PHOTOS_BUCKET: 'vehicle-photos' }));
 jest.mock('@/features/vehicles/creation-draft', () => ({ setVehicleCreationDraft: (draft: Record<string, unknown>) => mockState.drafts.push(draft) }));
@@ -55,6 +57,7 @@ describe('écran « Carte grise lue »', () => {
     mockState.vehicles = [];
     mockState.role = 'owner';
     mockState.drafts = [];
+    mockState.remote = null;
     setScanSession(null);
   });
 
@@ -126,6 +129,34 @@ describe('écran « Carte grise lue »', () => {
     await render(<CarteLueScreen />);
     expect(screen.getByText(/Une voiture a déjà ce numéro de série\./)).toBeTruthy();
     expect(screen.queryByText('Réactiver')).toBeNull();
+  });
+
+  it('véhicule d’une AUTRE filiale : bandeau avec le nom de la filiale, pas de fiche à ouvrir, « Continuer » désactivé', async () => {
+    mockState.remote = { found: true, branchName: 'Rabat' };
+    openSession({});
+    await render(<CarteLueScreen />);
+    expect(screen.getByText('Ce véhicule existe déjà dans la filiale Rabat.')).toBeTruthy();
+    expect(screen.queryByText('Ouvrir sa fiche')).toBeNull();
+    expect(screen.queryByText('Nouveau véhicule.')).toBeNull();
+    expect(screen.getByText('1')).toBeTruthy(); // compteur DOUBLON
+    await fireEvent.press(screen.getAllByText('Déjà dans votre flotte').at(-1) as never); // le bouton désactivé
+    expect(mockRouter.replace).not.toHaveBeenCalled();
+  });
+
+  it('autre filiale sans nom (agence entière) ; contrôle serveur sans réponse : « Nouveau véhicule » comme avant', async () => {
+    mockState.remote = { found: true, branchName: null };
+    openSession({});
+    await render(<CarteLueScreen />);
+    expect(screen.getByText('Ce véhicule existe déjà dans votre agence.')).toBeTruthy();
+  });
+
+  it('le véhicule visible garde sa fiche même si le serveur répond aussi', async () => {
+    mockState.remote = { found: true, branchName: 'Rabat' };
+    mockState.vehicles = [{ id: 'v9', marque: 'Dacia', modele: 'Logan', immatriculation: '68013 | ب | 72', vin: null, photos: [], archivedAt: null }];
+    openSession({});
+    await render(<CarteLueScreen />);
+    expect(screen.getByText('Ouvrir sa fiche')).toBeTruthy();
+    expect(screen.queryByText(/filiale Rabat/)).toBeNull();
   });
 
   it('un tap sur une ligne la corrige', async () => {

@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,11 +20,14 @@ import { deadlineDocuments, DEADLINE_TYPES, digitsOf, essentialProgress, formatD
 import { ChoiceChips, EssentialCard, GreenSwitch, KmField, PhotoZone, PriceStepper, ProgressRing } from '@/features/vehicles/add/finalize-parts';
 import { findExistingVehicle } from '@/features/vehicles/add/lookup';
 import { PlateDisplay } from '@/features/vehicles/add/plate-display';
+import { RemoteDuplicateNotice } from '@/features/vehicles/add/remote-duplicate';
+import { combineDuplicate } from '@/features/vehicles/add/remote-exists';
+import { useRemoteExists } from '@/features/vehicles/add/use-remote-exists';
 import { PlateInput, WwInput } from '@/features/vehicles/add/plate-input';
 import { formatPlate, joinPlate, joinWw, plateKind, splitPlate, vinKey, type PlateParts } from '@/features/vehicles/add/plate';
 import { takeVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
-import { findDuplicateVehicle, uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
+import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
 import { suggestDailyPrice } from '@/features/vehicles/pricing-suggestion';
 import { useCreateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicles } from '@/features/vehicles/hooks';
 import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type FuelType, type PendingVehicleDocument, type VehicleCategory, type VehicleDocument, type VehiclePhoto, type VehicleTransmission } from '@/features/vehicles/types';
@@ -84,7 +87,6 @@ export default function FinaliserVehiculeScreen() {
   const [touched, setTouched] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [serverDuplicate, setServerDuplicate] = useState<ReturnType<typeof findExistingVehicle>>(null);
 
   const plate = fromCard ? (draft?.immatriculation ?? '') : wwMode ? joinWw(wwDigits) : joinPlate(plateParts);
   const vin = draft?.vin ?? '';
@@ -94,25 +96,10 @@ export default function FinaliserVehiculeScreen() {
   const usual = useMemo(() => suggestDailyPrice(vehiclesQuery.data ?? [], effectiveCategory), [vehiclesQuery.data, effectiveCategory]);
   const progress = essentialProgress({ showPrice: isOwner, price, km, hasPhoto: !!facePhoto });
 
-  // --- doublon : comparaison locale tolérante + contrôle serveur à la sortie de la plaque (garde-fou final, quel que soit le chemin)
+  // --- doublon : comparaison locale tolérante (véhicules visibles) + contrôle serveur, autre filiale comprise (garde-fou final, quel que soit le chemin)
   const localDuplicate = useMemo(() => (plate ? findExistingVehicle(vehiclesQuery.data ?? [], { plate, vin }) : null), [vehiclesQuery.data, plate, vin]);
-  useEffect(() => {
-    if (!agencyId || !plate) return undefined;
-    let cancelled = false;
-    const timeout = setTimeout(async () => {
-      try {
-        const found = await findDuplicateVehicle(agencyId, formatPlate(plate), vin ? vinKey(vin) : null);
-        if (!cancelled) setServerDuplicate(found ? { ...found, archived: !!found.vehicle.archivedAt } : null);
-      } catch {
-        // Le contrôle du serveur à l'enregistrement reste le garde-fou définitif.
-      }
-    }, 500);
-    return () => {
-      cancelled = true;
-      clearTimeout(timeout);
-    };
-  }, [agencyId, plate, vin]);
-  const duplicate = plate ? (localDuplicate ?? serverDuplicate) : null;
+  const remote = useRemoteExists(agencyId, plate, vin);
+  const duplicate = plate ? combineDuplicate(localDuplicate, remote) : null;
 
   const deadlineErrors = DEADLINE_TYPES.filter((type) => !!deadlines[type] && !isValidDeadline(deadlines[type] as string));
   const missing = {
@@ -260,7 +247,8 @@ export default function FinaliserVehiculeScreen() {
           </AddHeader>
 
           <View style={{ paddingTop: 22, paddingHorizontal: 20, gap: 14 }}>
-            {duplicate ? <DuplicateVehicleCard duplicate={{ field: duplicate.field, vehicle: duplicate.vehicle }} /> : null}
+            {duplicate?.kind === 'visible' ? <DuplicateVehicleCard duplicate={{ field: duplicate.field, vehicle: duplicate.vehicle }} /> : null}
+            {duplicate?.kind === 'elsewhere' ? <RemoteDuplicateNotice branchName={duplicate.branchName} /> : null}
 
             <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <HText font="display" weight="bold" size={20} accessibilityRole="header">
