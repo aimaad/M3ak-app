@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Finaliser le véhicule</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cairo:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button,input{font-family:inherit}
+button{cursor:pointer}
+input::placeholder{color:#8A9193}
+</style>
+</helmet>
+<div style="width: 390px; height: 1640px; background: #F6F6F5; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+
+<div style="background: #202527; border-radius: 0 0 36px 36px; position: relative; overflow: hidden; padding: 58px 20px 22px 20px; display: flex; flex-direction: column; gap: 16px">
+<img src="/_blob/8e2fbe424fa366c01b8959c20e7d050b" alt="" style="position: absolute; left: 0; top: 50px; width: 390px; height: 244px; object-fit: cover; opacity: 0.5">
+<div style="position: relative; display: flex; align-items: center; justify-content: space-between">
+<a href="Analyse.dc.html" aria-label="Retour" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #40484B; background: rgba(42,48,51,0.75); display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+</a>
+<span style="position: relative; width: 52px; height: 52px">
+<svg width="52" height="52" viewBox="0 0 52 52" role="img" aria-label="{{ringLabel}}"><circle cx="26" cy="26" r="22" fill="rgba(32,37,39,0.8)" stroke="#40484B" stroke-width="5"></circle><circle cx="26" cy="26" r="22" fill="none" stroke="#CA531D" stroke-width="5" stroke-linecap="round" stroke-dasharray="{{ringDash}}" transform="rotate(-90 26 26)"></circle></svg>
+<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #FFFFFF">{{doneCount}}/3</span>
+</span>
+</div>
+<div style="position: relative; height: 90px"></div>
+
+<sc-if value="{{fromCard}}" hint-placeholder-val="{{true}}">
+<div style="position: relative; display: flex; align-items: center; gap: 12px; background: rgba(42,48,51,0.92); border: 1px solid #40484B; border-radius: 20px; padding: 14px">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700; color: #FFFFFF">Dacia Sandero Stepway</span>
+<span style="display: flex; align-items: center; gap: 8px">
+<span style="display: flex; align-items: stretch; background: #FFFFFF; border: 2px solid #202527; border-radius: 6px; font-family: 'Montserrat', sans-serif; font-size: 13px; font-weight: 700; color: #202527"><span style="padding: 1px 7px">68013</span><span style="width: 2px; background: #202527"></span><span style="padding: 0 7px; font-family: 'Cairo', sans-serif">ب</span><span style="width: 2px; background: #202527"></span><span style="padding: 1px 7px">72</span></span>
+<span style="font-size: 12px; color: #B4BABC">Diesel · 2022</span>
+</span>
+<span style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #4CC38A">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4CC38A" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>Lu sur la carte grise</span>
+</span>
+<a href="Analyse.dc.html" style="height: 40px; border-radius: 20px; border: 1px solid #40484B; padding: 0 14px; display: flex; align-items: center; font-size: 12px; font-weight: 600; color: #FFFFFF">Modifier</a>
+</div>
+</sc-if>
+
+<sc-if value="{{manual}}" hint-placeholder-val="{{false}}">
+<div style="position: relative; display: flex; flex-direction: column; gap: 10px; background: rgba(42,48,51,0.92); border: 1px solid #40484B; border-radius: 20px; padding: 14px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 700; color: #FFFFFF">Quel véhicule ?</span>
+<label for="m-plaque" style="font-size: 11px; font-weight: 600; color: #B4BABC">Immatriculation</label>
+<input id="m-plaque" placeholder="68013 | ب | 72" style="height: 48px; border-radius: 14px; border: 1px solid #40484B; background: #202527; padding: 0 14px; font-size: 16px; font-weight: 700; color: #FFFFFF; outline: none">
+<span style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+<span style="display: flex; flex-direction: column; gap: 6px"><label for="m-marque" style="font-size: 11px; font-weight: 600; color: #B4BABC">Marque</label><input id="m-marque" placeholder="Dacia" style="height: 48px; border-radius: 14px; border: 1px solid #40484B; background: #202527; padding: 0 14px; font-size: 15px; font-weight: 600; color: #FFFFFF; outline: none; min-width: 0"></span>
+<span style="display: flex; flex-direction: column; gap: 6px"><label for="m-modele" style="font-size: 11px; font-weight: 600; color: #B4BABC">Modèle</label><input id="m-modele" placeholder="Sandero" style="height: 48px; border-radius: 14px; border: 1px solid #40484B; background: #202527; padding: 0 14px; font-size: 15px; font-weight: 600; color: #FFFFFF; outline: none; min-width: 0"></span>
+</span>
+</div>
+</sc-if>
+</div>
+
+<div style="padding: 22px 20px 0 20px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700">L'essentiel</span>
+<span style="font-size: 12px; color: #5E6466">3 infos, et c'est prêt</span>
+</div>
+
+<section style="{{priceCard}}">
+<span style="display: flex; align-items: center; justify-content: space-between">
+<span style="display: flex; align-items: center; gap: 10px">
+<span style="{{num1}}">1</span>
+<span style="font-size: 15px; font-weight: 600">Prix par jour</span>
+</span>
+<span style="font-size: 11px; color: #5E6466">Propriétaire uniquement</span>
+</span>
+<span style="display: flex; align-items: center; justify-content: space-between; gap: 10px">
+<button onClick="{{minus}}" aria-label="Moins 50 dirhams" style="width: 48px; height: 48px; border-radius: 24px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 22px; font-weight: 600; color: #202527; flex-shrink: 0">−</button>
+<span style="display: flex; align-items: baseline; justify-content: center; gap: 6px; flex: 1">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 48px; font-weight: 700; letter-spacing: -0.02em; color: #202527">{{price}}</span>
+<span style="font-size: 14px; font-weight: 600; color: #5E6466">MAD</span>
+</span>
+<button onClick="{{plus}}" aria-label="Plus 50 dirhams" style="width: 48px; height: 48px; border-radius: 24px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 22px; font-weight: 600; color: #202527; flex-shrink: 0">+</button>
+</span>
+<span style="display: flex; align-items: center; gap: 10px; background: #F6F6F5; border-radius: 14px; padding: 10px 12px">
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CA531D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"></path></svg>
+<span style="flex: 1; font-size: 12px; line-height: 1.4; color: #202527">Vos autres SUV : <b>[prix moyen] MAD/j</b></span>
+<button onClick="{{applyAvg}}" style="height: 34px; border-radius: 17px; border: none; background: #202527; color: #FFFFFF; font-size: 12px; font-weight: 600; padding: 0 12px">Appliquer</button>
+</span>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 24px rgba(32,37,39,0.05)">
+<span style="display: flex; align-items: center; gap: 10px">
+<span style="width: 26px; height: 26px; border-radius: 13px; background: #202527; color: #FFFFFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">2</span>
+<label for="km" style="font-size: 15px; font-weight: 600">Kilométrage actuel</label>
+</span>
+<span style="display: flex; align-items: center; height: 60px; border-radius: 16px; border: 1.5px solid #CA531D; background: #FFFFFF; padding: 0 16px; box-shadow: 0 0 0 4px rgba(202,83,29,0.12)">
+<input id="km" placeholder="ex. 45 000" inputmode="numeric" style="flex: 1; min-width: 0; border: none; outline: none; font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 700; color: #202527; background: transparent">
+<span style="font-size: 14px; font-weight: 600; color: #5E6466">km</span>
+</span>
+</section>
+
+<section style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 8px 24px rgba(32,37,39,0.05)">
+<span style="display: flex; align-items: center; justify-content: space-between">
+<span style="display: flex; align-items: center; gap: 10px">
+<span style="width: 26px; height: 26px; border-radius: 13px; background: #202527; color: #FFFFFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center">3</span>
+<span style="font-size: 15px; font-weight: 600">Photo de face</span>
+</span>
+<span style="font-size: 11px; color: #5E6466">Affichée partout dans l'app</span>
+</span>
+<button style="position: relative; height: 170px; border-radius: 18px; border: 1.5px dashed #C9CDCE; background: #202527; padding: 0; overflow: hidden; display: flex; align-items: center; justify-content: center">
+<svg width="230" height="110" viewBox="0 0 230 110" fill="none" stroke="rgba(244,245,245,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="position: absolute"><path d="M20 80V58l22-26h146l22 26v22M20 80h190M40 58h150M60 32l-6 26M170 32l6 26"></path><rect x="34" y="66" width="34" height="9" rx="4"></rect><rect x="162" y="66" width="34" height="9" rx="4"></rect></svg>
+<span style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<span style="width: 56px; height: 56px; border-radius: 28px; background: #CA531D; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(202,83,29,0.45)">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"></path><circle cx="12" cy="13" r="3.5"></circle></svg>
+</span>
+<span style="font-size: 13px; font-weight: 600; color: #FFFFFF">Prendre la photo</span>
+</span>
+</button>
+<span style="display: flex; gap: 8px">
+<button style="flex: 1; height: 44px; border-radius: 22px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 13px; font-weight: 600; color: #202527">Depuis la galerie</button>
+<button style="flex: 1; height: 44px; border-radius: 22px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 13px; font-weight: 600; color: #202527">+ Autres photos</button>
+</span>
+</section>
+
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding-top: 10px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700">Caractéristiques</span>
+<span style="font-size: 12px; color: #5E6466">Déjà choisies, à ajuster</span>
+</div>
+<section style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 24px rgba(32,37,39,0.05)">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; font-weight: 600; color: #5E6466">Catégorie</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<sc-for list="{{cats}}" as="o" hint-placeholder-count="7"><button onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 12px; font-weight: 600; color: #5E6466">Boîte de vitesses</span>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+<sc-for list="{{gear}}" as="o" hint-placeholder-count="2"><button onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" style="{{o.style}}">{{o.label}}</button></sc-for>
+</div>
+</div>
+</section>
+
+<div style="display: flex; align-items: baseline; justify-content: space-between; padding-top: 10px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700">Échéances</span>
+<span style="font-size: 12px; color: #5E6466">Facultatif</span>
+</div>
+<section style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 24px; padding: 6px 16px; box-shadow: 0 8px 24px rgba(32,37,39,0.05)">
+<sc-for list="{{docs}}" as="d" hint-placeholder-count="2">
+<div style="{{d.row}}">
+<span style="width: 38px; height: 38px; border-radius: 12px; background: #F6F6F5; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{d.icon}}"></path></svg>
+</span>
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+<label for="{{d.id}}" style="font-size: 14px; font-weight: 600">{{d.label}}</label>
+<span style="font-size: 11px; color: #5E6466">Rappel 15 jours avant</span>
+</span>
+<input id="{{d.id}}" placeholder="Date de fin" style="width: 116px; height: 44px; border-radius: 12px; border: 1px solid #E2E4E5; background: #F6F6F5; padding: 0 10px; font-size: 13px; font-weight: 600; color: #202527; outline: none; text-align: center">
+</div>
+</sc-for>
+</section>
+
+<div style="display: flex; align-items: center; gap: 12px; background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 20px; padding: 14px 16px">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px">
+<label for="dispo" style="font-size: 14px; font-weight: 600">Louable tout de suite</label>
+<span style="font-size: 12px; color: #5E6466">{{dispoHint}}</span>
+</span>
+<button id="dispo" role="switch" aria-checked="{{dispoChecked}}" onClick="{{toggleDispo}}" style="{{switchStyle}}"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF"></span></button>
+</div>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 30px 20px; background: #FFFFFF; border-top: 1px solid #E2E4E5; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 -10px 30px rgba(32,37,39,0.06)">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #5E6466">
+<sc-for list="{{checks}}" as="k" hint-placeholder-count="3"><span style="{{k.style}}"><span style="{{k.dot}}"></span>{{k.label}}</span></sc-for>
+</span>
+<a href="Succes.dc.html" style="height: 54px; border-radius: 27px; background: #CA531D; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(202,83,29,0.35)">Ajouter à ma flotte</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"mode":{"editor":"select","options":["carte grise","à la main"],"default":"carte grise"},"$preview":{"width":390,"height":1640}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { price: 0, cat: 'SUV', gear: 'Manuelle', dispo: true };
+}
+renderVals() {
+const st = this.state;
+const manual = (this.props.mode ?? 'carte grise') === 'à la main';
+const chip = (on) => 'height: 42px; border-radius: 21px; padding: 0 16px; font-size: 13px; font-weight: 600; ' + (on ? 'background: #202527; color: #FFFFFF; border: 1px solid #202527;' : 'background: #FFFFFF; color: #202527; border: 1px solid #E2E4E5;');
+const group = (key, list) => list.map((label) => ({ label, pressed: st[key] === label ? 'true' : 'false', style: chip(st[key] === label), pick: () => this.setState({ [key]: label }) }));
+const hasPrice = st.price > 0;
+const done = (hasPrice ? 1 : 0);
+const C = 138.2;
+const checks = [['Prix', hasPrice], ['Kilométrage', false], ['Photo', false]].map(([label, ok]) => ({
+label,
+style: 'display: flex; align-items: center; gap: 5px; font-weight: 600; margin-right: 8px; color: ' + (ok ? '#1A7F53' : '#5E6466'),
+dot: 'width: 8px; height: 8px; border-radius: 4px; ' + (ok ? 'background: #1A7F53;' : 'border: 1.5px solid #8A9193; box-sizing: border-box;')
+}));
+const docs = [
+{ id: 'doc-assurance', label: 'Assurance', icon: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z' },
+{ id: 'doc-visite', label: 'Visite technique', icon: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4' }
+].map((d, i) => ({ ...d, row: 'display: flex; align-items: center; gap: 12px; padding: 12px 0; ' + (i ? 'border-top: 1px solid #EEF0F0;' : '') }));
+return {
+fromCard: !manual,
+manual,
+doneCount: String(done),
+ringDash: (C * done / 3).toFixed(1) + ' ' + C,
+ringLabel: done + ' sur 3 informations essentielles remplies',
+price: hasPrice ? String(st.price) : '—',
+minus: () => this.setState({ price: Math.max(0, (st.price || 300) - 50) }),
+plus: () => this.setState({ price: (st.price || 250) + 50 }),
+applyAvg: () => this.setState({ price: 400 }),
+priceCard: 'background: #FFFFFF; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 14px; ' + (hasPrice ? 'border: 1px solid #E2E4E5; box-shadow: 0 8px 24px rgba(32,37,39,0.05);' : 'border: 1.5px solid #CA531D; box-shadow: 0 10px 28px rgba(202,83,29,0.15);'),
+num1: 'width: 26px; height: 26px; border-radius: 13px; color: #FFFFFF; font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; background: ' + (hasPrice ? '#1A7F53' : '#CA531D'),
+cats: group('cat', ['Économique', 'Compacte', 'Berline', 'SUV', 'Utilitaire', 'Minibus', 'Luxe']),
+gear: group('gear', ['Manuelle', 'Automatique']),
+docs,
+dispoChecked: st.dispo ? 'true' : 'false',
+dispoHint: st.dispo ? 'Il apparaîtra comme Disponible' : 'Il sera mis En préparation',
+toggleDispo: () => this.setState({ dispo: !st.dispo }),
+switchStyle: 'width: 50px; height: 30px; border-radius: 15px; border: none; padding: 3px; display: flex; flex-shrink: 0; ' + (st.dispo ? 'background: #1A7F53; justify-content: flex-end;' : 'background: #8A9092; justify-content: flex-start;'),
+checks
+};
+}
+}
+</script>
+</body>
+</html>

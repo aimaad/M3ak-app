@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Carte grise lue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cairo:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button,input{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 1400px; background: #F6F6F5; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+
+<div style="background: #202527; border-radius: 0 0 36px 36px; position: relative; overflow: hidden; padding: 58px 20px 28px 20px; display: flex; flex-direction: column; gap: 18px">
+<div style="position: absolute; left: 50%; top: 120px; width: 420px; height: 420px; margin-left: -210px; border-radius: 210px; background: radial-gradient(circle, rgba(202,83,29,0.28) 0%, rgba(202,83,29,0) 65%)"></div>
+<div style="position: relative; display: flex; align-items: center; justify-content: space-between">
+<a href="Scan.dc.html" aria-label="Retour au scan" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #40484B; background: rgba(42,48,51,0.7); display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+</a>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #4CC38A">
+<span style="width: 8px; height: 8px; border-radius: 4px; background: #4CC38A; box-shadow: 0 0 10px #4CC38A"></span>Lu en 6 s
+</span>
+</div>
+
+<div style="position: relative; height: 120px; display: flex; justify-content: center">
+<span style="position: absolute; left: 62px; top: 10px; width: 150px; height: 96px; border-radius: 10px; background: #E9E4D8; transform: rotate(-8deg); box-shadow: 0 14px 30px rgba(0,0,0,0.45); overflow: hidden">
+<span style="display: block; height: 18px; background: #C8D3CC"></span>
+<span style="display: block; margin: 10px 10px 0 10px; height: 6px; width: 80px; background: rgba(32,37,39,0.55); border-radius: 2px"></span>
+<span style="display: block; margin: 7px 10px 0 10px; height: 5px; width: 110px; background: rgba(32,37,39,0.4); border-radius: 2px"></span>
+<span style="display: block; margin: 7px 10px 0 10px; height: 5px; width: 96px; background: rgba(32,37,39,0.4); border-radius: 2px"></span>
+</span>
+<span style="position: absolute; left: 176px; top: 4px; width: 150px; height: 96px; border-radius: 10px; background: #E9E4D8; transform: rotate(6deg); box-shadow: 0 14px 30px rgba(0,0,0,0.45); overflow: hidden">
+<span style="display: block; height: 18px; background: #C8D3CC"></span>
+<span style="display: block; margin: 10px 10px 0 10px; height: 5px; width: 120px; background: rgba(32,37,39,0.4); border-radius: 2px"></span>
+<span style="display: block; margin: 7px 10px 0 10px; height: 5px; width: 70px; background: rgba(32,37,39,0.4); border-radius: 2px"></span>
+<span style="display: block; margin: 7px 10px 0 10px; height: 5px; width: 104px; background: rgba(32,37,39,0.4); border-radius: 2px"></span>
+</span>
+<span style="position: absolute; left: 172px; top: 72px; width: 44px; height: 44px; border-radius: 22px; background: #1A7F53; border: 3px solid #202527; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(76,195,138,0.6)">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+</span>
+</div>
+
+<div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px">
+<span style="display: flex; align-items: stretch; background: #FFFFFF; border: 3px solid #202527; border-radius: 10px; box-shadow: 0 0 0 2px #FFFFFF, 0 18px 40px rgba(0,0,0,0.45); font-family: 'Montserrat', sans-serif; font-size: 30px; font-weight: 700; color: #202527">
+<span style="padding: 6px 16px">68013</span><span style="width: 3px; background: #202527"></span><span style="padding: 2px 16px; font-family: 'Cairo', sans-serif">ب</span><span style="width: 3px; background: #202527"></span><span style="padding: 6px 16px">72</span>
+</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 700; color: #FFFFFF">Dacia Sandero Stepway</span>
+<span style="display: flex; gap: 8px">
+<span style="font-size: 12px; font-weight: 600; color: #F4F5F5; background: #343B3E; border-radius: 12px; padding: 5px 10px">Diesel</span>
+<span style="font-size: 12px; font-weight: 600; color: #F4F5F5; background: #343B3E; border-radius: 12px; padding: 5px 10px">6 CV</span>
+<span style="font-size: 12px; font-weight: 600; color: #F4F5F5; background: #343B3E; border-radius: 12px; padding: 5px 10px">2022</span>
+</span>
+</div>
+
+<div style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<span style="background: rgba(42,48,51,0.9); border: 1px solid #40484B; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: #FFFFFF">{{readCount}}</span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC">CHAMPS LUS</span>
+</span>
+<span style="{{checkTile}}">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: #FFFFFF">{{toCheck}}</span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC">À VÉRIFIER</span>
+</span>
+<span style="background: rgba(42,48,51,0.9); border: 1px solid #40484B; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: #4CC38A">0</span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC">DOUBLON</span>
+</span>
+</div>
+</div>
+
+<div style="padding: 20px 20px 0 20px; display: flex; flex-direction: column; gap: 14px">
+
+<sc-if value="{{needsCheck}}" hint-placeholder-val="{{true}}">
+<div style="background: #FFFFFF; border: 1.5px solid #CA531D; border-radius: 24px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 28px rgba(202,83,29,0.15)">
+<span style="display: flex; align-items: center; justify-content: space-between">
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em; color: #B5481A">1 INFO À CONFIRMER</span>
+<span style="font-size: 11px; color: #5E6466">Chiffre peu lisible</span>
+</span>
+<span style="font-size: 15px; font-weight: 600">Date de 1ʳᵉ mise en circulation</span>
+<span style="height: 52px; border-radius: 12px; background: #2A3033; display: flex; align-items: center; padding: 0 14px; gap: 10px">
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC">SUR LA CARTE</span>
+<span style="font-family: 'Courier New', monospace; font-size: 20px; font-weight: 700; color: #F4F5F5; letter-spacing: 0.08em">12/03/2<span style="color: #F2C94C; text-decoration: underline">O</span>22</span>
+</span>
+<span style="display: flex; gap: 8px; align-items: center">
+<label for="date-mec" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Date de 1re mise en circulation</label>
+<input id="date-mec" value="12/03/2022" style="flex: 1; min-width: 0; height: 48px; border-radius: 14px; border: 1px solid #E2E4E5; background: #F6F6F5; padding: 0 14px; font-size: 16px; font-weight: 700; color: #202527; outline: none">
+<button onClick="{{confirm}}" style="height: 48px; border-radius: 24px; border: none; background: #CA531D; color: #FFFFFF; font-size: 14px; font-weight: 600; padding: 0 18px">Confirmer</button>
+</span>
+</div>
+</sc-if>
+
+<div style="display: flex; align-items: center; gap: 12px; background: #E8F5EE; border: 1px solid #B9E0CB; border-radius: 18px; padding: 12px 14px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#145F3F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"></path><path d="M8.5 12l2.5 2.5 4.5-5"></path></svg>
+<span style="font-size: 13px; line-height: 1.4; color: #145F3F"><b>Nouveau véhicule.</b> Aucune voiture avec cette plaque ou ce VIN dans votre flotte.</span>
+</div>
+
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+<div style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 22px; overflow: hidden; box-shadow: 0 8px 24px rgba(32,37,39,0.05)">
+<span style="display: flex; align-items: center; gap: 10px; padding: 14px 16px 6px 16px">
+<span style="width: 30px; height: 30px; border-radius: 10px; background: #202527; display: flex; align-items: center; justify-content: center">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{g.icon}}"></path></svg>
+</span>
+<span style="font-size: 11px; font-weight: 700; letter-spacing: 0.14em">{{g.title}}</span>
+</span>
+<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+<span style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 16px; border-top: 1px solid #F0F1F1">
+<span style="font-size: 13px; color: #5E6466">{{r.label}}</span>
+<span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+<span style="font-size: 14px; font-weight: 600; color: #202527; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{r.value}}</span>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A7F53" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="M5 12l5 5 9-10"></path></svg>
+</span>
+</span>
+</sc-for>
+</div>
+</sc-for>
+<span style="font-size: 11px; line-height: 1.45; color: #5E6466; text-align: center; padding: 0 10px">Touchez une ligne pour la corriger. Lu par Google Gemini, photo gardée dans le dossier du véhicule.</span>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 20px 30px 20px; background: #FFFFFF; border-top: 1px solid #E2E4E5; display: flex; gap: 10px; box-shadow: 0 -10px 30px rgba(32,37,39,0.06)">
+<a href="Scan.dc.html" aria-label="Reprendre les photos" style="width: 54px; height: 54px; border-radius: 27px; border: 1px solid #E2E4E5; display: flex; align-items: center; justify-content: center; flex-shrink: 0">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"></path></svg>
+</a>
+<a href="Finaliser.dc.html" style="{{ctaStyle}}">{{ctaLabel}}
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</a>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1400}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { ok: false };
+}
+renderVals() {
+const ok = this.state.ok;
+const groups = [
+{ title: 'VÉHICULE', icon: 'M5 16l1.5-5a2 2 0 0 1 2-1.5h7a2 2 0 0 1 2 1.5L19 16M3 16h18v4H3z', rows: [['Marque', 'Dacia'], ['Modèle', 'Sandero Stepway'], ['Genre', 'Voiture particulière']] },
+{ title: 'TECHNIQUE', icon: 'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M6 18l2.5-2.5M15.5 8.5L18 6', rows: [['N° de série (VIN)', 'UU1B5220XXXXXXXXX'], ['Carburant', 'Diesel'], ['Puissance fiscale', '6 CV']] },
+{ title: 'ADMINISTRATIF', icon: 'M6 3h9l4 4v14H6zM14 3v5h5M9 13h7M9 17h5', rows: [['Propriétaire', '[Nom de l’agence]'], ['1ʳᵉ mise en circulation', ok ? '12/03/2022' : 'À confirmer']] }
+].map((g) => ({ title: g.title, icon: g.icon, rows: g.rows.map(([label, value]) => ({ label, value })) }));
+return {
+groups,
+needsCheck: !ok,
+confirm: () => this.setState({ ok: true }),
+readCount: ok ? '10' : '9',
+toCheck: ok ? '0' : '1',
+checkTile: 'border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 4px; ' + (ok ? 'background: rgba(42,48,51,0.9); border: 1px solid #40484B;' : 'background: #3A2A22; border: 1px solid #CA531D;'),
+ctaLabel: ok ? 'Tout est bon, continuer' : 'Confirmer la date d’abord',
+ctaStyle: 'flex: 1; height: 54px; border-radius: 27px; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; ' + (ok ? 'background: #CA531D; box-shadow: 0 8px 20px rgba(202,83,29,0.35);' : 'background: #5E6466;')
+};
+}
+}
+</script>
+</body>
+</html>

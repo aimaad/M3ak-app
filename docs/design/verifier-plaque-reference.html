@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Vérifier une plaque</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Cairo:wght@700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button,input,select{font-family:inherit}
+button{cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 980px; background: #F6F6F5; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+
+<div style="background: #202527; border-radius: 0 0 36px 36px; position: relative; overflow: hidden; padding: 58px 20px 26px 20px; display: flex; flex-direction: column; gap: 18px">
+<div style="position: absolute; left: 50%; top: 150px; width: 460px; height: 300px; margin-left: -230px; border-radius: 230px; background: radial-gradient(closest-side, rgba(202,83,29,0.22), rgba(202,83,29,0))"></div>
+<div style="position: relative; display: flex; align-items: center; justify-content: space-between">
+<a href="Main.dc.html" aria-label="Retour" style="width: 44px; height: 44px; border-radius: 22px; border: 1px solid #40484B; background: #2A3033; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>
+</a>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.14em; color: #202527; background: #F4F5F5; border-radius: 10px; padding: 5px 10px">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5L21 21"></path></svg>VÉRIFICATION SEULEMENT</span>
+</div>
+<div style="position: relative; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 700; color: #FFFFFF; line-height: 1.15">Ce véhicule est-il déjà chez vous ?</span>
+<span style="font-size: 13px; color: #B4BABC">Réponse en 2 secondes. Rien n'est ajouté à votre flotte.</span>
+</div>
+
+<div style="position: relative; display: flex; background: #2A3033; border: 1px solid #40484B; border-radius: 16px; padding: 4px; gap: 4px">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+<button onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">{{t.label}}</button>
+</sc-for>
+</div>
+
+<sc-if value="{{isPlate}}" hint-placeholder-val="{{true}}">
+<div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="display: flex; align-items: stretch; height: 76px; background: #FFFFFF; border: 3px solid #202527; border-radius: 12px; box-shadow: 0 0 0 3px #CA531D, 0 18px 40px rgba(0,0,0,0.5); overflow: hidden">
+<label for="plaque-num" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Numéro</label>
+<input id="plaque-num" value="68013" inputmode="numeric" style="width: 134px; border: none; outline: none; text-align: center; font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #202527; background: transparent">
+<span style="width: 3px; background: #202527"></span>
+<label for="plaque-lettre" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Lettre</label>
+<select id="plaque-lettre" style="width: 72px; border: none; outline: none; font-family: 'Cairo', sans-serif; font-size: 30px; font-weight: 700; color: #202527; background: #FFF6EF; appearance: none; -webkit-appearance: none; text-align-last: center">
+<option>أ</option><option selected>ب</option><option>د</option><option>هـ</option><option>و</option><option>ط</option>
+</select>
+<span style="width: 3px; background: #202527"></span>
+<label for="plaque-region" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Région</label>
+<input id="plaque-region" value="72" inputmode="numeric" style="width: 72px; border: none; outline: none; text-align: center; font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #202527; background: transparent">
+</div>
+<span style="display: flex; gap: 34px; font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: #B4BABC"><span>NUMÉRO</span><span>LETTRE</span><span>RÉGION</span></span>
+</div>
+</sc-if>
+
+<sc-if value="{{isWW}}" hint-placeholder-val="{{false}}">
+<div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px">
+<div style="display: flex; align-items: center; height: 76px; background: #FFFFFF; border: 3px solid #202527; border-radius: 12px; box-shadow: 0 0 0 3px #CA531D; padding: 0 18px; gap: 12px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #CA531D">WW</span>
+<label for="plaque-ww" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Numéro WW</label>
+<input id="plaque-ww" placeholder="123456" inputmode="numeric" style="width: 170px; border: none; outline: none; font-family: 'Montserrat', sans-serif; font-size: 32px; font-weight: 700; color: #202527; background: transparent">
+</div>
+<span style="font-size: 12px; color: #B4BABC">Immatriculation provisoire</span>
+</div>
+</sc-if>
+
+<sc-if value="{{isVin}}" hint-placeholder-val="{{false}}">
+<div style="position: relative; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; gap: 8px; background: #FFFFFF; border-radius: 14px; padding: 4px 4px 4px 14px; box-shadow: 0 0 0 3px #CA531D">
+<label for="vin" style="position: absolute; width: 1px; height: 1px; overflow: hidden">Numéro VIN</label>
+<input id="vin" placeholder="17 caractères" maxlength="17" style="flex: 1; min-width: 0; height: 58px; border: none; outline: none; font-family: 'Montserrat', sans-serif; font-size: 20px; font-weight: 700; letter-spacing: 0.06em; color: #202527; background: transparent">
+<button aria-label="Scanner le code VIN" style="width: 58px; height: 58px; border-radius: 12px; border: none; background: #202527; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M3 7V4h3M18 4h3v3M21 17v3h-3M6 20H3v-3M7 8v8M10 8v8M13 8v8M16 8v8"></path></svg>
+</button>
+</div>
+<span style="font-size: 12px; color: #B4BABC">Sur la carte grise ou en bas du pare-brise.</span>
+</div>
+</sc-if>
+
+<button onClick="{{check}}" style="position: relative; height: 54px; border-radius: 27px; border: none; background: #CA531D; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(202,83,29,0.4)">
+<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M16.5 16.5L21 21"></path></svg>
+Vérifier
+</button>
+</div>
+
+<div style="padding: 20px 20px 0 20px; display: flex; flex-direction: column; gap: 14px">
+
+<sc-if value="{{showDup}}" hint-placeholder-val="{{true}}">
+<div style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 28px rgba(32,37,39,0.08)">
+<div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #202527">
+<span style="width: 24px; height: 24px; border-radius: 12px; background: #F2C94C; display: flex; align-items: center; justify-content: center">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 7v6M12 17h.01"></path></svg>
+</span>
+<span style="font-size: 13px; font-weight: 600; color: #FFFFFF">Déjà dans votre flotte</span>
+</div>
+<div style="padding: 14px; display: flex; flex-direction: column; gap: 14px">
+<span style="display: flex; gap: 12px; align-items: center">
+<span style="position: relative; width: 110px; height: 80px; border-radius: 16px; overflow: hidden; background: #202527; flex-shrink: 0">
+<img src="/_blob/8e2fbe424fa366c01b8959c20e7d050b" alt="Aucune photo pour la Dacia Sandero" style="width: 110px; height: 80px; object-fit: cover; display: block">
+<span style="position: absolute; left: 6px; bottom: 6px; display: flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 700; color: #202527; background: #F4F5F5; border-radius: 7px; padding: 2px 6px"><span style="width: 5px; height: 5px; border-radius: 3px; background: #202527"></span>En location</span>
+</span>
+<span style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 700">Dacia Sandero</span>
+<span style="align-self: flex-start; font-size: 11px; font-weight: 700; border: 1.5px solid #202527; border-radius: 6px; padding: 1px 7px">68013 | ب | 72</span>
+<span style="font-size: 12px; color: #5E6466">Youssef A. · retour lun. 16</span>
+</span>
+</span>
+<span style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<span style="background: #F6F6F5; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700">[mois]</span><span style="font-size: 10px; color: #5E6466">Dans la flotte depuis</span></span>
+<span style="background: #F6F6F5; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700">[n]</span><span style="font-size: 10px; color: #5E6466">Locations</span></span>
+<span style="background: #F6F6F5; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: 'Montserrat', sans-serif; font-size: 15px; font-weight: 700">72 %</span><span style="font-size: 10px; color: #5E6466">Occupation 30 j</span></span>
+</span>
+<a href="#" style="height: 48px; border-radius: 24px; background: #202527; color: #FFFFFF; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px">Ouvrir sa fiche
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</a>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{showNew}}" hint-placeholder-val="{{false}}">
+<div style="background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 24px; padding: 22px 18px 18px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; box-shadow: 0 10px 28px rgba(32,37,39,0.08)">
+<span style="width: 64px; height: 64px; border-radius: 32px; background: #E8F5EE; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 8px rgba(26,127,83,0.08)">
+<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1A7F53" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 18px; font-weight: 700">Pas dans votre flotte</span>
+<span style="font-size: 13px; line-height: 1.45; color: #5E6466">Aucun véhicule avec la plaque 68013 | ب | 72.</span>
+<a href="Main.dc.html" style="height: 44px; border-radius: 22px; border: 1px solid #E2E4E5; padding: 0 18px; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #202527">L'ajouter à ma flotte
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</a>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">DERNIÈRES VÉRIFICATIONS</span>
+<sc-for list="{{recent}}" as="r" hint-placeholder-count="3">
+<span style="display: flex; align-items: center; justify-content: space-between; height: 48px; padding: 0 14px; background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 14px">
+<span style="font-size: 13px; font-weight: 700">{{r.plate}}</span>
+<span style="{{r.style}}"><span style="{{r.dot}}"></span>{{r.result}}</span>
+</span>
+</sc-for>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"resultat":{"editor":"select","options":["doublon","nouveau","aucun"],"default":"doublon"},"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { tab: 'plate', checked: true };
+}
+renderVals() {
+const r = this.props.resultat ?? 'doublon';
+const tabs = [['plate', 'Plaque'], ['ww', 'WW'], ['vin', 'VIN']].map(([k, label]) => {
+const on = this.state.tab === k;
+return { label, pressed: on ? 'true' : 'false', pick: () => this.setState({ tab: k }), style: 'flex: 1; height: 38px; border-radius: 12px; border: none; font-size: 13px; font-weight: 600; ' + (on ? 'background: #FFFFFF; color: #202527;' : 'background: transparent; color: #B4BABC;') };
+});
+const shown = this.state.checked && r !== 'aucun';
+const recent = [['8921 | ب | 14', 'Dans la flotte', '#202527'], ['WW 482190', 'Pas chez vous', '#1A7F53'], ['33507 | أ | 6', 'Pas chez vous', '#1A7F53']].map(([plate, result, c]) => ({
+plate, result,
+style: 'display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: ' + c,
+dot: 'width: 7px; height: 7px; border-radius: 4px; background: ' + c
+}));
+return {
+tabs,
+isPlate: this.state.tab === 'plate',
+isWW: this.state.tab === 'ww',
+isVin: this.state.tab === 'vin',
+check: () => this.setState({ checked: true }),
+showNew: shown && r === 'nouveau',
+showDup: shown && r === 'doublon',
+recent
+};
+}
+}
+</script>
+</body>
+</html>

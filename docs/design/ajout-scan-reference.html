@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Scanner la carte grise</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#FFFFFF;text-decoration:none}a:hover{color:#EC7A45}
+button{font-family:inherit;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; background: #0B0D0E; font-family: 'Inter', sans-serif; color: #FFFFFF; position: relative; overflow: hidden; box-sizing: border-box">
+
+<div style="position: absolute; inset: 0; background: radial-gradient(80% 50% at 50% 40%, #3A3F41 0%, #1A1E1F 55%, #0B0D0E 100%)"></div>
+
+<div style="position: relative; padding: 58px 20px 0 20px; display: flex; align-items: center; justify-content: space-between">
+<a href="Main.dc.html" aria-label="Fermer" style="width: 44px; height: 44px; border-radius: 22px; background: rgba(32,37,39,0.75); border: 1px solid #40484B; display: flex; align-items: center; justify-content: center">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+</a>
+<span style="display: flex; flex-direction: column; align-items: center; gap: 2px">
+<span style="font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 700">{{title}}</span>
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.14em; color: #B4BABC">{{stepLabel}}</span>
+</span>
+<button onClick="{{toggleTorch}}" aria-label="Lampe" aria-pressed="{{torchPressed}}" style="{{torchStyle}}">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="{{torchInk}}" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 3L5 14h6l-1 7 8-11h-6z"></path></svg>
+</button>
+</div>
+
+<div style="position: relative; margin: 14px 20px 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px">
+<span style="{{segR}}"></span>
+<span style="{{segV}}"></span>
+</div>
+
+<div style="position: relative; margin: 24px auto 0 auto; width: 350px; height: 222px">
+<div style="position: absolute; inset: 12px; border-radius: 12px; background: #E9E4D8; box-shadow: 0 20px 40px rgba(0,0,0,0.5); overflow: hidden">
+<div style="height: 30px; background: #C8D3CC; display: flex; align-items: center; justify-content: space-between; padding: 0 12px">
+<span style="width: 110px; height: 6px; border-radius: 3px; background: rgba(32,37,39,0.35)"></span>
+<span style="width: 70px; height: 6px; border-radius: 3px; background: rgba(32,37,39,0.35)"></span>
+</div>
+<div style="padding: 10px 12px; display: flex; flex-direction: column; gap: 9px">
+<span style="display: flex; gap: 8px"><span style="width: 40px; height: 5px; border-radius: 3px; background: rgba(32,37,39,0.3)"></span><span style="width: 110px; height: 9px; border-radius: 2px; background: rgba(32,37,39,0.7)"></span></span>
+<span style="display: flex; gap: 8px"><span style="width: 40px; height: 5px; border-radius: 3px; background: rgba(32,37,39,0.3)"></span><span style="width: 150px; height: 7px; border-radius: 2px; background: rgba(32,37,39,0.55)"></span></span>
+<span style="display: flex; gap: 8px"><span style="width: 40px; height: 5px; border-radius: 3px; background: rgba(32,37,39,0.3)"></span><span style="width: 190px; height: 7px; border-radius: 2px; background: rgba(32,37,39,0.55)"></span></span>
+<span style="display: flex; gap: 8px"><span style="width: 40px; height: 5px; border-radius: 3px; background: rgba(32,37,39,0.3)"></span><span style="width: 90px; height: 7px; border-radius: 2px; background: rgba(32,37,39,0.55)"></span></span>
+<span style="display: flex; gap: 8px"><span style="width: 40px; height: 5px; border-radius: 3px; background: rgba(32,37,39,0.3)"></span><span style="width: 130px; height: 7px; border-radius: 2px; background: rgba(32,37,39,0.55)"></span></span>
+</div>
+</div>
+<span style="position: absolute; left: 66px; top: 52px; width: 126px; height: 17px; border: 1.5px solid #CA531D; border-radius: 4px; background: rgba(202,83,29,0.12)"></span>
+<span style="position: absolute; left: 66px; top: 36px; font-size: 9px; font-weight: 700; color: #FFFFFF; background: #CA531D; border-radius: 4px; padding: 1px 5px">PLAQUE</span>
+<span style="position: absolute; left: 66px; top: 86px; width: 166px; height: 15px; border: 1.5px solid #CA531D; border-radius: 4px; background: rgba(202,83,29,0.12)"></span>
+<span style="position: absolute; left: 240px; top: 86px; font-size: 9px; font-weight: 700; color: #FFFFFF; background: #CA531D; border-radius: 4px; padding: 1px 5px">MARQUE</span>
+<span style="position: absolute; left: 66px; top: 102px; width: 206px; height: 15px; border: 1.5px solid #EC7A45; border-radius: 4px; background: rgba(202,83,29,0.12)"></span>
+<span style="position: absolute; left: 278px; top: 102px; font-size: 9px; font-weight: 700; color: #FFFFFF; background: #CA531D; border-radius: 4px; padding: 1px 5px">VIN</span>
+<span style="position: absolute; left: 0; top: 0; width: 38px; height: 38px; border-left: 4px solid #FFFFFF; border-top: 4px solid #FFFFFF; border-radius: 16px 0 0 0"></span>
+<span style="position: absolute; right: 0; top: 0; width: 38px; height: 38px; border-right: 4px solid #FFFFFF; border-top: 4px solid #FFFFFF; border-radius: 0 16px 0 0"></span>
+<span style="position: absolute; left: 0; bottom: 0; width: 38px; height: 38px; border-left: 4px solid #FFFFFF; border-bottom: 4px solid #FFFFFF; border-radius: 0 0 0 16px"></span>
+<span style="position: absolute; right: 0; bottom: 0; width: 38px; height: 38px; border-right: 4px solid #FFFFFF; border-bottom: 4px solid #FFFFFF; border-radius: 0 0 16px 0"></span>
+<span style="position: absolute; left: 16px; right: 16px; top: 140px; height: 2px; background: #EC7A45; box-shadow: 0 0 16px 2px #EC7A45; border-radius: 1px"></span>
+</div>
+
+<div style="position: relative; margin-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 12px">
+<span style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #FFFFFF; background: rgba(26,127,83,0.92); border-radius: 18px; padding: 8px 14px; box-shadow: 0 6px 18px rgba(26,127,83,0.35)">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"></path></svg>
+3 zones repérées · capture dans 1 s
+</span>
+<span style="display: flex; gap: 8px">
+<span style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #F4F5F5; background: rgba(32,37,39,0.8); border: 1px solid #40484B; border-radius: 14px; padding: 5px 10px"><span style="width: 6px; height: 6px; border-radius: 3px; background: #4CC38A"></span>Netteté</span>
+<span style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #F4F5F5; background: rgba(32,37,39,0.8); border: 1px solid #40484B; border-radius: 14px; padding: 5px 10px"><span style="width: 6px; height: 6px; border-radius: 3px; background: #4CC38A"></span>Lumière</span>
+<span style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #F4F5F5; background: rgba(32,37,39,0.8); border: 1px solid #40484B; border-radius: 14px; padding: 5px 10px"><span style="width: 6px; height: 6px; border-radius: 3px; background: #F2C94C"></span>Léger reflet</span>
+</span>
+</div>
+
+<div style="position: absolute; left: 0; right: 0; bottom: 0; background: #151819; border-radius: 30px 30px 0 0; border-top: 1px solid #2A3033; padding: 16px 20px 30px 20px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: center">
+<div style="display: flex; background: #202527; border: 1px solid #343B3E; border-radius: 16px; padding: 3px">
+<button onClick="{{setAuto}}" aria-pressed="{{autoPressed}}" style="{{autoStyle}}">Auto</button>
+<button onClick="{{setManual}}" aria-pressed="{{manualPressed}}" style="{{manualStyle}}">Manuel</button>
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button aria-label="Importer depuis la galerie" style="width: 54px; height: 54px; border-radius: 16px; background: #2A3033; border: 1px solid #40484B; display: flex; align-items: center; justify-content: center; padding: 0">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="9" cy="10" r="2"></circle><path d="M21 16l-5-5-8 9"></path></svg>
+</button>
+<button onClick="{{shoot}}" aria-label="{{shootLabel}}" style="position: relative; width: 86px; height: 86px; border-radius: 43px; border: none; background: transparent; padding: 0; display: flex; align-items: center; justify-content: center">
+<svg width="86" height="86" viewBox="0 0 86 86" style="position: absolute; inset: 0" aria-hidden="true"><circle cx="43" cy="43" r="40" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="4"></circle><circle cx="43" cy="43" r="40" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-dasharray="176 252" transform="rotate(-90 43 43)"></circle></svg>
+<span style="width: 64px; height: 64px; border-radius: 32px; background: #CA531D; box-shadow: 0 0 26px rgba(202,83,29,0.6)"></span>
+</button>
+<div style="display: flex; gap: 6px">
+<span style="{{thumbR}}"><span style="{{thumbRInner}}"></span><span style="font-size: 9px; font-weight: 700">R</span></span>
+<span style="{{thumbV}}"><span style="{{thumbVInner}}"></span><span style="font-size: 9px; font-weight: 700">V</span></span>
+</div>
+</div>
+
+<sc-if value="{{done}}" hint-placeholder-val="{{false}}">
+<a href="Analyse.dc.html" style="height: 50px; border-radius: 25px; background: #CA531D; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(202,83,29,0.4)">Lire les 2 faces
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>
+</a>
+</sc-if>
+
+<div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: #202527; border: 1px solid #343B3E">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B4BABC" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+<label for="garder-photo" style="font-size: 13px; font-weight: 600; color: #F4F5F5">Garder la photo dans le dossier</label>
+<span style="font-size: 11px; color: #B4BABC">Lue par Google Gemini · <a href="#" style="color: #EC7A45; font-weight: 600">En savoir plus</a></span>
+</span>
+<button id="garder-photo" role="switch" aria-checked="{{keepChecked}}" onClick="{{toggleKeep}}" style="{{switchStyle}}"><span style="width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF"></span></button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { side: 'recto', recto: false, verso: false, keep: true, auto: true, torch: false };
+}
+renderVals() {
+const s = this.state;
+const seg = (ok, on) => 'height: 4px; border-radius: 2px; background: ' + (ok ? '#4CC38A' : on ? '#CA531D' : '#40484B');
+const thumb = (ok) => 'width: 42px; height: 54px; border-radius: 10px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; ' + (ok ? 'background: #2A3033; border: 2px solid #4CC38A; color: #FFFFFF;' : 'background: transparent; border: 1.5px dashed #4A5154; color: #8A9193;');
+const inner = (ok) => 'width: 28px; height: 18px; border-radius: 3px; ' + (ok ? 'background: #E9E4D8;' : 'background: transparent;');
+const mode = (on) => 'height: 32px; border-radius: 13px; border: none; padding: 0 16px; font-size: 12px; font-weight: 600; ' + (on ? 'background: #FFFFFF; color: #202527;' : 'background: transparent; color: #B4BABC;');
+return {
+title: s.side === 'recto' ? 'Recto de la carte grise' : 'Verso de la carte grise',
+stepLabel: s.side === 'recto' ? 'FACE 1 SUR 2' : 'FACE 2 SUR 2',
+segR: seg(s.recto, s.side === 'recto'),
+segV: seg(s.verso, s.side === 'verso'),
+toggleTorch: () => this.setState({ torch: !s.torch }),
+torchPressed: s.torch ? 'true' : 'false',
+torchInk: s.torch ? '#202527' : '#FFFFFF',
+torchStyle: 'width: 44px; height: 44px; border-radius: 22px; border: 1px solid #40484B; display: flex; align-items: center; justify-content: center; padding: 0; background: ' + (s.torch ? '#F2C94C' : 'rgba(32,37,39,0.75)'),
+setAuto: () => this.setState({ auto: true }),
+setManual: () => this.setState({ auto: false }),
+autoPressed: s.auto ? 'true' : 'false',
+manualPressed: s.auto ? 'false' : 'true',
+autoStyle: mode(s.auto),
+manualStyle: mode(!s.auto),
+shoot: () => (s.side === 'recto' ? this.setState({ recto: true, side: 'verso' }) : this.setState({ verso: true })),
+shootLabel: s.side === 'recto' ? 'Photographier le recto' : 'Photographier le verso',
+thumbR: thumb(s.recto), thumbRInner: inner(s.recto),
+thumbV: thumb(s.verso), thumbVInner: inner(s.verso),
+done: s.recto && s.verso,
+keepChecked: s.keep ? 'true' : 'false',
+toggleKeep: () => this.setState({ keep: !s.keep }),
+switchStyle: 'width: 50px; height: 30px; border-radius: 15px; border: none; padding: 3px; display: flex; flex-shrink: 0; ' + (s.keep ? 'background: #CA531D; justify-content: flex-end;' : 'background: #40484B; justify-content: flex-start;')
+};
+}
+}
+</script>
+</body>
+</html>
