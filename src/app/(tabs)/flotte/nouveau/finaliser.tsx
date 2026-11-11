@@ -24,7 +24,8 @@ import { RemoteDuplicateNotice } from '@/features/vehicles/add/remote-duplicate'
 import { combineDuplicate } from '@/features/vehicles/add/remote-exists';
 import { useRemoteExists } from '@/features/vehicles/add/use-remote-exists';
 import { PlateInput, WwInput } from '@/features/vehicles/add/plate-input';
-import { formatPlate, joinPlate, joinWw, plateKind, splitPlate, vinKey, type PlateParts } from '@/features/vehicles/add/plate';
+import { formatPlate, isValidVin, joinPlate, joinWw, plateKind, splitPlate, vinKey, type PlateParts } from '@/features/vehicles/add/plate';
+import { VinField } from '@/features/vehicles/add/vin-field';
 import { takeVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
 import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
@@ -73,6 +74,8 @@ export default function FinaliserVehiculeScreen() {
   const [wwDigits, setWwDigits] = useState(() => (plateKind(initialPlate) === 'ww' ? initialPlate.replace(/\D/g, '') : ''));
   const [marque, setMarque] = useState(draft?.marque ?? '');
   const [modele, setModele] = useState(draft?.modele ?? '');
+  // VIN (facultatif) : lu sur la carte grise, ou saisi ici. Enregistré, il sert à retrouver le véhicule dans « Vérifier » et au contrôle des doublons.
+  const [vin, setVin] = useState(draft?.vin ?? '');
   const [price, setPrice] = useState('');
   const [km, setKm] = useState('');
   const [facePhoto, setFacePhoto] = useState<string | null>(null);
@@ -89,7 +92,8 @@ export default function FinaliserVehiculeScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const plate = fromCard ? (draft?.immatriculation ?? '') : wwMode ? joinWw(wwDigits) : joinPlate(plateParts);
-  const vin = draft?.vin ?? '';
+  const vinInvalid = vin.trim() !== '' && !isValidVin(vin);
+  const vinAskedInCard = fromCard && !draft?.vin;
   // Catégorie : le choix de l'employé, sinon celle de la carte, sinon une suggestion d'après le genre et le modèle (toujours ajustable).
   const effectiveCategory = category === undefined ? suggestCategory({ genre: draft?.genre, marque, modele }) : category;
   const needsFuel = !fromCard || !draft?.carburant;
@@ -107,7 +111,7 @@ export default function FinaliserVehiculeScreen() {
     fuel: needsFuel && !fuel,
     price: isOwner && Number(digitsOf(price)) <= 0,
   };
-  const canSubmit = !missing.identity && !missing.fuel && !missing.price && deadlineErrors.length === 0 && !duplicate && !offline && !isSubmitting;
+  const canSubmit = !missing.identity && !missing.fuel && !missing.price && !vinInvalid && deadlineErrors.length === 0 && !duplicate && !offline && !isSubmitting;
 
   async function addPhoto(kind: 'face-camera' | 'face-library' | 'more') {
     setPhotoError(false);
@@ -179,7 +183,7 @@ export default function FinaliserVehiculeScreen() {
   const done = (key: 'price' | 'km' | 'photo') => !!progress.items.find((item) => item.key === key)?.done;
   const name = `${marque} ${modele}`.trim();
   const checks: { key: 'price' | 'km' | 'photo'; label: string }[] = [...(isOwner ? [{ key: 'price' as const, label: t('vehicleAdd.finalize.checkPrice') }] : []), { key: 'km', label: t('vehicleAdd.finalize.checkKm') }, { key: 'photo', label: t('vehicleAdd.finalize.checkPhoto') }];
-  const problem = offline ? t('vehicleAdd.finalize.offline') : duplicate ? t('vehicleAdd.finalize.duplicate') : touched && missing.identity ? t('vehicleAdd.finalize.needPlate') : touched && missing.fuel ? t('vehicleAdd.finalize.needFuel') : touched && missing.price ? t('vehicleAdd.finalize.needPrice') : submitError;
+  const problem = offline ? t('vehicleAdd.finalize.offline') : duplicate ? t('vehicleAdd.finalize.duplicate') : touched && missing.identity ? t('vehicleAdd.finalize.needPlate') : touched && missing.fuel ? t('vehicleAdd.finalize.needFuel') : touched && missing.price ? t('vehicleAdd.finalize.needPrice') : touched && vinInvalid ? t('vehicleAdd.verify.invalidVin') : submitError;
 
   return (
     <ThemedView className="flex-1" style={{ backgroundColor: Palette.surface }}>
@@ -242,6 +246,7 @@ export default function FinaliserVehiculeScreen() {
                     </View>
                   ))}
                 </View>
+                <VinField value={vin} onChange={setVin} dark invalid={vinInvalid} />
               </View>
             )}
           </AddHeader>
@@ -321,6 +326,7 @@ export default function FinaliserVehiculeScreen() {
                 </HText>
                 <ChoiceChips options={VEHICLE_TRANSMISSIONS} selected={gearbox} getLabel={(g) => t(`vehicle.transmission.${g}`)} onSelect={setGearbox} />
               </View>
+              {vinAskedInCard ? <VinField value={vin} onChange={setVin} invalid={vinInvalid} /> : null}
               {needsFuel ? (
                 <View style={{ gap: 8 }}>
                   <HText weight="semibold" size={12} color={touched && missing.fuel ? Palette.error : Palette.textSecondary}>

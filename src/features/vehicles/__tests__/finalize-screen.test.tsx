@@ -58,6 +58,7 @@ jest.mock('@/features/vehicles/api', () => ({
   VEHICLE_PHOTOS_BUCKET: 'vehicle-photos',
 }));
 jest.mock('@/features/vehicles/add/use-remote-exists', () => ({ useRemoteExists: () => mockState.remote }));
+jest.mock('expo-camera', () => ({ CameraView: () => null, useCameraPermissions: () => [{ granted: true }, jest.fn()] }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
 jest.mock('@/features/vehicles/creation-draft', () => ({ takeVehicleCreationDraft: () => mockState.draft }));
 jest.mock('@/features/vehicles/duplicate-vehicle-card', () => ({ DuplicateVehicleCard: () => null }));
@@ -217,6 +218,62 @@ describe('écran Finaliser', () => {
     await fireEvent.press(screen.getByLabelText('Plus 50 dirhams'));
     await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
     expect(mockState.created).toHaveLength(0);
+  });
+
+  it('saisie à la main : le VIN (facultatif) est saisi, normalisé et ENREGISTRÉ avec le véhicule', async () => {
+    await render(<FinaliserVehiculeScreen />);
+    await fillManualIdentity();
+    await fireEvent.press(screen.getByText('Diesel'));
+    await fireEvent.press(screen.getByLabelText('Plus 50 dirhams'));
+    await fireEvent.changeText(screen.getByLabelText('N° de série (VIN)'), 'uu1-hsdagc56789012');
+    expect(screen.getByDisplayValue('UU1HSDAGC56789012')).toBeTruthy(); // majuscules, sans tiret
+    await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+    await waitFor(() => expect(mockState.created).toHaveLength(1));
+    expect(mockState.created[0]).toMatchObject({ vin: 'UU1HSDAGC56789012' });
+  });
+
+  it('sans VIN : le véhicule est créé sans (facultatif) ; un VIN invalide bloque avec la raison', async () => {
+    await render(<FinaliserVehiculeScreen />);
+    await fillManualIdentity();
+    await fireEvent.press(screen.getByText('Diesel'));
+    await fireEvent.press(screen.getByLabelText('Plus 50 dirhams'));
+    await fireEvent.changeText(screen.getByLabelText('N° de série (VIN)'), 'UU1HSDAGC5678901');
+    await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+    expect(screen.getAllByText(/Un VIN a 17 caractères/).length).toBeGreaterThan(0);
+    expect(mockState.created).toHaveLength(0);
+    await fireEvent.changeText(screen.getByLabelText('N° de série (VIN)'), '');
+    await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+    await waitFor(() => expect(mockState.created).toHaveLength(1));
+    expect(mockState.created[0].vin).toBeNull();
+  });
+
+  it('saisie à la main : un VIN déjà dans la flotte (autre plaque) est détecté comme doublon', async () => {
+    mockState.vehicles = [{ ...base, id: 'dup', marque: 'Kia', modele: 'Picanto', immatriculation: '1 | د | 1', categorie: 'compacte', prixJour: 280, statut: 'disponible', vin: 'UU1HSDAGC56789012' }];
+    await render(<FinaliserVehiculeScreen />);
+    await fillManualIdentity();
+    await fireEvent.changeText(screen.getByLabelText('N° de série (VIN)'), 'UU1HSDAGC56789012');
+    expect(screen.getByText('Ce véhicule est déjà dans votre flotte.')).toBeTruthy();
+  });
+
+  it('carte grise sans VIN lu : le champ est proposé', async () => {
+    mockState.draft = { ...scanDraft, vin: undefined };
+    await render(<FinaliserVehiculeScreen />);
+    expect(screen.getByLabelText('N° de série (VIN)')).toBeTruthy();
+  });
+
+  it('carte grise avec VIN lu : pas de second champ', async () => {
+    mockState.draft = scanDraft;
+    await render(<FinaliserVehiculeScreen />);
+    expect(screen.queryByLabelText('N° de série (VIN)')).toBeNull();
+  });
+
+  it('carte grise : le VIN lu est enregistré', async () => {
+    mockState.draft = scanDraft;
+    await render(<FinaliserVehiculeScreen />);
+    await fireEvent.changeText(screen.getByLabelText('Prix par jour en dirhams'), '400');
+    await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+    await waitFor(() => expect(mockState.created).toHaveLength(1));
+    expect(mockState.created[0]).toMatchObject({ vin: 'UU1HSDAGC56789012' });
   });
 
   it('hors connexion : message clair, les saisies restent, rien n’est envoyé', async () => {

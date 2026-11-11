@@ -3278,7 +3278,9 @@
       "needFuel": "Choisissez le carburant pour continuer.",
       "needPlate": "Saisissez l'immatriculation, la marque et le modèle.",
       "needPrice": "Saisissez le prix par jour.",
-      "duplicate": "Ce véhicule est déjà dans votre flotte."
+      "duplicate": "Ce véhicule est déjà dans votre flotte.",
+      "vin": "N° de série (VIN)",
+      "vinHint": "Facultatif. Enregistré, il permet de retrouver le véhicule avec « Vérifier » et d'éviter les doublons."
     },
     "success": {
       "title": "{{name}} ajoutée à votre flotte",
