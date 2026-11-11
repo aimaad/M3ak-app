@@ -103,15 +103,17 @@ describe('scanner de la carte grise', () => {
     expect(session?.durationMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('le verso est facultatif : « Passer le verso » lit le recto seul, avec la même analyse', async () => {
-    mockState.scan.mockResolvedValue(okResult({ immatriculation: field('68013-ب-72') }));
+  it('le verso est obligatoire : avec le recto seul, aucune lecture n’est proposée (pas de « Passer le verso »)', async () => {
     await render(<ScannerCarteGriseScreen />);
+    expect(screen.queryByText('Lire les 2 faces')).toBeNull();
     await fireEvent.press(screen.getByLabelText('Photographier le recto'));
-    await fireEvent.press(await screen.findByText('Passer le verso'));
-    expect(mockState.scan).toHaveBeenCalledTimes(1);
-    expect(mockState.scan.mock.calls[0][0]).toEqual(['file:///photo-1.jpg']);
-    expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/carte-lue');
-    expect(getScanSession()?.scans).toHaveLength(1);
+    await screen.findByText('Verso de la carte grise');
+    expect(screen.queryByText('Passer le verso')).toBeNull();
+    expect(screen.queryByText('Lire cette face')).toBeNull();
+    expect(screen.queryByText('Lire les 2 faces')).toBeNull();
+    expect(mockState.scan).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByLabelText('Photographier le verso'));
+    expect(await screen.findByText('Lire les 2 faces')).toBeTruthy(); // proposée seulement avec les deux faces
   });
 
   it('résultat vide sur les deux faces : traité comme une carte non lue, photos gardées', async () => {
@@ -128,13 +130,13 @@ describe('scanner de la carte grise', () => {
   it('photo illisible : message clair, photos gardées (réessayer relit les mêmes), saisie à la main possible', async () => {
     mockState.scan.mockResolvedValue({ ok: false, error: 'ocr_failed' });
     await render(<ScannerCarteGriseScreen />);
-    await fireEvent.press(screen.getByLabelText('Photographier le recto'));
-    await fireEvent.press(await screen.findByText('Passer le verso'));
+    await shootBoth();
+    await fireEvent.press(screen.getByText('Lire les 2 faces'));
     expect(await screen.findByText('Carte non lue, reprenez la photo ou saisissez à la main.')).toBeTruthy();
     expect(mockRouter.replace).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByText('Réessayer'));
     expect(mockState.scan).toHaveBeenCalledTimes(2);
-    expect(mockState.scan.mock.calls[1][0]).toEqual(['file:///photo-1.jpg']); // la photo n'a pas été perdue
+    expect(mockState.scan.mock.calls[1][0]).toEqual(['file:///photo-1.jpg', 'file:///photo-2.jpg']); // les photos n'ont pas été perdues
     await fireEvent.press(await screen.findByText('Saisir à la main'));
     expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/finaliser');
     expect(mockState.drafts.at(-1)).toMatchObject({ source: 'manual' });
@@ -143,9 +145,9 @@ describe('scanner de la carte grise', () => {
   it('hors connexion : message clair et lecture impossible, les photos restent à l’écran', async () => {
     mockState.connected = false;
     await render(<ScannerCarteGriseScreen />);
-    await fireEvent.press(screen.getByLabelText('Photographier le recto'));
+    await shootBoth();
     expect(screen.getByText(/Pas de connexion/)).toBeTruthy();
-    await fireEvent.press(await screen.findByText('Passer le verso'));
+    await fireEvent.press(screen.getByText('Lire les 2 faces'));
     expect(mockState.scan).not.toHaveBeenCalled();
   });
 

@@ -30,7 +30,7 @@ const FACES: Face[] = ['recto', 'verso'];
 /**
  * Scanner la carte grise (recto puis verso). Aperçu caméra réel, cadre au format carte, déclencheur manuel, lampe et import depuis la galerie.
  * RIEN n'est détecté en direct (ni zones, ni netteté, ni reflet) : on ne montre que des conseils fixes. La lecture est faite par le serveur de lecture des documents,
- * une seule fois pour les deux faces ; le verso est facultatif.
+ * une seule fois pour les deux faces ; les DEUX faces sont obligatoires (la lecture n'est proposée qu'avec le recto ET le verso).
  */
 export default function ScannerCarteGriseScreen() {
   const { t } = useLanguage();
@@ -105,7 +105,7 @@ export default function ScannerCarteGriseScreen() {
    */
   async function analyze() {
     const entries: ScanItem[] = FACES.flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
-    if (entries.length === 0 || offline) return;
+    if (entries.length < FACES.length || offline) return; // recto ET verso
     setPhase('analyzing');
     setStep(0);
     setErrorCode(null);
@@ -190,8 +190,8 @@ export default function ScannerCarteGriseScreen() {
 
   // ---------------------------------------------------------------- capture
   const title = side === 'recto' ? t('vehicleAdd.scan.titleRecto') : t('vehicleAdd.scan.titleVerso');
-  const canRead = taken.length > 0;
-  const readLabel = both ? t('vehicleAdd.scan.readBoth') : side === 'verso' && photos.recto ? t('vehicleAdd.scan.skipVerso') : t('vehicleAdd.scan.readOne');
+  const canRead = both;
+  const readLabel = t('vehicleAdd.scan.readBoth');
   const cameraBlocked = !!permission && !permission.granted;
   const maskColor = withAlpha(Brand.scannerBackground, 0.62);
 
