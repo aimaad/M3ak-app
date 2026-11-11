@@ -26,17 +26,17 @@ function asCode(raw: unknown): CloudErrorCode {
   return raw === 'ocr_disabled' || raw === 'ocr_not_configured' || raw === 'ocr_timeout' || raw === 'ocr_busy' ? raw : 'ocr_failed';
 }
 
-export async function scanInCloud(documentType: CloudDocumentType, localUri: string): Promise<CloudScanResult> {
-  let imageBase64 = '';
+/** Un serveur qui ne connaît pas encore l'envoi de deux photos répond « image invalide » : on le reconnaît pour lire les faces une par une. */
+export const LEGACY_SERVER_DETAIL = 'legacy_single_image';
+
+async function scanImages(documentType: CloudDocumentType, localUris: string[], many: boolean): Promise<CloudScanResult> {
+  let totalBase64 = 0;
   try {
-    imageBase64 = await new File(localUri).base64();
+    const images = await Promise.all(localUris.map(async (uri) => ({ imageBase64: await new File(uri).base64(), mimeType: guessMimeType(uri) })));
+    totalBase64 = images.reduce((sum, image) => sum + image.imageBase64.length, 0);
+    const body = many ? { documentType, images } : { documentType, imageBase64: images[0].imageBase64, mimeType: images[0].mimeType };
     const timeout = new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), CLOUD_TIMEOUT_MS));
-    const outcome = await Promise.race([
-      getSupabase().functions.invoke('scan-document', {
-        body: { documentType, imageBase64, mimeType: guessMimeType(localUri) },
-      }),
-      timeout,
-    ]);
+    const outcome = await Promise.race([getSupabase().functions.invoke('scan-document', { body }), timeout]);
     if (outcome === 'timeout') return { ok: false, error: 'ocr_timeout', detail: 'stage:app' };
     const { data, error } = outcome;
 
@@ -44,6 +44,7 @@ export async function scanInCloud(documentType: CloudDocumentType, localUri: str
       if (error instanceof FunctionsHttpError) {
         if (error.context.status === 404) return { ok: false, error: 'unavailable', detail: 'function_not_deployed' };
         const parsed = (await error.context.json().catch(() => null)) as { error?: unknown; detail?: unknown } | null;
+        if (many && parsed?.error === 'invalid_image') return { ok: false, error: 'ocr_failed', detail: LEGACY_SERVER_DETAIL };
         return { ok: false, error: asCode(parsed?.error), detail: typeof parsed?.detail === 'string' ? parsed.detail : undefined };
       }
       // FunctionsFetchError : la requête n'est pas partie ou n'a pas abouti. La vraie cause (réseau coupé,
@@ -53,7 +54,7 @@ export async function scanInCloud(documentType: CloudDocumentType, localUri: str
       return {
         ok: false,
         error: 'unavailable',
-        detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''} (image ${Math.round(imageBase64.length / 1024)} Ko)`,
+        detail: `${error.message}${causeMessage ? ` — ${causeMessage}` : ''} (image ${Math.round(totalBase64 / 1024)} Ko)`,
       };
     }
 
@@ -63,4 +64,13 @@ export async function scanInCloud(documentType: CloudDocumentType, localUri: str
   } catch (error) {
     return { ok: false, error: 'unavailable', detail: error instanceof Error ? error.message : 'unknown' };
   }
+}
+
+export async function scanInCloud(documentType: CloudDocumentType, localUri: string): Promise<CloudScanResult> {
+  return scanImages(documentType, [localUri], false);
+}
+
+/** Lit PLUSIEURS photos d'un même document (recto et verso d'une carte grise) en UNE seule analyse : un seul résultat. */
+export async function scanInCloudMany(documentType: CloudDocumentType, localUris: string[]): Promise<CloudScanResult> {
+  return scanImages(documentType, localUris, true);
 }

@@ -1,7 +1,7 @@
 import { File } from 'expo-file-system';
 
 import { clearInsightsCache } from '@/features/dashboard/insights-cache';
-import { scanInCloud, type CloudDocumentType, type CloudScanResult } from './cloud-ocr';
+import { scanInCloud, scanInCloudMany, type CloudDocumentType, type CloudScanResult } from './cloud-ocr';
 import { clearScanCache, hasAnyFieldValue, readScanCache, scanCacheKey, writeScanCache, type KeyValueStorage } from './scan-cache';
 
 /** Stockage local de l'appareil ; absent (tests, web) → pas de cache, la lecture fonctionne quand même. */
@@ -45,6 +45,27 @@ export async function scanCloudCached(
   }
 
   const result = await scanInCloud(documentType, localUri);
+  if (result.ok && storage && key && hasAnyFieldValue(result.fields)) {
+    await writeScanCache(storage, key, result.fields);
+  }
+  return result;
+}
+
+/**
+ * Lit PLUSIEURS photos d'un même document (recto et verso) en une seule analyse. Même cache : la clé réunit les empreintes des photos, dans l'ordre
+ * (les mêmes deux photos relues dans les 24 h ne sont pas renvoyées au serveur).
+ */
+export async function scanCloudManyCached(documentType: CloudDocumentType, localUris: string[], agencyId?: string): Promise<CachedScanResult> {
+  const storage = agencyId ? deviceStorage() : null;
+  const hashes = storage ? localUris.map(fileHash) : [];
+  const key = agencyId && hashes.length === localUris.length && hashes.every((hash): hash is string => !!hash) ? scanCacheKey(agencyId, documentType, hashes.join('+')) : null;
+
+  if (storage && key) {
+    const cached = await readScanCache(storage, key);
+    if (cached) return { ok: true, fields: cached, fromCache: true };
+  }
+
+  const result = await scanInCloudMany(documentType, localUris);
   if (result.ok && storage && key && hasAnyFieldValue(result.fields)) {
     await writeScanCache(storage, key, result.fields);
   }

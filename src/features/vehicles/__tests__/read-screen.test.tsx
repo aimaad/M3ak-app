@@ -39,16 +39,18 @@ jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
 import { normalizeVehicleFields } from '@/features/vehicles/ocr';
-import { setScanSession, mergeScans, type ScanItem } from '@/features/vehicles/add/scan-session';
+import { setScanSession, type ScanItem } from '@/features/vehicles/add/scan-session';
 
 import CarteLueScreen from '../../../app/(tabs)/flotte/nouveau/carte-lue';
 
 const field = (value: unknown, confidence = 'high') => ({ value, confidence });
 
 function openSession(patch: Record<string, unknown>, extra: { keepPhoto?: boolean; fromCache?: boolean; durationMs?: number } = {}) {
-  const recto: ScanItem = { face: 'recto', uri: 'file:///recto.jpg', fields: normalizeVehicleFields({ immatriculation: field('68013-ب-72'), dateMiseEnCirculation: field('2022-03-12'), proprietaire: field('Atlas Voyages') }) };
-  const verso: ScanItem = { face: 'verso', uri: 'file:///verso.jpg', fields: normalizeVehicleFields({ marque: field('Dacia'), modele: field('Sandero Stepway'), carburant: field('diesel'), puissanceFiscale: field(6), genre: field('Voiture particulière'), vin: field('UU1HSDAGC56789012'), ...patch }) };
-  setScanSession({ photos: { recto: recto.uri, verso: verso.uri }, scans: [recto, verso], merged: mergeScans([recto, verso]), durationMs: extra.durationMs ?? 6200, fromCache: extra.fromCache ?? false, keepPhoto: extra.keepPhoto ?? true, errorCode: null });
+  const recto: ScanItem = { face: 'recto', uri: 'file:///recto.jpg' };
+  const verso: ScanItem = { face: 'verso', uri: 'file:///verso.jpg' };
+  // Une seule lecture, faite sur les deux faces ensemble.
+  const merged = normalizeVehicleFields({ immatriculation: field('68013-ب-72'), dateMiseEnCirculation: field('2022-03-12'), proprietaire: field('Atlas Voyages'), marque: field('Dacia'), modele: field('Sandero Stepway', 'medium'), carburant: field('diesel'), puissanceFiscale: field(6), genre: field('Voiture particulière'), vin: field('UU1HSDAGC56789012'), ...patch });
+  setScanSession({ photos: { recto: recto.uri, verso: verso.uri }, scans: [recto, verso], merged, durationMs: extra.durationMs ?? 6200, fromCache: extra.fromCache ?? false, keepPhoto: extra.keepPhoto ?? true, errorCode: null });
 }
 
 describe('écran « Carte grise lue »', () => {

@@ -17,10 +17,10 @@ import { useOcrSettings } from '@/features/ocr/hooks';
 import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { RoundButton } from '@/features/vehicles/add/add-ui';
 import { FaceThumb, KeepSwitch, LegalSheet, ScanFrame, TipPills } from '@/features/vehicles/add/scan-parts';
-import { mergeScans, setScanSession, type Face, type ScanItem } from '@/features/vehicles/add/scan-session';
+import { setScanSession, type Face, type ScanItem } from '@/features/vehicles/add/scan-session';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { withAlpha } from '@/features/vehicles/fleet-style';
-import { filledCount, scanVehicleDocument, type ScanErrorCode } from '@/features/vehicles/ocr';
+import { filledCount, scanVehicleDocuments, type ScanErrorCode } from '@/features/vehicles/ocr';
 import { useLanguage } from '@/i18n/use-language';
 
 type Phase = 'capture' | 'analyzing' | 'error';
@@ -99,29 +99,25 @@ export default function ScannerCarteGriseScreen() {
     if (uri) putPhoto(side, uri);
   }
 
-  /** Lit le recto et le verso en même temps (une seule analyse), puis fusionne ; la durée affichée ensuite est la vraie. */
+  /**
+   * Lit le recto et le verso EN MÊME TEMPS : une seule analyse, lancée une seule fois, sur les deux photos ensemble. Un seul résultat réunit
+   * ce qui est lisible sur l'une ou l'autre face. La durée affichée ensuite est la vraie.
+   */
   async function analyze() {
-    const entries = FACES.flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
+    const entries: ScanItem[] = FACES.flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
     if (entries.length === 0 || offline) return;
     setPhase('analyzing');
     setStep(0);
     setErrorCode(null);
     const startedAt = Date.now();
-    const results = await Promise.all(entries.map((entry) => scanVehicleDocument(entry.uri, { agencyId })));
-    const scans: ScanItem[] = [];
-    let firstError: ScanErrorCode | null = null;
-    results.forEach((result, index) => {
-      if (result.ok) scans.push({ ...entries[index], fields: result.fields });
-      else firstError ??= result.error;
-    });
-    // Rien de lisible (erreur sur toutes les faces, ou faces vides) : on garde les photos et on propose de reprendre ou de saisir à la main.
-    if (scans.length === 0 || scans.every((item) => filledCount(item.fields) === 0)) {
-      setErrorCode(scans.length === 0 ? firstError : 'nothing_read');
+    const result = await scanVehicleDocuments(entries.map((entry) => entry.uri), { agencyId });
+    // Rien de lisible (erreur, ou résultat vide) : on garde les photos et on propose de reprendre ou de saisir à la main.
+    if (!result.ok || filledCount(result.fields) === 0) {
+      setErrorCode(result.ok ? 'nothing_read' : result.error);
       setPhase('error');
       return;
     }
-    const session = { photos, scans, merged: mergeScans(scans), durationMs: Date.now() - startedAt, fromCache: results.every((result) => result.ok && result.fromCache === true), keepPhoto, errorCode: firstError };
-    setScanSession(session);
+    setScanSession({ photos, scans: entries, merged: result.fields, durationMs: Date.now() - startedAt, fromCache: result.fromCache === true, keepPhoto, errorCode: null });
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
     router.replace('/flotte/nouveau/carte-lue');
   }

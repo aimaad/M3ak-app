@@ -23,6 +23,8 @@ const CORS_HEADERS = {
 
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png']);
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
+/** Recto et verso d'une carte grise : lus ensemble, en une seule analyse. */
+const MAX_IMAGES = 2;
 const FUEL_VALUES = ['essence', 'diesel', 'hybride', 'electrique'];
 const CATEGORY_VALUES = ['economique', 'compacte', 'berline', 'suv', 'utilitaire', 'minibus', 'luxe'];
 
@@ -49,7 +51,7 @@ const LICENCE_PROMPT = `Tu lis la photo d'UNE FACE d'un permis de conduire (Maro
 Permis marocain (format carte « Royaume du Maroc ») :
 - RECTO : Prénom, Nom (en lettres latines et arabes), C.N.I., Né(e) le + lieu de naissance, Permis N° (ex. 20/086579), « <Ville> le <date> » = lieu et date de délivrance, et la ou les lettres de catégorie encadrées (ex. B).
 - VERSO : tableau Catégories (A1, A, B, C, D, EB, EC, ED) avec une « Date de délivrance » par catégorie (une catégorie dont la case de date est vide n'est PAS détenue), colonne Restrictions (ex. 01.01), et en bas « Date de fin de validité » suivie d'un long numéro de série (à ignorer).
-Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information qui n'est pas sur la face photographiée, mets "value": null :
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information qui n'est sur aucune des photos reçues, mets "value": null :
 
 {
   "nom": { "value": string ou null, "confidence": "high" | "medium" | "low" },
@@ -74,10 +76,10 @@ Règles strictes :
 - "nom" et "prenom" : tels qu'imprimés, en graphie latine (ignore la ligne arabe si une ligne latine existe).
 - Le permis peut être étranger : lis ce qui est présent sans traduire les numéros.`;
 
-const REGISTRATION_PROMPT = `Tu lis la photo d'UNE FACE d'un certificat d'immatriculation marocain (carte grise, format carte bancaire « Royaume du Maroc ») pour une agence de location de voitures. La photo montre le RECTO, le VERSO, ou parfois les deux.
+const REGISTRATION_PROMPT = `Tu lis les photos d'UN SEUL certificat d'immatriculation marocain (carte grise, format carte bancaire « Royaume du Maroc ») pour une agence de location de voitures. Tu reçois une ou deux photos : le RECTO, le VERSO, ou le RECTO puis le VERSO (ou une photo qui montre les deux faces). Lis TOUTES les photos ensemble et réponds par UN SEUL résultat qui réunit ce qui est lisible sur l'une ou l'autre face : une information présente sur une face n'est jamais effacée par l'absence de l'autre.
 Le RECTO contient : Numéro d'immatriculation, Immatriculation antérieure, Première mise en circulation, M.C. au Maroc, Mutation le, Usage, Propriétaire, Adresse, Fin de validité.
 Le VERSO contient : Marque, Type (code du modèle), Genre, Modèle, Type carburant, N° du chassis, Nombre de cylindres, Puissance fiscale, Nombre de places, P.T.A.C., Poids à vide, P.T.R.A., Restrictions, et en bas une ligne de caractères (zone lisible par machine).
-Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information qui n'est pas sur la face photographiée, mets "value": null :
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information qui n'est sur aucune des photos reçues, mets "value": null :
 
 {
   "immatriculation": { "value": string ou null, "confidence": "high" | "medium" | "low" },
@@ -115,8 +117,9 @@ Règles strictes :
 - "categorie" : null SAUF si le « Genre » l'indique clairement : camionnette ou véhicule utilitaire → "utilitaire" ; autocar ou minibus → "minibus". « Conduite intérieure » ne suffit pas : mets null.
 - "finition" et "couleur" ne figurent jamais sur la carte : toujours null.
 - "puissanceFiscale" en CV (ex. 6), "nombreCylindres" (ex. 4), "ptac" et "poidsVide" en kilogrammes (nombre seul).
-- Si un champ n'est pas lisible ou absent de la face photographiée, mets "value": null et "confidence": "low". Ne devine JAMAIS une valeur plausible.
+- Si un champ n'est pas lisible ou absent de toutes les photos, mets "value": null et "confidence": "low". Ne devine JAMAIS une valeur plausible.
 - "confidence": "high" seulement si le texte est net et sans ambiguïté. "medium" si lisible mais avec un doute raisonnable. "low" sinon.
+- Si les deux faces donnent des valeurs différentes pour un même champ, garde la plus lisible et mets "confidence": "medium" ou "low".
 - Le document est bilingue français / arabe : lis la version française (ou latine) quand elle existe.`;
 
 function confidenceOf(raw: unknown): Confidence {
@@ -303,15 +306,24 @@ Deno.serve(async (request: Request) => {
 
   const documentType = body.documentType;
   if (documentType !== 'permis' && documentType !== 'carte_grise') return json({ ok: false, error: 'invalid_request' }, 400);
-  const imageBase64 = typeof body.imageBase64 === 'string' ? body.imageBase64 : null;
-  const mimeType = typeof body.mimeType === 'string' ? body.mimeType : null;
-  if (!imageBase64 || !mimeType || !ALLOWED_MIME_TYPES.has(mimeType)) return json({ ok: false, error: 'invalid_image' }, 400);
-  if (imageBase64.length * 0.75 > MAX_IMAGE_BYTES) return json({ ok: false, error: 'image_too_large' }, 400);
+  // Une ou deux photos (recto, verso) lues ENSEMBLE en une seule analyse : un seul résultat. L'ancien format (une seule image) reste accepté.
+  const rawImages: unknown[] = Array.isArray(body.images) ? body.images : [{ imageBase64: body.imageBase64, mimeType: body.mimeType }];
+  const maxImages = documentType === 'carte_grise' ? MAX_IMAGES : 1;
+  if (rawImages.length < 1 || rawImages.length > maxImages) return json({ ok: false, error: 'invalid_image' }, 400);
+  const images: { mimeType: string; data: string }[] = [];
+  for (const raw of rawImages) {
+    const entry = (typeof raw === 'object' && raw !== null ? raw : {}) as { imageBase64?: unknown; mimeType?: unknown };
+    const data = typeof entry.imageBase64 === 'string' ? entry.imageBase64 : null;
+    const mime = typeof entry.mimeType === 'string' ? entry.mimeType : null;
+    if (!data || !mime || !ALLOWED_MIME_TYPES.has(mime)) return json({ ok: false, error: 'invalid_image' }, 400);
+    if (data.length * 0.75 > MAX_IMAGE_BYTES) return json({ ok: false, error: 'image_too_large' }, 400);
+    images.push({ mimeType: mime, data });
+  }
 
   try {
     const result = await callGeminiJson(apiKey, documentType === 'permis' ? LICENCE_PROMPT : REGISTRATION_PROMPT, [
-      { inlineData: { mimeType, data: imageBase64 } },
-      { text: 'Extrais les champs de ce document, au format JSON demandé.' },
+      ...images.map((image) => ({ inlineData: { mimeType: image.mimeType, data: image.data } })),
+      { text: images.length > 1 ? 'Extrais les champs de ce document à partir de ces deux photos (recto puis verso), en UN SEUL résultat JSON au format demandé.' : 'Extrais les champs de ce document, au format JSON demandé.' },
     ], { qualityFirst: true });
     await recordUsage(admin, { agencyId, documentType, ok: true, model: result.model, usage: result.usage });
     return json({ ok: true, fields: documentType === 'permis' ? sanitizeLicence(result.json) : sanitizeRegistration(result.json) });

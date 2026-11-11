@@ -1,5 +1,5 @@
 import { fromIsoDate } from '../validation';
-import { emptyVehicleFields, mergeVehicleFields, yearFromFields, type OcrConfidence, type ScanErrorCode, type VehicleOcrFields } from '../ocr';
+import { yearFromFields, type OcrConfidence, type ScanErrorCode, type VehicleOcrFields } from '../ocr';
 import type { VehicleCreationDraft } from '../creation-draft';
 import type { PendingVehicleDocument } from '../types';
 
@@ -7,11 +7,12 @@ import { formatPlate, vinKey } from './plate';
 import { reviewedFuel, type ReviewKey, type ReviewState } from './review';
 
 export type Face = 'recto' | 'verso';
-export type ScanItem = { face: Face; uri: string; fields: VehicleOcrFields };
+/** Une photo prise (recto ou verso). La lecture est UNE seule, faite sur les deux photos ensemble : elle est dans `ScanSession.merged`. */
+export type ScanItem = { face: Face; uri: string };
 
 /**
  * Résultat d'une lecture de carte grise, transmis du scanner à l'écran « Carte grise lue » (en mémoire, jamais enregistré) :
- * les photos prises, les champs lus et fusionnés, la vraie durée de lecture, et le choix de garder les photos dans le dossier.
+ * les photos prises, les champs lus (une seule lecture pour les deux faces), la vraie durée de lecture, et le choix de garder les photos dans le dossier.
  */
 export type ScanSession = {
   photos: Record<Face, string | null>;
@@ -20,7 +21,7 @@ export type ScanSession = {
   durationMs: number;
   fromCache: boolean;
   keepPhoto: boolean;
-  /** Première erreur d'une face (l'autre a pu être lue). */
+  /** Réservé : erreur de lecture (la session n'est créée que si quelque chose a été lu). */
   errorCode: ScanErrorCode | null;
 };
 
@@ -30,10 +31,6 @@ export const setScanSession = (value: ScanSession | null) => {
   session = value;
 };
 export const getScanSession = (): ScanSession | null => session;
-
-export function mergeScans(scans: ScanItem[]): VehicleOcrFields {
-  return scans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
-}
 
 /** Photos de la carte grise rangées par face : le recto porte la date de fin de validité (alerte d'expiration), le verso a son propre document. */
 export function pendingCardDocuments(scans: Pick<ScanItem, 'face' | 'uri'>[], expiresAt: string | null): PendingVehicleDocument[] {

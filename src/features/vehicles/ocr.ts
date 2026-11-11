@@ -1,5 +1,6 @@
 import type { CloudErrorCode } from '@/features/ocr/cloud-ocr';
-import { scanCloudCached } from '@/features/ocr/cached-scan';
+import { scanCloudCached, scanCloudManyCached } from '@/features/ocr/cached-scan';
+import { LEGACY_SERVER_DETAIL } from '@/features/ocr/cloud-ocr';
 
 import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type VehicleCategory } from './types';
 
@@ -114,6 +115,26 @@ export async function scanVehicleDocument(localUri: string, options: { agencyId?
   return { ok: true, fields: normalizeVehicleFields(cloud.fields), ...(cloud.fromCache ? { fromCache: true } : {}) };
 }
 
+
+/**
+ * Lit la carte grise à partir de SES DEUX FACES (recto, verso) en UNE seule analyse, lancée une seule fois : un seul résultat qui réunit ce
+ * qui est lisible sur l'une ou l'autre face. Une seule photo (verso facultatif) est lue de la même façon.
+ * Un serveur pas encore mis à jour (il ne connaît que l'envoi d'une photo) : repli sur une lecture par face, en parallèle, puis fusion.
+ */
+export async function scanVehicleDocuments(localUris: string[], options: { agencyId?: string } = {}): Promise<ScanVehicleDocumentResult> {
+  const uris = localUris.filter(Boolean);
+  if (uris.length === 0) return { ok: false, error: 'ocr_failed', detail: 'no_image' };
+  if (uris.length === 1) return scanVehicleDocument(uris[0], options);
+
+  const combined = await scanCloudManyCached('carte_grise', uris, options.agencyId);
+  if (combined.ok) return { ok: true, fields: normalizeVehicleFields(combined.fields), ...(combined.fromCache ? { fromCache: true } : {}) };
+  if (combined.detail !== LEGACY_SERVER_DETAIL) return { ok: false, error: combined.error, ...(combined.detail ? { detail: combined.detail } : {}) };
+
+  const results = await Promise.all(uris.map((uri) => scanVehicleDocument(uri, options)));
+  const read = results.flatMap((result) => (result.ok ? [result] : []));
+  if (read.length === 0) return results[0] as Extract<ScanVehicleDocumentResult, { ok: false }>;
+  return { ok: true, fields: read.reduce<VehicleOcrFields>((acc, result) => mergeVehicleFields(acc, result.fields), emptyVehicleFields()), ...(read.every((result) => result.fromCache) ? { fromCache: true } : {}) };
+}
 
 const RANK: Record<OcrConfidence, number> = { low: 0, medium: 1, high: 2 };
 

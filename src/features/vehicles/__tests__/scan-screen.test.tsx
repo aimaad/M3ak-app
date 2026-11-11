@@ -40,7 +40,7 @@ jest.mock('expo-haptics', () => ({ impactAsync: async () => undefined, notificat
 jest.mock('@react-native-community/netinfo', () => ({ useNetInfo: () => ({ isConnected: mockState.connected }) }));
 jest.mock('@/features/ocr/hooks', () => ({ useOcrSettings: () => ({ availability: mockState.availability, agencyId: 'a1' }) }));
 jest.mock('@/features/ocr/ocr-inactive-notice', () => ({ OcrInactiveNotice: () => null }));
-jest.mock('@/features/vehicles/ocr', () => ({ ...jest.requireActual('@/features/vehicles/ocr'), scanVehicleDocument: (...args: unknown[]) => mockState.scan(...args) }));
+jest.mock('@/features/vehicles/ocr', () => ({ ...jest.requireActual('@/features/vehicles/ocr'), scanVehicleDocuments: (...args: unknown[]) => mockState.scan(...args) }));
 jest.mock('@/features/vehicles/creation-draft', () => ({ setVehicleCreationDraft: (draft: unknown) => mockState.drafts.push(draft) }));
 jest.mock('@/i18n/use-language', () => ({ useLanguage: () => ({ language: 'fr', t: (key: string, o?: Record<string, unknown>) => mockTranslate(key, o) }) }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
@@ -87,15 +87,15 @@ describe('scanner de la carte grise', () => {
     expect(screen.queryByText(/zones repérées/)).toBeNull();
   });
 
-  it('recto puis verso, puis « Lire les 2 faces » : une seule lecture par face, direction « Carte grise lue »', async () => {
-    mockState.scan.mockResolvedValueOnce(okResult({ immatriculation: field('68013-ب-72') })).mockResolvedValueOnce(okResult({ marque: field('Dacia'), modele: field('Sandero'), carburant: field('diesel') }));
+  it('recto puis verso, puis « Lire les 2 faces » : UNE seule analyse sur les deux photos ensemble, un seul résultat, direction « Carte grise lue »', async () => {
+    mockState.scan.mockResolvedValueOnce(okResult({ immatriculation: field('68013-ب-72'), marque: field('Dacia'), modele: field('Sandero'), carburant: field('diesel') }));
     await render(<ScannerCarteGriseScreen />);
     await shootBoth();
     await fireEvent.press(screen.getByText('Lire les 2 faces'));
-    expect(mockState.scan).toHaveBeenCalledTimes(2);
-    expect(mockState.scan.mock.calls.map((call) => call[0])).toEqual(['file:///photo-1.jpg', 'file:///photo-2.jpg']);
+    expect(mockState.scan).toHaveBeenCalledTimes(1); // pas une lecture par face : une seule, lancée une seule fois
+    expect(mockState.scan.mock.calls[0][0]).toEqual(['file:///photo-1.jpg', 'file:///photo-2.jpg']); // recto puis verso, ensemble
     expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/carte-lue');
-    // La lecture est transmise à l'écran « Carte grise lue » (plaque, marque, modèle, carburant lus ; vraie durée mesurée)
+    // Le résultat unique réunit plaque (recto) et marque, modèle, carburant (verso)
     const session = getScanSession();
     expect(session?.merged.marque.value).toBe('Dacia');
     expect(session?.merged.immatriculation.value).toBe('68013 | ب | 72'); // déjà au format de l'app
@@ -103,14 +103,26 @@ describe('scanner de la carte grise', () => {
     expect(session?.durationMs).toBeGreaterThanOrEqual(0);
   });
 
-  it('le verso est facultatif : « Passer le verso » lit le recto seul', async () => {
+  it('le verso est facultatif : « Passer le verso » lit le recto seul, avec la même analyse', async () => {
     mockState.scan.mockResolvedValue(okResult({ immatriculation: field('68013-ب-72') }));
     await render(<ScannerCarteGriseScreen />);
     await fireEvent.press(screen.getByLabelText('Photographier le recto'));
     await fireEvent.press(await screen.findByText('Passer le verso'));
     expect(mockState.scan).toHaveBeenCalledTimes(1);
+    expect(mockState.scan.mock.calls[0][0]).toEqual(['file:///photo-1.jpg']);
     expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/carte-lue');
     expect(getScanSession()?.scans).toHaveLength(1);
+  });
+
+  it('résultat vide sur les deux faces : traité comme une carte non lue, photos gardées', async () => {
+    mockState.scan.mockResolvedValue(okResult({}));
+    await render(<ScannerCarteGriseScreen />);
+    await shootBoth();
+    await fireEvent.press(screen.getByText('Lire les 2 faces'));
+    expect(await screen.findByText('Carte non lue, reprenez la photo ou saisissez à la main.')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Réessayer'));
+    expect(mockState.scan).toHaveBeenCalledTimes(2);
+    expect(mockState.scan.mock.calls[1][0]).toEqual(['file:///photo-1.jpg', 'file:///photo-2.jpg']);
   });
 
   it('photo illisible : message clair, photos gardées (réessayer relit les mêmes), saisie à la main possible', async () => {
@@ -122,7 +134,7 @@ describe('scanner de la carte grise', () => {
     expect(mockRouter.replace).not.toHaveBeenCalled();
     await fireEvent.press(screen.getByText('Réessayer'));
     expect(mockState.scan).toHaveBeenCalledTimes(2);
-    expect(mockState.scan.mock.calls[1][0]).toBe('file:///photo-1.jpg'); // la photo n'a pas été perdue
+    expect(mockState.scan.mock.calls[1][0]).toEqual(['file:///photo-1.jpg']); // la photo n'a pas été perdue
     await fireEvent.press(await screen.findByText('Saisir à la main'));
     expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/finaliser');
     expect(mockState.drafts.at(-1)).toMatchObject({ source: 'manual' });
