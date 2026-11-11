@@ -45,6 +45,8 @@ const brand = {
   /** Ajout de véhicule : fond plein écran du scanner de carte grise et fond de son panneau du bas. */
   scannerBackground: '#0B0D0E',
   scannerPanel: '#151819',
+  /** Fiche véhicule en retard : fond de la carte d'état (rouge très sombre). */
+  errorDeep: '#3A2228',
 };
 
 const light = {

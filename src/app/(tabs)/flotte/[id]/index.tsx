@@ -1,34 +1,35 @@
 import { useUndo } from '@/components/undo-toast';
 import { router, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, Alert, Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
 import { Card, PressableCard } from '@/components/card';
 import { DocumentPreview } from '@/components/document-preview';
-import { ScreenHeader } from '@/components/screen-header';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { Palette } from '@/constants/theme';
-import { useMyAgency } from '@/features/agency/hooks';
-import { useVehicleRentals } from '@/features/rentals/hooks';
-import { useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
+import { Brand, Palette } from '@/constants/theme';
+import { HText } from '@/features/dashboard/home-ui';
 import { findDocument } from '@/features/storage/documents';
 import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 import { deleteVehiclePhotoFile, VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
-import {
-  useArchiveVehicle,
-  useReactivateVehicle,
-  useUpdateVehiclePhotos,
-  useVehicle,
-} from '@/features/vehicles/hooks';
+import { canSeePrices, formatDayLabel } from '@/features/vehicles/fleet-card';
+import { lateBadgeText, lateDurationText } from '@/features/vehicles/fleet-card-text';
+import { useArchiveVehicle, useReactivateVehicle, useUpdateVehiclePhotos, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
 import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
+import { DetailHeader } from '@/features/vehicles/detail/detail-header';
+import { displayName } from '@/features/vehicles/detail/names';
+import { shareMessage } from '@/features/vehicles/detail/share';
+import { MoreMenu, ReasonSheet } from '@/features/vehicles/detail/sheets';
+import { StateCardView } from '@/features/vehicles/detail/state-card-view';
+import { buildStateCard, statusBadge, type StateAction } from '@/features/vehicles/detail/state-card';
+import { useVehicleDetail } from '@/features/vehicles/detail/use-vehicle-detail';
 import { VEHICLE_DOCUMENT_TYPES, type VehiclePhoto } from '@/features/vehicles/types';
 import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-section-scroll';
-import { VehicleImage } from '@/features/vehicles/vehicle-image';
 import { VehiclePhotoGallery } from '@/features/vehicles/vehicle-photo-gallery';
-import { VehicleStatusBadge } from '@/features/vehicles/vehicle-status-badge';
 import { useLanguage } from '@/i18n/use-language';
 
 const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
@@ -39,31 +40,45 @@ const URGENCY_COLOR: Record<ExpiryUrgency, string> = {
 
 export default function VehicleDetailScreen() {
   const { id, section: sectionParam } = useLocalSearchParams<{ id: string; section?: string }>();
-  const { t } = useLanguage();
-  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll(parseVehicleSection(sectionParam));
-  const agencyQuery = useMyAgency();
-  const { data: vehicle, isLoading, isError } = useVehicle(id);
+  const { t, language } = useLanguage();
+  const insets = useSafeAreaInsets();
+  const { scrollRef, onSectionLayout: onSectionLayoutAuto, onScrollBeginDrag } = useSectionScroll(parseVehicleSection(sectionParam));
+  const detail = useVehicleDetail(id);
+  const { vehicle, rentals, maintenance: maintenanceItems, customers, role, isManager, item, context, now } = detail;
+  const showPrice = canSeePrices(role);
   const updatePhotos = useUpdateVehiclePhotos();
+  const updateStatus = useUpdateVehicleStatus();
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
   const { showUndo } = useUndo();
-  const { data: maintenanceItems = [] } = useVehicleMaintenanceItems(id);
-  const rentalsQuery = useVehicleRentals(id);
-  const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentalsQuery.data ?? []);
+  const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentals);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reasonOpen, setReasonOpen] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
+  const [entretienY, setEntretienY] = useState(0);
+  const onSectionLayout = (name: 'photos' | 'documents' | 'entretien') => (event: Parameters<ReturnType<typeof onSectionLayoutAuto>>[0]) => {
+    if (name === 'entretien') setEntretienY(event.nativeEvent.layout.y);
+    onSectionLayoutAuto(name)(event);
+  };
 
-  const isManager = agencyQuery.data?.role === 'owner' || agencyQuery.data?.role === 'manager';
-  const totalMaintenanceCost = maintenanceItems
-    .filter((item) => item.statut === 'effectuee' && item.cout != null)
-    .reduce((sum, item) => sum + (item.cout ?? 0), 0);
+  const totalMaintenanceCost = maintenanceItems.filter((entry) => entry.statut === 'effectuee' && entry.cout != null).reduce((sum, entry) => sum + (entry.cout ?? 0), 0);
+  const name = vehicle ? displayName(vehicle) : '';
+
+  const card = vehicle && item && context
+    ? buildStateCard({
+        vehicle, item, context, rentals, customers, maintenance: maintenanceItems, role, now,
+        day: (key) => formatDayLabel(key, language, 'short', now),
+        lateBadge: (late) => lateBadgeText(late, t),
+        lateDuration: (late) => lateDurationText(late, t),
+      })
+    : null;
 
   async function handleDeletePhoto(photo: VehiclePhoto) {
     if (!vehicle) return;
     try {
       await deleteVehiclePhotoFile(photo.path);
-      await updatePhotos.mutateAsync({
-        id: vehicle.id,
-        photos: vehicle.photos.filter((p) => p.path !== photo.path),
-      });
+      await updatePhotos.mutateAsync({ id: vehicle.id, photos: vehicle.photos.filter((p) => p.path !== photo.path) });
     } catch {
       Alert.alert(t('common.appName'), t('vehicle.photoDeleteError'));
     }
@@ -75,74 +90,119 @@ export default function VehicleDetailScreen() {
       Alert.alert(t('common.appName'), t('vehicle.archiveBlockedActiveRentals'));
       return;
     }
-    const id = vehicle.id;
+    const vehicleId = vehicle.id;
     // Archive tout de suite (réversible) puis laisse quelques secondes pour annuler.
-    archiveVehicle.mutate(id, {
+    archiveVehicle.mutate(vehicleId, {
       onSuccess: () =>
         showUndo({
           message: t('undoToast.vehicleArchived'),
           actionLabel: t('undoToast.undo'),
-          onUndo: () => reactivateVehicle.mutateAsync(id),
+          onUndo: () => reactivateVehicle.mutateAsync(vehicleId),
           onUndoError: () => Alert.alert(t('common.appName'), t('undoToast.failed')),
         }),
-      onError: (error) =>
-        Alert.alert(t('common.appName'), t(isArchiveBlockedError(error) ? 'vehicle.archiveBlockedActiveRentals' : 'vehicle.archiveError')),
+      onError: (error) => Alert.alert(t('common.appName'), t(isArchiveBlockedError(error) ? 'vehicle.archiveBlockedActiveRentals' : 'vehicle.archiveError')),
     });
   }
 
   function handleReactivate() {
     if (!vehicle) return;
-    reactivateVehicle.mutate(vehicle.id, {
-      onError: () => Alert.alert(t('common.appName'), t('vehicle.archiveError')),
-    });
+    reactivateVehicle.mutate(vehicle.id, { onError: () => Alert.alert(t('common.appName'), t('vehicle.archiveError')) });
   }
 
+  function setStatus(statut: 'disponible' | 'indisponible', motif?: string) {
+    if (!vehicle) return;
+    setStatusError(null);
+    updateStatus.mutate(
+      { id: vehicle.id, statut, motif },
+      {
+        onSuccess: () => setReasonOpen(false),
+        onError: () => (statut === 'indisponible' ? setStatusError(t('vehicleDetail.reason.error')) : Alert.alert(t('common.appName'), t('vehicleDetail.reason.error'))),
+      }
+    );
+  }
+
+  /** Les boutons de la carte d'état : chacun suit l'action choisie par la carte (droits déjà appliqués). */
+  function runAction(action: StateAction) {
+    switch (action.id) {
+      case 'call':
+        if (action.phone) void Linking.openURL(`tel:${action.phone.replace(/[^\d+]/g, '')}`).catch(() => action.href && router.push(action.href as never));
+        else if (action.href) router.push(action.href as never);
+        return;
+      case 'seeMaintenance':
+        scrollRef.current?.scrollTo({ y: Math.max(0, entretienY - 12), animated: true });
+        return;
+      case 'makeAvailable':
+        setStatus('disponible');
+        return;
+      case 'makeUnavailable':
+        setStatusError(null);
+        setReasonOpen(true);
+        return;
+      default:
+        if (action.href) router.push(action.href as never);
+    }
+  }
+
+  function shareSheet() {
+    if (!vehicle) return;
+    void Share.share({ message: shareMessage(vehicle, { showPrice, perDay: t('flotte.perDay') }) }).catch(() => undefined);
+  }
+
+  const goEdit = () => vehicle && router.push(`/flotte/${vehicle.id}/modifier`);
+  const goPhotos = () => vehicle && router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'photos' } });
+
   return (
-    <ThemedView className="flex-1">
-      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader
-          title={vehicle ? `${vehicle.marque} ${vehicle.modele}` : t('vehicle.detailsTitle')}
-          showBack
-          right={
-            vehicle ? (
-              <Pressable onPress={() => router.push(`/flotte/${vehicle.id}/modifier`)} hitSlop={8}>
-                <ThemedText type="small" themeColor="primary">
-                  {t('vehicle.edit')}
-                </ThemedText>
-              </Pressable>
-            ) : undefined
-          }
-        />
+    <ThemedView className="flex-1" style={{ backgroundColor: Palette.surface }}>
+      <StatusBar style="light" />
+      {detail.isLoading ? (
+        <View className="flex-1 items-center justify-center" style={{ backgroundColor: Brand.graphite }}>
+          <ActivityIndicator color={Brand.orange} />
+        </View>
+      ) : detail.isError ? (
+        <View className="flex-1 items-center justify-center gap-4 px-8" style={{ backgroundColor: Brand.graphite }}>
+          <HText color={Brand.textOnDark} style={{ textAlign: 'center' }}>
+            {t('vehicleDetail.loadError')}
+          </HText>
+          <Pressable onPress={detail.refetch} accessibilityRole="button" style={{ minHeight: 48, borderRadius: 24, paddingHorizontal: 22, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
+            <HText weight="semibold" color={Brand.white}>
+              {t('vehicleDetail.retry')}
+            </HText>
+          </Pressable>
+        </View>
+      ) : !vehicle ? (
+        <View className="flex-1 items-center justify-center px-8" style={{ backgroundColor: Brand.graphite }}>
+          <HText color={Brand.textOnDark}>{t('vehicleDetail.notFound')}</HText>
+        </View>
+      ) : (
+        <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+          <DetailHeader
+            vehicle={vehicle}
+            badge={item ? statusBadge(item) : null}
+            photoCount={vehicle.photos.length}
+            onBack={() => (router.canGoBack() ? router.back() : router.replace('/flotte'))}
+            onShare={shareSheet}
+            onMore={() => setMenuOpen(true)}
+            onPhotos={goPhotos}
+          >
+            {vehicle.archivedAt ? (
+              <View style={{ borderRadius: 22, padding: 16, gap: 12, backgroundColor: Brand.surfaceOnDark, borderWidth: 1, borderColor: Brand.strokeOnDark }}>
+                <HText size={14} color={Brand.textOnDark} style={{ lineHeight: 20 }}>
+                  {t('vehicleDetail.archivedBanner')}
+                </HText>
+                {role === 'owner' ? (
+                  <Pressable onPress={handleReactivate} accessibilityRole="button" style={{ minHeight: 52, borderRadius: 26, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
+                    <HText weight="semibold" color={Brand.white}>
+                      {t('vehicleDetail.restore')}
+                    </HText>
+                  </Pressable>
+                ) : null}
+              </View>
+            ) : card ? (
+              <StateCardView card={card} name={name} onAction={runAction} />
+            ) : null}
+          </DetailHeader>
 
-        {isLoading ? (
-          <View className="flex-1 items-center justify-center">
-            <ActivityIndicator color={Palette.primary} />
-          </View>
-        ) : isError ? (
-          <View className="flex-1 items-center justify-center px-8">
-            <ThemedText type="default" themeColor="textSecondary" className="text-center">
-              {t('vehicle.loadError')}
-            </ThemedText>
-          </View>
-        ) : !vehicle ? (
-          <View className="flex-1 items-center justify-center px-8">
-            <ThemedText type="default" themeColor="textSecondary">
-              {t('vehicle.notFound')}
-            </ThemedText>
-          </View>
-        ) : (
-          <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerClassName="gap-6 px-6 pb-10">
-            <VehicleImage vehicle={vehicle} height={176} radius={24} />
-
-            <View className="flex-row items-center gap-2">
-              <VehicleStatusBadge status={vehicle.statut} />
-              {vehicle.archivedAt ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.archivedBadge')}
-                </ThemedText>
-              ) : null}
-            </View>
-
+          <View className="gap-6 px-6 pb-10 pt-6">
             <View>
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.infoSection')}
@@ -185,6 +245,7 @@ export default function VehicleDetailScreen() {
               </Card>
             </View>
 
+            {showPrice ? (
             <View>
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.sections.tarification')}
@@ -208,6 +269,7 @@ export default function VehicleDetailScreen() {
                 />
               </Card>
             </View>
+            ) : null}
 
             {vehicle.description ? (
               <View>
@@ -318,9 +380,19 @@ export default function VehicleDetailScreen() {
                 onPress={vehicle.archivedAt ? handleReactivate : handleArchive}
               />
             ) : null}
-          </ScrollView>
-        )}
-      </SafeAreaView>
+          </View>
+        </ScrollView>
+      )}
+
+      <MoreMenu
+        visible={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        items={[
+          { key: 'edit', label: t('vehicleDetail.menu.edit'), onPress: goEdit },
+          ...(isManager && vehicle && !vehicle.archivedAt ? [{ key: 'archive', label: t('vehicleDetail.menu.archive'), onPress: handleArchive, danger: true }] : []),
+        ]}
+      />
+      <ReasonSheet visible={reasonOpen} onClose={() => setReasonOpen(false)} onConfirm={(reason) => setStatus('indisponible', reason)} busy={updateStatus.isPending} error={statusError} />
     </ThemedView>
   );
 }

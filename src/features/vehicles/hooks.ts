@@ -9,6 +9,7 @@ import {
   updateVehicle,
   updateVehicleDocuments,
   updateVehiclePhotos,
+  updateVehicleStatus,
 } from './api';
 import type { Vehicle, VehicleDocument, VehicleInput, VehiclePhoto } from './types';
 
@@ -56,6 +57,19 @@ function useVehicleStatusMutation(mutationFn: (id: string) => Promise<Vehicle>) 
 
   return useMutation({
     mutationFn,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: vehiclesKey });
+      queryClient.invalidateQueries({ queryKey: vehicleKey(data.id) });
+    },
+  });
+}
+
+/** Rendre un véhicule disponible / indisponible (motif facultatif). */
+export function useUpdateVehicleStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, statut, motif }: { id: string; statut: VehicleInput['statut']; motif?: string | null }) => updateVehicleStatus(id, statut, motif),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: vehiclesKey });
       queryClient.invalidateQueries({ queryKey: vehicleKey(data.id) });

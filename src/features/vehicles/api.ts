@@ -33,6 +33,7 @@ type VehicleRow = {
   kilometrage: number;
   niveau_carburant: number | null;
   statut: Vehicle['statut'];
+  statut_motif?: string | null;
   prix_jour: number;
   prix_semaine: number | null;
   prix_mois: number | null;
@@ -66,6 +67,7 @@ function fromRow(row: VehicleRow): Vehicle {
     kilometrage: row.kilometrage,
     niveauCarburant: row.niveau_carburant,
     statut: row.statut,
+    statutMotif: row.statut_motif ?? null,
     prixJour: Number(row.prix_jour),
     prixSemaine: row.prix_semaine !== null ? Number(row.prix_semaine) : null,
     prixMois: row.prix_mois !== null ? Number(row.prix_mois) : null,
@@ -175,6 +177,18 @@ export async function createVehicle(agencyId: string, input: VehicleInput): Prom
     .select()
     .single();
 
+  if (error) throw error;
+  return fromRow(data as VehicleRow);
+}
+
+/**
+ * Rend un véhicule disponible ou indisponible (avec un motif facultatif de 200 caractères). Seuls les statuts réglables à la main sont permis ;
+ * le motif n'a de sens que pour « indisponible » (la base l'efface sinon).
+ */
+export async function updateVehicleStatus(id: string, statut: VehicleInput['statut'], motif?: string | null): Promise<Vehicle> {
+  assertManuallySettableStatus(statut);
+  const reason = statut === 'indisponible' ? (motif?.trim().slice(0, 200) || null) : null;
+  const { data, error } = await getSupabase().from('vehicles').update({ statut, statut_motif: reason }).eq('id', id).select().single();
   if (error) throw error;
   return fromRow(data as VehicleRow);
 }

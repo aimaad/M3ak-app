@@ -3309,5 +3309,87 @@
       "inAgency": "Ce véhicule existe déjà dans votre agence.",
       "hint": "Vous ne pouvez pas l'ajouter une deuxième fois. Demandez au responsable de cette filiale."
     }
+  },
+  "vehicleDetail": {
+    "back": "Retour à Ma flotte",
+    "share": "Partager la fiche",
+    "more": "Plus d'actions : modifier, archiver",
+    "photosButton": "Photos",
+    "photosA11yNone": "Gérer les photos, aucune photo",
+    "photosA11yOne": "Gérer les photos, 1 photo",
+    "photosA11yMany": "Gérer les photos, {{count}} photos",
+    "pagerA11y": "Photo {{n}} sur {{total}}",
+    "photoAlt": "Photo {{angle}} de la {{name}}",
+    "photoAltNoAngle": "Photo de la {{name}}",
+    "close": "Fermer",
+    "loadError": "Impossible de charger ce véhicule.",
+    "retry": "Réessayer",
+    "notFound": "Véhicule introuvable.",
+    "angles": {
+      "avant": "avant",
+      "arriere": "arrière",
+      "cote_gauche": "côté gauche",
+      "cote_droit": "côté droit",
+      "interieur": "intérieur",
+      "coffre": "coffre",
+      "autre": "supplémentaire"
+    },
+    "menu": {
+      "edit": "Modifier",
+      "archive": "Archiver ce véhicule"
+    },
+    "action": {
+      "rent": "Louer",
+      "extend": "Prolonger",
+      "call": "Appeler {{name}}",
+      "callNoName": "Appeler le client",
+      "inspect": "Démarrer l'inspection",
+      "seeMaintenance": "Voir l'entretien",
+      "finishMaintenance": "Terminer l'entretien",
+      "makeAvailable": "Rendre disponible",
+      "makeUnavailable": "Rendre indisponible",
+      "a11y": "{{action}} : {{name}}"
+    },
+    "state": {
+      "nextDeparture": "Prochain départ {{date}} · {{name}} pour {{days}} jours",
+      "nextDepartureOne": "Prochain départ {{date}} · {{name}} pour 1 jour",
+      "nextDepartureNoName": "Prochain départ {{date}} pour {{days}} jours",
+      "nextDepartureNoNameOne": "Prochain départ {{date}} pour 1 jour",
+      "rentedTitle": "Chez {{name}} · retour {{date}}",
+      "rentedTitleNoName": "En location · retour {{date}}",
+      "rentedDetail": "Départ {{date}} · {{days}} jours",
+      "rentedDetailOne": "Départ {{date}} · 1 jour",
+      "progressDay": "J{{n}} sur {{total}}",
+      "progressReturn": "Retour {{date}}",
+      "progressDue": "Retour prévu {{date}}",
+      "raw": "{{text}}",
+      "lateTitle": "{{name}} devait la rendre {{date}}",
+      "lateTitleNoName": "Elle devait être rendue {{date}}",
+      "lateDetail": "{{duration}} de retard · location non prolongée",
+      "inspectTitle": "Rendue {{date}} par {{name}}",
+      "inspectTitleNoName": "Rendue {{date}}",
+      "inspectTitleNoRental": "À inspecter",
+      "inspectDetailToday": "En attente d'inspection depuis aujourd'hui",
+      "inspectDetailOne": "En attente d'inspection depuis 1 jour",
+      "inspectDetailMany": "En attente d'inspection depuis {{days}} jours",
+      "preparationTitle": "En préparation",
+      "preparationDetail": "Pas encore prête pour la location",
+      "maintenanceTitle": "Au garage",
+      "maintenanceReturn": "Au garage · retour prévu {{date}}",
+      "maintenancePlanned": "Entretien prévu aujourd'hui",
+      "unavailableTitle": "Indisponible"
+    },
+    "reason": {
+      "title": "Rendre indisponible",
+      "body": "Elle ne sera plus proposée à la location tant que vous ne la rendrez pas disponible.",
+      "label": "Motif (facultatif)",
+      "placeholder": "Ex. pare-brise cassé",
+      "confirm": "Rendre indisponible",
+      "cancel": "Annuler",
+      "error": "Impossible de changer le statut pour l'instant."
+    },
+    "archivedBadge": "Archivé",
+    "archivedBanner": "Ce véhicule est archivé : il n'apparaît plus dans la flotte.",
+    "restore": "Restaurer"
   }
 }

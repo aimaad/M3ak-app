@@ -73,9 +73,15 @@ export type PendingVehicleDocument = {
   expiresAt: string | null;
 };
 
+/** Angle d'une photo : les 6 angles conseillés (un seul chacun) et « autre » (photos libres : dommage, détail…). Les anciennes photos n'ont pas d'angle. */
+export type PhotoAngle = 'avant' | 'arriere' | 'cote_gauche' | 'cote_droit' | 'interieur' | 'coffre' | 'autre';
+export const NAMED_PHOTO_ANGLES: Exclude<PhotoAngle, 'autre'>[] = ['avant', 'arriere', 'cote_gauche', 'cote_droit', 'interieur', 'coffre'];
+export const MAX_VEHICLE_PHOTOS = 12;
+
 export type VehiclePhoto = {
   path: string;
   uploadedAt: string;
+  angle?: PhotoAngle;
 };
 
 export type Vehicle = {
@@ -100,6 +106,8 @@ export type Vehicle = {
   kilometrage: number;
   niveauCarburant: number | null;
   statut: VehicleStatus;
+  /** Motif facultatif quand le véhicule est « indisponible » (effacé par la base dès qu'il ne l'est plus). */
+  statutMotif?: string | null;
   prixJour: number;
   prixSemaine: number | null;
   prixMois: number | null;

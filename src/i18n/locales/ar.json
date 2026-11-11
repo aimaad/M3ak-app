@@ -3413,5 +3413,87 @@
       "inAgency": "هاد الطوموبيل راه كاينة فالوكالة ديالك.",
       "hint": "ما يمكنش تزيدها مرة أخرى. سول المسؤول ديال هاد الفرع."
     }
+  },
+  "vehicleDetail": {
+    "back": "رجوع للأسطول",
+    "share": "شارك الملف",
+    "more": "إجراءات أخرى: تعديل، أرشفة",
+    "photosButton": "الصور",
+    "photosA11yNone": "تدبير الصور، ما كاين حتى صورة",
+    "photosA11yOne": "تدبير الصور، صورة وحدة",
+    "photosA11yMany": "تدبير الصور، {{count}} صور",
+    "pagerA11y": "الصورة {{n}} من {{total}}",
+    "photoAlt": "صورة {{angle}} ديال {{name}}",
+    "photoAltNoAngle": "صورة ديال {{name}}",
+    "close": "سد",
+    "loadError": "ما قدرناش نحملو هاد الطوموبيل.",
+    "retry": "عاود",
+    "notFound": "الطوموبيل ما لقيناهاش.",
+    "angles": {
+      "avant": "من القدام",
+      "arriere": "من الور",
+      "cote_gauche": "الجنب اليسار",
+      "cote_droit": "الجنب اليمين",
+      "interieur": "من الداخل",
+      "coffre": "الكوفر",
+      "autre": "إضافية"
+    },
+    "menu": {
+      "edit": "عدل",
+      "archive": "أرشف هاد الطوموبيل"
+    },
+    "action": {
+      "rent": "كري",
+      "extend": "مدد",
+      "call": "اتصل بـ {{name}}",
+      "callNoName": "اتصل بالكليان",
+      "inspect": "بدا الفحص",
+      "seeMaintenance": "شوف الصيانة",
+      "finishMaintenance": "سالي الصيانة",
+      "makeAvailable": "خليها متاحة",
+      "makeUnavailable": "خليها غير متاحة",
+      "a11y": "{{action}}: {{name}}"
+    },
+    "state": {
+      "nextDeparture": "الخروج الجاي {{date}} · {{name}} لمدة {{days}} أيام",
+      "nextDepartureOne": "الخروج الجاي {{date}} · {{name}} لمدة نهار",
+      "nextDepartureNoName": "الخروج الجاي {{date}} لمدة {{days}} أيام",
+      "nextDepartureNoNameOne": "الخروج الجاي {{date}} لمدة نهار",
+      "rentedTitle": "عند {{name}} · الرجوع {{date}}",
+      "rentedTitleNoName": "مكراية · الرجوع {{date}}",
+      "rentedDetail": "الخروج {{date}} · {{days}} أيام",
+      "rentedDetailOne": "الخروج {{date}} · نهار",
+      "progressDay": "ن{{n}} من {{total}}",
+      "progressReturn": "الرجوع {{date}}",
+      "progressDue": "الرجوع المبرمج {{date}}",
+      "raw": "{{text}}",
+      "lateTitle": "{{name}} كان خاصو يرجعها {{date}}",
+      "lateTitleNoName": "كان خاصها ترجع {{date}}",
+      "lateDetail": "{{duration}} ديال التأخير · الكراء ما تمددش",
+      "inspectTitle": "رجعات {{date}} من عند {{name}}",
+      "inspectTitleNoName": "رجعات {{date}}",
+      "inspectTitleNoRental": "خاصها فحص",
+      "inspectDetailToday": "كتسنى الفحص من اليوم",
+      "inspectDetailOne": "كتسنى الفحص من نهار",
+      "inspectDetailMany": "كتسنى الفحص من {{days}} أيام",
+      "preparationTitle": "قيد التحضير",
+      "preparationDetail": "باقا ماواجدش للكراء",
+      "maintenanceTitle": "عند الميكانيسيان",
+      "maintenanceReturn": "عند الميكانيسيان · الرجوع المبرمج {{date}}",
+      "maintenancePlanned": "صيانة مبرمجة اليوم",
+      "unavailableTitle": "غير متاحة"
+    },
+    "reason": {
+      "title": "خليها غير متاحة",
+      "body": "ما غتبقاش كتعرض للكراء حتى ترجعها متاحة.",
+      "label": "السبب (اختياري)",
+      "placeholder": "مثلا الزجاج مكسور",
+      "confirm": "خليها غير متاحة",
+      "cancel": "إلغاء",
+      "error": "ما قدرناش نبدلو الحالة دابا."
+    },
+    "archivedBadge": "مؤرشف",
+    "archivedBanner": "هاد الطوموبيل مؤرشفة: ما بقاتش كتبان فالأسطول.",
+    "restore": "رجّعها"
   }
 }

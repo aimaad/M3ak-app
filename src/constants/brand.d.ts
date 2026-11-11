@@ -18,6 +18,7 @@ export declare const brand: {
   readonly orangeUrgentText: string;
   readonly scannerBackground: string;
   readonly scannerPanel: string;
+  readonly errorDeep: string;
 };
 
 export type ThemeTokens = {
