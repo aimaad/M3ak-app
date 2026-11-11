@@ -20,6 +20,7 @@ const mockState = {
   statusCalls: [] as unknown[],
   archived: [] as string[],
   reactivated: [] as string[],
+  payments: [] as unknown[],
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true };
 const base = { id: 'v1', agencyId: 'a1', branchId: null, marque: 'DACIA', modele: 'LOGAN', immatriculation: '8921 | ب | 14', vin: null, categorie: 'economique', carburant: 'diesel', annee: 2021, kilometrage: 40000, prixJour: 500, prixSemaine: null, prixMois: null, finition: null, niveauCarburant: null, description: null, photoUrl: null, photos: [], documents: [], archivedAt: null, createdAt: at(-100), updatedAt: at(-1), transmission: null, couleur: 'Blanc', nombrePlaces: 5 };
@@ -36,6 +37,7 @@ jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { agen
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => ({ data: [{ id: 'c1', nomComplet: 'FOUAD BENNANI', telephone: '+212 6 11 22 33 44' }] }) }));
 jest.mock('@/features/rentals/hooks', () => ({ useVehicleRentals: () => ({ data: mockState.rentals, refetch: jest.fn() }) }));
 jest.mock('@/features/maintenance/hooks', () => ({ useVehicleMaintenanceItems: () => ({ data: mockState.maintenance, refetch: jest.fn() }) }));
+jest.mock('@/features/payments/hooks', () => ({ useAllPayments: (enabled = true) => ({ data: enabled ? mockState.payments : undefined }) }));
 jest.mock('@/features/vehicles/hooks', () => ({
   useVehicle: () => ({ data: mockState.vehicle, isLoading: false, isError: false, refetch: jest.fn() }),
   useUpdateVehiclePhotos: () => ({ mutateAsync: jest.fn() }),
@@ -59,7 +61,7 @@ const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -182,7 +184,7 @@ describe('fiche véhicule', () => {
     await render(<VehicleDetailScreen />);
     await fireEvent.press(screen.getByLabelText("Plus d'actions : modifier, archiver"));
     expect((await screen.findAllByText('Archiver ce véhicule', hidden)).length).toBeGreaterThan(0);
-    await fireEvent.press(screen.getByText('Modifier', hidden));
+    await fireEvent.press(screen.getAllByText('Modifier', hidden).at(-1) as never);
     expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
   });
 
@@ -207,5 +209,55 @@ describe('fiche véhicule', () => {
     mockState.vehicle = { ...base, statut: 'disponible', archivedAt: at(-3) };
     await render(<VehicleDetailScreen />);
     expect(screen.queryByText('Restaurer')).toBeNull();
+  });
+
+  describe('chiffres clés et 14 jours', () => {
+    const finished = () => rentalRow({ id: 'done', statut: 'terminee', dateDebutPrevue: at(-5), dateFinPrevue: at(-3), dateDepartReel: at(-5), dateRetourReel: at(-3), prixTotal: 1500 });
+
+    it('propriétaire : revenus 30 jours, encaissé réel, prix par jour, occupation et locations', async () => {
+      mockState.rentals = [finished()];
+      mockState.payments = [{ id: 'p1', rentalId: 'done', montant: 1000, statut: 'paye', datePaiement: at(-3), methode: 'especes', agencyId: 'a1' }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('REVENUS · 30 JOURS')).toBeTruthy();
+      expect(screen.getByText(/^1.?500$/)).toBeTruthy();
+      expect(screen.getByText(/^Encaissé : 1.?000 MAD$/)).toBeTruthy();
+      expect(screen.getByText('Prix par jour')).toBeTruthy();
+      expect(screen.getByText('Occupation')).toBeTruthy();
+      expect(screen.getByText("Locations depuis l'ajout")).toBeTruthy();
+    });
+
+    it('période sans revenu : message clair, pas de variation', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('Aucun revenu sur 30 jours')).toBeTruthy();
+      expect(screen.queryByText(/vs période précédente/)).toBeNull();
+    });
+
+    it('employé : ni revenus, ni encaissé, ni prix ; occupation et locations restent', async () => {
+      mockState.role = 'employee';
+      mockState.rentals = [finished()];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText('REVENUS · 30 JOURS')).toBeNull();
+      expect(screen.queryByText('Prix par jour')).toBeNull();
+      expect(screen.queryByText(/Encaissé/)).toBeNull();
+      expect(screen.getByText('Occupation')).toBeTruthy();
+      expect(screen.getByText("Locations depuis l'ajout")).toBeTruthy();
+    });
+
+    it('14 jours : pas de « Bloquer des dates » ; un jour libre ouvre une location à partir de ce jour', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('14 prochains jours')).toBeTruthy();
+      expect(screen.queryByText(/Bloquer/)).toBeNull();
+      const day = screen.getAllByLabelText(/Libre\. Louer à partir de ce jour$/)[0];
+      await fireEvent.press(day);
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/locations/nouveau', params: { vehicleId: 'v1', date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) } });
+    });
+
+    it('14 jours : un jour réservé ouvre la location ; le résumé est lu à voix haute', async () => {
+      mockState.rentals = [rentalRow({ id: 'res', statut: 'confirmee', dateDebutPrevue: at(3), dateFinPrevue: at(5), dateDepartReel: null })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getAllByLabelText(/: Loué$/)[0]);
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/locations/[id]', params: { id: 'res' } });
+      expect(screen.getByLabelText(/^Libre du .* au .*\. Loué du .* au .*\. Libre du .* au /)).toBeTruthy();
+    });
   });
 });

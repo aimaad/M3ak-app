@@ -13,8 +13,8 @@ export function usePaymentsForRental(rentalId: string | undefined) {
   });
 }
 
-export function useAllPayments() {
-  return useQuery({ queryKey: ['payments', 'all'], queryFn: listAllPayments });
+export function useAllPayments(enabled = true) {
+  return useQuery({ queryKey: ['payments', 'all'], queryFn: listAllPayments, enabled });
 }
 
 export function useCreatePayment() {

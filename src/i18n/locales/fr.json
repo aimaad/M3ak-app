@@ -3390,6 +3390,35 @@
     },
     "archivedBadge": "Archivé",
     "archivedBanner": "Ce véhicule est archivé : il n'apparaît plus dans la flotte.",
-    "restore": "Restaurer"
+    "restore": "Restaurer",
+    "figures": {
+      "revenue": "Revenus · 30 jours",
+      "currency": "MAD",
+      "variationUp": "+{{n}} % vs période précédente",
+      "variationDown": "−{{n}} % vs période précédente",
+      "variationFlat": "Stable vs période précédente",
+      "noRevenue": "Aucun revenu sur 30 jours",
+      "cashed": "Encaissé : {{amount}} MAD",
+      "curveA11y": "Revenus des 6 derniers mois : de {{from}} à {{to}} MAD",
+      "revenueA11y": "Revenus sur 30 jours : {{amount}} MAD",
+      "occupation": "Occupation",
+      "occupationSub": "30 derniers jours",
+      "occupationA11y": "Occupation sur 30 jours : {{percent}} %",
+      "rentals": "Locations depuis l'ajout",
+      "pricePerDay": "Prix par jour",
+      "priceEdit": "Modifier le prix"
+    },
+    "calendar": {
+      "title": "14 prochains jours",
+      "free": "Libre",
+      "rented": "Loué",
+      "immobilised": "Immobilisé",
+      "late": "En retard",
+      "rentFrom": "Louer à partir de ce jour",
+      "dayA11y": "{{day}} : {{state}}",
+      "summaryRun": "{{state}} du {{from}} au {{to}}",
+      "summaryDay": "{{state}} le {{day}}",
+      "summaryAll": "{{state}} pendant les 14 jours"
+    }
   }
 }

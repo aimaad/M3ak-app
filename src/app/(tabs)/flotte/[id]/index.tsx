@@ -1,7 +1,7 @@
 import { useUndo } from '@/components/undo-toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -16,10 +16,13 @@ import { HText } from '@/features/dashboard/home-ui';
 import { findDocument } from '@/features/storage/documents';
 import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 import { deleteVehiclePhotoFile, VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
-import { canSeePrices, formatDayLabel } from '@/features/vehicles/fleet-card';
+import { useAllPayments } from '@/features/payments/hooks';
+import { canSeePrices, formatDayLabel, occupancyByVehicle } from '@/features/vehicles/fleet-card';
 import { lateBadgeText, lateDurationText } from '@/features/vehicles/fleet-card-text';
 import { useArchiveVehicle, useReactivateVehicle, useUpdateVehiclePhotos, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
 import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
+import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
+import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-view';
 import { DetailHeader } from '@/features/vehicles/detail/detail-header';
 import { displayName } from '@/features/vehicles/detail/names';
 import { shareMessage } from '@/features/vehicles/detail/share';
@@ -51,6 +54,19 @@ export default function VehicleDetailScreen() {
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
   const { showUndo } = useUndo();
+  const paymentsQuery = useAllPayments(showPrice);
+  const figures = useMemo(() => {
+    if (!vehicle) return null;
+    return {
+      occupation: occupancyByVehicle(rentals, now).get(vehicle.id) ?? 0,
+      rentals: rentalsSinceAdded(rentals),
+      revenue: revenueLast30(rentals, now),
+      curve: monthlyRevenue(rentals, now),
+      cashed: cashedLast30(paymentsQuery.data ?? [], rentals, now),
+      cashedKnown: paymentsQuery.data !== undefined,
+      days: vehicle.archivedAt ? [] : calendarDays({ vehicle, rentals, maintenance: maintenanceItems, now }),
+    };
+  }, [vehicle, rentals, maintenanceItems, now, paymentsQuery.data]);
   const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentals);
   const [menuOpen, setMenuOpen] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
@@ -148,6 +164,12 @@ export default function VehicleDetailScreen() {
     void Share.share({ message: shareMessage(vehicle, { showPrice, perDay: t('flotte.perDay') }) }).catch(() => undefined);
   }
 
+  function openCalendarTap(tap: NonNullable<CalendarTap>) {
+    if (!vehicle) return;
+    if (tap.type === 'rental') router.push({ pathname: '/locations/[id]', params: { id: tap.rentalId } });
+    else router.push({ pathname: '/locations/nouveau', params: { vehicleId: vehicle.id, date: tap.day } });
+  }
+
   const goEdit = () => vehicle && router.push(`/flotte/${vehicle.id}/modifier`);
   const goPhotos = () => vehicle && router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'photos' } });
 
@@ -203,6 +225,16 @@ export default function VehicleDetailScreen() {
           </DetailHeader>
 
           <View className="gap-6 px-6 pb-10 pt-6">
+            {figures ? (
+              <>
+                <KeyFigures
+                  occupation={figures.occupation}
+                  rentals={figures.rentals}
+                  money={showPrice ? { revenue: figures.revenue, curve: figures.curve, cashed: figures.cashedKnown ? figures.cashed : null, pricePerDay: vehicle.prixJour, onEditPrice: goEdit } : undefined}
+                />
+                <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
+              </>
+            ) : null}
             <View>
               <ThemedText type="smallBold" className="mb-2">
                 {t('vehicle.infoSection')}

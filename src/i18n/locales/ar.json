@@ -3494,6 +3494,35 @@
     },
     "archivedBadge": "مؤرشف",
     "archivedBanner": "هاد الطوموبيل مؤرشفة: ما بقاتش كتبان فالأسطول.",
-    "restore": "رجّعها"
+    "restore": "رجّعها",
+    "figures": {
+      "revenue": "الإيرادات · 30 يومًا",
+      "currency": "درهم",
+      "variationUp": "+{{n}}٪ مقارنة بالفترة السابقة",
+      "variationDown": "−{{n}}٪ مقارنة بالفترة السابقة",
+      "variationFlat": "مستقر مقارنة بالفترة السابقة",
+      "noRevenue": "لا إيرادات خلال 30 يومًا",
+      "cashed": "المحصَّل: {{amount}} درهم",
+      "curveA11y": "إيرادات آخر 6 أشهر: من {{from}} إلى {{to}} درهم",
+      "revenueA11y": "الإيرادات خلال 30 يومًا: {{amount}} درهم",
+      "occupation": "نسبة الإشغال",
+      "occupationSub": "آخر 30 يومًا",
+      "occupationA11y": "نسبة الإشغال خلال 30 يومًا: {{percent}}٪",
+      "rentals": "عدد الكراءات منذ الإضافة",
+      "pricePerDay": "السعر لليوم",
+      "priceEdit": "تعديل السعر"
+    },
+    "calendar": {
+      "title": "الأيام الـ14 القادمة",
+      "free": "متاحة",
+      "rented": "مكراة",
+      "immobilised": "متوقفة",
+      "late": "متأخرة",
+      "rentFrom": "كراء ابتداءً من هذا اليوم",
+      "dayA11y": "{{day}}: {{state}}",
+      "summaryRun": "{{state}} من {{from}} إلى {{to}}",
+      "summaryDay": "{{state}} يوم {{day}}",
+      "summaryAll": "{{state}} طوال الأيام الـ14"
+    }
   }
 }
