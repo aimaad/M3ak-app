@@ -1,8 +1,11 @@
-import { uploadFile } from '@/features/storage/api';
+import * as ImageManipulator from 'expo-image-manipulator';
+
+import { uploadFile, uploadFileWithProgress } from '@/features/storage/api';
 import { getSupabase } from '@/lib/supabase';
 
 import { SYSTEM_MANAGED_STATUSES } from './types';
 import type {
+  PhotoAngle,
   Vehicle,
   VehicleDocument,
   VehicleDocumentType,
@@ -283,6 +286,35 @@ export async function uploadVehiclePhoto(
   await uploadFile(VEHICLE_PHOTOS_BUCKET, path, localUri, contentType);
 
   return { path, uploadedAt: new Date().toISOString() };
+}
+
+/** Côté le plus long d'une photo de véhicule envoyée : assez net pour la fiche et la galerie, léger pour une connexion moyenne. */
+export const VEHICLE_PHOTO_MAX_SIDE = 1600;
+
+/** Photo réduite (1600 px, JPEG 0,8) ; si la réduction échoue, la photo d'origine est envoyée telle quelle. */
+export async function prepareVehiclePhoto(localUri: string): Promise<string> {
+  try {
+    const info = await ImageManipulator.manipulateAsync(localUri, [], {});
+    const actions = Math.max(info.width, info.height) > VEHICLE_PHOTO_MAX_SIDE ? [{ resize: info.width >= info.height ? { width: VEHICLE_PHOTO_MAX_SIDE } : { height: VEHICLE_PHOTO_MAX_SIDE } }] : [];
+    return (await ImageManipulator.manipulateAsync(localUri, actions, { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG })).uri;
+  } catch {
+    return localUri;
+  }
+}
+
+/** Envoie la photo (réduite) avec la progression et renvoie l'entrée à ajouter à la liste, avec son angle. */
+export async function uploadVehiclePhotoWithAngle(
+  agencyId: string,
+  vehicleId: string,
+  localUri: string,
+  angle: PhotoAngle,
+  onProgress: (fraction: number) => void,
+  signal?: AbortSignal
+): Promise<VehiclePhoto> {
+  const prepared = await prepareVehiclePhoto(localUri);
+  const path = `${agencyId}/${vehicleId}/photo-${Date.now()}.jpg`;
+  await uploadFileWithProgress(VEHICLE_PHOTOS_BUCKET, path, prepared, 'image/jpeg', (progress) => onProgress(progress.fraction), signal);
+  return { path, uploadedAt: new Date().toISOString(), angle };
 }
 
 export async function deleteVehiclePhotoFile(path: string): Promise<void> {

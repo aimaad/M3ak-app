@@ -47,6 +47,15 @@ const brand = {
   scannerPanel: '#151819',
   /** Fiche véhicule en retard : fond de la carte d'état (rouge très sombre). */
   errorDeep: '#3A2228',
+  /** Écran Photos du véhicule (plein écran sombre) : fond, emplacement vide, pointillés, contours, « Principale », « Supprimer ». */
+  photoScreenBackground: '#161A1B',
+  slotEmptyOnDark: '#1D2122',
+  slotDashOnDark: '#4A5154',
+  slotIconOnDark: '#8A9193',
+  panelStrokeOnDark: '#343B3E',
+  mainFillOnDark: '#3A3220',
+  dangerFillOnDark: '#2A1E21',
+  dangerStrokeOnDark: '#5A2A33',
 };
 
 const light = {

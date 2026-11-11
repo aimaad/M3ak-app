@@ -19,6 +19,14 @@ export declare const brand: {
   readonly scannerBackground: string;
   readonly scannerPanel: string;
   readonly errorDeep: string;
+  readonly photoScreenBackground: string;
+  readonly slotEmptyOnDark: string;
+  readonly slotDashOnDark: string;
+  readonly slotIconOnDark: string;
+  readonly panelStrokeOnDark: string;
+  readonly mainFillOnDark: string;
+  readonly dangerFillOnDark: string;
+  readonly dangerStrokeOnDark: string;
 };
 
 export type ThemeTokens = {

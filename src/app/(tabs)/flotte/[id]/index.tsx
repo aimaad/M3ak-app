@@ -11,11 +11,10 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Palette } from '@/constants/theme';
 import { HText } from '@/features/dashboard/home-ui';
-import { deleteVehiclePhotoFile } from '@/features/vehicles/api';
 import { useAllPayments } from '@/features/payments/hooks';
 import { canSeePrices, formatDayLabel, occupancyByVehicle } from '@/features/vehicles/fleet-card';
 import { lateBadgeText, lateDurationText } from '@/features/vehicles/fleet-card-text';
-import { useArchiveVehicle, useReactivateVehicle, useUpdateVehiclePhotos, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
+import { useArchiveVehicle, useReactivateVehicle, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
 import { archiveBlock, blockingCountFromError, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
 import { archiveReasonText, ArchiveSection } from '@/features/vehicles/detail/archive-section';
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
@@ -32,9 +31,7 @@ import { MoreMenu, ReasonSheet } from '@/features/vehicles/detail/sheets';
 import { StateCardView } from '@/features/vehicles/detail/state-card-view';
 import { buildStateCard, statusBadge, type StateAction } from '@/features/vehicles/detail/state-card';
 import { useVehicleDetail } from '@/features/vehicles/detail/use-vehicle-detail';
-import { type VehiclePhoto } from '@/features/vehicles/types';
 import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-section-scroll';
-import { VehiclePhotoGallery } from '@/features/vehicles/vehicle-photo-gallery';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function VehicleDetailScreen() {
@@ -45,7 +42,6 @@ export default function VehicleDetailScreen() {
   const detail = useVehicleDetail(id);
   const { vehicle, rentals, maintenance: maintenanceItems, customers, role, isManager, item, context, now } = detail;
   const showPrice = canSeePrices(role);
-  const updatePhotos = useUpdateVehiclePhotos();
   const updateStatus = useUpdateVehicleStatus();
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
@@ -91,16 +87,6 @@ export default function VehicleDetailScreen() {
         lateDuration: (late) => lateDurationText(late, t),
       })
     : null;
-
-  async function handleDeletePhoto(photo: VehiclePhoto) {
-    if (!vehicle) return;
-    try {
-      await deleteVehiclePhotoFile(photo.path);
-      await updatePhotos.mutateAsync({ id: vehicle.id, photos: vehicle.photos.filter((p) => p.path !== photo.path) });
-    } catch {
-      Alert.alert(t('common.appName'), t('vehicle.photoDeleteError'));
-    }
-  }
 
   function archiveNow() {
     if (!vehicle) return;
@@ -196,7 +182,7 @@ export default function VehicleDetailScreen() {
   }
 
   const goEdit = () => vehicle && router.push(`/flotte/${vehicle.id}/modifier`);
-  const goPhotos = () => vehicle && router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'photos' } });
+  const goPhotos = () => vehicle && router.push({ pathname: '/flotte/[id]/photos', params: { id: vehicle.id } });
 
   return (
     <ThemedView className="flex-1" style={{ backgroundColor: Palette.surface }}>
@@ -293,16 +279,6 @@ export default function VehicleDetailScreen() {
               </Card>
             </View>
             ) : null}
-
-            <View className="gap-3" onLayout={onSectionLayout('photos')}>
-              <ThemedText type="smallBold">{t('vehicle.sections.photos')}</ThemedText>
-              <VehiclePhotoGallery
-                photos={vehicle.photos}
-                canDelete={isManager}
-                onDelete={handleDeletePhoto}
-                emptyLabel={t('vehicle.noPhotos')}
-              />
-            </View>
 
             <View onLayout={onSectionLayout('documents')}>
               <DocumentsRow vehicle={vehicle} onAdd={() => router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'documents' } })} />
