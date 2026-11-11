@@ -17,7 +17,7 @@ import { useOcrSettings } from '@/features/ocr/hooks';
 import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
 import { RoundButton } from '@/features/vehicles/add/add-ui';
 import { FaceThumb, KeepSwitch, LegalSheet, ScanFrame, TipPills } from '@/features/vehicles/add/scan-parts';
-import { draftFromScan, mergeScans, setScanSession, type Face, type ScanItem } from '@/features/vehicles/add/scan-session';
+import { mergeScans, setScanSession, type Face, type ScanItem } from '@/features/vehicles/add/scan-session';
 import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
 import { withAlpha } from '@/features/vehicles/fleet-style';
 import { filledCount, scanVehicleDocument, type ScanErrorCode } from '@/features/vehicles/ocr';
@@ -123,8 +123,7 @@ export default function ScannerCarteGriseScreen() {
     const session = { photos, scans, merged: mergeScans(scans), durationMs: Date.now() - startedAt, fromCache: results.every((result) => result.ok && result.fromCache === true), keepPhoto, errorCode: firstError };
     setScanSession(session);
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
-    setVehicleCreationDraft(draftFromScan(session));
-    router.replace('/flotte/nouveau/finaliser');
+    router.replace('/flotte/nouveau/carte-lue');
   }
 
   function goManual() {

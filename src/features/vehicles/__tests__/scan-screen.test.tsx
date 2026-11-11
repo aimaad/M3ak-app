@@ -52,6 +52,7 @@ jest.mock('react-native-reanimated', () => {
   return { __esModule: true, default: { View, createAnimatedComponent: (c: unknown) => c }, useSharedValue: value, useAnimatedStyle: () => ({}), useReducedMotion: () => true, withTiming: (v: number) => v, withRepeat: (v: number) => v, withSequence: (v: number) => v, cancelAnimation: () => undefined, Easing: { inOut: () => undefined, quad: undefined } };
 });
 
+import { getScanSession } from '@/features/vehicles/add/scan-session';
 import { normalizeVehicleFields } from '@/features/vehicles/ocr';
 
 import ScannerCarteGriseScreen from '../../../app/(tabs)/flotte/nouveau/scan';
@@ -86,15 +87,20 @@ describe('scanner de la carte grise', () => {
     expect(screen.queryByText(/zones repérées/)).toBeNull();
   });
 
-  it('recto puis verso, puis « Lire les 2 faces » : une seule lecture par face, brouillon créé, direction Finaliser', async () => {
+  it('recto puis verso, puis « Lire les 2 faces » : une seule lecture par face, direction « Carte grise lue »', async () => {
     mockState.scan.mockResolvedValueOnce(okResult({ immatriculation: field('68013-ب-72') })).mockResolvedValueOnce(okResult({ marque: field('Dacia'), modele: field('Sandero'), carburant: field('diesel') }));
     await render(<ScannerCarteGriseScreen />);
     await shootBoth();
     await fireEvent.press(screen.getByText('Lire les 2 faces'));
     expect(mockState.scan).toHaveBeenCalledTimes(2);
     expect(mockState.scan.mock.calls.map((call) => call[0])).toEqual(['file:///photo-1.jpg', 'file:///photo-2.jpg']);
-    expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/finaliser');
-    expect(mockState.drafts[0]).toMatchObject({ immatriculation: '68013 | ب | 72', marque: 'Dacia', source: 'scan' });
+    expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/carte-lue');
+    // La lecture est transmise à l'écran « Carte grise lue » (plaque, marque, modèle, carburant lus ; vraie durée mesurée)
+    const session = getScanSession();
+    expect(session?.merged.marque.value).toBe('Dacia');
+    expect(session?.merged.immatriculation.value).toBe('68013 | ب | 72'); // déjà au format de l'app
+    expect(session?.scans.map((item) => item.face)).toEqual(['recto', 'verso']);
+    expect(session?.durationMs).toBeGreaterThanOrEqual(0);
   });
 
   it('le verso est facultatif : « Passer le verso » lit le recto seul', async () => {
@@ -103,7 +109,8 @@ describe('scanner de la carte grise', () => {
     await fireEvent.press(screen.getByLabelText('Photographier le recto'));
     await fireEvent.press(await screen.findByText('Passer le verso'));
     expect(mockState.scan).toHaveBeenCalledTimes(1);
-    expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/finaliser');
+    expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/carte-lue');
+    expect(getScanSession()?.scans).toHaveLength(1);
   });
 
   it('photo illisible : message clair, photos gardées (réessayer relit les mêmes), saisie à la main possible', async () => {

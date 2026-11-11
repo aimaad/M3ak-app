@@ -3137,6 +3137,78 @@
       "unreadable": "Carte non lue, reprenez la photo ou saisissez à la main.",
       "retake": "Reprendre les photos",
       "retry": "Réessayer"
+    },
+    "read": {
+      "readIn": "Lu en {{n}} s",
+      "readInstant": "Lu instantanément",
+      "fieldsRead": "CHAMPS LUS",
+      "toCheck": "À VÉRIFIER",
+      "duplicate": "DOUBLON",
+      "toConfirmOne": "1 INFO À CONFIRMER",
+      "toConfirmMany": "{{count}} INFOS À CONFIRMER",
+      "onCard": "SUR LA CARTE",
+      "nothingRead": "rien lu",
+      "confirm": "Confirmer",
+      "toConfirm": "À confirmer",
+      "ok": "OK",
+      "fieldCv": "{{n}} CV",
+      "reasons": {
+        "unreadable_char": "Caractère peu lisible",
+        "length": "Nombre de caractères incorrect",
+        "invalid_date": "Date impossible",
+        "format": "Format inattendu",
+        "low": "Lecture peu sûre",
+        "missing": "Non lu"
+      },
+      "labels": {
+        "immatriculation": "Plaque",
+        "marque": "Marque",
+        "modele": "Modèle",
+        "genre": "Genre",
+        "vin": "N° de série (VIN)",
+        "carburant": "Carburant",
+        "puissanceFiscale": "Puissance fiscale",
+        "proprietaire": "Propriétaire",
+        "dateMiseEnCirculation": "Date de 1ʳᵉ mise en circulation"
+      },
+      "rowLabels": {
+        "dateMiseEnCirculation": "1ʳᵉ mise en circulation"
+      },
+      "groups": {
+        "vehicle": "VÉHICULE",
+        "technical": "TECHNIQUE",
+        "admin": "ADMINISTRATIF"
+      },
+      "newVehicle": "Nouveau véhicule.",
+      "newVehicleBody": " Aucune voiture avec cette plaque ou ce VIN dans votre flotte.",
+      "dupTitle": "Déjà dans votre flotte",
+      "dupPlate": "Une voiture a déjà cette plaque.",
+      "dupVin": "Une voiture a déjà ce numéro de série.",
+      "dupArchived": " Elle est archivée.",
+      "openFile": "Ouvrir sa fiche",
+      "reactivate": "Réactiver",
+      "reactivateError": "Impossible de réactiver ce véhicule pour l'instant.",
+      "hint": "Touchez une ligne pour la corriger. Lu par Google Gemini, photo gardée dans le dossier du véhicule.",
+      "hintNoPhoto": "Touchez une ligne pour la corriger. Lu par Google Gemini, photo non conservée.",
+      "retakeA11y": "Reprendre les photos",
+      "ctaConfirmFirst": "Confirmer {{field}} d'abord",
+      "ctaGo": "Tout est bon, continuer",
+      "ctaDuplicate": "Déjà dans votre flotte",
+      "edit": "Modifier {{field}}",
+      "pickFuel": "Choisir le carburant",
+      "a11yPending": "{{field}} : à confirmer",
+      "a11yRead": "{{field}} : {{value}}",
+      "ctaFields": {
+        "immatriculation": "la plaque",
+        "marque": "la marque",
+        "modele": "le modèle",
+        "genre": "le genre",
+        "vin": "le VIN",
+        "carburant": "le carburant",
+        "puissanceFiscale": "la puissance fiscale",
+        "proprietaire": "le propriétaire",
+        "dateMiseEnCirculation": "la date"
+      }
     }
   }
 }

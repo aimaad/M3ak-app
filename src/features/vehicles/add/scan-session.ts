@@ -3,7 +3,8 @@ import { emptyVehicleFields, mergeVehicleFields, yearFromFields, type OcrConfide
 import type { VehicleCreationDraft } from '../creation-draft';
 import type { PendingVehicleDocument } from '../types';
 
-import { formatPlate } from './plate';
+import { formatPlate, vinKey } from './plate';
+import { reviewedFuel, type ReviewKey, type ReviewState } from './review';
 
 export type Face = 'recto' | 'verso';
 export type ScanItem = { face: Face; uri: string; fields: VehicleOcrFields };
@@ -70,4 +71,32 @@ export function draftFromScan(session: Pick<ScanSession, 'merged' | 'scans' | 'k
   if (uncertain.length > 0) draft.uncertainFields = uncertain;
   // Nettoie les clés non lues : un brouillon ne garde que ce qui a été lu.
   return Object.fromEntries(Object.entries(draft).filter(([, value]) => value !== undefined)) as VehicleCreationDraft;
+}
+
+const REVIEWED_DRAFT_KEYS: (keyof VehicleCreationDraft)[] = ['immatriculation', 'marque', 'modele', 'vin', 'carburant', 'puissanceFiscale', 'dateMiseEnCirculation'];
+
+/**
+ * Brouillon final après l'écran « Carte grise lue » : les valeurs vérifiées ou corrigées par l'employé remplacent celles de la lecture, et
+ * ces champs ne sont plus signalés (il les a vus). Seuls restent signalés ceux que l'écran ne montre pas.
+ */
+export function draftFromReview(session: Pick<ScanSession, 'merged' | 'scans' | 'keepPhoto'>, state: ReviewState): VehicleCreationDraft {
+  const base = draftFromScan(session);
+  const text = (key: ReviewKey) => state[key].value.trim();
+  const cv = Number(text('puissanceFiscale'));
+  const reviewed: VehicleCreationDraft = {
+    immatriculation: text('immatriculation') ? formatPlate(text('immatriculation')) : undefined,
+    marque: text('marque') || undefined,
+    modele: text('modele') || undefined,
+    vin: text('vin') ? vinKey(text('vin')) : undefined,
+    carburant: reviewedFuel(state),
+    puissanceFiscale: Number.isInteger(cv) && cv > 0 ? cv : undefined,
+    dateMiseEnCirculation: text('dateMiseEnCirculation') || undefined,
+    genre: text('genre') || undefined,
+  };
+  const draft = { ...base, ...Object.fromEntries(Object.entries(reviewed).filter(([, value]) => value !== undefined)) } as VehicleCreationDraft;
+  for (const key of REVIEWED_DRAFT_KEYS) if (reviewed[key] === undefined) delete draft[key];
+  const stillUncertain = (base.uncertainFields ?? []).filter((key) => !REVIEWED_DRAFT_KEYS.includes(key));
+  if (stillUncertain.length > 0) draft.uncertainFields = stillUncertain;
+  else delete draft.uncertainFields;
+  return draft;
 }

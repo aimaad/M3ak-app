@@ -13,6 +13,8 @@ export type VehicleCreationDraft = {
   marque?: string;
   modele?: string;
   finition?: string;
+  /** Genre lu sur la carte grise (« Voiture particulière », « Camionnette »…) : sert à pré-choisir la catégorie. */
+  genre?: string;
   annee?: number;
   /** Première mise en circulation, « JJ/MM/AAAA ». */
   dateMiseEnCirculation?: string;

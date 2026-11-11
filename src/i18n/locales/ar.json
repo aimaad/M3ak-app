@@ -3241,6 +3241,78 @@
       "unreadable": "الكارط ما تقراتش، عاود صور ولا كتب بيديك.",
       "retake": "عاود صور",
       "retry": "عاود"
+    },
+    "read": {
+      "readIn": "تقرات فـ {{n}} ث",
+      "readInstant": "تقرات فالحين",
+      "fieldsRead": "خانات مقروءة",
+      "toCheck": "خاصها تأكيد",
+      "duplicate": "تكرار",
+      "toConfirmOne": "معلومة وحدة خاصها تأكيد",
+      "toConfirmMany": "{{count}} معلومات خاصهم تأكيد",
+      "onCard": "فالكارط",
+      "nothingRead": "ما تقرا والو",
+      "confirm": "أكد",
+      "toConfirm": "خاصها تأكيد",
+      "ok": "واخا",
+      "fieldCv": "{{n}} CV",
+      "reasons": {
+        "unreadable_char": "حرف ما باينش مزيان",
+        "length": "عدد الحروف ماشي هو",
+        "invalid_date": "تاريخ مستحيل",
+        "format": "صيغة غير متوقعة",
+        "low": "قراءة ماشي أكيدة",
+        "missing": "ما تقراتش"
+      },
+      "labels": {
+        "immatriculation": "اللوحة",
+        "marque": "الماركة",
+        "modele": "الموديل",
+        "genre": "النوع",
+        "vin": "رقم الشاسي (VIN)",
+        "carburant": "الوقود",
+        "puissanceFiscale": "القوة الجبائية",
+        "proprietaire": "المالك",
+        "dateMiseEnCirculation": "تاريخ أول تشغيل"
+      },
+      "rowLabels": {
+        "dateMiseEnCirculation": "أول تشغيل"
+      },
+      "groups": {
+        "vehicle": "الطوموبيل",
+        "technical": "تقني",
+        "admin": "إداري"
+      },
+      "newVehicle": "طوموبيل جديدة.",
+      "newVehicleBody": " ما كاينة حتى طوموبيل بهاد اللوحة ولا VIN فالأسطول ديالك.",
+      "dupTitle": "راه كاين فالأسطول ديالك",
+      "dupPlate": "كاينة طوموبيل عندها هاد اللوحة.",
+      "dupVin": "كاينة طوموبيل عندها هاد رقم الشاسي.",
+      "dupArchived": " وهي مؤرشفة.",
+      "openFile": "افتح الملف ديالها",
+      "reactivate": "فعّل",
+      "reactivateError": "ما قدرناش نفعلو هاد الطوموبيل دابا.",
+      "hint": "لمس شي سطر باش تصححو. قراتها Google Gemini، والتصويرة محفوظة فملف الطوموبيل.",
+      "hintNoPhoto": "لمس شي سطر باش تصححو. قراتها Google Gemini، والتصويرة ماشي محفوظة.",
+      "retakeA11y": "عاود صور",
+      "ctaConfirmFirst": "أكد {{field}} أولا",
+      "ctaGo": "كلشي مزيان، كمل",
+      "ctaDuplicate": "راه كاين فالأسطول",
+      "edit": "عدل {{field}}",
+      "pickFuel": "اختار الوقود",
+      "a11yPending": "{{field}}: خاصو تأكيد",
+      "a11yRead": "{{field}}: {{value}}",
+      "ctaFields": {
+        "immatriculation": "اللوحة",
+        "marque": "الماركة",
+        "modele": "الموديل",
+        "genre": "النوع",
+        "vin": "VIN",
+        "carburant": "الوقود",
+        "puissanceFiscale": "القوة الجبائية",
+        "proprietaire": "المالك",
+        "dateMiseEnCirculation": "التاريخ"
+      }
     }
   }
 }
