@@ -433,7 +433,13 @@
       },
       "titleAll": "Tous les véhicules",
       "countOne": "{{count}} véhicule",
-      "countMany": "{{count}} véhicules"
+      "countMany": "{{count}} véhicules",
+      "lateLineOne": "1 retour en retard",
+      "lateLineMany": "{{count}} retours en retard",
+      "lateLineA11y": "Voir les véhicules en location, dont {{count}} en retard",
+      "tileLate": "{{count}} en retard",
+      "tileA11yLate": "{{label}} : {{count}}, dont {{late}} en retard",
+      "ringA11yLate": "Répartition de la flotte : {{free}} disponibles, {{rented}} en location dont {{late}} en retard, {{immobilized}} immobilisés"
     },
     "advice": {
       "label": "Conseil BIBIP",
@@ -443,7 +449,14 @@
       "waitingSuffix": " attend son inspection depuis {{days}} jours.",
       "createOffer": "Créer l'offre",
       "inspect": "Inspecter",
-      "later": "Plus tard"
+      "later": "Plus tard",
+      "lateLabel": "Retour en retard",
+      "latePrefix": "La ",
+      "lateSuffix": " devait revenir {{date}} : {{duration}} de retard.",
+      "lateClient": " {{name}} ne l'a pas rendue.",
+      "callClient": "Appeler {{name}}",
+      "callClientNoName": "Appeler le client",
+      "openRental": "Voir la location"
     },
     "offer": {
       "title": "Créer l'offre",
@@ -474,7 +487,8 @@
         "rented": "En location",
         "inspect": "À inspecter",
         "maintenance": "Entretien",
-        "unavailable": "Indisponible"
+        "unavailable": "Indisponible",
+        "late": "En retard"
       },
       "statusPhrase": {
         "free": "disponible",
@@ -492,7 +506,9 @@
         "maintenanceReturn": "Retour d'atelier {{date}}",
         "garage": "Au garage",
         "maintenancePlanned": "Entretien prévu aujourd'hui",
-        "unavailable": "Indisponible"
+        "unavailable": "Indisponible",
+        "lateWith": "{{name}} · prévu {{date}}",
+        "lateNoName": "Prévu {{date}}"
       },
       "spoken": {
         "rentedWith": "chez {{name}}, retour {{date}}",
@@ -506,7 +522,8 @@
         "rent": "Louer",
         "extend": "Prolonger",
         "inspect": "Inspecter",
-        "maintenance": "Voir l'entretien"
+        "maintenance": "Voir l'entretien",
+        "call": "Appeler"
       },
       "actionA11y": "{{action}} : {{name}}",
       "addPhoto": "Ajouter une photo pour la {{name}}",
@@ -514,7 +531,8 @@
       "weekState": {
         "free": "libre",
         "rented": "loué",
-        "immobilized": "immobilisé"
+        "immobilized": "immobilisé",
+        "late": "en retard"
       },
       "weekUntil": "{{state}} jusqu'au {{date}}",
       "weekAllWeek": "{{state}} toute la semaine",
@@ -523,14 +541,16 @@
       "legend": {
         "free": "Libre",
         "rented": "Loué",
-        "immobilized": "Immobilisé"
+        "immobilized": "Immobilisé",
+        "late": "En retard"
       },
       "sections": {
         "inspect": "À inspecter",
         "maintenance": "Entretien",
         "unavailable": "Indisponibles",
         "rented": "En location",
-        "free": "Disponibles"
+        "free": "Disponibles",
+        "lateNote": "· {{count}} en retard"
       },
       "states": {
         "emptyTitle": "Ajoutez votre premier véhicule",
@@ -540,6 +560,17 @@
         "noResultBody": "Aucun véhicule ne correspond à votre recherche ou à vos filtres.",
         "retry": "Réessayer",
         "archived": "Archivés"
+      },
+      "late": {
+        "badgeDays": "+{{count}} j",
+        "badgeHours": "+{{count}} h",
+        "daysOne": "{{count}} jour",
+        "daysMany": "{{count}} jours",
+        "hoursOne": "{{count}} heure",
+        "hoursMany": "{{count}} heures",
+        "spokenLate": "en retard de {{duration}}",
+        "spokenDue": "prévue le {{date}}",
+        "spokenClient": "client {{name}}"
       }
     },
     "gallery": {

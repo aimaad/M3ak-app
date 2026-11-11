@@ -2,7 +2,7 @@ import { buildAvailability, parcCounts } from '@/features/dashboard/availability
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 
-import { buildFleetItems, buildSections, groupCounts, groupFromStatusParam, matchesGroup, rentedPercent, toggleGroup } from '../fleet-model';
+import { buildFleetItems, buildSections, lateInfo, groupCounts, groupFromStatusParam, matchesGroup, rentedPercent, toggleGroup } from '../fleet-model';
 import { RING_CIRCUMFERENCE, ringSegments } from '../ring-geometry';
 import type { Vehicle } from '../types';
 
@@ -38,7 +38,7 @@ describe('flotte : statut d’aujourd’hui et groupes', () => {
   });
 
   it('3 groupes : disponibles, en location, immobilisés (les quatre statuts immobilisants ensemble)', () => {
-    expect(groupCounts(items)).toEqual({ free: 1, rented: 1, immobilized: 4, total: 6 });
+    expect(groupCounts(items)).toEqual({ free: 1, rented: 1, immobilized: 4, total: 6, late: 0 });
   });
 
   it('sections dans l’ordre : À inspecter, Entretien, Indisponibles, En location, Disponibles ; une section vide n’apparaît pas', () => {
@@ -49,8 +49,8 @@ describe('flotte : statut d’aujourd’hui et groupes', () => {
 
   it('le pourcentage « en route » est celui des véhicules en location', () => {
     expect(rentedPercent(groupCounts(items))).toBe(17);
-    expect(rentedPercent({ free: 0, rented: 0, immobilized: 0, total: 0 })).toBe(0);
-    expect(rentedPercent({ free: 0, rented: 3, immobilized: 0, total: 3 })).toBe(100);
+    expect(rentedPercent({ free: 0, rented: 0, immobilized: 0, total: 0, late: 0 })).toBe(0);
+    expect(rentedPercent({ free: 0, rented: 3, immobilized: 0, total: 3, late: 0 })).toBe(100);
   });
 
   it('une tuile active filtre ; un second tap sur la même tuile revient à « Tous »', () => {
@@ -85,7 +85,7 @@ describe('flotte : statut d’aujourd’hui et groupes', () => {
 });
 
 describe('anneau de répartition', () => {
-  const counts = (free: number, rented: number, immobilized: number) => ({ free, rented, immobilized, total: free + rented + immobilized });
+  const counts = (free: number, rented: number, immobilized: number) => ({ free, rented, immobilized, total: free + rented + immobilized, late: 0 });
   it('un segment par groupe présent, proportionnel, avec un espace entre deux', () => {
     const segments = ringSegments(counts(2, 1, 2));
     expect(segments.map((s) => s.key)).toEqual(['free', 'rented', 'immobilized']);
@@ -99,5 +99,59 @@ describe('anneau de répartition', () => {
   });
   it('un petit groupe garde un trait visible', () => {
     expect(ringSegments(counts(100, 1, 0))[1].length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+describe('retour en retard (état calculé)', () => {
+  // Retour prévu le mercredi 5 juin à 18 h ; on est le lundi 10 juin à 10 h → 5 jours de retard.
+  const lateRental = (id: string, vehicleId: string, dueDay: number, dueHour = 18) =>
+    ({ id, vehicleId, customerId: 'c1', statut: 'en_cours', dateDebutPrevue: iso(1), dateFinPrevue: iso(dueDay, dueHour), dateDepartReel: iso(1), dateRetourReel: null }) as Rental;
+
+  it('jours civils dès 24 h de retard, heures en dessous ; le retard minimum est 1', () => {
+    expect(lateInfo('r', iso(5, 18), NOW)).toMatchObject({ amount: 5, unit: 'days' });
+    expect(lateInfo('r', new Date(2030, 5, 9, 10).toISOString(), NOW)).toMatchObject({ amount: 1, unit: 'days' }); // exactement 24 h
+    expect(lateInfo('r', new Date(2030, 5, 10, 7).toISOString(), NOW)).toMatchObject({ amount: 3, unit: 'hours' });
+    expect(lateInfo('r', new Date(2030, 5, 10, 9, 59, 30).toISOString(), NOW)).toMatchObject({ amount: 1, unit: 'hours' }); // jamais « +0 h »
+    expect(lateInfo('r', new Date(2030, 5, 9, 23, 30).toISOString(), NOW)).toMatchObject({ amount: 10, unit: 'hours' }); // la veille au soir : heures, pas « 1 j »
+  });
+
+  it('pas de retard : retour prévu à venir, date absente ou invalide', () => {
+    expect(lateInfo('r', iso(10, 18), NOW)).toBeNull();
+    expect(lateInfo('r', iso(10, 10), NOW)).toBeNull(); // pile maintenant
+    expect(lateInfo('r', null, NOW)).toBeNull();
+    expect(lateInfo('r', undefined, NOW)).toBeNull();
+    expect(lateInfo('r', 'pas une date', NOW)).toBeNull();
+  });
+
+  it('le jour civil suit l’heure locale : 23 h le 8 et 10 h le 10 comptent 2 jours', () => {
+    expect(lateInfo('r', new Date(2030, 5, 8, 23).toISOString(), NOW)).toMatchObject({ amount: 2, unit: 'days' });
+  });
+
+  const vehicles = [vehicle('normal', 'en_location'), vehicle('retard5', 'en_location'), vehicle('retard2', 'en_location'), vehicle('libre', 'disponible')];
+  const rentals = [rental('rn', 'normal', 'en_cours', 8, 14), lateRental('r5', 'retard5', 5), lateRental('r2', 'retard2', 8)];
+  const items = buildFleetItems({ vehicles, rentals, maintenance: [] as MaintenanceItem[], now: NOW });
+
+  it('le véhicule en retard reste dans « En location » (tuile, anneau, filtre) et porte l’état calculé', () => {
+    const retard = items.find((i) => i.vehicle.id === 'retard5');
+    expect(retard).toMatchObject({ section: 'rented', group: 'rented', late: { rentalId: 'r5', amount: 5, unit: 'days' } });
+    expect(items.find((i) => i.vehicle.id === 'normal')?.late).toBeNull();
+    expect(groupCounts(items)).toEqual({ free: 1, rented: 3, immobilized: 0, total: 4, late: 2 }); // « 3 en location », dont 2 en retard
+  });
+
+  it('la frise d’un véhicule en retard est rouge tant qu’il n’est pas rendu', () => {
+    expect(items.find((i) => i.vehicle.id === 'retard5')?.week.map((d) => d.kind)).toEqual(Array(7).fill('late'));
+    expect(items.find((i) => i.vehicle.id === 'normal')?.week.map((d) => d.kind)).not.toContain('late');
+  });
+
+  it('en tête de « En location » : le plus gros retard d’abord, puis les locations normales dans l’ordre reçu', () => {
+    const rented = buildSections(items, NOW).find((s) => s.key === 'rented');
+    expect(rented?.items.map((i) => i.vehicle.id)).toEqual(['retard5', 'retard2', 'normal']);
+    expect(rented?.late).toBe(2);
+    expect(buildSections(items, NOW).find((s) => s.key === 'free')?.late).toBe(0);
+  });
+
+  it('sans retard : aucune pastille, aucune ligne', () => {
+    const calm = buildFleetItems({ vehicles: [vehicle('normal', 'en_location')], rentals: [rental('rn', 'normal', 'en_cours', 8, 14)], maintenance: [], now: NOW });
+    expect(groupCounts(calm).late).toBe(0);
   });
 });

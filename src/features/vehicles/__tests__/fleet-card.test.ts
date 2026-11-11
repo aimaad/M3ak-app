@@ -87,12 +87,12 @@ describe('ligne de contexte', () => {
 
   it('en location : prénom, initiale et retour prévu', () => {
     const context = build([vehicle('a', 'en_location')], [rental('r', 'a', 'en_cours', -2, 6)])('a');
-    expect(context).toMatchObject({ kind: 'rented', name: 'Youssef A.', late: false });
+    expect(context).toMatchObject({ kind: 'rented', name: 'Youssef A.', late: null });
     expect((context as { endDay: string }).endDay).toBe('2030-06-16');
   });
 
   it('en retard : même ligne, marquée en retard', () => {
-    expect(build([vehicle('a', 'en_location')], [rental('r', 'a', 'en_cours', -5, -1)])('a')).toMatchObject({ kind: 'rented', late: true });
+    expect(build([vehicle('a', 'en_location')], [rental('r', 'a', 'en_cours', -5, -3)])('a')).toMatchObject({ kind: 'rented', late: { rentalId: 'r', amount: 3, unit: 'days' } });
   });
 
   it('disponible : libre jusqu’au jour avant la réservation, ou toute la semaine', () => {
@@ -116,17 +116,38 @@ describe('ligne de contexte', () => {
     expect(customerShortName('  ')).toBeNull();
     expect(customerShortName(null)).toBeNull();
     expect(customerShortName('سارة الإدريسي')).toBe('سارة ا.');
+    // Casse normalisée à l'affichage (la donnée n'est pas modifiée)
+    expect(customerShortName('FOUAD BENNANI')).toBe('Fouad B.');
+    expect(customerShortName('imadeddine bouzid')).toBe('Imadeddine B.');
+    expect(customerShortName('mohamed-amine EL alami')).toBe('Mohamed-Amine A.');
+    expect(customerShortName("KARIM d'arc")).toBe('Karim D.');
+    expect(customerShortName('KARIM')).toBe('Karim');
+  });
+});
+
+describe('dates : le mois s’affiche au-delà de 7 jours et dans le passé', () => {
+  const key = (delta: number) => `2030-06-${String(10 + delta).padStart(2, '0')}`;
+  it('dans les 7 prochains jours : le jour seul', () => {
+    expect(formatDayLabel(key(0), 'fr', 'short', NOW)).toBe('lun. 10');
+    expect(formatDayLabel(key(6), 'fr', 'short', NOW)).toBe('dim. 16');
+    expect(formatDayLabel(key(6), 'fr', 'long', NOW)).toBe('dimanche 16');
+  });
+  it('au-delà de 7 jours, ou dans le passé : toujours avec le mois', () => {
+    expect(formatDayLabel(key(7), 'fr', 'short', NOW)).toBe('lun. 17 juin');
+    expect(formatDayLabel('2030-06-05', 'fr', 'short', NOW)).toBe('mer. 5 juin');
+    expect(formatDayLabel('2030-05-29', 'fr', 'long', NOW)).toBe('mercredi 29 mai');
+    expect(formatDayLabel('2030-05-29', 'fr', 'short', NOW)).toBe('mer. 29 mai');
   });
 });
 
 describe('frise lue à voix haute', () => {
   const day = (n: number, kind: 'free' | 'rented' | 'immobilized') => ({ key: `2030-06-${String(10 + n).padStart(2, '0')}`, kind });
-  const words = { state: { free: 'libre', rented: 'loué', immobilized: 'immobilisé' }, until: (s: string, d: string) => `${s} jusqu'au ${d}`, allWeek: (s: string) => `${s} toute la semaine`, then: ' puis ' };
+  const words = { state: { free: 'libre', rented: 'loué', immobilized: 'immobilisé', late: 'en retard' }, until: (s: string, d: string) => `${s} jusqu'au ${d}`, allWeek: (s: string) => `${s} toute la semaine`, then: ' puis ' };
 
   it('« libre jusqu’au vendredi 13 puis loué »', () => {
     const week = [day(0, 'free'), day(1, 'free'), day(2, 'free'), day(3, 'free'), day(4, 'rented'), day(5, 'rented'), day(6, 'rented')];
     expect(weekRuns(week)).toEqual([{ kind: 'free', lastDay: '2030-06-13' }, { kind: 'rented', lastDay: '2030-06-16' }]);
-    expect(weekSummary(week, words, (key) => formatDayLabel(key, 'fr', 'long'))).toBe("libre jusqu'au jeudi 13 puis loué");
+    expect(weekSummary(week, words, (key) => formatDayLabel(key, 'fr', 'long', NOW))).toBe("libre jusqu'au jeudi 13 puis loué");
   });
   it('une seule plage : toute la semaine ; trois plages', () => {
     expect(weekSummary(Array.from({ length: 7 }, (_, n) => day(n, 'free')), words, () => '')).toBe('libre toute la semaine');
@@ -161,6 +182,16 @@ describe('bouton d’action', () => {
   });
   it('indisponible : aucun bouton', () => {
     expect(action('hs', 'owner')).toBeNull();
+  });
+  it('en retard : « Appeler » pour TOUS les rôles (même l’employé), avec le numéro du client ; sans numéro, la location', () => {
+    const lateItems = buildFleetItems({ vehicles: [vehicle('retard', 'en_location')], rentals: [rental('rl', 'retard', 'en_cours', -5, -1)], maintenance: [], now: NOW });
+    const withPhone = { rentals: new Map([['rl', { customerId: 'c1' }]]), customers: new Map([['c1', { telephone: ' +212 6 12 34 56 78 ' }]]) };
+    const noPhone = { rentals: new Map([['rl', { customerId: 'c1' }]]), customers: new Map([['c1', { telephone: null }]]) };
+    for (const role of ['owner', 'manager', 'employee'] as const) {
+      expect(actionFor(lateItems[0], role, [], NOW, withPhone)).toEqual({ kind: 'call', href: { pathname: '/locations/[id]', params: { id: 'rl' } }, phone: '+212 6 12 34 56 78' });
+    }
+    expect(actionFor(lateItems[0], 'employee', [], NOW, noPhone)).toEqual({ kind: 'call', href: { pathname: '/locations/[id]', params: { id: 'rl' } } });
+    expect(actionFor(lateItems[0], 'owner', [], NOW)?.kind).toBe('call'); // pas de données client : ouvre la location
   });
 });
 

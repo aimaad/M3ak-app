@@ -6,12 +6,13 @@ import { ArrowIcon, HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
 import { occupancyTone, plateText, type FleetAction, type FleetContext, type OccupancyTone } from './fleet-card';
-import { cardSentence, contextTexts, weekSummaryText } from './fleet-card-text';
+import { cardSentence, contextTexts, lateBadgeText, weekSummaryText } from './fleet-card-text';
 import type { FleetItem, FleetSection } from './fleet-model';
 import { WEEK_COLOR, withAlpha } from './fleet-style';
 import { VehicleImage, vehicleName } from './vehicle-image';
 
-const BADGE: Record<FleetSection, { background: string; text: string; dot: string }> = {
+const BADGE: Record<FleetSection | 'late', { background: string; text: string; dot: string }> = {
+  late: { background: Palette.error, text: Brand.white, dot: Brand.white },
   free: { background: withAlpha(Palette.success, 0.92), text: Brand.white, dot: Brand.white },
   rented: { background: withAlpha(Brand.textOnDark, 0.95), text: Brand.graphite, dot: Brand.graphite },
   inspect: { background: withAlpha(Brand.warningOnDark, 0.95), text: Brand.graphite, dot: Brand.graphite },
@@ -38,6 +39,7 @@ export function FleetVehicleCard({
   onOpen,
   onAction,
   onAddPhoto,
+  now,
 }: {
   item: FleetItem;
   context: FleetContext;
@@ -47,26 +49,30 @@ export function FleetVehicleCard({
   onOpen: () => void;
   onAction: (action: FleetAction) => void;
   onAddPhoto: () => void;
+  /** « Maintenant » de l'écran (un seul pour toute la liste) : dates et retards sont calculés avec lui. */
+  now: Date;
 }) {
   const { t, language } = useLanguage();
   const { vehicle } = item;
   const name = vehicleName(vehicle);
-  const badge = BADGE[item.section];
-  const texts = contextTexts(context, language, t);
-  const weekSummary = weekSummaryText(item.week, language, t);
+  const late = item.late;
+  const badgeKey = late ? 'late' : item.section;
+  const badge = BADGE[badgeKey];
+  const texts = contextTexts(context, language, t, now);
+  const weekSummary = weekSummaryText(item.week, language, t, now);
   const noPhoto = vehicle.photos.length === 0 && canAddPhoto;
   const actionLabel = action ? t(`flotte.card.action.${action.kind}`) : '';
   const plate = plateText(vehicle.immatriculation);
 
   return (
     <View style={{ backgroundColor: Palette.card, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 10, gap: 12, shadowColor: Palette.shadow, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 8 }, elevation: 1 }}>
-      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={cardSentence(item, context, language, t)} style={{ gap: 12 }}>
+      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={cardSentence(item, context, language, t, now)} style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', gap: 12 }} importantForAccessibility="no-hide-descendants">
           <VehicleImage vehicle={vehicle} width={PHOTO_WIDTH} height={96} radius={18}>
             <View style={{ position: 'absolute', start: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7, backgroundColor: badge.background }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: badge.dot }} />
               <HText weight="bold" size={10} color={badge.text} style={{ lineHeight: 13 }}>
-                {t(`flotte.card.status.${item.section}`)}
+                {t(`flotte.card.status.${badgeKey}`)}
               </HText>
             </View>
           </VehicleImage>
@@ -97,12 +103,22 @@ export function FleetVehicleCard({
         </View>
 
         <View style={{ gap: 8, paddingHorizontal: 4 }} importantForAccessibility="no-hide-descendants">
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-            <HText weight="semibold" size={12} numberOfLines={1} color={context.kind === 'rented' && context.late ? Palette.error : Palette.textPrimary} style={{ flexShrink: 1 }}>
-              {texts.display}
-            </HText>
+          {/* Les deux blocs ne se coupent jamais : si la place manque, « 7 PROCHAINS JOURS » passe à la ligne en entier. */}
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', columnGap: 8, rowGap: 4 }}>
+            <View style={{ flexShrink: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <HText weight="semibold" size={12} numberOfLines={1} color={late ? Palette.error : Palette.textPrimary} style={{ flexShrink: 1 }}>
+                {texts.display}
+              </HText>
+              {late ? (
+                <View style={{ flexShrink: 0, backgroundColor: Palette.error, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 1 }}>
+                  <HText weight="bold" size={11} color={Brand.white} numberOfLines={1} style={{ lineHeight: 15 }}>
+                    {lateBadgeText(late, t)}
+                  </HText>
+                </View>
+              ) : null}
+            </View>
             <MicroLabel size={10} track={0.12} color={Palette.textSecondary} numberOfLines={1} style={{ flexShrink: 0 }}>
-              {t('flotte.card.sevenDays')}
+              {t('flotte.card.sevenDays').replace(/ /g, '\u00a0')}
             </MicroLabel>
           </View>
           {/* Frise des 7 prochains jours : aujourd'hui en premier (à droite en arabe), cerclé d'orange. */}
@@ -141,7 +157,11 @@ export function FleetVehicleCard({
             accessibilityLabel={t('flotte.card.actionA11y', { action: actionLabel, name })}
             style={[
               { height: 44, borderRadius: 22, paddingStart: 18, paddingEnd: 14, flexDirection: 'row', alignItems: 'center', gap: 4 },
-              action.kind === 'rent' ? { backgroundColor: Brand.orange, shadowColor: Brand.orange, shadowOpacity: 0.35, shadowRadius: 8, shadowOffset: { width: 0, height: 6 } } : { backgroundColor: Brand.graphite },
+              action.kind === 'rent'
+                ? { backgroundColor: Brand.orange, shadowColor: Brand.orange, shadowOpacity: 0.35, shadowRadius: 8, shadowOffset: { width: 0, height: 6 } }
+                : action.kind === 'call'
+                  ? { backgroundColor: Palette.error, shadowColor: Palette.error, shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 6 } }
+                  : { backgroundColor: Brand.graphite },
             ]}
           >
             <HText weight="semibold" size={13} color={Brand.white}>

@@ -8,7 +8,7 @@ import type { Customer } from '@/features/customers/types';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 
-import type { FleetItem, WeekKind } from './fleet-model';
+import type { FleetItem, LateInfo, WeekKind } from './fleet-model';
 import { inspectionHref, type FleetHref } from './fleet-routes';
 
 // ------------------------------------------------------------------ occupation sur 30 jours
@@ -77,16 +77,22 @@ export const plateSpoken = (raw: string): string => {
 
 // ------------------------------------------------------------------ ligne de contexte
 
-/** « Youssef Alami » → « Youssef A. » ; un seul mot : tel quel ; vide : null. */
+/** Majuscule au début de chaque mot et après un tiret ou une apostrophe : « FOUAD » et « fouad » donnent « Fouad ». Sans effet en arabe (pas de casse). */
+const capitalizeWord = (word: string) => word.toLocaleLowerCase().replace(/(^|[-'’])(\p{L})/gu, (_, sep: string, letter: string) => sep + letter.toLocaleUpperCase());
+
+/**
+ * « Youssef Alami » → « Youssef A. » ; la casse est normalisée à l'affichage (« FOUAD BENNANI » → « Fouad B. », « imadeddine bouzid » →
+ * « Imadeddine B. ») sans modifier la donnée. Un seul mot : tel quel (casse normalisée) ; vide : null.
+ */
 export function customerShortName(fullName: string | null | undefined): string | null {
   const words = (fullName ?? '').trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return null;
-  if (words.length === 1) return words[0];
-  return `${words[0]} ${Array.from(words[words.length - 1])[0]}.`;
+  if (words.length === 1) return capitalizeWord(words[0]);
+  return `${capitalizeWord(words[0])} ${Array.from(capitalizeWord(words[words.length - 1]))[0]}.`;
 }
 
 export type FleetContext =
-  | { kind: 'rented'; name: string | null; endDay: string | null; late: boolean }
+  | { kind: 'rented'; name: string | null; endDay: string | null; late: LateInfo | null }
   | { kind: 'free'; untilDay: string | null }
   | { kind: 'inspect' }
   | { kind: 'maintenance'; returnDay: string | null; planned: boolean }
@@ -106,7 +112,7 @@ export function contextOf(
       const rental = today.rentalId ? data.rentals.get(today.rentalId) : undefined;
       const name = rental ? customerShortName(data.customers.get(rental.customerId)?.nomComplet) : null;
       const endDay = today.endDay ?? (rental ? dayKey(new Date(rental.dateFinPrevue)) : null);
-      return { kind: 'rented', name, endDay, late: today.status === 'late' };
+      return { kind: 'rented', name, endDay, late: item.late };
     }
     case 'free': {
       const lastWeekDay = week[week.length - 1]?.key;
@@ -155,24 +161,43 @@ export function weekSummary(
   return runs.map((run, index) => (index < runs.length - 1 ? words.until(words.state[run.kind], formatDay(run.lastDay)) : words.state[run.kind])).join(words.then);
 }
 
-/** « lun. 16 » / « lundi 16 » d'un jour AAAA-MM-JJ, dans la langue de l'app. */
-export function formatDayLabel(key: string, language: string, style: 'short' | 'long' = 'short'): string {
-  return parseDayKey(key).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { weekday: style, day: 'numeric' });
+/**
+ * Un jour AAAA-MM-JJ dans la langue de l'app. Dans les 7 prochains jours (aujourd'hui compris) : le jour seul (« lun. 16 », « lundi 16 ») ;
+ * au-delà, ou dans le passé : toujours avec le mois (« mer. 28 oct. », « mercredi 28 octobre »), pour ne pas laisser croire à une date proche.
+ */
+export function formatDayLabel(key: string, language: string, style: 'short' | 'long' = 'short', now: Date = new Date()): string {
+  const day = parseDayKey(key);
+  const gap = Math.round((day.getTime() - parseDayKey(dayKey(now)).getTime()) / 86_400_000);
+  const withMonth = gap < 0 || gap >= 7;
+  return day.toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', withMonth ? { weekday: style, day: 'numeric', month: style } : { weekday: style, day: 'numeric' });
 }
 
 // ------------------------------------------------------------------ bouton d'action
 
-export type FleetActionKind = 'rent' | 'extend' | 'inspect' | 'maintenance';
-export type FleetAction = { kind: FleetActionKind; href: FleetHref };
+export type FleetActionKind = 'call' | 'rent' | 'extend' | 'inspect' | 'maintenance';
+/** `phone` : numéro à appeler (« Appeler » seulement) ; sans numéro, le bouton ouvre la location (`href`). */
+export type FleetAction = { kind: FleetActionKind; href: FleetHref; phone?: string };
 
 /**
  * Bouton d'action d'une carte, choisi par la section du véhicule et le rôle :
+ *  - en retard → « Appeler » le client (tous les rôles ; sans numéro : ouvre la location, d'où l'on prolonge) ;
  *  - disponible → « Louer » (nouvelle location préremplie) ;
  *  - en location → « Prolonger » : propriétaire et responsable seulement ;
  *  - à inspecter → « Inspecter » ; entretien → « Voir l'entretien » ; indisponible → aucun.
  * Une action que l'utilisateur n'a pas le droit de faire n'apparaît pas.
  */
-export function actionFor(item: FleetItem, role: AgencyRole | null | undefined, rentals: Rental[], now: Date): FleetAction | null {
+export function actionFor(
+  item: FleetItem,
+  role: AgencyRole | null | undefined,
+  rentals: Rental[],
+  now: Date,
+  customers?: { rentals: Map<string, Pick<Rental, 'customerId'>>; customers: Map<string, Pick<Customer, 'telephone'>> }
+): FleetAction | null {
+  if (item.late) {
+    const rental = customers?.rentals.get(item.late.rentalId);
+    const phone = rental ? customers?.customers.get(rental.customerId)?.telephone?.trim() : undefined;
+    return { kind: 'call', href: { pathname: '/locations/[id]', params: { id: item.late.rentalId } }, ...(phone ? { phone } : {}) };
+  }
   switch (item.section) {
     case 'free':
       return { kind: 'rent', href: { pathname: '/locations/nouveau', params: { vehicleId: item.vehicle.id, date: dayKey(now) } } };

@@ -4,7 +4,7 @@ import { Image, Pressable, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { Brand } from '@/constants/theme';
+import { Brand, Palette } from '@/constants/theme';
 import { HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -13,7 +13,7 @@ import { FLEET_GROUPS, type FleetCounts, type FleetGroup } from './fleet-model';
 import { GROUP_ON_DARK, withAlpha } from './fleet-style';
 import { DEFAULT_VEHICLE_IMAGE } from './vehicle-image';
 
-function Tile({ group, count, selected, onPress }: { group: FleetGroup; count: number; selected: boolean; onPress: () => void }) {
+function Tile({ group, count, late, selected, onPress }: { group: FleetGroup; count: number; late: number; selected: boolean; onPress: () => void }) {
   const { t } = useLanguage();
   const label = t(`flotte.header.groups.${group}`);
   const color = GROUP_ON_DARK[group];
@@ -22,7 +22,7 @@ function Tile({ group, count, selected, onPress }: { group: FleetGroup; count: n
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={t('flotte.header.tileA11y', { label, count })}
+      accessibilityLabel={late > 0 ? t('flotte.header.tileA11yLate', { label, count, late }) : t('flotte.header.tileA11y', { label, count })}
       style={{
         flex: 1,
         height: 84,
@@ -40,6 +40,14 @@ function Tile({ group, count, selected, onPress }: { group: FleetGroup; count: n
     >
       {/* Petit trait coloré lumineux en haut à l'angle. */}
       <View style={{ position: 'absolute', start: 12, top: 12, width: 22, height: 4, borderRadius: 2, backgroundColor: color, shadowColor: color, shadowOpacity: 0.9, shadowRadius: 5, shadowOffset: { width: 0, height: 0 } }} />
+      {/* Pastille « N en retard » sur la tuile En location (le chiffre compte toutes les locations, retards compris). */}
+      {late > 0 ? (
+        <View style={{ position: 'absolute', end: 8, top: 8, backgroundColor: Palette.error, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2 }}>
+          <HText weight="bold" size={10} color={Brand.white} numberOfLines={1} style={{ lineHeight: 13 }}>
+            {t('flotte.header.tileLate', { count: late }).replace(/ /g, '\u00a0')}
+          </HText>
+        </View>
+      ) : null}
       <HText font="display" weight="bold" size={24} color={Brand.white} style={{ lineHeight: 24 }}>
         {String(count)}
       </HText>
@@ -64,6 +72,7 @@ export function FleetHeader({
   onOpenFilters,
   onAdd,
   onGallery,
+  onLatePress,
   children,
 }: {
   agencyName: string;
@@ -75,6 +84,8 @@ export function FleetHeader({
   onOpenFilters: () => void;
   onAdd: () => void;
   onGallery?: () => void;
+  /** Tap sur « N retour(s) en retard » : filtre sur « En location ». */
+  onLatePress?: () => void;
   children?: ReactNode;
 }) {
   const { t } = useLanguage();
@@ -139,6 +150,20 @@ export function FleetHeader({
               {ready}
             </HText>
           </View>
+          {counts.late > 0 ? (
+            <Pressable
+              onPress={onLatePress}
+              accessibilityRole="button"
+              accessibilityLabel={t('flotte.header.lateLineA11y', { count: counts.late })}
+              hitSlop={10}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+            >
+              <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: Brand.errorOnDark, shadowColor: Brand.errorOnDark, shadowOpacity: 1, shadowRadius: 4, shadowOffset: { width: 0, height: 0 } }} />
+              <HText weight="semibold" size={12} color={Brand.errorOnDark}>
+                {counts.late === 1 ? t('flotte.header.lateLineOne') : t('flotte.header.lateLineMany', { count: counts.late })}
+              </HText>
+            </Pressable>
+          ) : null}
         </View>
         <FleetRing counts={counts} />
       </View>
@@ -146,7 +171,7 @@ export function FleetHeader({
       {/* Tuiles de statut : ce sont les filtres */}
       <View style={{ paddingTop: 18, paddingHorizontal: 20, flexDirection: 'row', gap: 8 }}>
         {FLEET_GROUPS.map((key) => (
-          <Tile key={key} group={key} count={counts[key]} selected={group === key} onPress={() => onToggleGroup(key)} />
+          <Tile key={key} group={key} count={counts[key]} late={key === 'rented' ? counts.late : 0} selected={group === key} onPress={() => onToggleGroup(key)} />
         ))}
       </View>
 

@@ -4,12 +4,12 @@ import { Brand, Palette } from '@/constants/theme';
 import { HText, MicroLabel } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
-import { FLEET_GROUPS, type FleetGroup, type FleetSection } from './fleet-model';
+import { FLEET_GROUPS, type FleetSection, type WeekKind } from './fleet-model';
 import { SECTION_LABEL_KEY } from './fleet-card-text';
 import { SECTION_DOT, WEEK_COLOR } from './fleet-style';
 
 /** En-tête de section : point coloré, libellé, nombre et filet jusqu'au bord. */
-export function FleetSectionHeader({ section, count }: { section: FleetSection; count: number }) {
+export function FleetSectionHeader({ section, count, late = 0 }: { section: FleetSection; count: number; late?: number }) {
   const { t } = useLanguage();
   return (
     <View accessibilityRole="header" style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingTop: 16, paddingBottom: 10 }}>
@@ -20,17 +20,22 @@ export function FleetSectionHeader({ section, count }: { section: FleetSection; 
       <HText weight="semibold" size={11} color={Palette.textSecondary}>
         {String(count)}
       </HText>
+      {late > 0 ? (
+        <HText weight="bold" size={11} color={Palette.error}>
+          {t('flotte.card.sections.lateNote', { count: late })}
+        </HText>
+      ) : null}
       <View style={{ flex: 1, height: 1, backgroundColor: Palette.border }} />
     </View>
   );
 }
 
-/** Légende unique sous la liste : Libre, Loué, Immobilisé (les couleurs de la frise). */
+/** Légende unique sous la liste : Libre, Loué, Immobilisé, En retard (les couleurs de la frise). */
 export function FleetLegend() {
   const { t } = useLanguage();
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, paddingTop: 16, paddingBottom: 8 }}>
-      {FLEET_GROUPS.map((group: FleetGroup) => (
+    <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, paddingTop: 16, paddingBottom: 8, flexWrap: 'wrap' }}>
+      {([...FLEET_GROUPS, 'late'] as WeekKind[]).map((group) => (
         <View key={group} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           <View style={{ width: 14, height: 6, borderRadius: 3, backgroundColor: WEEK_COLOR[group] }} />
           <HText size={11} color={Palette.textSecondary}>

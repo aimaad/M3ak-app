@@ -47,7 +47,7 @@ export function FleetRing({ counts }: { counts: FleetCounts }) {
     <View
       accessible
       accessibilityRole="image"
-      accessibilityLabel={t('flotte.header.ringA11y', { free: counts.free, rented: counts.rented, immobilized: counts.immobilized })}
+      accessibilityLabel={t(counts.late > 0 ? 'flotte.header.ringA11yLate' : 'flotte.header.ringA11y', { free: counts.free, rented: counts.rented, immobilized: counts.immobilized, late: counts.late })}
       style={{ width: RING_SIZE, height: RING_SIZE }}
     >
       <Svg width={RING_SIZE} height={RING_SIZE} viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`} style={{ transform: [{ rotate: '-90deg' }] }}>

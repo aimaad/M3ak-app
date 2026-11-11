@@ -1,6 +1,6 @@
 import type { Rental } from '@/features/rentals/types';
 
-import { adviceCandidates, isSnoozed, parseSnoozeMap, pickAdvice, SNOOZE_MS, snoozeAdvice } from '../fleet-advice';
+import { adviceCandidates, isSnoozed, parseSnoozeMap, pickAdvice, SNOOZE_MS, snoozeAdvice, visibleAdvice } from '../fleet-advice';
 import { buildFleetItems } from '../fleet-model';
 import type { Vehicle } from '../types';
 
@@ -72,5 +72,40 @@ describe('« Plus tard » : masqué 24 h', () => {
     expect(parseSnoozeMap('pas du json')).toEqual({});
     expect(parseSnoozeMap('[1,2]')).toEqual({});
     expect(parseSnoozeMap('{"a":123,"b":"x"}')).toEqual({ a: 123 });
+  });
+});
+
+describe('Conseil BIBIP : retour en retard (priorité 0)', () => {
+  const lateRental = (id: string, vehicleId: string, dueDay: number) =>
+    ({ id, vehicleId, customerId: 'c1', statut: 'en_cours', dateDebutPrevue: iso(1), dateFinPrevue: iso(dueDay, 18), dateDepartReel: iso(1), dateRetourReel: null }) as Rental;
+  const customers = [{ id: 'c1', nomComplet: 'FOUAD BENNANI', telephone: '+212611223344' }];
+  const vehicles = [vehicle('libre', 'disponible'), vehicle('r5', 'en_location', 'Sandero'), vehicle('r2', 'en_location', 'Logan')];
+  const rentals = [lateRental('l5', 'r5', 5), lateRental('l2', 'r2', 8)];
+  const advice = adviceCandidates({ items: fleet(vehicles, rentals), rentals, customers, now: NOW });
+
+  it('passe avant tous les autres conseils, le plus gros retard d’abord', () => {
+    expect(advice.map((a) => [a.kind, a.vehicleName])).toEqual([['late', 'Dacia Sandero'], ['late', 'Dacia Logan'], ['noBooking', 'Dacia libre']]);
+    expect(pickAdvice(advice, {}, NOW)?.kind).toBe('late');
+  });
+
+  it('porte le client (casse normalisée), son numéro, le jour prévu et la durée', () => {
+    expect(advice[0]).toMatchObject({ kind: 'late', key: 'late:r5', customerName: 'Fouad B.', phone: '+212611223344', dueDay: '2030-06-05', late: { amount: 5, unit: 'days' } });
+  });
+
+  it('sans client connu : pas de nom ni de numéro', () => {
+    const none = adviceCandidates({ items: fleet(vehicles, rentals), rentals, now: NOW });
+    expect(none[0]).toMatchObject({ kind: 'late', customerName: null, phone: null });
+  });
+
+  it('visible de tous les rôles ; les conseils 1 et 2 (offre, inspection) restent réservés au propriétaire', () => {
+    expect(visibleAdvice(advice, true).map((a) => a.kind)).toEqual(['late', 'late', 'noBooking']);
+    expect(visibleAdvice(advice, false).map((a) => a.kind)).toEqual(['late', 'late']);
+    expect(visibleAdvice(adviceCandidates({ items: fleet([vehicle('libre', 'disponible')], []), rentals: [], now: NOW }), false)).toEqual([]);
+  });
+
+  it('« Plus tard » masque le retard 24 h, puis le suivant prend la place', () => {
+    const snoozed = snoozeAdvice({}, 'late:r5', NOW);
+    expect(pickAdvice(advice, snoozed, NOW)).toMatchObject({ key: 'late:r2' });
+    expect(pickAdvice(advice, snoozed, new Date(NOW.getTime() + SNOOZE_MS + 1000))).toMatchObject({ key: 'late:r5' });
   });
 });

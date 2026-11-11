@@ -16,7 +16,7 @@ button{font-family:inherit;cursor:pointer}
 input::placeholder{color:#8A9193}
 </style>
 </helmet>
-<div style="width: 390px; height: 2180px; background: #F6F6F5; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
+<div style="width: 390px; height: 2500px; background: #F6F6F5; font-family: 'Inter', sans-serif; color: #202527; position: relative; overflow: hidden; box-sizing: border-box">
 
 <div style="background: #202527; border-radius: 0 0 34px 34px; position: relative; overflow: hidden; padding-bottom: 22px">
 <img src="/_blob/b93ff4357a87bf918b957270b01b0847" alt="" style="position: absolute; left: 0; top: 70px; width: 390px; height: 244px; object-fit: cover; opacity: 0.9">
@@ -40,20 +40,21 @@ input::placeholder{color:#8A9193}
 <div style="position: relative; height: 150px; padding: 0 20px; display: flex; align-items: flex-end; justify-content: space-between">
 <div style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 4px">
 <span style="display: flex; align-items: baseline; gap: 8px">
-<span style="font-family: 'Montserrat', sans-serif; font-size: 56px; font-weight: 700; color: #FFFFFF; line-height: 0.9; letter-spacing: -0.03em">5</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 56px; font-weight: 700; color: #FFFFFF; line-height: 0.9; letter-spacing: -0.03em">6</span>
 <span style="font-size: 15px; font-weight: 500; color: #F4F5F5">véhicules</span>
 </span>
 <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #B4BABC"><span style="width: 7px; height: 7px; border-radius: 4px; background: #4CC38A; box-shadow: 0 0 8px #4CC38A"></span>2 prêts à partir maintenant</span>
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #F0657F"><span style="width: 7px; height: 7px; border-radius: 4px; background: #F0657F; box-shadow: 0 0 8px #F0657F"></span>1 retour en retard</span>
 </div>
 <div style="position: relative; width: 112px; height: 112px">
-<svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Répartition de la flotte : 2 disponibles, 1 en location, 2 à inspecter">
+<svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="Répartition de la flotte : 2 disponibles, 2 en location dont 1 en retard, 2 immobilisés">
 <circle cx="56" cy="56" r="46" fill="rgba(32,37,39,0.75)" stroke="#343B3E" stroke-width="9"></circle>
-<circle cx="56" cy="56" r="46" fill="none" stroke="#4CC38A" stroke-width="9" stroke-linecap="round" stroke-dasharray="104 185" stroke-dashoffset="-6" transform="rotate(-90 56 56)"></circle>
-<circle cx="56" cy="56" r="46" fill="none" stroke="#F4F5F5" stroke-width="9" stroke-linecap="round" stroke-dasharray="46 243" stroke-dashoffset="-122" transform="rotate(-90 56 56)"></circle>
-<circle cx="56" cy="56" r="46" fill="none" stroke="#F2C94C" stroke-width="9" stroke-linecap="round" stroke-dasharray="104 185" stroke-dashoffset="-180" transform="rotate(-90 56 56)"></circle>
+<circle cx="56" cy="56" r="46" fill="none" stroke="#4CC38A" stroke-width="9" stroke-linecap="round" stroke-dasharray="86 203" stroke-dashoffset="-6" transform="rotate(-90 56 56)"></circle>
+<circle cx="56" cy="56" r="46" fill="none" stroke="#F4F5F5" stroke-width="9" stroke-linecap="round" stroke-dasharray="86 203" stroke-dashoffset="-102" transform="rotate(-90 56 56)"></circle>
+<circle cx="56" cy="56" r="46" fill="none" stroke="#F2C94C" stroke-width="9" stroke-linecap="round" stroke-dasharray="86 203" stroke-dashoffset="-198" transform="rotate(-90 56 56)"></circle>
 </svg>
 <span style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
-<span style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: #FFFFFF; line-height: 1">20%</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: #FFFFFF; line-height: 1">33%</span>
 <span style="font-size: 9px; font-weight: 600; letter-spacing: 0.12em; color: #B4BABC">EN ROUTE</span>
 </span>
 </div>
@@ -63,6 +64,9 @@ input::placeholder{color:#8A9193}
 <sc-for list="{{tiles}}" as="t" hint-placeholder-count="3">
 <button onClick="{{t.pick}}" aria-pressed="{{t.pressed}}" style="{{t.style}}">
 <span style="{{t.barStyle}}"></span>
+<sc-if value="{{t.hasLate}}" hint-placeholder-val="{{false}}">
+<span style="position: absolute; right: 8px; top: 8px; font-size: 10px; font-weight: 700; color: #FFFFFF; background: #C42B4B; border-radius: 8px; padding: 2px 6px">{{t.late}}</span>
+</sc-if>
 <span style="font-family: 'Montserrat', sans-serif; font-size: 24px; font-weight: 700; color: #FFFFFF; line-height: 1">{{t.n}}</span>
 <span style="font-size: 10px; font-weight: 600; letter-spacing: 0.1em; color: #B4BABC; text-align: left">{{t.label}}</span>
 </button>
@@ -84,12 +88,12 @@ input::placeholder{color:#8A9193}
 <svg width="22" height="22" viewBox="-20 -27 164 164" fill="none" aria-hidden="true"><line x1="18" y1="92" x2="18" y2="8" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"></line><circle cx="46" cy="64" r="26" stroke="#FFFFFF" stroke-width="13"></circle><path d="M81.2 34.4 A46 46 0 0 1 81.2 93.6" stroke="#CA531D" stroke-width="8" stroke-linecap="round"></path><path d="M93.5 24.1 A62 62 0 0 1 93.5 103.9" stroke="#CA531D" stroke-width="8" stroke-linecap="round"></path></svg>
 </span>
 <span style="display: flex; flex-direction: column; gap: 4px">
-<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: #EC7A45">CONSEIL BIBIP</span>
-<span style="font-size: 14px; line-height: 1.4; color: #F4F5F5">La <b style="color: #FFFFFF">Troc 2025</b> n'a aucune réservation cette semaine. Une offre week-end ?</span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.16em; color: #F0657F">RETOUR EN RETARD</span>
+<span style="font-size: 14px; line-height: 1.4; color: #F4F5F5">La <b style="color: #FFFFFF">Dacia Sandero</b> devait revenir mer. 28 oct. : <b style="color: #FFFFFF">13 jours de retard</b>. Fouad B. ne l'a pas rendue.</span>
 </span>
 </div>
 <div style="display: flex; gap: 8px; padding-left: 48px">
-<button style="height: 36px; border-radius: 18px; border: none; background: {{accent}}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 0 14px">Créer l'offre</button>
+<button style="height: 36px; border-radius: 18px; border: none; background: {{accent}}; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 0 14px">Appeler Fouad B.</button>
 <button style="height: 36px; border-radius: 18px; border: 1px solid #6B3A22; background: transparent; color: #F4F5F5; font-size: 13px; font-weight: 600; padding: 0 14px">Plus tard</button>
 </div>
 </div>
@@ -139,6 +143,7 @@ input::placeholder{color:#8A9193}
 <span style="{{g.dot}}"></span>
 <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #202527">{{g.label}}</span>
 <span style="font-size: 11px; font-weight: 600; color: #5E6466">{{g.n}}</span>
+<span style="font-size: 11px; font-weight: 700; color: #C42B4B">{{g.lateNote}}</span>
 <span style="flex: 1; height: 1px; background: #E2E4E5"></span>
 </div>
 <sc-for list="{{g.cars}}" as="c" hint-placeholder-count="2">
@@ -169,8 +174,8 @@ input::placeholder{color:#8A9193}
 
 <span style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px 4px 4px">
 <span style="display: flex; justify-content: space-between; align-items: center; font-size: 12px">
-<span style="font-weight: 600; color: #202527">{{c.when}}</span>
-<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: #5E6466">7 PROCHAINS JOURS</span>
+<span style="{{c.whenStyle}}">{{c.when}}<sc-if value="{{c.isLate}}" hint-placeholder-val="{{false}}"><span style="font-weight: 700; color: #FFFFFF; background: #C42B4B; border-radius: 6px; padding: 1px 6px; margin-left: 6px; white-space: nowrap; display: inline-block">{{c.lateTxt}}</span></sc-if></span>
+<span style="font-size: 10px; font-weight: 600; letter-spacing: 0.12em; color: #5E6466; white-space: nowrap; flex-shrink: 0; margin-left: 8px">7 PROCHAINS JOURS</span>
 </span>
 <span style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
 <sc-for list="{{c.days}}" as="d" hint-placeholder-count="7">
@@ -200,6 +205,7 @@ input::placeholder{color:#8A9193}
 <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 6px; border-radius: 3px; background: #1A7F53"></span>Libre</span>
 <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 6px; border-radius: 3px; background: #202527"></span>Loué</span>
 <span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 6px; border-radius: 3px; background: #E0B000"></span>Immobilisé</span>
+<span style="display: flex; align-items: center; gap: 6px"><span style="width: 14px; height: 6px; border-radius: 3px; background: #C42B4B"></span>En retard</span>
 </div>
 </div>
 
@@ -228,7 +234,7 @@ input::placeholder{color:#8A9193}
 </nav>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#CA531D","options":["#CA531D","#E46A32","#D4AF6A"]},"$preview":{"width":390,"height":2180}}'>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#CA531D","options":["#CA531D","#E46A32","#D4AF6A"]},"$preview":{"width":390,"height":2500}}'>
 class Component extends DCLogic {
 constructor(props) {
 super(props);
@@ -238,7 +244,8 @@ renderVals() {
 const DEF = '/_blob/b93ff4357a87bf918b957270b01b0847';
 const PHOTO = '/_blob/4fbd9ba9c887d5ee000f35dc1343bfda';
 const fleet = [
-{ name: 'Dacia Sandero', plate: '68013 | ب | 72', st: 'rent', when: 'Youssef A. · retour lun. 16', km: '1 500 km', price: '500', img: DEF, week: 'rrrrrrf', occ: 72 },
+{ name: 'Dacia Sandero', plate: '68013 | ب | 72', st: 'late', when: 'Fouad B. · prévu mer. 28 oct.', lateTxt: '+13\u00a0j', km: '1 500 km', price: '500', img: DEF, week: 'lllllll', occ: 100 },
+{ name: 'Peugeot 208', plate: '[Immatriculation]', st: 'rent', when: 'Youssef A. · retour lun. 16', km: '1 550 km', price: '[Prix]', img: DEF, week: 'rrrrrrf', occ: 72 },
 { name: 'Dacia Logan', plate: '8921 | ب | 14', st: 'insp', when: 'Inspection avant remise', km: '0 km', price: '500', img: PHOTO, week: 'iffffff', occ: 45 },
 { name: 'Troc 2025', plate: '[Immatriculation]', st: 'free', when: 'Libre toute la semaine', km: '— km', price: '[Prix]', img: DEF, week: 'fffffff', occ: 18 },
 { name: 'F1 F1', plate: '[Immatriculation]', st: 'free', when: "Libre jusqu'au ven. 13", km: '— km', price: '[Prix]', img: DEF, week: 'ffffrrr', occ: 54 },
@@ -247,31 +254,36 @@ const fleet = [
 const look = {
 free: { label: 'Disponible', tile: 'DISPONIBLES', c: '#4CC38A', pillBg: 'rgba(26,127,83,0.92)', pillFg: '#FFFFFF' },
 rent: { label: 'En location', tile: 'EN LOCATION', c: '#F4F5F5', pillBg: 'rgba(244,245,245,0.95)', pillFg: '#202527' },
-insp: { label: 'À inspecter', tile: 'À INSPECTER', c: '#F2C94C', pillBg: 'rgba(242,201,76,0.95)', pillFg: '#202527' }
+late: { label: 'En retard', tile: 'EN LOCATION', c: '#F0657F', pillBg: '#C42B4B', pillFg: '#FFFFFF' },
+insp: { label: 'À inspecter', tile: 'IMMOBILISÉS', c: '#F2C94C', pillBg: 'rgba(242,201,76,0.95)', pillFg: '#202527' }
 };
-const dayBg = { f: '#1A7F53', r: '#202527', i: '#E0B000' };
-const order = { insp: 0, rent: 1, free: 2 };
+const dayBg = { f: '#1A7F53', r: '#202527', i: '#E0B000', l: '#C42B4B' };
+const order = { late: -1, insp: 0, rent: 1, free: 2 };
+const inGroup = (v, k) => v.st === k || (k === 'rent' && v.st === 'late');
 const cur = this.state.filter;
 const tiles = ['free', 'rent', 'insp'].map((k) => {
 const on = cur === k;
-const n = fleet.filter((v) => v.st === k).length;
+const n = fleet.filter((v) => inGroup(v, k)).length;
+const nl = k === 'rent' ? fleet.filter((v) => v.st === 'late').length : 0;
 return {
 n: String(n),
 label: look[k].tile,
+hasLate: nl > 0,
+late: nl + ' en retard',
 pressed: on ? 'true' : 'false',
 style: 'position: relative; overflow: hidden; height: 84px; border-radius: 18px; padding: 14px 12px 12px 12px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 6px; text-align: left; ' + (on ? 'background: #343B3E; border: 1.5px solid #CA531D; box-shadow: 0 8px 22px rgba(202,83,29,0.28);' : 'background: rgba(42,48,51,0.88); border: 1px solid #40484B;'),
 barStyle: 'position: absolute; left: 12px; top: 12px; width: 22px; height: 4px; border-radius: 2px; background: ' + look[k].c + '; box-shadow: 0 0 10px ' + look[k].c,
 pick: () => this.setState({ filter: on ? 'all' : k })
 };
 });
-const shown = fleet.filter((v) => cur === 'all' || v.st === cur).sort((a, b) => order[a.st] - order[b.st]);
+const shown = fleet.filter((v) => cur === 'all' || inGroup(v, cur)).sort((a, b) => order[a.st] - order[b.st]);
 const nums = ['10', '11', '12', '13', '14', '15', '16'];
-const act = { free: ['Louer', true], rent: ['Prolonger', false], insp: ["Inspecter", false] };
+const act = { free: ['Louer', 'o'], rent: ['Prolonger', 'g'], insp: ['Inspecter', 'g'], late: ['Appeler', 'r'] };
 const toCar = (v) => ({
 occ: v.occ + ' %',
 occBar: 'width: ' + Math.max(v.occ, 2) + '%; border-radius: 3px; background: ' + (v.occ >= 60 ? '#1A7F53' : v.occ >= 30 ? '#202527' : '#CA531D'),
 act: act[v.st][0],
-actStyle: 'flex-shrink: 0; height: 44px; border-radius: 22px; padding: 0 14px 0 18px; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; ' + (act[v.st][1] ? 'background: #CA531D; color: #FFFFFF; box-shadow: 0 6px 16px rgba(202,83,29,0.35);' : 'background: #202527; color: #FFFFFF;'),
+actStyle: 'flex-shrink: 0; height: 44px; border-radius: 22px; padding: 0 14px 0 18px; display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; ' + ({ o: 'background: #CA531D; color: #FFFFFF; box-shadow: 0 6px 16px rgba(202,83,29,0.35);', g: 'background: #202527; color: #FFFFFF;', r: 'background: #C42B4B; color: #FFFFFF; box-shadow: 0 6px 16px rgba(196,43,75,0.3);' })[act[v.st][1]],
 name: v.name,
 plate: v.plate,
 img: v.img,
@@ -279,8 +291,11 @@ alt: v.img === DEF ? 'Image par défaut, aucune photo' : 'Photo de la ' + v.name
 noPhoto: v.img === DEF,
 status: look[v.st].label,
 pill: 'position: absolute; left: 6px; bottom: 6px; display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; border-radius: 8px; padding: 3px 7px; background: ' + look[v.st].pillBg + '; color: ' + look[v.st].pillFg,
-pillDot: 'width: 6px; height: 6px; border-radius: 3px; background: ' + (v.st === 'free' ? '#FFFFFF' : '#202527'),
+pillDot: 'width: 6px; height: 6px; border-radius: 3px; background: ' + (v.st === 'free' || v.st === 'late' ? '#FFFFFF' : '#202527'),
 when: v.when,
+isLate: v.st === 'late',
+lateTxt: v.lateTxt || '',
+whenStyle: 'font-weight: 600; color: ' + (v.st === 'late' ? '#C42B4B' : '#202527'),
 km: v.km,
 price: v.price,
 days: v.week.split('').map((s, i) => ({
@@ -290,16 +305,18 @@ numStyle: 'font-size: 10px; font-weight: ' + (i === 0 ? '700; color: #CA531D' : 
 }))
 });
 const gLook = { insp: ['À INSPECTER', '#E0B000'], rent: ['EN LOCATION', '#202527'], free: ['DISPONIBLES', '#1A7F53'] };
-const groups = ['insp', 'rent', 'free'].map((k) => ({ k, list: shown.filter((v) => v.st === k) })).filter((g) => g.list.length).map((g) => ({
+const groups = ['insp', 'rent', 'free'].map((k) => ({ k, list: shown.filter((v) => inGroup(v, k)) })).filter((g) => g.list.length).map((g) => ({
 label: gLook[g.k][0],
 n: String(g.list.length),
+lateNote: g.list.filter((v) => v.st === 'late').length ? '· ' + g.list.filter((v) => v.st === 'late').length + ' en retard' : '',
 dot: 'width: 8px; height: 8px; border-radius: 4px; background: ' + gLook[g.k][1],
 cars: g.list.map(toCar)
 }));
 const IC = {
 shield: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z',
 tool: 'M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.5-.5-.5-2.5z',
-cal: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4'
+cal: 'M3 5h18v16H3zM3 10h18M8 3v4M16 3v4',
+clock: 'M12 3a9 9 0 1 0 0 18a9 9 0 1 0 0-18M12 7v5l3 2'
 };
 const alerts = [
 { title: 'Assurance', car: 'Dacia Logan', due: 'J-5', icon: IC.shield, pct: 84, hot: true },
@@ -311,11 +328,12 @@ car: a.car,
 due: a.due,
 icon: a.icon,
 iconColor: a.hot ? '#FFFFFF' : '#202527',
-iconBox: 'width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: ' + (a.hot ? '#CA531D' : '#F6F6F5'),
-dueStyle: 'font-family: Montserrat, sans-serif; font-size: 15px; font-weight: 700; color: ' + (a.hot ? '#B5481A' : '#202527'),
-fill: 'width: ' + a.pct + '%; border-radius: 3px; background: ' + (a.hot ? '#CA531D' : '#202527')
+bc: a.hot === 'late' ? '#C42B4B' : '#CA531D',
+iconBox: 'width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: ' + (a.hot === 'late' ? '#C42B4B' : a.hot ? '#CA531D' : '#F6F6F5'),
+dueStyle: 'font-family: Montserrat, sans-serif; font-size: 15px; font-weight: 700; color: ' + (a.hot === 'late' ? '#C42B4B' : a.hot ? '#B5481A' : '#202527'),
+fill: 'width: ' + a.pct + '%; border-radius: 3px; background: ' + (a.hot === 'late' ? '#C42B4B' : a.hot ? '#CA531D' : '#202527')
 }));
-const titles = { all: 'Tous les véhicules', free: 'Disponibles', rent: 'En location', insp: 'À inspecter' };
+const titles = { all: 'Tous les véhicules', free: 'Disponibles', rent: 'En location', insp: 'Immobilisés' };
 return {
 accent: this.props.accent ?? '#CA531D',
 tiles,

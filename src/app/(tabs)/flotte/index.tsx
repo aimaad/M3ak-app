@@ -2,7 +2,7 @@ import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useMemo, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { ActivityIndicator, FlatList, Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
+import { ActivityIndicator, FlatList, Linking, Pressable, RefreshControl, ScrollView, SectionList, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
@@ -17,7 +17,7 @@ import { useCustomers } from '@/features/customers/hooks';
 import { useMaintenanceItems } from '@/features/maintenance/hooks';
 import { useRentals } from '@/features/rentals/hooks';
 import { AdviceCard } from '@/features/vehicles/advice-card';
-import { adviceCandidates, pickAdvice } from '@/features/vehicles/fleet-advice';
+import { adviceCandidates, pickAdvice, visibleAdvice } from '@/features/vehicles/fleet-advice';
 import { actionFor, canAddVehiclePhoto, canSeePrices, contextOf, type FleetAction } from '@/features/vehicles/fleet-card';
 import { FleetVehicleCard } from '@/features/vehicles/fleet-vehicle-card';
 import { FleetLegend, FleetMessage, FleetSectionHeader, FleetSkeleton } from '@/features/vehicles/fleet-sections';
@@ -76,7 +76,10 @@ export default function FlotteScreen() {
   const customers = customersQuery.data ?? EMPTY_CUSTOMERS;
   const activeVehicles = useMemo(() => vehicles.filter((v) => !v.archivedAt), [vehicles]);
   // Statut d'aujourd'hui et frise de chaque véhicule : UN calcul pour toute la flotte, même source que les Disponibilités de l'accueil.
-  const items = useMemo(() => buildFleetItems({ vehicles, rentals, maintenance, now: new Date() }), [vehicles, rentals, maintenance]);
+  // « Maintenant » : un seul pour tout l'écran (dates, retards, conseil), renouvelé quand les données se rafraîchissent.
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- on veut une nouvelle heure à chaque nouvelle donnée
+  const now = useMemo(() => new Date(), [vehicles, rentals, maintenance]);
+  const items = useMemo(() => buildFleetItems({ vehicles, rentals, maintenance, now }), [vehicles, rentals, maintenance, now]);
   const counts = useMemo(() => groupCounts(items), [items]);
   const itemById = useMemo(() => new Map(items.map((item) => [item.vehicle.id, item])), [items]);
   const options = useMemo(() => filterOptions(activeVehicles), [activeVehicles]);
@@ -86,14 +89,16 @@ export default function FlotteScreen() {
   }, [vehicles, filters, sort, group, itemById]);
   const pagination = usePagination(filtered, `${JSON.stringify(filters)}${sort}${group}`);
 
-  // Liste groupée par statut : mêmes filtres (recherche, catégorie, marque) et tuile active ; l'ordre dans une section suit le tri choisi.
+  // Liste groupée par statut : mêmes filtres (recherche, catégorie, marque) et tuile active ; l'ordre dans une section suit le tri choisi,
+  // sauf « En location » où les retours en retard passent en tête (le plus gros retard d'abord).
   const sections = useMemo(() => {
     if (filters.includeArchived) return [];
-    const visible = new Set(filtered.map((v) => v.id));
-    const order = new Map(filtered.map((v, index) => [v.id, index]));
-    const shown = items.filter((item) => visible.has(item.vehicle.id) && matchesGroup(item, group));
-    return buildSections(shown).map((section) => ({ key: section.key, data: [...section.items].sort((a, b) => (order.get(a.vehicle.id) ?? 0) - (order.get(b.vehicle.id) ?? 0)) }));
-  }, [items, filtered, group, filters.includeArchived]);
+    const shown = filtered.flatMap((vehicle) => {
+      const item = itemById.get(vehicle.id);
+      return item && matchesGroup(item, group) ? [item] : [];
+    });
+    return buildSections(shown, now).map((section) => ({ key: section.key, late: section.late, data: section.items }));
+  }, [itemById, filtered, group, filters.includeArchived, now]);
   // Données des cartes (client, retour, locations) : une seule préparation pour toute la flotte.
   const cardData = useMemo(
     () => ({ customers: new Map(customers.map((c) => [c.id, c])), rentals: new Map(rentals.map((r) => [r.id, r])), maintenance }),
@@ -101,12 +106,18 @@ export default function FlotteScreen() {
   );
 
   // Conseil BIBIP : propriétaire seulement, un seul à la fois, « Plus tard » le masque 24 h.
+  // Le retard est visible de tous les rôles (aucun montant) ; les autres conseils restent réservés au propriétaire.
   const advice = useMemo(
-    () => (isOwner && snoozeLoaded ? pickAdvice(adviceCandidates({ items, rentals, now: new Date() }), snoozed, new Date()) : null),
-    [isOwner, snoozeLoaded, items, rentals, snoozed]
+    () => (snoozeLoaded ? pickAdvice(visibleAdvice(adviceCandidates({ items, rentals, customers, now }), isOwner), snoozed, now) : null),
+    [isOwner, snoozeLoaded, items, rentals, customers, snoozed, now]
   );
   // « À surveiller » : documents et entretiens à échéance, un seul calcul pour toute la flotte.
   const watchItems = useMemo(() => buildWatchItems({ vehicles, maintenance, now: new Date() }), [vehicles, maintenance]);
+  // Appelle le client si on a son numéro ; sinon ouvre la location (d'où l'on peut le retrouver et prolonger).
+  const callOrOpen = (phone: string | null, href: { pathname: string; params?: Record<string, string> }) => {
+    if (phone) void Linking.openURL(`tel:${phone.replace(/[^\d+]/g, '')}`).catch(() => router.push(href as Parameters<typeof router.push>[0]));
+    else router.push(href as Parameters<typeof router.push>[0]);
+  };
   const offerVehicle = offerVehicleId ? vehicles.find((v) => v.id === offerVehicleId) : undefined;
 
   if (agencyQuery.isPending) {
@@ -162,13 +173,19 @@ export default function FlotteScreen() {
       onQueryChange={(query) => setFilters((prev) => ({ ...prev, query }))}
       onOpenFilters={() => setShowSheet(true)}
       onGallery={() => setView('gallery')}
+      onLatePress={() => setGroup('rented')}
       onAdd={() => router.push('/flotte/nouveau')}
     >
       {advice ? (
         <AdviceCard
           advice={advice}
+          now={now}
           onLater={() => snooze(advice.key)}
-          onAct={() => (advice.kind === 'noBooking' ? setOfferVehicleId(advice.vehicleId) : router.push(inspectionHref(advice.vehicleId, rentals) as Parameters<typeof router.push>[0]))}
+          onAct={() => {
+            if (advice.kind === 'noBooking') setOfferVehicleId(advice.vehicleId);
+            else if (advice.kind === 'late') callOrOpen(advice.phone, { pathname: '/locations/[id]', params: { id: advice.late.rentalId } });
+            else router.push(inspectionHref(advice.vehicleId, rentals) as Parameters<typeof router.push>[0]);
+          }}
         />
       ) : null}
     </FleetHeader>
@@ -215,7 +232,8 @@ export default function FlotteScreen() {
     void maintenanceQuery.refetch();
     void customersQuery.refetch();
   };
-  const runAction = (action: FleetAction) => router.push(action.href as Parameters<typeof router.push>[0]);
+  // « Appeler » : appel du client (tel:) ; sans numéro, ouvre la location.
+  const runAction = (action: FleetAction) => (action.kind === 'call' ? callOrOpen(action.phone ?? null, action.href) : router.push(action.href as Parameters<typeof router.push>[0]));
   const archivedMode = filters.includeArchived;
   // Galerie : mêmes éléments que la liste, à plat (ordre des sections) ; un vide complète la dernière ligne si le nombre est impair.
   const galleryData = sections.flatMap((section) => section.data);
@@ -309,13 +327,14 @@ export default function FlotteScreen() {
                 {controls}
               </View>
             }
-            renderSectionHeader={({ section }) => <FleetSectionHeader section={section.key} count={section.data.length} />}
+            renderSectionHeader={({ section }) => <FleetSectionHeader section={section.key} count={section.data.length} late={section.late} />}
             renderItem={({ item }) => (
               <View style={{ paddingHorizontal: 20 }}>
                 <FleetVehicleCard
                   item={item}
                   context={contextOf(item, cardData)}
-                  action={actionFor(item, role, rentals, new Date())}
+                  action={actionFor(item, role, rentals, now, cardData)}
+                  now={now}
                   showPrice={showPrice}
                   canAddPhoto={canAddVehiclePhoto(role)}
                   onOpen={() => router.push(`/flotte/${item.vehicle.id}`)}

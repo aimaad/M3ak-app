@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports, import/first -- les « jest.mock » doivent précéder les imports et utilisent require */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { Linking } from 'react-native';
 
 import fr from '@/i18n/locales/fr.json';
 
@@ -14,6 +15,9 @@ const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth
 const base = { agencyId: 'a1', branchId: null, kilometrage: 1000, prixJour: 400, photos: [], documents: [], archivedAt: null, createdAt: at(-100), updatedAt: at(-100), categorie: 'economique' };
 const mockState = {
   role: 'owner' as 'owner' | 'manager' | 'employee',
+  late: false, // ajoute une Logan en retard (retour prévu il y a 3 jours) loué à FOUAD BENNANI
+  lateVehicles: [{ ...base, id: 'retard', marque: 'Dacia', modele: 'Logan', immatriculation: '8921-ب-14', statut: 'en_location' }],
+  lateRentals: [{ id: 'rl', vehicleId: 'retard', customerId: 'c2', statut: 'en_cours', dateDebutPrevue: at(-9), dateFinPrevue: at(-3, 18), dateDepartReel: at(-9), dateRetourReel: null }],
   vehicles: [
     { ...base, id: 'libre', marque: 'Dacia', modele: 'Troc', immatriculation: '8921-ب-14', statut: 'disponible' },
     { ...base, id: 'louee', marque: 'Dacia', modele: 'Sandero', immatriculation: '68013 | ب | 72', statut: 'en_location' },
@@ -25,14 +29,14 @@ const mockState = {
     { id: 'r0', vehicleId: 'inspecter', customerId: 'c1', statut: 'terminee', dateDebutPrevue: at(-9), dateFinPrevue: at(-5), dateDepartReel: at(-9), dateRetourReel: at(-5) },
   ],
   maintenance: [] as unknown[],
-  customers: [{ id: 'c1', nomComplet: 'Youssef Alami' }],
+  customers: [{ id: 'c1', nomComplet: 'Youssef Alami', telephone: null }, { id: 'c2', nomComplet: 'FOUAD BENNANI', telephone: '+212 6 11 22 33 44' }],
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
 const mockQuery = (data: unknown) => ({ data, isLoading: false, isPending: false, isError: false, isFetching: false, refetch: jest.fn() });
 
 jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => mockQuery({ agencyId: 'a1', role: mockState.role, agencyName: 'Atlas Location' }) }));
-jest.mock('@/features/vehicles/hooks', () => ({ useVehicles: () => mockQuery(mockState.vehicles) }));
-jest.mock('@/features/rentals/hooks', () => ({ useRentals: () => mockQuery(mockState.rentals) }));
+jest.mock('@/features/vehicles/hooks', () => ({ useVehicles: () => mockQuery(mockState.late ? [...mockState.vehicles, ...mockState.lateVehicles] : mockState.vehicles) }));
+jest.mock('@/features/rentals/hooks', () => ({ useRentals: () => mockQuery(mockState.late ? [...mockState.rentals, ...mockState.lateRentals] : mockState.rentals) }));
 jest.mock('@/features/maintenance/hooks', () => ({ useMaintenanceItems: () => mockQuery(mockState.maintenance) }));
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => mockQuery(mockState.customers) }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
@@ -71,6 +75,7 @@ describe('écran Ma Flotte (données simulées)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockState.role = 'owner';
+    mockState.late = false;
     mockStorage.view = null;
     mockStorage.saved = [];
   });
@@ -164,7 +169,7 @@ describe('écran Ma Flotte (données simulées)', () => {
   it('galerie : choix mémorisé, cartes avec statut, prix propriétaire seulement', async () => {
     mockStorage.view = 'gallery';
     await render(<FlotteScreen />);
-    expect(await screen.findByLabelText(/^Dacia Troc, Disponibles, immatriculation /, hidden)).toBeTruthy();
+    expect(await screen.findByLabelText(/^Dacia Troc, Disponible, immatriculation /, hidden)).toBeTruthy();
     expect(screen.getByLabelText('Afficher en liste')).toBeTruthy();
     expect(screen.queryAllByText(/\/j/, hidden).length).toBeGreaterThan(0);
   });
@@ -178,5 +183,70 @@ describe('écran Ma Flotte (données simulées)', () => {
     await fireEvent.press(screen.getByLabelText('Afficher en liste'));
     expect(mockStorage.saved).toContainEqual(['bibip.flotte.view.v1', 'list']);
     expect(screen.queryByLabelText('Afficher en liste')).toBeNull();
+  });
+
+  describe('retour en retard', () => {
+    const openURL = jest.spyOn(Linking, 'openURL');
+    beforeEach(() => {
+      openURL.mockReset();
+      openURL.mockResolvedValue(undefined);
+      mockState.late = true;
+    });
+
+    it('en-tête : ligne « 1 retour en retard » (tous les rôles), pastille sur la tuile En location, section « · 1 en retard »', async () => {
+      mockState.role = 'employee';
+      await render(<FlotteScreen />);
+      expect(screen.getByText('1 retour en retard')).toBeTruthy();
+      expect(screen.getByText('1\u00a0en\u00a0retard', hidden)).toBeTruthy();
+      expect(screen.getByLabelText('En location : 2, dont 1 en retard')).toBeTruthy(); // la tuile compte toutes les locations, retards compris
+      expect(screen.getByText('· 1 en retard', hidden)).toBeTruthy();
+    });
+
+    it('un tap sur la ligne de retard filtre sur « En location » ; le véhicule en retard passe avant la location normale', async () => {
+      await render(<FlotteScreen />);
+      await fireEvent.press(screen.getByLabelText(/Voir les véhicules en location, dont 1 en retard/));
+      expect(screen.getByLabelText('En location : 2, dont 1 en retard').props.accessibilityState).toMatchObject({ selected: true });
+      const logan = screen.getByLabelText(/^Dacia Logan, en retard de 3 jours, prévue le /);
+      const sandero = screen.getByLabelText(/^Dacia Sandero, /);
+      const labels = screen.getAllByRole('button').map((node) => node.props.accessibilityLabel as string | undefined);
+      expect(labels.indexOf(logan.props.accessibilityLabel)).toBeLessThan(labels.indexOf(sandero.props.accessibilityLabel));
+      expect(screen.queryByLabelText(/^Dacia Troc, /)).toBeNull();
+    });
+
+    it('conseil BIBIP prioritaire « RETOUR EN RETARD » : visible de l’employé, qui peut appeler le client', async () => {
+      mockState.role = 'employee';
+      await render(<FlotteScreen />);
+      expect(await screen.findByText('RETOUR EN RETARD', hidden)).toBeTruthy();
+      expect(screen.queryByText('CONSEIL BIBIP', hidden)).toBeNull();
+      expect(screen.getByLabelText(/^Retour en retard\. La Dacia Logan devait revenir .* : 3 jours de retard\. Fouad B\. ne l'a pas rendue\.$/)).toBeTruthy();
+      await fireEvent.press(screen.getByText('Appeler Fouad B.'));
+      expect(openURL).toHaveBeenCalledWith('tel:+212611223344');
+    });
+
+    it('le propriétaire voit le retard AVANT le conseil offre ; « Plus tard » laisse passer le conseil suivant', async () => {
+      await render(<FlotteScreen />);
+      expect(await screen.findByText('RETOUR EN RETARD', hidden)).toBeTruthy();
+      await fireEvent.press(screen.getByText('Plus tard'));
+      expect(screen.queryByText('RETOUR EN RETARD', hidden)).toBeNull();
+      expect(screen.getByText('CONSEIL BIBIP', hidden)).toBeTruthy();
+    });
+
+    it('bouton « Appeler » de la carte : appelle le client (employé compris), sans « Prolonger » ni montant', async () => {
+      mockState.role = 'employee';
+      await render(<FlotteScreen />);
+      await fireEvent.press(screen.getByLabelText(/Voir les véhicules en location/));
+      await fireEvent.press(screen.getByLabelText('Appeler : Dacia Logan'));
+      expect(openURL).toHaveBeenCalledWith('tel:+212611223344');
+      expect(screen.queryByLabelText(/Prolonger/)).toBeNull();
+      expect(screen.queryAllByText(/MAD\/j/, hidden)).toHaveLength(0);
+    });
+
+    it('sans retard : ni ligne, ni pastille, ni conseil de retard', async () => {
+      mockState.late = false;
+      await render(<FlotteScreen />);
+      expect(screen.queryByText(/retour(s)? en retard/)).toBeNull();
+      expect(screen.queryByText('RETOUR EN RETARD', hidden)).toBeNull();
+      expect(screen.getByLabelText('En location : 1')).toBeTruthy();
+    });
   });
 });

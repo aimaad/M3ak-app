@@ -437,7 +437,13 @@
       },
       "titleAll": "جميع الطوموبيلات",
       "countOne": "{{count}} طوموبيل",
-      "countMany": "{{count}} طوموبيلات"
+      "countMany": "{{count}} طوموبيلات",
+      "lateLineOne": "رجوع واحد متأخر",
+      "lateLineMany": "{{count}} رجوعات متأخرة",
+      "lateLineA11y": "شوف الطوموبيلات المكرية، منها {{count}} متأخرة",
+      "tileLate": "{{count}} متأخرة",
+      "tileA11yLate": "{{label}}: {{count}}، منها {{late}} متأخرة",
+      "ringA11yLate": "توزيع الأسطول: {{free}} متاحة، {{rented}} مكرية منها {{late}} متأخرة، {{immobilized}} موقوفة"
     },
     "advice": {
       "label": "نصيحة BIBIP",
@@ -447,7 +453,14 @@
       "waitingSuffix": " كتسنا المعاينة من {{days}} أيام.",
       "createOffer": "دير العرض",
       "inspect": "عاين",
-      "later": "من بعد"
+      "later": "من بعد",
+      "lateLabel": "رجوع متأخر",
+      "latePrefix": "",
+      "lateSuffix": " كان خاصها ترجع {{date}} : {{duration}} ديال التأخير.",
+      "lateClient": " {{name}} ما رجعهاش.",
+      "callClient": "اتصل بـ {{name}}",
+      "callClientNoName": "اتصل بالكليان",
+      "openRental": "شوف الكراء"
     },
     "offer": {
       "title": "دير العرض",
@@ -478,7 +491,8 @@
         "rented": "مكراية",
         "inspect": "خاصها معاينة",
         "maintenance": "فالصيانة",
-        "unavailable": "ماشي متاحة"
+        "unavailable": "ماشي متاحة",
+        "late": "متأخرة"
       },
       "statusPhrase": {
         "free": "متاحة",
@@ -496,7 +510,9 @@
         "maintenanceReturn": "كترجع من الورشة {{date}}",
         "garage": "فالكراج",
         "maintenancePlanned": "صيانة مبرمجة اليوم",
-        "unavailable": "ماشي متاحة"
+        "unavailable": "ماشي متاحة",
+        "lateWith": "{{name}} · كان مبرمج {{date}}",
+        "lateNoName": "كان مبرمج {{date}}"
       },
       "spoken": {
         "rentedWith": "عند {{name}}، الرجوع {{date}}",
@@ -510,7 +526,8 @@
         "rent": "كري",
         "extend": "مدّد",
         "inspect": "عاين",
-        "maintenance": "شوف الصيانة"
+        "maintenance": "شوف الصيانة",
+        "call": "اتصل"
       },
       "actionA11y": "{{action}}: {{name}}",
       "addPhoto": "زيد تصويرة ل {{name}}",
@@ -518,7 +535,8 @@
       "weekState": {
         "free": "خاوية",
         "rented": "مكراية",
-        "immobilized": "موقوفة"
+        "immobilized": "موقوفة",
+        "late": "متأخرة"
       },
       "weekUntil": "{{state}} حتى {{date}}",
       "weekAllWeek": "{{state}} الأسبوع كامل",
@@ -527,14 +545,16 @@
       "legend": {
         "free": "خاوية",
         "rented": "مكراية",
-        "immobilized": "موقوفة"
+        "immobilized": "موقوفة",
+        "late": "متأخرة"
       },
       "sections": {
         "inspect": "خاصها معاينة",
         "maintenance": "الصيانة",
         "unavailable": "ماشي متاحة",
         "rented": "مكراية",
-        "free": "متاحة"
+        "free": "متاحة",
+        "lateNote": "· {{count}} متأخرة"
       },
       "states": {
         "emptyTitle": "زيد أول طوموبيل ديالك",
@@ -544,6 +564,17 @@
         "noResultBody": "ما كاينة حتى طوموبيل كتوافق البحث ولا الفلاتر ديالك.",
         "retry": "عاود جرب",
         "archived": "المؤرشفة"
+      },
+      "late": {
+        "badgeDays": "‎+{{count}} يوم",
+        "badgeHours": "‎+{{count}} س",
+        "daysOne": "يوم واحد",
+        "daysMany": "{{count}} أيام",
+        "hoursOne": "ساعة واحدة",
+        "hoursMany": "{{count}} ساعات",
+        "spokenLate": "متأخرة بـ {{duration}}",
+        "spokenDue": "كان مبرمج ترجع نهار {{date}}",
+        "spokenClient": "الكليان {{name}}"
       }
     },
     "gallery": {

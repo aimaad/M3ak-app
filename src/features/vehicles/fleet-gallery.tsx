@@ -96,7 +96,9 @@ export function GalleryCard({ item, showPrice, onOpen }: { item: FleetItem; show
   const { t } = useLanguage();
   const { vehicle, group } = item;
   const name = fleetName(vehicle);
-  const status = t(`flotte.header.groups.${group}`);
+  // Libellé au singulier, comme sur la carte de la liste (« Disponible », « En location », « À inspecter », « En retard »).
+  const statusKey = item.late ? 'late' : item.section;
+  const status = t(`flotte.card.status.${statusKey}`);
   const plate = plateText(vehicle.immatriculation);
   const price = showPrice && vehicle.prixJour > 0 ? vehicle.prixJour : null;
   return (
@@ -121,7 +123,7 @@ export function GalleryCard({ item, showPrice, onOpen }: { item: FleetItem; show
             paddingVertical: 4,
           }}
         >
-          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: GROUP_ON_DARK[group] }} />
+          <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: item.late ? Brand.errorOnDark : GROUP_ON_DARK[group] }} />
           <HText weight="semibold" size={11} color={Brand.white}>
             {status}
           </HText>

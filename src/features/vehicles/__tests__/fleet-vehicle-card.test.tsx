@@ -30,12 +30,13 @@ const items = buildFleetItems({ vehicles: [sandero, libre], rentals, maintenance
 const hidden = { includeHiddenElements: true };
 const itemOf = (id: string) => items.find((i) => i.vehicle.id === id) as FleetItem;
 const data = { customers: new Map([['c1', { nomComplet: 'Youssef Alami' }]]), rentals: new Map(rentals.map((r) => [r.id, r])), maintenance: [] };
+const cardData = { rentals: data.rentals, customers: new Map([['c1', { telephone: '+212600000000' }]]) };
 
 async function renderCard(id: string, role: 'owner' | 'manager' | 'employee', overrides: Partial<React.ComponentProps<typeof FleetVehicleCard>> = {}) {
   const handlers = { onOpen: jest.fn(), onAction: jest.fn(), onAddPhoto: jest.fn() };
   const item = itemOf(id);
   const result = await render(
-    <FleetVehicleCard item={item} context={contextOf(item, data)} action={actionFor(item, role, rentals, NOW)} showPrice={canSeePrices(role)} canAddPhoto={canAddVehiclePhoto(role)} {...handlers} {...overrides} />
+    <FleetVehicleCard item={item} context={contextOf(item, data)} action={actionFor(item, role, rentals, NOW, cardData)} showPrice={canSeePrices(role)} canAddPhoto={canAddVehiclePhoto(role)} {...handlers} now={NOW} {...overrides} />
   );
   return { handlers, ...result };
 }
@@ -43,7 +44,7 @@ async function renderCard(id: string, role: 'owner' | 'manager' | 'employee', ov
 describe('carte véhicule', () => {
   it('lue en une phrase : nom, plaque, statut, client, retour, occupation', async () => {
     const item = itemOf('a');
-    expect(cardSentence(item, contextOf(item, data), 'fr', t)).toBe('Dacia Sandero, 68013 ب 72, en location chez Youssef A., retour lundi 17, occupation 40 pour cent');
+    expect(cardSentence(item, contextOf(item, data), 'fr', t, NOW)).toBe('Dacia Sandero, 68013 ب 72, en location chez Youssef A., retour lundi 17 juin, occupation 40 pour cent');
     await renderCard('a', 'owner');
     expect(screen.getByLabelText(/Dacia Sandero, 68013 ب 72, en location chez Youssef A\./)).toBeTruthy();
   });
@@ -105,14 +106,42 @@ describe('carte véhicule', () => {
     expect(screen.queryByLabelText(/Ajouter une photo/)).toBeNull();
   });
 
-  it('location en retard : ligne courte à l’écran, retard dit en toutes lettres à voix haute', async () => {
-    const lateRentals = [{ id: 'r9', vehicleId: 'a', customerId: 'c1', statut: 'en_cours', dateDebutPrevue: at(-5), dateFinPrevue: at(-1, 18), dateDepartReel: at(-5), dateRetourReel: null }] as Rental[];
-    const lateItem = buildFleetItems({ vehicles: [sandero], rentals: lateRentals, maintenance: [], now: NOW })[0];
-    const lateData = { ...data, rentals: new Map(lateRentals.map((r) => [r.id, r])) };
-    const context = contextOf(lateItem, lateData);
-    expect(context).toMatchObject({ kind: 'rented', late: true });
-    expect(contextTexts(context, 'fr', t).display).toBe('Youssef A. · retour dim. 9');
-    expect(cardSentence(lateItem, context, 'fr', t)).toContain('en location chez Youssef A., en retard, retour prévu dimanche 9');
+  // Un véhicule en retard à côté d'une location normale : retour prévu dimanche 2 juin à 18 h, on est le lundi 10 juin à midi → 8 jours.
+  const lateRentals = [{ id: 'r9', vehicleId: 'a', customerId: 'c1', statut: 'en_cours', dateDebutPrevue: at(-12), dateFinPrevue: at(-8, 18), dateDepartReel: at(-12), dateRetourReel: null }] as Rental[];
+  const lateItem = () => buildFleetItems({ vehicles: [sandero], rentals: lateRentals, maintenance: [], now: NOW })[0];
+  const lateData = () => ({ ...data, rentals: new Map(lateRentals.map((r) => [r.id, r])) });
+
+  it('location en retard : « prévu » avec le mois, pastille « +8 j » insécable, retard dit en toutes lettres à voix haute', async () => {
+    const item = lateItem();
+    const context = contextOf(item, lateData());
+    expect(context).toMatchObject({ kind: 'rented', late: { amount: 8, unit: 'days' } });
+    expect(contextTexts(context, 'fr', t, NOW).display).toBe('Youssef A. · prévu dim. 2 juin');
+    expect(cardSentence(item, context, 'fr', t, NOW)).toBe('Dacia Sandero, en retard de 8 jours, prévue le dimanche 2 juin, client Youssef A.');
+    await render(<FleetVehicleCard item={item} context={context} action={actionFor(item, 'employee', [], NOW, { ...cardData, rentals: lateData().rentals })} showPrice={false} canAddPhoto={false} onOpen={jest.fn()} onAction={jest.fn()} onAddPhoto={jest.fn()} now={NOW} />);
+    const badge = screen.getByText(/^\+8/, hidden);
+    expect(String(badge.props.children)).toBe('+8\u00a0j'); // jamais coupée entre le nombre et « j »
+    expect(screen.getByText('En retard', hidden)).toBeTruthy(); // badge sur la photo
+    expect(screen.getByText('Youssef A. · prévu dim. 2 juin', hidden)).toBeTruthy();
+  });
+
+  it('en retard : le bouton « Appeler » est proposé à l’employé aussi, et appelle sans ouvrir la fiche', async () => {
+    const item = lateItem();
+    const handlers = { onOpen: jest.fn(), onAction: jest.fn(), onAddPhoto: jest.fn() };
+    await render(<FleetVehicleCard item={item} context={contextOf(item, lateData())} action={actionFor(item, 'employee', [], NOW, { ...cardData, rentals: lateData().rentals })} showPrice={false} canAddPhoto={false} {...handlers} now={NOW} />);
+    await fireEvent.press(screen.getByLabelText('Appeler : Dacia Sandero'));
+    expect(handlers.onAction).toHaveBeenCalledWith({ kind: 'call', href: { pathname: '/locations/[id]', params: { id: 'r9' } }, phone: '+212600000000' });
+    expect(handlers.onOpen).not.toHaveBeenCalled();
+    expect(screen.queryByLabelText(/Prolonger/)).toBeNull();
+  });
+
+  it('retard de moins de 24 h : « +3 h » et « 3 heures » ; « 1 jour » au singulier', () => {
+    const short = (due: Date) => {
+      const rs = [{ id: 'r8', vehicleId: 'a', customerId: 'c1', statut: 'en_cours', dateDebutPrevue: at(-3), dateFinPrevue: due.toISOString(), dateDepartReel: at(-3), dateRetourReel: null }] as Rental[];
+      const item = buildFleetItems({ vehicles: [sandero], rentals: rs, maintenance: [], now: NOW })[0];
+      return cardSentence(item, contextOf(item, { ...data, rentals: new Map(rs.map((r) => [r.id, r])) }), 'fr', t, NOW);
+    };
+    expect(short(new Date(2030, 5, 10, 9))).toContain('en retard de 3 heures');
+    expect(short(new Date(2030, 5, 9, 12))).toContain('en retard de 1 jour');
   });
 
   it('la frise a un résumé lu à voix haute', async () => {
