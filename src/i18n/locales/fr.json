@@ -3478,6 +3478,26 @@
       "missing": "Ajouter la photo",
       "open": "Voir {{label}}",
       "viewerClose": "Fermer le document"
+    },
+    "archive": {
+      "lockedButton": "Archivage impossible pour l'instant",
+      "button": "Archiver ce véhicule",
+      "rented": "Elle est en location chez {{name}} jusqu'au {{day}}. Vous pourrez l'archiver après son retour.",
+      "rentedNoName": "Elle est en location jusqu'au {{day}}. Vous pourrez l'archiver après son retour.",
+      "late": "{{name}} ne l'a pas encore rendue. Enregistrez d'abord son retour.",
+      "lateNoName": "Elle n'a pas été rendue. Enregistrez d'abord son retour.",
+      "reserved": "Elle est réservée par {{name}} le {{day}}. Annulez ou déplacez cette réservation sur un autre véhicule d'abord.",
+      "reservedNoName": "Elle est réservée le {{day}}. Annulez ou déplacez cette réservation sur un autre véhicule d'abord.",
+      "status": "Elle est marquée en location. Terminez la location d'abord.",
+      "others": "Et {{count}} autre réservation.",
+      "othersMany": "Et {{count}} autres réservations.",
+      "confirmTitle": "Archiver ce véhicule ?",
+      "confirmBody": "Il n'apparaîtra plus dans la flotte, mais ses données restent conservées. Vous pourrez le restaurer à tout moment.",
+      "confirm": "Archiver",
+      "cancel": "Annuler",
+      "serverRefused": "Archivage refusé : {{count}} location à terminer ou annuler d'abord. Actualisez la fiche.",
+      "serverRefusedMany": "Archivage refusé : {{count}} locations à terminer ou annuler d'abord. Actualisez la fiche.",
+      "serverRefusedNoCount": "Archivage refusé : des locations sont encore ouvertes. Actualisez la fiche."
     }
   }
 }

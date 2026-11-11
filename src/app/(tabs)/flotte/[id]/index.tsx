@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/button';
 import { Card, PressableCard } from '@/components/card';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
@@ -17,7 +16,8 @@ import { useAllPayments } from '@/features/payments/hooks';
 import { canSeePrices, formatDayLabel, occupancyByVehicle } from '@/features/vehicles/fleet-card';
 import { lateBadgeText, lateDurationText } from '@/features/vehicles/fleet-card-text';
 import { useArchiveVehicle, useReactivateVehicle, useUpdateVehiclePhotos, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
-import { hasActiveRental, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
+import { archiveBlock, blockingCountFromError, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
+import { archiveReasonText, ArchiveSection } from '@/features/vehicles/detail/archive-section';
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
 import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-view';
 import { useVehicleInspections } from '@/features/inspections/hooks';
@@ -69,7 +69,7 @@ export default function VehicleDetailScreen() {
     () => buildHistory({ rentals, inspections: inspectionsQuery.data ?? [], maintenance: maintenanceItems, customers, showAmounts: showPrice }),
     [rentals, inspectionsQuery.data, maintenanceItems, customers, showPrice]
   );
-  const archiveBlocked = !!vehicle && hasActiveRental(vehicle, rentals);
+  const block = vehicle ? archiveBlock(vehicle, rentals, customers, now) : null;
   const [menuOpen, setMenuOpen] = useState(false);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
@@ -102,12 +102,8 @@ export default function VehicleDetailScreen() {
     }
   }
 
-  function handleArchive() {
+  function archiveNow() {
     if (!vehicle) return;
-    if (archiveBlocked) {
-      Alert.alert(t('common.appName'), t('vehicle.archiveBlockedActiveRentals'));
-      return;
-    }
     const vehicleId = vehicle.id;
     // Archive tout de suite (réversible) puis laisse quelques secondes pour annuler.
     archiveVehicle.mutate(vehicleId, {
@@ -118,8 +114,24 @@ export default function VehicleDetailScreen() {
           onUndo: () => reactivateVehicle.mutateAsync(vehicleId),
           onUndoError: () => Alert.alert(t('common.appName'), t('undoToast.failed')),
         }),
-      onError: (error) => Alert.alert(t('common.appName'), t(isArchiveBlockedError(error) ? 'vehicle.archiveBlockedActiveRentals' : 'vehicle.archiveError')),
+      onError: (error) => {
+        if (!isArchiveBlockedError(error)) return Alert.alert(t('common.appName'), t('vehicle.archiveError'));
+        const count = blockingCountFromError(error);
+        Alert.alert(t('common.appName'), count === null ? t('vehicleDetail.archive.serverRefusedNoCount') : t(count === 1 ? 'vehicleDetail.archive.serverRefused' : 'vehicleDetail.archive.serverRefusedMany', { count }));
+      },
     });
+  }
+
+  function handleArchive() {
+    if (!vehicle) return;
+    if (block) {
+      Alert.alert(t('common.appName'), archiveReasonText(block, t, language, now));
+      return;
+    }
+    Alert.alert(t('vehicleDetail.archive.confirmTitle'), t('vehicleDetail.archive.confirmBody'), [
+      { text: t('vehicleDetail.archive.cancel'), style: 'cancel' },
+      { text: t('vehicleDetail.archive.confirm'), style: 'destructive', onPress: archiveNow },
+    ]);
   }
 
   function handleReactivate() {
@@ -224,7 +236,7 @@ export default function VehicleDetailScreen() {
                 <HText size={14} color={Brand.textOnDark} style={{ lineHeight: 20 }}>
                   {t('vehicleDetail.archivedBanner')}
                 </HText>
-                {role === 'owner' ? (
+                {isManager ? (
                   <Pressable onPress={handleReactivate} accessibilityRole="button" style={{ minHeight: 52, borderRadius: 26, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
                     <HText weight="semibold" color={Brand.white}>
                       {t('vehicleDetail.restore')}
@@ -345,17 +357,7 @@ export default function VehicleDetailScreen() {
               )}
             </View>
 
-            {isManager && !vehicle.archivedAt && archiveBlocked ? (
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('vehicle.archiveBlockedActiveRentals')}
-              </ThemedText>
-            ) : isManager ? (
-              <Button
-                label={vehicle.archivedAt ? t('vehicle.reactivate') : t('vehicle.archive')}
-                variant={vehicle.archivedAt ? 'secondary' : 'danger'}
-                onPress={vehicle.archivedAt ? handleReactivate : handleArchive}
-              />
-            ) : null}
+            {isManager && !vehicle.archivedAt ? <ArchiveSection block={block} now={now} onArchive={handleArchive} /> : null}
           </View>
         </ScrollView>
       )}

@@ -1,7 +1,7 @@
 /* eslint-disable import/first -- les « jest.mock » doivent précéder les imports */
 import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { Linking, Share } from 'react-native';
+import { Alert, Linking, Share } from 'react-native';
 
 import ar from '@/i18n/locales/ar.json';
 import fr from '@/i18n/locales/fr.json';
@@ -22,6 +22,7 @@ const mockState = {
   reactivated: [] as string[],
   payments: [] as unknown[],
   inspections: [] as unknown[],
+  archiveError: null as unknown,
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true };
 const base = { id: 'v1', agencyId: 'a1', branchId: null, marque: 'DACIA', modele: 'LOGAN', immatriculation: '8921 | ب | 14', vin: null, categorie: 'economique', carburant: 'diesel', annee: 2021, kilometrage: 40000, prixJour: 500, prixSemaine: null, prixMois: null, finition: null, niveauCarburant: null, description: null, photoUrl: null, photos: [], documents: [], archivedAt: null, createdAt: at(-100), updatedAt: at(-1), transmission: null, couleur: 'Blanc', nombrePlaces: 5 };
@@ -44,7 +45,12 @@ jest.mock('@/features/vehicles/hooks', () => ({
   useVehicle: () => ({ data: mockState.vehicle, isLoading: false, isError: false, refetch: jest.fn() }),
   useUpdateVehiclePhotos: () => ({ mutateAsync: jest.fn() }),
   useUpdateVehicleStatus: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.statusCalls.push(args); options?.onSuccess?.(); } }),
-  useArchiveVehicle: () => ({ mutate: (id: string) => mockState.archived.push(id) }),
+  useArchiveVehicle: () => ({
+    mutate: (id: string, options?: { onError?: (error: unknown) => void }) => {
+      mockState.archived.push(id);
+      if (mockState.archiveError) options?.onError?.(mockState.archiveError);
+    },
+  }),
   useReactivateVehicle: () => ({ mutate: (id: string) => mockState.reactivated.push(id), mutateAsync: jest.fn() }),
 }));
 jest.mock('@/components/undo-toast', () => ({ useUndo: () => ({ showUndo: jest.fn() }) }));
@@ -63,7 +69,7 @@ const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -206,8 +212,15 @@ describe('fiche véhicule', () => {
     expect(mockState.reactivated).toEqual(['v1']);
   });
 
-  it('archivé, responsable : pas de « Restaurer »', async () => {
+  it('archivé, responsable : « Restaurer » aussi (le serveur l’autorise)', async () => {
     mockState.role = 'manager';
+    mockState.vehicle = { ...base, statut: 'disponible', archivedAt: at(-3) };
+    await render(<VehicleDetailScreen />);
+    expect(screen.getByText('Restaurer')).toBeTruthy();
+  });
+
+  it('archivé, employé : pas de « Restaurer »', async () => {
+    mockState.role = 'employee';
     mockState.vehicle = { ...base, statut: 'disponible', archivedAt: at(-3) };
     await render(<VehicleDetailScreen />);
     expect(screen.queryByText('Restaurer')).toBeNull();
@@ -330,6 +343,71 @@ describe('fiche véhicule', () => {
       expect(screen.getByText('Documents')).toBeTruthy();
       await fireEvent.press(screen.getByLabelText('Ajouter'));
       expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', section: 'documents' } });
+    });
+  });
+
+  describe('archivage protégé', () => {
+    it('autorisé : bouton « Archiver ce véhicule » ; confirmation avant d’archiver', async () => {
+      const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText("Archivage impossible pour l'instant")).toBeNull();
+      await fireEvent.press(screen.getAllByLabelText('Archiver ce véhicule').at(-1) as never);
+      expect(alert).toHaveBeenCalledWith('Archiver ce véhicule ?', expect.any(String), expect.any(Array));
+      expect(mockState.archived).toEqual([]); // rien tant que l'on n'a pas confirmé
+      const buttons = alert.mock.calls[0][2] as { text: string; onPress?: () => void }[];
+      buttons.find((button) => button.text === 'Archiver')?.onPress?.();
+      expect(mockState.archived).toEqual(['v1']);
+    });
+
+    it('en location : bouton verrouillé + raison avec le client et le jour de retour', async () => {
+      mockState.vehicle = { ...base, statut: 'en_location' };
+      mockState.rentals = [rentalRow({})];
+      await render(<VehicleDetailScreen />);
+      const locked = screen.getByLabelText("Archivage impossible pour l'instant");
+      expect(locked.props.accessibilityState).toEqual({ disabled: true });
+      expect(screen.getByText(/^Elle est en location chez Fouad B\. jusqu'au .*\. Vous pourrez l'archiver après son retour\.$/)).toBeTruthy();
+    });
+
+    it('en retard : « Enregistrez d’abord son retour »', async () => {
+      mockState.vehicle = { ...base, statut: 'en_location' };
+      mockState.rentals = [rentalRow({ dateDebutPrevue: at(-9), dateFinPrevue: at(-3, 18) })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText("Fouad B. ne l'a pas encore rendue. Enregistrez d'abord son retour.")).toBeTruthy();
+    });
+
+    it('réservée : jour, client et « Et 1 autre réservation. »', async () => {
+      mockState.rentals = [
+        rentalRow({ id: 'a', statut: 'confirmee', dateDebutPrevue: at(3), dateFinPrevue: at(5), dateDepartReel: null }),
+        rentalRow({ id: 'b', statut: 'confirmee', dateDebutPrevue: at(8), dateFinPrevue: at(9), dateDepartReel: null }),
+      ];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText(/^Elle est réservée par Fouad B\. le .*\. Annulez ou déplacez cette réservation sur un autre véhicule d'abord\. Et 1 autre réservation\.$/)).toBeTruthy();
+    });
+
+    it('employé : ni bouton ni raison', async () => {
+      mockState.role = 'employee';
+      mockState.vehicle = { ...base, statut: 'en_location' };
+      mockState.rentals = [rentalRow({})];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByLabelText("Archivage impossible pour l'instant")).toBeNull();
+      expect(screen.queryByText(/Elle est en location chez/)).toBeNull();
+    });
+
+    it('responsable : voit le bouton verrouillé', async () => {
+      mockState.role = 'manager';
+      mockState.vehicle = { ...base, statut: 'en_location' };
+      mockState.rentals = [rentalRow({})];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByLabelText("Archivage impossible pour l'instant")).toBeTruthy();
+    });
+
+    it('le serveur refuse malgré tout : message précis avec le nombre', async () => {
+      const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+      mockState.archiveError = { message: 'vehicle_has_active_rentals', details: 'count=2' };
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getAllByLabelText('Archiver ce véhicule').at(-1) as never);
+      (alert.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((button) => button.text === 'Archiver')?.onPress?.();
+      expect(alert).toHaveBeenLastCalledWith('BIBIP', 'Archivage refusé : 2 locations à terminer ou annuler d\'abord. Actualisez la fiche.');
     });
   });
 });
