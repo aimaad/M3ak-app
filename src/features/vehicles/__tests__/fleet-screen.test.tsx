@@ -218,6 +218,7 @@ describe('écran Ma Flotte (données simulées)', () => {
       await render(<FlotteScreen />);
       expect(await screen.findByText('RETOUR EN RETARD', hidden)).toBeTruthy();
       expect(screen.queryByText('CONSEIL BIBIP', hidden)).toBeNull();
+      expect(screen.getByText('3 jours de retard', hidden).props.style).toBeTruthy(); // durée du retard en gras, comme la maquette
       expect(screen.getByLabelText(/^Retour en retard\. La Dacia Logan devait revenir .* : 3 jours de retard\. Fouad B\. ne l'a pas rendue\.$/)).toBeTruthy();
       await fireEvent.press(screen.getByText('Appeler Fouad B.'));
       expect(openURL).toHaveBeenCalledWith('tel:+212611223344');

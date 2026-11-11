@@ -456,11 +456,13 @@
       "later": "من بعد",
       "lateLabel": "رجوع متأخر",
       "latePrefix": "",
-      "lateSuffix": " كان خاصها ترجع {{date}} : {{duration}} ديال التأخير.",
       "lateClient": " {{name}} ما رجعهاش.",
       "callClient": "اتصل بـ {{name}}",
       "callClientNoName": "اتصل بالكليان",
-      "openRental": "شوف الكراء"
+      "openRental": "شوف الكراء",
+      "lateBefore": " كان خاصها ترجع {{date}} : ",
+      "lateBold": "{{duration}} ديال التأخير",
+      "lateAfter": "."
     },
     "offer": {
       "title": "دير العرض",

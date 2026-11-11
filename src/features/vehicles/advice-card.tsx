@@ -18,12 +18,13 @@ export function AdviceCard({ advice, onAct, onLater, now }: { advice: Advice; on
   const isLate = advice.kind === 'late';
   const prefix = t(isLate ? 'flotte.advice.latePrefix' : advice.kind === 'noBooking' ? 'flotte.advice.noBookingPrefix' : 'flotte.advice.waitingPrefix');
   let suffix: string;
+  let lateParts: { before: string; bold: string; after: string } | null = null;
   let actLabel: string;
   if (advice.kind === 'late') {
     // « La Dacia Sandero devait revenir mer. 28 oct. : 13 jours de retard. Fouad B. ne l'a pas rendue. »
-    suffix =
-      t('flotte.advice.lateSuffix', { date: formatDayLabel(advice.dueDay, language, 'short', now), duration: lateDurationText(advice.late, t) }) +
-      (advice.customerName ? t('flotte.advice.lateClient', { name: advice.customerName }) : '');
+    const vars = { date: formatDayLabel(advice.dueDay, language, 'short', now), duration: lateDurationText(advice.late, t) };
+    lateParts = { before: t('flotte.advice.lateBefore', vars), bold: t('flotte.advice.lateBold', vars), after: t('flotte.advice.lateAfter') + (advice.customerName ? t('flotte.advice.lateClient', { name: advice.customerName }) : '') };
+    suffix = lateParts.before + lateParts.bold + lateParts.after;
     actLabel = !advice.phone ? t('flotte.advice.openRental') : advice.customerName ? t('flotte.advice.callClient', { name: advice.customerName }) : t('flotte.advice.callClientNoName');
   } else {
     suffix = t(advice.kind === 'noBooking' ? 'flotte.advice.noBookingSuffix' : 'flotte.advice.waitingSuffix', { days: advice.kind === 'waitingInspection' ? advice.days : 0 });
@@ -47,7 +48,17 @@ export function AdviceCard({ advice, onAct, onLater, now }: { advice: Advice; on
             <HText size={14} weight="semibold" color={Brand.white} style={{ lineHeight: 20 }}>
               {advice.vehicleName}
             </HText>
-            {suffix}
+            {lateParts ? (
+              <>
+                {lateParts.before}
+                <HText size={14} weight="semibold" color={Brand.white} style={{ lineHeight: 20 }}>
+                  {lateParts.bold}
+                </HText>
+                {lateParts.after}
+              </>
+            ) : (
+              suffix
+            )}
           </HText>
         </View>
       </View>

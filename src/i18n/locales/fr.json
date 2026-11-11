@@ -452,11 +452,13 @@
       "later": "Plus tard",
       "lateLabel": "Retour en retard",
       "latePrefix": "La ",
-      "lateSuffix": " devait revenir {{date}} : {{duration}} de retard.",
       "lateClient": " {{name}} ne l'a pas rendue.",
       "callClient": "Appeler {{name}}",
       "callClientNoName": "Appeler le client",
-      "openRental": "Voir la location"
+      "openRental": "Voir la location",
+      "lateBefore": " devait revenir {{date}} : ",
+      "lateBold": "{{duration}} de retard",
+      "lateAfter": "."
     },
     "offer": {
       "title": "Créer l'offre",
