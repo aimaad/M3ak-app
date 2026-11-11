@@ -9,7 +9,7 @@ import { formatDayLabel } from '../fleet-card';
 import { calendarRuns, calendarTap, sparkPoints, type CalendarDay, type CalendarKind, type CalendarTap, type RevenueFigure } from './figures';
 
 const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 22 } as const;
-const RING = 52;
+const RING = 48;
 const RING_STROKE = 6;
 const RING_R = (RING - RING_STROKE) / 2;
 const RING_LENGTH = 2 * Math.PI * RING_R;
@@ -33,7 +33,7 @@ function OccupancyRing({ percent }: { percent: number }) {
         />
       </Svg>
       <View style={{ position: 'absolute', top: 0, bottom: 0, start: 0, end: 0, alignItems: 'center', justifyContent: 'center' }}>
-        <HText weight="bold" size={12}>{`${value}%`}</HText>
+        <HText weight="bold" size={11}>{`${value}%`}</HText>
       </View>
     </View>
   );
@@ -104,10 +104,10 @@ export function KeyFigures({ money, occupation, rentals }: KeyFiguresProps) {
         </View>
       ) : null}
 
-      <View accessible accessibilityLabel={t('vehicleDetail.figures.occupationA11y', { percent: occupation })} style={[CARD, { flexGrow: 1, flexBasis: '45%', padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 }]}>
+      <View accessible accessibilityLabel={t('vehicleDetail.figures.occupationA11y', { percent: occupation })} style={[CARD, { flexGrow: 1, flexBasis: '45%', padding: 12, flexDirection: 'row', alignItems: 'center', gap: 10 }]}>
         <OccupancyRing percent={occupation} />
         <View style={{ flex: 1, gap: 2 }}>
-          <HText weight="semibold" size={13}>
+          <HText weight="semibold" size={12} numberOfLines={1}>
             {t('vehicleDetail.figures.occupation')}
           </HText>
           <HText size={11} color={Palette.textSecondary}>

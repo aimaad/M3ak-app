@@ -270,11 +270,11 @@ export default function VehicleDetailScreen() {
                 </View>
                 <InfoRow
                   label={t('vehicle.fields.prixSemaine')}
-                  value={vehicle.prixSemaine !== null ? `${vehicle.prixSemaine.toLocaleString('fr-FR')} MAD` : '—'}
+                  value={vehicle.prixSemaine != null ? `${vehicle.prixSemaine.toLocaleString('fr-FR')} MAD` : '—'}
                 />
                 <InfoRow
                   label={t('vehicle.fields.prixMois')}
-                  value={vehicle.prixMois !== null ? `${vehicle.prixMois.toLocaleString('fr-FR')} MAD` : '—'}
+                  value={vehicle.prixMois != null ? `${vehicle.prixMois.toLocaleString('fr-FR')} MAD` : '—'}
                 />
               </Card>
             </View>

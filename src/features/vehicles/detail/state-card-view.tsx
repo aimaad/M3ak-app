@@ -79,9 +79,9 @@ export function StateCardView({ card, name, onAction }: { card: StateCardModel; 
                 onPress={() => onAction(action)}
                 accessibilityRole="button"
                 accessibilityLabel={`${labelOf(action)} : ${name}`}
-                style={[{ flex: primary ? 1.4 : 1, height: 52, borderRadius: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10 }, BUTTON[index === 0 ? action.tone : action.tone === 'orange' ? 'orange' : 'neutral']]}
+                style={[{ flex: primary ? 1.4 : 1, minHeight: 52, borderRadius: 26, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6 }, BUTTON[index === 0 ? action.tone : action.tone === 'orange' ? 'orange' : 'neutral']]}
               >
-                <HText weight="semibold" size={14} color={Brand.white} numberOfLines={1} style={{ flexShrink: 1 }}>
+                <HText weight="semibold" size={14} color={Brand.white} numberOfLines={2} style={{ flexShrink: 1, textAlign: 'center' }}>
                   {labelOf(action)}
                 </HText>
                 {index === 0 && action.id !== 'makeUnavailable' ? <ArrowIcon color={Brand.white} size={16} /> : null}

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, Modal, Pressable, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, View } from 'react-native';
 
 import { Brand, Palette } from '@/constants/theme';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
@@ -304,7 +304,7 @@ export function DocumentsRow({ vehicle, onAdd }: { vehicle: Vehicle; onAdd: () =
   return (
     <View style={{ gap: 10 }}>
       <SectionHeader title={t('vehicleDetail.documents.title')} />
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
         {VEHICLE_DOCUMENT_TYPES.map((type) => (
           <DocumentThumb key={type} vehicle={vehicle} type={type} onOpen={(url, label) => setViewing({ url, label })} onAdd={onAdd} />
         ))}
@@ -316,7 +316,7 @@ export function DocumentsRow({ vehicle, onAdd }: { vehicle: Vehicle; onAdd: () =
             {t('vehicleDetail.documents.add')}
           </HText>
         </Pressable>
-      </View>
+      </ScrollView>
       <Modal visible={viewing !== null} transparent animationType="fade" onRequestClose={() => setViewing(null)}>
         <View style={{ flex: 1, backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
           {viewing ? <Image source={{ uri: viewing.url }} accessibilityLabel={viewing.label} style={{ width: '100%', height: '80%' }} resizeMode="contain" /> : null}
