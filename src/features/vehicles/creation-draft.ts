@@ -21,6 +21,8 @@ export type VehicleCreationDraft = {
   nombrePlaces?: number;
   carburant?: FuelType;
   categorie?: VehicleCategory;
+  /** D'où vient le brouillon : lecture de la carte grise (champs lus sur la carte) ou saisie à la main. */
+  source?: 'scan' | 'manual';
   /** Champs dont la confiance OCR était "medium" — à mettre en évidence pour vérification. */
   uncertainFields?: (keyof VehicleCreationDraft)[];
   /** Photos de la carte grise (recto et/ou verso) prises pendant le scan, à proposer comme documents du véhicule. */

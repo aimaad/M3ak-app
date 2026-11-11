@@ -16,6 +16,8 @@ export declare const brand: {
   readonly parcInspect: string;
   readonly orangeDeepBorder: string;
   readonly orangeUrgentText: string;
+  readonly scannerBackground: string;
+  readonly scannerPanel: string;
 };
 
 export type ThemeTokens = {

@@ -42,6 +42,9 @@ const brand = {
   orangeDeepBorder: '#6B3A22',
   /** Ma Flotte : texte d'une échéance urgente sur fond clair (orange foncé, contraste suffisant). */
   orangeUrgentText: '#B5481A',
+  /** Ajout de véhicule : fond plein écran du scanner de carte grise et fond de son panneau du bas. */
+  scannerBackground: '#0B0D0E',
+  scannerPanel: '#151819',
 };
 
 const light = {

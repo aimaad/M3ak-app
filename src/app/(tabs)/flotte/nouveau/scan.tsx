@@ -1,543 +1,350 @@
+import { useNetInfo } from '@react-native-community/netinfo';
+import { Ionicons } from '@expo/vector-icons';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as Haptics from 'expo-haptics';
 import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Image, Linking, Pressable, useWindowDimensions, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
-import { Button } from '@/components/button';
-import { Card } from '@/components/card';
-import { ZoomableImage } from '@/components/zoomable-image';
-import { KeepPhotoChoice } from '@/components/keep-photo-choice';
-import { ChipGroup } from '@/components/chip-group';
-import { ScreenHeader } from '@/components/screen-header';
-import { TextField } from '@/components/text-field';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Brand, Palette } from '@/constants/theme';
-import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
-import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card';
-import { findDuplicateInList } from '@/features/vehicles/duplicates';
-import { useVehicles } from '@/features/vehicles/hooks';
+import { Brand } from '@/constants/theme';
+import { ArrowIcon, HText } from '@/features/dashboard/home-ui';
 import { scanErrorMessageKey } from '@/features/ocr/availability';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { OcrInactiveNotice } from '@/features/ocr/ocr-inactive-notice';
-import {
-  checkRegistrationCard,
-  emptyVehicleFields,
-  faceStatus,
-  filledCount,
-  mergeVehicleFields,
-  scanVehicleDocument,
-  yearFromFields,
-  type OcrConfidence,
-  type ScanErrorCode,
-  type VehicleOcrFields,
-} from '@/features/vehicles/ocr';
-import { fromIsoDate } from '@/features/vehicles/validation';
-import { FUEL_TYPES, VEHICLE_CATEGORIES, type FuelType, type PendingVehicleDocument, type VehicleCategory } from '@/features/vehicles/types';
+import { RoundButton } from '@/features/vehicles/add/add-ui';
+import { FaceThumb, KeepSwitch, LegalSheet, ScanFrame, TipPills } from '@/features/vehicles/add/scan-parts';
+import { draftFromScan, mergeScans, setScanSession, type Face, type ScanItem } from '@/features/vehicles/add/scan-session';
+import { setVehicleCreationDraft } from '@/features/vehicles/creation-draft';
+import { withAlpha } from '@/features/vehicles/fleet-style';
+import { filledCount, scanVehicleDocument, type ScanErrorCode } from '@/features/vehicles/ocr';
 import { useLanguage } from '@/i18n/use-language';
 
-type Status = 'idle' | 'processing' | 'result' | 'error';
+type Phase = 'capture' | 'analyzing' | 'error';
+const CARD_RATIO = 54 / 85.6;
+const FACES: Face[] = ['recto', 'verso'];
 
-type EditableFields = {
-  immatriculation: string;
-  vin: string;
-  marque: string;
-  modele: string;
-  finition: string;
-  annee: string;
-  dateMiseEnCirculation: string;
-  puissanceFiscale: string;
-  couleur: string;
-  nombrePlaces: string;
-  carburant: FuelType | null;
-  categorie: VehicleCategory | null;
-};
-
-const EMPTY_EDITABLE: EditableFields = {
-  immatriculation: '',
-  vin: '',
-  marque: '',
-  modele: '',
-  finition: '',
-  annee: '',
-  dateMiseEnCirculation: '',
-  puissanceFiscale: '',
-  couleur: '',
-  nombrePlaces: '',
-  carburant: null,
-  categorie: null,
-};
-
-function fieldsToEditable(fields: VehicleOcrFields): EditableFields {
-  return {
-    immatriculation: fields.immatriculation.value ?? '',
-    vin: fields.vin.value ?? '',
-    marque: fields.marque.value ?? '',
-    modele: fields.modele.value ?? '',
-    finition: fields.finition.value ?? '',
-    annee: yearFromFields(fields) != null ? String(yearFromFields(fields)) : '',
-    dateMiseEnCirculation: fromIsoDate(fields.dateMiseEnCirculation.value),
-    puissanceFiscale: fields.puissanceFiscale.value != null ? String(fields.puissanceFiscale.value) : '',
-    couleur: fields.couleur.value ?? '',
-    nombrePlaces: fields.nombrePlaces.value != null ? String(fields.nombrePlaces.value) : '',
-    carburant: fields.carburant.value,
-    categorie: fields.categorie.value,
-  };
-}
-
-async function pickImage(source: 'library' | 'camera'): Promise<string | null> {
-  const permission =
-    source === 'library'
-      ? await ImagePicker.requestMediaLibraryPermissionsAsync()
-      : await ImagePicker.requestCameraPermissionsAsync();
-  if (!permission.granted) return null;
-
-  const result =
-    source === 'library'
-      ? await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 })
-      : await ImagePicker.launchCameraAsync({ quality: 0.8 });
-  return result.canceled ? null : (result.assets[0]?.uri ?? null);
-}
-
-type Face = 'recto' | 'verso';
-type ScanItem = { face: Face; uri: string; fields: VehicleOcrFields };
-
-const CONFIDENCE_KEYS = [
-  'immatriculation', 'vin', 'marque', 'modele', 'finition', 'annee', 'dateMiseEnCirculation', 'puissanceFiscale', 'couleur', 'nombrePlaces', 'carburant', 'categorie',
-] as const;
-
-function confidencesOf(fields: VehicleOcrFields): Partial<Record<keyof EditableFields, OcrConfidence>> {
-  return Object.fromEntries(CONFIDENCE_KEYS.map((key) => [key, fields[key].confidence])) as Partial<Record<keyof EditableFields, OcrConfidence>>;
-}
-
-/** Photos de la carte grise rangées par face : le recto porte la date de fin de validité (alerte d'expiration), le verso a son propre document. */
-function pendingCardDocuments(scans: ScanItem[], expiresAt: string | null): PendingVehicleDocument[] {
-  return scans.map((item) =>
-    item.face === 'recto'
-      ? { type: 'carte_grise', localUri: item.uri, expiresAt }
-      : { type: 'carte_grise_verso', localUri: item.uri, expiresAt: null }
-  );
-}
-
+/**
+ * Scanner la carte grise (recto puis verso). Aperçu caméra réel, cadre au format carte, déclencheur manuel, lampe et import depuis la galerie.
+ * RIEN n'est détecté en direct (ni zones, ni netteté, ni reflet) : on ne montre que des conseils fixes. La lecture est faite par le serveur de lecture des documents,
+ * une seule fois pour les deux faces ; le verso est facultatif.
+ */
 export default function ScannerCarteGriseScreen() {
   const { t } = useLanguage();
-  const [scans, setScans] = useState<ScanItem[]>([]);
-  const [status, setStatus] = useState<Status>('idle');
-  const [errorCode, setErrorCode] = useState<ScanErrorCode | null>(null);
-  const [photos, setPhotos] = useState<Record<Face, string | null>>({ recto: null, verso: null });
-  const [emptyFaces, setEmptyFaces] = useState<Face[]>([]);
-  const [keepPhoto, setKeepPhoto] = useState(true);
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
   const { availability, agencyId } = useOcrSettings();
-  const vehiclesQuery = useVehicles();
-  const [fromCache, setFromCache] = useState(false);
-  const [duplicateDismissed, setDuplicateDismissed] = useState(false);
-  const [confidences, setConfidences] = useState<Partial<Record<keyof EditableFields, OcrConfidence>>>({});
-  const [values, setValues] = useState<EditableFields>(EMPTY_EDITABLE);
+  const netInfo = useNetInfo();
+  const offline = netInfo.isConnected === false;
+  const [permission, requestPermission] = useCameraPermissions();
+  const cameraRef = useRef<CameraView>(null);
 
-  const merged = scans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
-  const faces = faceStatus(merged);
-  const checks = checkRegistrationCard(merged);
+  const [phase, setPhase] = useState<Phase>('capture');
+  const [side, setSide] = useState<Face>('recto');
+  const [photos, setPhotos] = useState<Record<Face, string | null>>({ recto: null, verso: null });
+  const [torch, setTorch] = useState(false);
+  const [keepPhoto, setKeepPhoto] = useState(true);
+  const [legalOpen, setLegalOpen] = useState(false);
+  const [shooting, setShooting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<ScanErrorCode | 'nothing_read' | null>(null);
+  const [step, setStep] = useState(0);
 
-  function update<K extends keyof EditableFields>(key: K, value: EditableFields[K]) {
-    setValues((prev) => ({ ...prev, [key]: value }));
+  const frameWidth = Math.min(screenWidth - 40, 350);
+  const frameHeight = Math.round(frameWidth * CARD_RATIO);
+  const taken = FACES.filter((face) => photos[face]);
+  const both = taken.length === 2;
+  const active = availability === 'active';
+
+  // Texte qui change pendant la lecture (pas de pourcentage : on ne sait pas combien de temps elle prendra).
+  useEffect(() => {
+    if (phase !== 'analyzing') return undefined;
+    const timer = setInterval(() => setStep((current) => (current + 1) % 3), 1600);
+    return () => clearInterval(timer);
+  }, [phase]);
+
+  function putPhoto(face: Face, uri: string) {
+    setPhotos((previous) => ({ ...previous, [face]: uri }));
+    setMessage(null);
+    // Après le recto on passe au verso ; reprendre une face ne déplace pas l'autre.
+    setSide(face === 'recto' && !photos.verso ? 'verso' : face);
   }
 
-  /** Choisit la photo d'une face : rien n'est analysé tant que l'employé n'a pas lancé l'analyse. */
-  async function choosePhoto(face: Face, source: 'library' | 'camera') {
-    const uri = await pickImage(source);
-    if (uri) setPhotos((prev) => ({ ...prev, [face]: uri }));
+  async function shoot() {
+    if (shooting || !cameraRef.current) return;
+    setShooting(true);
+    try {
+      const picture = await cameraRef.current.takePictureAsync({ quality: 0.8 });
+      if (!picture?.uri) throw new Error('no-uri');
+      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+      putPhoto(side, picture.uri);
+    } catch {
+      setMessage(t('vehicleAdd.scan.captureError'));
+    } finally {
+      setShooting(false);
+    }
   }
 
-  /** Analyse le recto et le verso en même temps, puis fusionne les deux lectures. */
-  async function analyze() {
-    const entries = (['recto', 'verso'] as const).flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
-    if (entries.length === 0) return;
-    setStatus('processing');
-    setErrorCode(null);
-    setEmptyFaces([]);
-    setFromCache(false);
-    setDuplicateDismissed(false);
-
-    const results = await Promise.all(entries.map((entry) => scanVehicleDocument(entry.uri, { agencyId })));
-    const nextScans: ScanItem[] = [];
-    let firstError: ScanErrorCode | null = null;
-    results.forEach((result, index) => {
-      if (result.ok) nextScans.push({ ...entries[index], fields: result.fields });
-      else firstError ??= result.error;
-    });
-    if (nextScans.length === 0) {
-      setErrorCode(firstError);
-      setStatus('error');
+  async function fromGallery() {
+    const granted = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted.granted) {
+      setMessage(t('vehicleAdd.scan.captureError'));
       return;
     }
-
-    const after = nextScans.reduce<VehicleOcrFields>((acc, item) => mergeVehicleFields(acc, item.fields), emptyVehicleFields());
-    setEmptyFaces(nextScans.filter((item) => filledCount(item.fields) === 0).map((item) => item.face));
-    const nextValues = fieldsToEditable(after);
-    setValues(nextValues);
-    setScans(nextScans);
-    setErrorCode(firstError);
-    setFromCache(results.every((result) => result.ok && result.fromCache === true));
-    setConfidences(confidencesOf(after));
-    setStatus('result');
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });
+    const uri = result.canceled ? null : (result.assets[0]?.uri ?? null);
+    if (uri) putPhoto(side, uri);
   }
 
-  function restart() {
-    setScans([]);
-    setStatus('idle');
-    setEmptyFaces([]);
+  /** Lit le recto et le verso en même temps (une seule analyse), puis fusionne ; la durée affichée ensuite est la vraie. */
+  async function analyze() {
+    const entries = FACES.flatMap((face) => (photos[face] ? [{ face, uri: photos[face] as string }] : []));
+    if (entries.length === 0 || offline) return;
+    setPhase('analyzing');
+    setStep(0);
     setErrorCode(null);
-    setValues(EMPTY_EDITABLE);
-  }
-
-  function continueWithDraft(useValues: boolean) {
-    const expiresAt = merged.dateFinValidite.value;
-    setVehicleCreationDraft({
-      immatriculation: useValues && values.immatriculation.trim() ? values.immatriculation.trim() : undefined,
-      vin: useValues && values.vin.trim() ? values.vin.trim() : undefined,
-      marque: useValues && values.marque.trim() ? values.marque.trim() : undefined,
-      modele: useValues && values.modele.trim() ? values.modele.trim() : undefined,
-      finition: useValues && values.finition.trim() ? values.finition.trim() : undefined,
-      annee: useValues && values.annee.trim() ? Number(values.annee) : undefined,
-      dateMiseEnCirculation: useValues && values.dateMiseEnCirculation.trim() ? values.dateMiseEnCirculation.trim() : undefined,
-      puissanceFiscale: useValues && values.puissanceFiscale.trim() ? Number(values.puissanceFiscale) : undefined,
-      couleur: useValues && values.couleur.trim() ? values.couleur.trim() : undefined,
-      nombrePlaces: useValues && values.nombrePlaces.trim() ? Number(values.nombrePlaces) : undefined,
-      carburant: useValues ? (values.carburant ?? undefined) : undefined,
-      categorie: useValues ? (values.categorie ?? undefined) : undefined,
-      carteGrisePendingDocuments: keepPhoto && scans.length > 0 ? pendingCardDocuments(scans, expiresAt) : undefined,
+    const startedAt = Date.now();
+    const results = await Promise.all(entries.map((entry) => scanVehicleDocument(entry.uri, { agencyId })));
+    const scans: ScanItem[] = [];
+    let firstError: ScanErrorCode | null = null;
+    results.forEach((result, index) => {
+      if (result.ok) scans.push({ ...entries[index], fields: result.fields });
+      else firstError ??= result.error;
     });
+    // Rien de lisible (erreur sur toutes les faces, ou faces vides) : on garde les photos et on propose de reprendre ou de saisir à la main.
+    if (scans.length === 0 || scans.every((item) => filledCount(item.fields) === 0)) {
+      setErrorCode(scans.length === 0 ? firstError : 'nothing_read');
+      setPhase('error');
+      return;
+    }
+    const session = { photos, scans, merged: mergeScans(scans), durationMs: Date.now() - startedAt, fromCache: results.every((result) => result.ok && result.fromCache === true), keepPhoto, errorCode: firstError };
+    setScanSession(session);
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
+    setVehicleCreationDraft(draftFromScan(session));
     router.replace('/flotte/nouveau/finaliser');
   }
 
-  const scanDuplicate = findDuplicateInList(vehiclesQuery.data ?? [], { immatriculation: values.immatriculation, vin: values.vin });
-  const hasAnyDetectedValue = Object.values(values).some((v) => (typeof v === 'string' ? v.trim() !== '' : v !== null));
+  function goManual() {
+    setVehicleCreationDraft({ source: 'manual' });
+    router.replace('/flotte/nouveau/finaliser');
+  }
 
-  return (
-    <ThemedView className="flex-1">
-      <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t('vehicle.quickCreate.scanTitle')} showBack />
+  // ---------------------------------------------------------------- états sans caméra
+  const closeLabel = t('vehicleAdd.scan.closeScan');
 
-        <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-          {status === 'idle' && availability === 'loading' ? <ActivityIndicator color={Palette.primary} /> : null}
-
-          {status === 'idle' && availability !== 'loading' && availability !== 'active' ? (
-            <Card className="gap-4">
-              <OcrInactiveNotice availability={availability} />
-              <Button label={t('vehicle.quickCreate.manualTitle')} onPress={() => continueWithDraft(false)} />
-            </Card>
-          ) : null}
-
-          {status === 'idle' && availability === 'active' ? (
-            <Card className="gap-4 py-6">
-              <ThemedText type="small" themeColor="textSecondary" className="text-center">
-                {t('vehicle.quickCreate.scanHint')}
-              </ThemedText>
-              {(['recto', 'verso'] as const).map((face) => (
-                <View key={face} className="gap-2">
-                  <ThemedText type="smallBold">{t(`vehicle.quickCreate.face.${face}`)}</ThemedText>
-                  {photos[face] ? (
-                    <View style={{ height: 150 }}>
-                      <ZoomableImage uri={photos[face] as string} label={t(`vehicle.quickCreate.face.${face}`)} style={{ borderRadius: 16 }} />
-                    </View>
-                  ) : null}
-                  <View className="flex-row gap-2">
-                    <Button
-                      label={photos[face] ? t('vehicle.quickCreate.photoChange') : t('common.camera')}
-                      variant={photos[face] ? 'secondary' : 'primary'}
-                      size="sm"
-                      onPress={() => choosePhoto(face, 'camera')}
-                      style={{ flex: 1 }}
-                    />
-                    <Button label={t('common.gallery')} variant="secondary" size="sm" onPress={() => choosePhoto(face, 'library')} style={{ flex: 1 }} />
-                  </View>
-                </View>
-              ))}
-              <ThemedText type="small" themeColor="textSecondary">
-                {!photos.recto && !photos.verso
-                  ? t('vehicle.quickCreate.photoMissing')
-                  : photos.recto && photos.verso
-                    ? ''
-                    : t('vehicle.quickCreate.photoOneOnly')}
-              </ThemedText>
-              <Button label={t('vehicle.quickCreate.analyzeBoth')} disabled={!photos.recto && !photos.verso} onPress={analyze} />
-              <View className="w-full gap-3">
-                <KeepPhotoChoice value={keepPhoto} onChange={setKeepPhoto} />
-                <View className="rounded-2xl bg-background px-4 py-3">
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('ocr.privacyCloud')}
-                  </ThemedText>
-                </View>
-              </View>
-            </Card>
-          ) : null}
-
-          {status === 'result' && scans.length > 0 ? (
-            <View className="gap-1">
-              <View className="flex-row gap-2" style={{ height: 150 }}>
-                {scans.map((item) => (
-                  <ZoomableImage key={item.face} uri={item.uri} label={t(`vehicle.quickCreate.face.${item.face}`)} style={{ borderRadius: 16 }} />
-                ))}
-              </View>
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('common.zoomHint')}
-              </ThemedText>
+  if (availability === 'loading') {
+    return (
+      <PlainScreen closeLabel={closeLabel}>
+        <ActivityIndicator color={Brand.orange} />
+      </PlainScreen>
+    );
+  }
+  if (!active) {
+    return (
+      <PlainScreen closeLabel={closeLabel}>
+        <OcrInactiveNotice availability={availability} />
+        <PillButton label={t('vehicleAdd.scan.manual')} onPress={goManual} primary />
+      </PlainScreen>
+    );
+  }
+  if (phase === 'analyzing') {
+    const steps = [t('vehicleAdd.scan.step1'), t('vehicleAdd.scan.step2'), t('vehicleAdd.scan.step3')];
+    return (
+      <PlainScreen closeLabel={closeLabel}>
+        <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 14 }}>
+          {FACES.filter((face) => photos[face]).map((face) => (
+            <View key={face} style={{ width: 150, height: 96, borderRadius: 14, overflow: 'hidden', borderWidth: 1, borderColor: Brand.strokeOnDark }}>
+              <Image source={{ uri: photos[face] as string }} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
             </View>
+          ))}
+        </View>
+        <View style={{ alignItems: 'center', gap: 12 }} accessibilityLiveRegion="polite">
+          <ActivityIndicator color={Brand.orange} />
+          <HText weight="semibold" size={15} color={Brand.white}>
+            {t('vehicleAdd.scan.analyzing')}
+          </HText>
+          <HText size={13} color={Brand.mutedOnDark}>
+            {steps[step]}
+          </HText>
+        </View>
+      </PlainScreen>
+    );
+  }
+  if (phase === 'error') {
+    return (
+      <PlainScreen closeLabel={closeLabel}>
+        <View style={{ gap: 8 }}>
+          <HText font="display" weight="bold" size={20} color={Brand.white} accessibilityRole="header">
+            {t('vehicleAdd.scan.unreadable')}
+          </HText>
+          {errorCode && errorCode !== 'nothing_read' ? (
+            <HText size={13} color={Brand.mutedOnDark}>
+              {t(scanErrorMessageKey(errorCode))}
+            </HText>
           ) : null}
+        </View>
+        <PillButton label={t('vehicleAdd.scan.retry')} onPress={analyze} primary />
+        <PillButton label={t('vehicleAdd.scan.retake')} onPress={() => { setPhotos({ recto: null, verso: null }); setSide('recto'); setPhase('capture'); }} />
+        <PillButton label={t('vehicleAdd.scan.manual')} onPress={goManual} />
+      </PlainScreen>
+    );
+  }
 
-          {status === 'processing' ? (
-            <Card className="items-center gap-3 py-8">
-              <ActivityIndicator color={Palette.primary} />
-              <ThemedText type="small" themeColor="textSecondary">
-                {t('vehicle.quickCreate.analyzingBoth')}
-              </ThemedText>
-            </Card>
-          ) : null}
+  // ---------------------------------------------------------------- capture
+  const title = side === 'recto' ? t('vehicleAdd.scan.titleRecto') : t('vehicleAdd.scan.titleVerso');
+  const canRead = taken.length > 0;
+  const readLabel = both ? t('vehicleAdd.scan.readBoth') : side === 'verso' && photos.recto ? t('vehicleAdd.scan.skipVerso') : t('vehicleAdd.scan.readOne');
+  const cameraBlocked = !!permission && !permission.granted;
+  const maskColor = withAlpha(Brand.scannerBackground, 0.62);
 
-          {status === 'error' ? (
-            <Card className="gap-3">
-              <ThemedText type="smallBold">{t(scanErrorMessageKey(errorCode))}</ThemedText>
-              <View className="flex-row gap-2">
-                <Button
-                  label={t('vehicle.quickCreate.retake')}
-                  variant="secondary"
-                  size="sm"
-                  onPress={restart}
-                  style={{ flex: 1 }}
-                />
-                <Button
-                  label={t('vehicle.quickCreate.manualTitle')}
-                  size="sm"
-                  onPress={() => continueWithDraft(false)}
-                  style={{ flex: 1 }}
-                />
-              </View>
-            </Card>
-          ) : null}
-
-          {status === 'result' ? (
-            <View className="gap-4">
-              {!hasAnyDetectedValue ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.quickCreate.nothingDetected')}
-                </ThemedText>
-              ) : (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.quickCreate.reviewHint')}
-                </ThemedText>
-              )}
-
-              {fromCache ? (
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('ocr.fromCache')}
-                </ThemedText>
-              ) : null}
-
-              <View className="gap-2 rounded-2xl bg-background px-4 py-3">
-                <View className="flex-row flex-wrap gap-2">
-                  {(['recto', 'verso'] as const).map((face) => (
-                    <View key={face} className="flex-row items-center gap-1 rounded-full px-3 py-1" style={{ backgroundColor: faces[face] ? Palette.successSoft : Palette.warningSoft }}>
-                      <ThemedText type="small" style={{ color: faces[face] ? Palette.success : Palette.warning }}>
-                        {faces[face] ? '✓ ' : '• '}
-                        {t(`vehicle.quickCreate.face.${face}`)}
-                      </ThemedText>
-                    </View>
-                  ))}
-                </View>
-                {scans.length < 2 ? (
-                  <ThemedText type="small">{t(scans[0]?.face === 'recto' ? 'vehicle.quickCreate.faceMissingVerso' : 'vehicle.quickCreate.faceMissingRecto')}</ThemedText>
-                ) : faces.recto && faces.verso ? (
-                  <ThemedText type="small" style={{ color: Palette.success }}>
-                    {t('vehicle.quickCreate.bothFaces')}
-                  </ThemedText>
-                ) : null}
-                {emptyFaces.map((face) => (
-                  <ThemedText key={face} type="small" style={{ color: Palette.warning }}>
-                    {t('vehicle.quickCreate.nothingNewFace', { face: t(`vehicle.quickCreate.face.${face}`) })}
-                  </ThemedText>
-                ))}
-                {errorCode ? (
-                  <ThemedText type="small" style={{ color: Palette.error }}>
-                    {t(scanErrorMessageKey(errorCode))}
-                  </ThemedText>
-                ) : null}
-              </View>
-
-              {checks.map((check) => (
-                <View key={check.code} className="rounded-2xl px-4 py-3" style={{ backgroundColor: check.severity === 'warning' ? Palette.warningSoft : Palette.primarySoft }}>
-                  <ThemedText type="small" style={{ color: check.severity === 'warning' ? Palette.warning : Brand.graphite }}>
-                    {t(`vehicle.quickCreate.checks.${check.code}`)}
-                  </ThemedText>
-                </View>
-              ))}
-
-              {scanDuplicate && !duplicateDismissed ? (
-                <DuplicateVehicleCard duplicate={scanDuplicate} onContinue={() => setDuplicateDismissed(true)} />
-              ) : null}
-
-              <ReviewField
-                label={t('vehicle.fields.immatriculation')}
-                value={values.immatriculation}
-                onChangeText={(v) => update('immatriculation', v)}
-                confidence={confidences.immatriculation}
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.vin')}
-                value={values.vin}
-                onChangeText={(v) => update('vin', v)}
-                confidence={confidences.vin}
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.marque')}
-                value={values.marque}
-                onChangeText={(v) => update('marque', v)}
-                confidence={confidences.marque}
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.modele')}
-                value={values.modele}
-                onChangeText={(v) => update('modele', v)}
-                confidence={confidences.modele}
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.finition')}
-                value={values.finition}
-                onChangeText={(v) => update('finition', v)}
-                confidence={confidences.finition}
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.annee')}
-                value={values.annee}
-                onChangeText={(v) => update('annee', v)}
-                confidence={confidences.annee}
-                keyboardType="number-pad"
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.dateMiseEnCirculation')}
-                value={values.dateMiseEnCirculation}
-                onChangeText={(v) => update('dateMiseEnCirculation', v)}
-                confidence={confidences.dateMiseEnCirculation}
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.puissanceFiscale')}
-                value={values.puissanceFiscale}
-                onChangeText={(v) => update('puissanceFiscale', v)}
-                confidence={confidences.puissanceFiscale}
-                keyboardType="number-pad"
-                t={t}
-              />
-              <ReviewField
-                label={t('vehicle.fields.couleur')}
-                value={values.couleur}
-                onChangeText={(v) => update('couleur', v)}
-                confidence={confidences.couleur}
-                t={t}
-              />
-
-              <View className="gap-1.5">
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.fields.carburant')}
-                  {confidences.carburant === 'medium' ? ` · ${t('vehicle.quickCreate.toVerify')}` : ''}
-                </ThemedText>
-                <ChipGroup
-                  options={FUEL_TYPES}
-                  selected={values.carburant}
-                  getLabel={(f) => t(`vehicle.fuel.${f}`)}
-                  onSelect={(f) => update('carburant', f)}
-                />
-              </View>
-
-              <View className="gap-1.5">
-                <ThemedText type="small" themeColor="textSecondary">
-                  {t('vehicle.fields.categorie')}
-                  {confidences.categorie === 'medium' ? ` · ${t('vehicle.quickCreate.toVerify')}` : ''}
-                </ThemedText>
-                <ChipGroup
-                  options={VEHICLE_CATEGORIES}
-                  selected={values.categorie}
-                  getLabel={(c) => t(`vehicle.category.${c}`)}
-                  onSelect={(c) => update('categorie', c)}
-                />
-              </View>
-
-              <RegistrationInfo fields={merged} t={t} />
-
-              <View className="flex-row gap-2">
-                <Pressable onPress={restart} className="flex-1 items-center rounded-2xl border border-border bg-card px-4 py-3">
-                  <ThemedText type="small">{t('vehicle.quickCreate.retake')}</ThemedText>
-                </Pressable>
-              </View>
-              <Button label={t('vehicle.quickCreate.continue')} onPress={() => continueWithDraft(true)} />
-            </View>
-          ) : null}
-        </ScrollView>
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-/** Informations lues sur la carte mais qui n'ont pas de champ propre : affichées pour contrôle (non modifiables ici). */
-function RegistrationInfo({ fields, t }: { fields: VehicleOcrFields; t: (key: string) => string }) {
-  const rows: [string, string | null][] = [
-    [t('vehicle.quickCreate.info.proprietaire'), fields.proprietaire.value],
-    [t('vehicle.quickCreate.info.usage'), fields.usage.value],
-    [t('vehicle.quickCreate.info.finValidite'), fromIsoDate(fields.dateFinValidite.value) || null],
-    [t('vehicle.quickCreate.info.immatriculationAnterieure'), fields.immatriculationAnterieure.value],
-    [t('vehicle.quickCreate.info.genre'), fields.genre.value],
-    [t('vehicle.quickCreate.info.type'), fields.type.value],
-    [t('vehicle.quickCreate.info.cylindres'), fields.nombreCylindres.value != null ? String(fields.nombreCylindres.value) : null],
-    [t('vehicle.quickCreate.info.ptac'), fields.ptac.value != null ? `${fields.ptac.value} kg` : null],
-    [t('vehicle.quickCreate.info.poidsVide'), fields.poidsVide.value != null ? `${fields.poidsVide.value} kg` : null],
-  ];
-  const shown = rows.filter((row): row is [string, string] => !!row[1]);
-  if (shown.length === 0) return null;
   return (
-    <Card className="gap-1">
-      <ThemedText type="smallBold">{t('vehicle.quickCreate.info.title')}</ThemedText>
-      <ThemedText type="small" themeColor="textSecondary">
-        {t('vehicle.quickCreate.info.help')}
-      </ThemedText>
-      {shown.map(([label, value]) => (
-        <ThemedText key={label} type="small">
-          {label} : <ThemedText type="smallBold">{value}</ThemedText>
-        </ThemedText>
-      ))}
-    </Card>
-  );
-}
+    <View style={{ flex: 1, backgroundColor: Brand.scannerBackground }}>
+      <StatusBar style="light" />
+      {permission?.granted ? <CameraView ref={cameraRef} style={{ position: 'absolute', top: 0, start: 0, end: 0, bottom: 0 }} facing="back" enableTorch={torch} /> : null}
+      {/* Halo radial sombre par-dessus l'aperçu (lisibilité) */}
+      <View pointerEvents="none" style={{ position: 'absolute', top: 0, start: 0, end: 0, bottom: 0 }}>
+        <Svg width="100%" height="100%">
+          <Defs>
+            <RadialGradient id="scanVeil" cx="50%" cy="40%" rx="80%" ry="50%">
+              <Stop offset="0" stopColor="#0B0D0E" stopOpacity={permission?.granted ? 0.15 : 0} />
+              <Stop offset="0.6" stopColor="#0B0D0E" stopOpacity={permission?.granted ? 0.55 : 0.4} />
+              <Stop offset="1" stopColor="#0B0D0E" stopOpacity={0.9} />
+            </RadialGradient>
+          </Defs>
+          <Rect width="100%" height="100%" fill="url(#scanVeil)" />
+        </Svg>
+      </View>
 
-function ReviewField({
-  label,
-  value,
-  onChangeText,
-  confidence,
-  keyboardType,
-  t,
-}: {
-  label: string;
-  value: string;
-  onChangeText: (v: string) => void;
-  confidence?: OcrConfidence;
-  keyboardType?: 'number-pad';
-  t: (key: string) => string;
-}) {
-  if (!value && confidence === undefined) return null;
-  return (
-    <View className="gap-1">
-      <TextField label={label} value={value} onChangeText={onChangeText} keyboardType={keyboardType} />
-      {confidence === 'medium' ? (
-        <ThemedText type="small" style={{ color: Palette.warning }}>
-          {t('vehicle.quickCreate.toVerify')}
-        </ThemedText>
-      ) : null}
+      <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+        <RoundButton icon="close" label={t('vehicleAdd.scan.closeScan')} onPress={() => router.back()} />
+        <View style={{ alignItems: 'center', gap: 2 }}>
+          <HText font="display" weight="bold" size={16} color={Brand.white} accessibilityRole="header">
+            {title}
+          </HText>
+          <HText weight="semibold" size={11} track={0.14} color={Brand.mutedOnDark}>
+            {t('vehicleAdd.scan.step', { n: side === 'recto' ? 1 : 2 })}
+          </HText>
+        </View>
+        <RoundButton icon="flash-outline" label={t('vehicleAdd.scan.torch')} onPress={() => setTorch((on) => !on)} active={torch} />
+      </View>
+
+      <View style={{ marginHorizontal: 20, marginTop: 14, flexDirection: 'row', gap: 6 }} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+        {FACES.map((face) => (
+          <View key={face} style={{ flex: 1, height: 4, borderRadius: 2, backgroundColor: photos[face] ? Brand.successOnDark : face === side ? Brand.orange : Brand.strokeOnDark }} />
+        ))}
+      </View>
+
+      <View style={{ alignSelf: 'center', marginTop: 24, borderRadius: 18, backgroundColor: cameraBlocked ? maskColor : 'transparent' }}>
+        <ScanFrame width={frameWidth} height={frameHeight} />
+      </View>
+
+      <View style={{ alignItems: 'center', gap: 12, marginTop: 18, paddingHorizontal: 20 }}>
+        {cameraBlocked ? (
+          <View style={{ alignItems: 'center', gap: 10 }}>
+            <HText size={13} color={Brand.textOnDark} style={{ textAlign: 'center' }}>
+              {permission?.canAskAgain ? t('vehicleAdd.scan.cameraAsk') : t('vehicleAdd.scan.cameraDenied')}
+            </HText>
+            <PillButton label={permission?.canAskAgain ? t('vehicleAdd.scan.allowCamera') : t('vehicleAdd.scan.gallery')} onPress={() => (permission?.canAskAgain ? void requestPermission() : void Linking.openSettings())} />
+          </View>
+        ) : (
+          <View style={{ backgroundColor: withAlpha(Brand.graphite, 0.9), borderRadius: 18, paddingHorizontal: 14, paddingVertical: 8 }} accessibilityLiveRegion="polite">
+            <HText weight="semibold" size={13} color={Brand.white}>
+              {t('vehicleAdd.scan.placeCard')}
+            </HText>
+          </View>
+        )}
+        <TipPills tips={[t('vehicleAdd.scan.tipFlat'), t('vehicleAdd.scan.tipNoGlare'), t('vehicleAdd.scan.tipLight')]} />
+        {message || offline ? (
+          <HText size={12} weight="semibold" color={Brand.errorOnDark} style={{ textAlign: 'center' }} accessibilityLiveRegion="polite">
+            {message ?? t('vehicleAdd.scan.offline')}
+          </HText>
+        ) : null}
+      </View>
+
+      {/* Panneau du bas */}
+      <View style={{ position: 'absolute', start: 0, end: 0, bottom: 0, backgroundColor: Brand.scannerPanel, borderTopLeftRadius: 30, borderTopRightRadius: 30, borderTopWidth: 1, borderTopColor: Brand.surfaceOnDark, paddingTop: 16, paddingHorizontal: 20, paddingBottom: insets.bottom + 18, gap: 14 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Pressable onPress={fromGallery} accessibilityRole="button" accessibilityLabel={t('vehicleAdd.scan.gallery')} style={{ width: 54, height: 54, borderRadius: 16, backgroundColor: Brand.surfaceOnDark, borderWidth: 1, borderColor: Brand.strokeOnDark, alignItems: 'center', justifyContent: 'center' }}>
+            <Ionicons name="images-outline" size={22} color={Brand.white} />
+          </Pressable>
+          <Pressable
+            onPress={shoot}
+            disabled={cameraBlocked || shooting}
+            accessibilityRole="button"
+            accessibilityLabel={side === 'recto' ? t('vehicleAdd.scan.shootRecto') : t('vehicleAdd.scan.shootVerso')}
+            style={{ width: 86, height: 86, borderRadius: 43, borderWidth: 4, borderColor: Brand.white, alignItems: 'center', justifyContent: 'center', opacity: cameraBlocked ? 0.4 : 1 }}
+          >
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: Brand.orange, shadowColor: Brand.orange, shadowOpacity: 0.6, shadowRadius: 13, shadowOffset: { width: 0, height: 0 } }} />
+          </Pressable>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {FACES.map((face) => (
+              <FaceThumb key={face} face={face} taken={!!photos[face]} current={side === face} onPress={() => setSide(face)} label={face === 'recto' ? t('vehicleAdd.scan.retakeRecto') : t('vehicleAdd.scan.retakeVerso')} />
+            ))}
+          </View>
+        </View>
+
+        {canRead ? (
+          <Pressable
+            onPress={analyze}
+            disabled={offline}
+            accessibilityRole="button"
+            style={{ height: 50, borderRadius: 25, backgroundColor: Brand.orange, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: offline ? 0.5 : 1, shadowColor: Brand.orange, shadowOpacity: 0.4, shadowRadius: 10, shadowOffset: { width: 0, height: 8 } }}
+          >
+            <HText weight="semibold" size={15} color={Brand.white}>
+              {readLabel}
+            </HText>
+            <ArrowIcon color={Brand.white} size={16} />
+          </Pressable>
+        ) : null}
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16, backgroundColor: Brand.graphite, borderWidth: 1, borderColor: Brand.borderOnDark }}>
+          <Ionicons name="lock-closed-outline" size={18} color={Brand.mutedOnDark} />
+          <View style={{ flex: 1, minWidth: 0, gap: 1 }}>
+            <HText weight="semibold" size={13} color={Brand.textOnDark}>
+              {t('vehicleAdd.scan.keepLabel')}
+            </HText>
+            <HText size={11} color={Brand.mutedOnDark}>
+              {t('vehicleAdd.scan.readBy')}
+              <HText weight="semibold" size={11} color={Brand.orangeLight} onPress={() => setLegalOpen(true)} accessibilityRole="link">
+                {t('vehicleAdd.scan.learnMore')}
+              </HText>
+            </HText>
+          </View>
+          <KeepSwitch value={keepPhoto} onChange={setKeepPhoto} label={t('vehicleAdd.scan.keepLabel')} />
+        </View>
+      </View>
+      <LegalSheet visible={legalOpen} onClose={() => setLegalOpen(false)} />
     </View>
+  );
+}
+
+/** Écran sombre simple (lecture en cours, erreur, lecture non active) avec le bouton fermer. */
+function PlainScreen({ children, closeLabel }: { children: React.ReactNode; closeLabel: string }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <View style={{ flex: 1, backgroundColor: Brand.scannerBackground }}>
+      <StatusBar style="light" />
+      <View style={{ paddingTop: insets.top + 8, paddingHorizontal: 20, flexDirection: 'row' }}>
+        <RoundButton icon="close" label={closeLabel} onPress={() => router.back()} />
+      </View>
+      <View style={{ flex: 1, padding: 24, justifyContent: 'center', gap: 16 }}>{children}</View>
+    </View>
+  );
+}
+
+function PillButton({ label, onPress, primary = false }: { label: string; onPress: () => void; primary?: boolean }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      style={{ minHeight: 48, borderRadius: 24, paddingHorizontal: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: primary ? Brand.orange : Brand.surfaceOnDark, borderWidth: primary ? 0 : 1, borderColor: Brand.strokeOnDark }}
+    >
+      <HText weight="semibold" size={14} color={Brand.white}>
+        {label}
+      </HText>
+    </Pressable>
   );
 }
