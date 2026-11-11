@@ -3273,6 +3273,29 @@
       "needPlate": "Saisissez l'immatriculation, la marque et le modèle.",
       "needPrice": "Saisissez le prix par jour.",
       "duplicate": "Ce véhicule est déjà dans votre flotte."
+    },
+    "success": {
+      "title": "{{name}} ajoutée à votre flotte",
+      "subtitleFree": "Elle est disponible dès maintenant.",
+      "subtitlePrep": "Elle est en préparation.",
+      "statusFree": "Disponible",
+      "statusPrep": "En préparation",
+      "toComplete": "À compléter plus tard : ",
+      "toCompleteOwnerPrice": "À compléter : ",
+      "complete": "Compléter",
+      "rentNow": "Louer maintenant",
+      "addAnother": "Ajouter un autre",
+      "seeInFleet": "Voir dans Ma flotte",
+      "photoA11y": "Photo de la {{name}}",
+      "missing": {
+        "price": "prix (propriétaire)",
+        "km": "kilométrage",
+        "photo": "photo de face",
+        "assurance": "date d'assurance",
+        "visite_technique": "date de visite technique"
+      },
+      "and": " et ",
+      "comma": ", "
     }
   }
 }

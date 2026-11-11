@@ -103,3 +103,20 @@ export function deadlineDocuments(dates: Partial<Record<DeadlineType, string>>, 
     return iso ? [{ type, path: '', uploadedAt: now.toISOString(), expiresAt: iso }] : [];
   });
 }
+
+// ------------------------------------------------------------------ ce qu'il reste à compléter
+
+export type MissingKey = 'price' | 'km' | 'photo' | DeadlineType;
+
+/**
+ * Ce qui manque après l'ajout (encart « À compléter plus tard » de l'écran de succès). Le prix manque toujours à l'employé : il est créé
+ * à 0 MAD et le propriétaire le complète.
+ */
+export function missingAfterCreate(input: { isOwner: boolean; price: string; km: string; hasPhoto: boolean; deadlines: Partial<Record<DeadlineType, string>> }): MissingKey[] {
+  return [
+    ...(Number(digitsOf(input.price)) > 0 && input.isOwner ? [] : (['price'] as MissingKey[])),
+    ...(digitsOf(input.km) === '' ? (['km'] as MissingKey[]) : []),
+    ...(input.hasPhoto ? [] : (['photo'] as MissingKey[])),
+    ...DEADLINE_TYPES.filter((type) => !isValidDeadline(input.deadlines[type] ?? '')),
+  ];
+}

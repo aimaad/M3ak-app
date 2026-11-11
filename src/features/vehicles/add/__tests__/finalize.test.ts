@@ -3,7 +3,8 @@ jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn
 
 import { suggestDailyPrice } from '../../pricing-suggestion';
 import type { Vehicle } from '../../types';
-import { deadlineDocuments, essentialProgress, formatDateInput, formatThousands, isValidDeadline, statusForRentable, stepPrice, suggestCategory } from '../finalize';
+import { canRentNow } from '../created';
+import { deadlineDocuments, essentialProgress, formatDateInput, formatThousands, isValidDeadline, missingAfterCreate, statusForRentable, stepPrice, suggestCategory } from '../finalize';
 
 describe('avancement des infos essentielles', () => {
   const base = { showPrice: true, price: '', km: '', hasPhoto: false };
@@ -109,5 +110,26 @@ describe('échéances (assurance, visite technique)', () => {
     expect(deadlineDocuments({ assurance: '15/06/2031', visite_technique: '' }, now)).toEqual([{ type: 'assurance', path: '', uploadedAt: '2030-06-10T10:00:00.000Z', expiresAt: '2031-06-15' }]);
     expect(deadlineDocuments({}, now)).toEqual([]);
     expect(deadlineDocuments({ visite_technique: '31/02/2031' }, now)).toEqual([]);
+  });
+});
+
+describe('ce qu’il reste à compléter après l’ajout', () => {
+  const all = { isOwner: true, price: '400', km: '45000', hasPhoto: true, deadlines: { assurance: '15/06/2031', visite_technique: '01/01/2031' } };
+  it('rien ne manque : pas d’encart', () => {
+    expect(missingAfterCreate(all)).toEqual([]);
+  });
+  it('kilométrage, photo et dates manquants, dans l’ordre de l’écran', () => {
+    expect(missingAfterCreate({ ...all, km: '', hasPhoto: false, deadlines: {} })).toEqual(['km', 'photo', 'assurance', 'visite_technique']);
+    expect(missingAfterCreate({ ...all, deadlines: { assurance: '15/06/2031' } })).toEqual(['visite_technique']);
+    expect(missingAfterCreate({ ...all, km: '0' })).toEqual([]); // 0 km est une valeur
+  });
+  it('l’employé ne fixe pas le prix : « prix (propriétaire) » manque toujours', () => {
+    expect(missingAfterCreate({ ...all, isOwner: false, price: '' })).toEqual(['price']);
+    expect(missingAfterCreate({ ...all, isOwner: false, price: '500' })).toEqual(['price']);
+  });
+  it('« Louer maintenant » : seulement un véhicule disponible dont le prix est fixé', () => {
+    expect(canRentNow({ statut: 'disponible', prixJour: 400 })).toBe(true);
+    expect(canRentNow({ statut: 'disponible', prixJour: 0 })).toBe(false); // créé par un employé, prix à compléter
+    expect(canRentNow({ statut: 'en_preparation', prixJour: 400 })).toBe(false);
   });
 });

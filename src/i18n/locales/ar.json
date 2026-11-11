@@ -3339,7 +3339,7 @@
       "usual": "طوموبيلاتك الأخرى {{category}}: {{price}} درهم/نهار (الثمن العادي)",
       "apply": "طبق",
       "km": "الكيلومتراج الحالي",
-      "kmPlaceholder": "مثلا 45 000",
+      "kmPlaceholder": "45 000",
       "kmUnit": "كم",
       "photo": "تصويرة من القدام",
       "photoShown": "كتبان فكل بلاصة فالتطبيق",
@@ -3377,6 +3377,29 @@
       "needPlate": "كتب اللوحة والماركة والموديل.",
       "needPrice": "كتب الثمن فالنهار.",
       "duplicate": "هاد الطوموبيل راه كاينة فالأسطول ديالك."
+    },
+    "success": {
+      "title": "{{name}} تزادت للأسطول ديالك",
+      "subtitleFree": "هي متاحة دابا.",
+      "subtitlePrep": "هي قيد التحضير.",
+      "statusFree": "متاحة",
+      "statusPrep": "قيد التحضير",
+      "toComplete": "خاص تكمل من بعد: ",
+      "toCompleteOwnerPrice": "خاص تكمل: ",
+      "complete": "كمّل",
+      "rentNow": "كري دابا",
+      "addAnother": "زيد وحدة أخرى",
+      "seeInFleet": "شوف فالأسطول",
+      "photoA11y": "تصويرة {{name}}",
+      "missing": {
+        "price": "الثمن (المالك)",
+        "km": "الكيلومتراج",
+        "photo": "تصويرة من القدام",
+        "assurance": "تاريخ التأمين",
+        "visite_technique": "تاريخ الفحص التقني"
+      },
+      "and": " و",
+      "comma": "، "
     }
   }
 }

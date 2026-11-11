@@ -88,6 +88,16 @@ Ces exceptions ne changent rien aux autres écrans. Jetons ajoutés : `orangeDee
 
 **Galerie et Filtres et tri** : le bouton liste/galerie de l'en-tête bascule la vue, et le choix est gardé sur le téléphone (`use-fleet-view.ts`). Galerie : en-tête compact « N VÉHICULES » + « Ma flotte », pastilles Tous + 3 groupes (défilement horizontal), grille de 2 colonnes (`fleet-gallery.tsx`), prix visible du propriétaire seulement. Le bouton « Statut ⌄ » (liste et galerie) ouvre la feuille « Filtres et tri » (`filters-sheet.tsx`) : catégorie, marque, carburant, boîte (valeurs existantes seulement), tri (statut, nom, prix [propriétaire], kilométrage, ajout récent) et « Voir les archivés ».
 
+## Ajout d'un véhicule (choix, scan, carte grise lue, finaliser, véhicule ajouté, vérifier une plaque)
+Références : `docs/design/ajout-choix-reference.html`, `ajout-scan-reference.html`, `ajout-carte-lue-reference.html`, `ajout-finaliser-reference.html`, `ajout-succes-reference.html`, `verifier-plaque-reference.html`. Code : `src/app/(tabs)/flotte/nouveau/` (écrans) et `src/features/vehicles/add/` (logique et composants).
+- **Rien n'est détecté en direct** : le scanner n'affiche que des conseils fixes (« À plat », « Sans reflet », « Bien éclairé ») et un déclencheur manuel. Pas de zones repérées, pas de points de qualité, pas de capture automatique : l'app n'a pas d'analyse d'image en direct. La ligne de lecture orange est un simple guidage (coupée si « réduire les animations »).
+- **Outil « Vérifier une plaque »** : visuellement à part (ni carte, ni icône colorée sur l'écran de choix) ; il ne crée rien.
+- **Plaques** : enregistrées au format « numéro | lettre | région » (ou « WW 123456 ») ; la comparaison ignore espaces, tirets, marques invisibles et l'allongement de « هـ ». La lettre arabe de la plaque est toujours en Cairo, l'ordre ne s'inverse pas en arabe.
+- **Carte grise lue** : « à confirmer » = confiance faible, format invalide (VIN ≠ 17 caractères ou avec I/O/Q, date impossible, plaque hors format) ou champ essentiel vide ; confiance moyenne = petit point jaune.
+- **Employé** : aucune carte Prix ni suggestion ; le véhicule est créé à 0 MAD et le propriétaire le complète.
+- **Échéances** : la date est enregistrée sans fichier ; les rappels préviennent 30 jours avant.
+- Jetons ajoutés : `scannerBackground` (`#0B0D0E`) et `scannerPanel` (`#151819`) pour le fond plein écran du scanner.
+
 ## Vérification
 Les captures d'écran ont été prises en exportant l'app en version web (`npx expo export -p web`) et en l'ouvrant dans un navigateur. Le rendu sur iPhone n'a pas été vérifié par l'équipe de développement.
 

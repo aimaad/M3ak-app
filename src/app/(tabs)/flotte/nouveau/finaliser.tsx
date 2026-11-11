@@ -8,8 +8,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { Image, KeyboardAvoidingView, Platform, Pressable, ScrollView, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/button';
-import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
@@ -17,7 +15,8 @@ import { useBranches } from '@/features/branches/hooks';
 import { HText } from '@/features/dashboard/home-ui';
 import { mergeDocuments } from '@/features/storage/documents';
 import { AddHeader, BackButton } from '@/features/vehicles/add/add-ui';
-import { deadlineDocuments, DEADLINE_TYPES, digitsOf, essentialProgress, formatDateInput, isValidDeadline, REMINDER_DAYS, statusForRentable, stepPrice, suggestCategory, type DeadlineType } from '@/features/vehicles/add/finalize';
+import { setCreatedVehicle } from '@/features/vehicles/add/created';
+import { deadlineDocuments, DEADLINE_TYPES, digitsOf, essentialProgress, formatDateInput, isValidDeadline, missingAfterCreate, REMINDER_DAYS, statusForRentable, stepPrice, suggestCategory, type DeadlineType } from '@/features/vehicles/add/finalize';
 import { ChoiceChips, EssentialCard, GreenSwitch, KmField, PhotoZone, PriceStepper, ProgressRing } from '@/features/vehicles/add/finalize-parts';
 import { findExistingVehicle } from '@/features/vehicles/add/lookup';
 import { PlateDisplay } from '@/features/vehicles/add/plate-display';
@@ -28,7 +27,7 @@ import { DuplicateVehicleCard } from '@/features/vehicles/duplicate-vehicle-card
 import { findDuplicateVehicle, uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
 import { suggestDailyPrice } from '@/features/vehicles/pricing-suggestion';
 import { useCreateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicles } from '@/features/vehicles/hooks';
-import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type FuelType, type PendingVehicleDocument, type Vehicle, type VehicleCategory, type VehicleTransmission } from '@/features/vehicles/types';
+import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type FuelType, type PendingVehicleDocument, type VehicleCategory, type VehicleDocument, type VehiclePhoto, type VehicleTransmission } from '@/features/vehicles/types';
 import { duplicateVehicleField, toVehicleInput, type VehicleFormValues } from '@/features/vehicles/validation';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -85,7 +84,6 @@ export default function FinaliserVehiculeScreen() {
   const [touched, setTouched] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [created, setCreated] = useState<Vehicle | null>(null);
   const [serverDuplicate, setServerDuplicate] = useState<ReturnType<typeof findExistingVehicle>>(null);
 
   const plate = fromCard ? (draft?.immatriculation ?? '') : wwMode ? joinWw(wwDigits) : joinPlate(plateParts);
@@ -153,52 +151,40 @@ export default function FinaliserVehiculeScreen() {
 
       // Documents : photos de la carte grise gardées, puis échéances saisies (sans fichier : la date alimente déjà les rappels).
       const pending: PendingVehicleDocument[] = draft?.carteGrisePendingDocuments ?? [];
+      let documents: VehicleDocument[] = vehicle.documents;
       try {
         const uploaded = await Promise.all(pending.map((doc) => uploadVehicleDocument(agencyId, vehicle.id, doc.type, doc.localUri, doc.expiresAt)));
         const dated = deadlineDocuments(deadlines);
-        if (uploaded.length + dated.length > 0) await updateDocuments.mutateAsync({ id: vehicle.id, documents: mergeDocuments(vehicle.documents, [...uploaded, ...dated]) });
+        if (uploaded.length + dated.length > 0) {
+          documents = mergeDocuments(vehicle.documents, [...uploaded, ...dated]);
+          await updateDocuments.mutateAsync({ id: vehicle.id, documents });
+        }
       } catch {
         // Le véhicule est créé ; l'envoi des documents pourra être refait depuis sa fiche.
       }
-      const photos = [facePhoto, ...extraPhotos].filter((uri): uri is string => !!uri);
-      if (photos.length > 0) {
+      const photoUris = [facePhoto, ...extraPhotos].filter((uri): uri is string => !!uri);
+      let photos: VehiclePhoto[] = vehicle.photos;
+      let photoSent = false;
+      if (photoUris.length > 0) {
         try {
-          const uploaded = await Promise.all(photos.map((uri) => uploadVehiclePhoto(agencyId, vehicle.id, uri)));
-          await updatePhotos.mutateAsync({ id: vehicle.id, photos: [...vehicle.photos, ...uploaded] });
+          const uploaded = await Promise.all(photoUris.map((uri) => uploadVehiclePhoto(agencyId, vehicle.id, uri)));
+          photos = [...vehicle.photos, ...uploaded];
+          await updatePhotos.mutateAsync({ id: vehicle.id, photos });
+          photoSent = true;
         } catch {
           // Idem pour les photos.
         }
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
-      setCreated(vehicle);
+      // L'écran « Véhicule ajouté » rappelle ce qui manque (kilométrage, photo, dates, prix pour l'employé).
+      setCreatedVehicle({ vehicle: { ...vehicle, documents, photos }, missing: missingAfterCreate({ isOwner, price, km, hasPhoto: photoSent, deadlines }) });
+      router.replace('/flotte/nouveau/succes');
     } catch (error) {
       const field = duplicateVehicleField(error);
       setSubmitError(field === 'vin' ? t('vehicle.form.duplicateVinError') : field === 'immatriculation' ? t('vehicle.form.duplicatePlateError') : t('vehicle.form.createError'));
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (created) {
-    return (
-      <ThemedView className="flex-1">
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24, paddingHorizontal: 32 }}>
-          <View className="h-16 w-16 items-center justify-center rounded-full" style={{ backgroundColor: Palette.successSoft }}>
-            <Ionicons name="checkmark" size={32} color={Palette.success} />
-          </View>
-          <ThemedText type="subtitle" className="text-center">
-            {t('vehicle.quickCreate.successTitle')}
-          </ThemedText>
-          <ThemedText type="default" themeColor="textSecondary" className="text-center">
-            {t('vehicle.quickCreate.successBody', { plate: created.immatriculation })}
-          </ThemedText>
-          <View className="w-full gap-2">
-            <Button label={t('vehicle.quickCreate.viewVehicle')} onPress={() => router.replace(`/flotte/${created.id}`)} />
-            <Button label={t('vehicle.quickCreate.addAnother')} variant="secondary" onPress={() => router.replace('/flotte/nouveau')} />
-          </View>
-        </View>
-      </ThemedView>
-    );
   }
 
   const highlighted = (key: 'price' | 'km' | 'photo') => progress.next === key;

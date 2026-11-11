@@ -65,6 +65,8 @@ jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
+import { getCreatedVehicle } from '@/features/vehicles/add/created';
+
 import FinaliserVehiculeScreen from '../../../app/(tabs)/flotte/nouveau/finaliser';
 
 const scanDraft = { source: 'scan', immatriculation: '68013 | ب | 72', marque: 'Dacia', modele: 'Sandero Stepway', carburant: 'diesel', annee: 2022, genre: 'Voiture particulière', vin: 'UU1HSDAGC56789012', puissanceFiscale: 6, dateMiseEnCirculation: '12/03/2022' };
@@ -103,6 +105,8 @@ describe('écran Finaliser', () => {
     await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
     await waitFor(() => expect(mockState.created).toHaveLength(1));
     expect(mockState.created[0]).toMatchObject({ immatriculation: '68013 | ب | 72', marque: 'Dacia', modele: 'Sandero', carburant: 'diesel', prixJour: 350, kilometrage: 45000, statut: 'disponible' });
+    expect(mockRouter.replace).toHaveBeenCalledWith('/flotte/nouveau/succes');
+    expect(getCreatedVehicle()?.missing).toEqual(['photo', 'assurance', 'visite_technique']); // le kilométrage a été saisi
   });
 
   it('« Louable tout de suite » désactivé : le véhicule est créé En préparation', async () => {
@@ -152,6 +156,7 @@ describe('écran Finaliser', () => {
     await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
     await waitFor(() => expect(mockState.created).toHaveLength(1));
     expect(mockState.created[0]).toMatchObject({ prixJour: 0 });
+    expect(getCreatedVehicle()?.missing).toContain('price'); // le propriétaire le complétera
   });
 
   it('photo de face : l’avancement monte ; la photo est envoyée en premier avec les autres', async () => {
