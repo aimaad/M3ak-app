@@ -240,6 +240,41 @@ describe('« Modifier la fiche technique »', () => {
     expect(screen.getByText('Archiver ce véhicule').props.style).toBeDefined();
   });
 
+  it('statut : voiture réservée → refus avec le nom du client, le statut ne change pas', async () => {
+    mockState.rentals = [{ id: 'r1', statut: 'confirmee', customerId: 'c1', dateDebutPrevue: new Date(Date.now() + 3 * 86400000).toISOString(), dateFinPrevue: new Date(Date.now() + 6 * 86400000).toISOString() }];
+    await render(<VehicleForm vehicle={base} />);
+    await fireEvent.press(screen.getByLabelText('Maintenance'));
+    expect(await screen.findByText(/Elle est déjà réservée par Fouad B\. .*Essayez de lui accorder une autre voiture\./)).toBeTruthy();
+    expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // rien n'a changé
+  });
+
+  it('statut : voiture libre → le changement est accepté sans message', async () => {
+    await render(<VehicleForm vehicle={base} />);
+    await fireEvent.press(screen.getByLabelText('Maintenance'));
+    expect(screen.getByLabelText('Maintenance').props.accessibilityState.checked).toBe(true);
+    expect(screen.queryByText(/Essayez de lui accorder/)).toBeNull();
+  });
+
+  it('rendre disponible avec une échéance en alerte : simple alerte, « Annuler » ne change rien, confirmer applique', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    mockState.compliance = [{ id: 'c1', vehicleId: 'v1', kind: 'assurance', validFrom: null, validUntil: day(-5), documentPath: null, createdAt: '2026-01-01T00:00:00Z' }];
+    await render(<VehicleForm vehicle={{ ...base, statut: 'indisponible' }} />);
+    await fireEvent.press(screen.getByLabelText('Disponible'));
+    expect(alert).toHaveBeenCalledWith('Échéances en alerte', expect.stringContaining('Assurance (expirée)'), expect.any(Array));
+    expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // pas encore changé
+    (alert.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((button) => button.text === 'Rendre disponible quand même')?.onPress?.();
+    expect(await screen.findByLabelText('Enregistrer')).toBeTruthy();
+    expect(screen.getByLabelText('Disponible').props.accessibilityState.checked).toBe(true);
+  });
+
+  it('rendre disponible sans alerte : direct, sans confirmation', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    await render(<VehicleForm vehicle={{ ...base, statut: 'indisponible' }} />);
+    await fireEvent.press(screen.getByLabelText('Disponible'));
+    expect(alert).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Disponible').props.accessibilityState.checked).toBe(true);
+  });
+
   it('échéances : aucune → état vide avec des puces ; « + Vidange » ouvre la feuille et crée l’échéance (requête séparée)', async () => {
     await render(<VehicleForm vehicle={base} />);
     expect(screen.getByText('Aucun entretien prévu')).toBeTruthy();

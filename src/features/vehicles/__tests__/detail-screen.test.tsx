@@ -169,6 +169,28 @@ describe('fiche véhicule', () => {
     await waitFor(() => expect(mockState.statusCalls).toEqual([{ id: 'v1', statut: 'indisponible', motif: 'Pare-brise cassé' }]));
   });
 
+  it('« Rendre indisponible » sur une voiture réservée : refus avec le nom du client, aucun motif demandé', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    mockState.rentals = [rentalRow({ statut: 'confirmee', dateDebutPrevue: at(3), dateFinPrevue: at(6), dateDepartReel: null })];
+    await render(<VehicleDetailScreen />);
+    await fireEvent.press(screen.getByLabelText('Rendre indisponible : Dacia Logan'));
+    expect(alert).toHaveBeenCalledWith('Statut impossible à changer', expect.stringMatching(/Elle est déjà réservée par .+\. Essayez de lui accorder une autre voiture\./), expect.any(Array));
+    expect(screen.queryByText('Motif (facultatif)', hidden)).toBeNull();
+    expect(mockState.statusCalls).toHaveLength(0);
+  });
+
+  it('« Rendre disponible » avec une échéance en alerte : simple alerte, rien n’est bloqué ; « Annuler » ne change rien, confirmer rend disponible', async () => {
+    const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+    mockState.vehicle = { ...base, statut: 'indisponible', statutMotif: 'Pare-brise' };
+    mockState.compliance = [{ id: 'c1', agencyId: 'a1', vehicleId: 'v1', kind: 'assurance', validFrom: null, validUntil: at(-3).slice(0, 10), reference: null, provider: null, amount: null, documentPath: 'p.jpg', notes: null, periodMonths: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z' }];
+    await render(<VehicleDetailScreen />);
+    await fireEvent.press(screen.getByLabelText('Rendre disponible : Dacia Logan'));
+    expect(alert).toHaveBeenCalledWith('Échéances en alerte', expect.stringContaining('Assurance (expirée)'), expect.any(Array));
+    expect(mockState.statusCalls).toHaveLength(0); // rien avant la confirmation
+    (alert.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((button) => button.text === 'Rendre disponible quand même')?.onPress?.();
+    await waitFor(() => expect(mockState.statusCalls).toEqual([{ id: 'v1', statut: 'disponible', motif: undefined }]));
+  });
+
   it('indisponible : le motif s’affiche et « Rendre disponible » remet le statut', async () => {
     mockState.vehicle = { ...base, statut: 'indisponible', statutMotif: 'Pare-brise cassé' };
     await render(<VehicleDetailScreen />);

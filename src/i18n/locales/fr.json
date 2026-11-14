@@ -3667,6 +3667,27 @@
       "repeatLabel": "Renouvellement",
       "repeatOnce": "Une seule fois",
       "repeatPeriodic": "Périodique"
+    },
+    "statusBlock": {
+      "title": "Statut impossible à changer",
+      "late": "Elle est déjà en location chez {{name}} et n'a pas été rendue. Enregistrez d'abord son retour.",
+      "lateNoName": "Elle est déjà en location et n'a pas été rendue. Enregistrez d'abord son retour.",
+      "rented": "Elle est déjà louée à {{name}} jusqu'au {{day}}. Essayez de lui accorder une autre voiture.",
+      "rentedNoName": "Elle est déjà louée jusqu'au {{day}}. Essayez d'accorder une autre voiture au client.",
+      "reserved": "Elle est déjà réservée par {{name}} le {{day}}. Essayez de lui accorder une autre voiture.",
+      "reservedNoName": "Elle est déjà réservée le {{day}}. Essayez d'accorder une autre voiture au client.",
+      "status": "Elle est marquée en location. Terminez la location d'abord.",
+      "ok": "Compris"
+    },
+    "availability": {
+      "title": "Échéances en alerte",
+      "body": "Cette voiture a des échéances en alerte : {{list}}. Vous pouvez la rendre disponible quand même.",
+      "confirm": "Rendre disponible quand même",
+      "cancel": "Annuler",
+      "state": {
+        "urgent": "urgente",
+        "expired": "expirée"
+      }
     }
   },
   "vehiclePhotos": {

@@ -34,6 +34,7 @@ import { StateCardView } from '@/features/vehicles/detail/state-card-view';
 import { buildStateCard, statusBadge, type StateAction } from '@/features/vehicles/detail/state-card';
 import { useVehicleDetail } from '@/features/vehicles/detail/use-vehicle-detail';
 import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-section-scroll';
+import { availabilityAlertList, availabilityAlerts, statusBlockText } from '@/features/vehicles/status-guard';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function VehicleDetailScreen() {
@@ -155,10 +156,22 @@ export default function VehicleDetailScreen() {
       case 'seeMaintenance':
         scrollRef.current?.scrollTo({ y: Math.max(0, entretienY - 12), animated: true });
         return;
-      case 'makeAvailable':
-        setStatus('disponible');
+      case 'makeAvailable': {
+        // Échéances en alerte : jamais bloquant, une simple alerte ; on peut passer outre en confirmant.
+        const alerts = vehicle ? availabilityAlerts(vehicle, complianceQuery.data ?? [], maintenanceItems, now) : [];
+        if (alerts.length === 0) return setStatus('disponible');
+        Alert.alert(t('vehicleDetail.availability.title'), t('vehicleDetail.availability.body', { list: availabilityAlertList(alerts, t) }), [
+          { text: t('vehicleDetail.availability.cancel'), style: 'cancel' },
+          { text: t('vehicleDetail.availability.confirm'), onPress: () => setStatus('disponible') },
+        ]);
         return;
+      }
       case 'makeUnavailable':
+        // Réservée ou en location : le statut ne se change pas ; on dit chez qui elle est.
+        if (block) {
+          Alert.alert(t('vehicleDetail.statusBlock.title'), statusBlockText(block, t, language, now), [{ text: t('vehicleDetail.statusBlock.ok') }]);
+          return;
+        }
         setStatusError(null);
         setReasonOpen(true);
         return;

@@ -44,6 +44,7 @@ import { useCreateMaintenanceItem, useVehicleMaintenanceItems } from '@/features
 import { useVehicleRentals } from '@/features/rentals/hooks';
 import { mergeDocuments } from '@/features/storage/documents';
 import { useSignedUrl } from '@/features/storage/hooks';
+import { availabilityAlertList, availabilityAlerts, statusBlockText } from './status-guard';
 import { useLanguage } from '@/i18n/use-language';
 
 import { prepareVehiclePhoto, uploadVehicleDocument, VEHICLE_DOCUMENTS_BUCKET } from './api';
@@ -283,6 +284,24 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
   }, [compliance, maintenance, vehicle, now, t]);
 
   const block = archiveBlock(vehicle, rentals, new Map(customerList.map((customer) => [customer.id, customer])), now);
+
+  // Statut : impossible à changer si la voiture est réservée ou en location (on dit chez qui) ; une échéance en alerte n'empêche pas de la
+  // rendre disponible : simple alerte, on confirme pour passer outre.
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  function chooseStatus(next: VehicleStatus) {
+    if (next === draft.statut) return;
+    if (block) {
+      setStatusMessage(statusBlockText(block, t, language, now));
+      return;
+    }
+    setStatusMessage(null);
+    const alerts = next === 'disponible' ? availabilityAlerts(vehicle, compliance, maintenance, now) : [];
+    if (alerts.length === 0) return set('statut', next);
+    Alert.alert(t('vehicleDetail.availability.title'), t('vehicleDetail.availability.body', { list: availabilityAlertList(alerts, t) }), [
+      { text: t('vehicleDetail.availability.cancel'), style: 'cancel' },
+      { text: t('vehicleDetail.availability.confirm'), onPress: () => set('statut', next) },
+    ]);
+  }
   function confirmArchive() {
     Alert.alert(t('vehicleForm.edit.archive.confirmTitle'), t('vehicleForm.edit.archive.confirmBody'), [
       { text: t('vehicleForm.edit.archive.cancel'), style: 'cancel' },
@@ -457,7 +476,15 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
 
         <View style={{ gap: 12 }}>
           <SectionLabel>{t('vehicleForm.edit.sections.availability')}</SectionLabel>
-          <ChoiceTiles<VehicleStatus> label={label('statut')} value={draft.statut} onChange={(value) => set('statut', value)} options={MANUAL_VEHICLE_STATUSES.map((value) => ({ value, label: t(`vehicleForm.edit.status.${value}`), icon: STATUS_ICON[value] ?? 'ellipse-outline' }))} />
+          <ChoiceTiles<VehicleStatus> label={label('statut')} value={draft.statut} onChange={chooseStatus} options={MANUAL_VEHICLE_STATUSES.map((value) => ({ value, label: t(`vehicleForm.edit.status.${value}`), icon: STATUS_ICON[value] ?? 'ellipse-outline' }))} />
+          {statusMessage ? (
+            <View accessibilityRole="alert" style={{ flexDirection: 'row', gap: 8, borderRadius: 14, borderWidth: 1.5, borderColor: Palette.error, backgroundColor: Brand.errorFieldFill, padding: 12 }}>
+              <Ionicons name="alert-circle-outline" size={16} color={Palette.error} />
+              <HText weight="semibold" size={13} color={Palette.error} style={{ flex: 1 }}>
+                {statusMessage}
+              </HText>
+            </View>
+          ) : null}
           {canChooseBranch ? <SelectField label={label('branchId')} value={draft.branchId ?? ''} options={[{ value: '', label: t('vehicle.fields.allBranches') }, ...branches.map((branch) => ({ value: branch.id, label: branch.nom }))]} searchable={false} onChange={(value) => set('branchId', value === '' ? null : value)} /> : null}
         </View>
 
