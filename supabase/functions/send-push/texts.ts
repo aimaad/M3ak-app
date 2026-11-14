@@ -8,8 +8,8 @@ export type PushParams = Record<string, unknown>;
 type Template = { title: string; body: string };
 
 const MAINTENANCE: Record<Locale, Record<string, string>> = {
-  fr: { vidange: 'la vidange', assurance: "l'assurance", visite_technique: 'la visite technique', freins: 'les freins', pneus: 'les pneus', autre: "l'entretien" },
-  ar: { vidange: 'تغيير الزيت', assurance: 'التأمين', visite_technique: 'الفحص التقني', freins: 'الفرامل', pneus: 'العجلات', autre: 'الصيانة' },
+  fr: { vidange: 'la vidange', assurance: "l'assurance", visite_technique: 'la visite technique', freins: 'les freins', pneus: 'les pneus', autre: "l'entretien", vignette: 'la vignette' },
+  ar: { vidange: 'تغيير الزيت', assurance: 'التأمين', visite_technique: 'الفحص التقني', freins: 'الفرامل', pneus: 'العجلات', autre: 'الصيانة', vignette: 'القسيمة' },
 };
 
 const TEMPLATES: Record<string, Record<Locale, Template>> = {
@@ -44,6 +44,14 @@ const TEMPLATES: Record<string, Record<Locale, Template>> = {
   maintenance_overdue: {
     fr: { title: 'Entretien en retard', body: 'Pour {vehicle} ({plate}) : {maintenance} devait être fait le {date}.' },
     ar: { title: 'صيانة متأخرة', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} كانت مبرمجة في {date}.' },
+  },
+  compliance_due: {
+    fr: { title: 'Obligation à renouveler', body: 'Pour {vehicle} ({plate}) : {maintenance} arrive à échéance le {date}.' },
+    ar: { title: 'التزام يجب تجديده', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} ينتهي في {date}.' },
+  },
+  compliance_expired: {
+    fr: { title: 'Obligation expirée', body: 'Pour {vehicle} ({plate}) : {maintenance} a expiré le {date}. Renouvelez-la dans la fiche du véhicule.' },
+    ar: { title: 'التزام منتهٍ', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} انتهى في {date}. جدّده من بطاقة السيارة.' },
   },
   licence_expiring: {
     fr: { title: 'Permis bientôt expiré', body: 'Le permis de {customer} expire le {date}. Tél : {phone}' },

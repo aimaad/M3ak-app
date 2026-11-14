@@ -76,4 +76,15 @@ describe('timeAgo', () => {
     expect(timeAgo('2030-06-10T09:00:00Z', now, tFr)).toBe('Il y a 3 h');
     expect(timeAgo('2030-06-08T12:00:00Z', now, tFr)).toBe('Il y a 2 j');
   });
+  it('rappels des obligations : écrits dans l’application, la vignette est traduite, ils ouvrent la fiche du véhicule', () => {
+    for (const [t, language] of [[tFr, 'fr'], [tAr, 'ar']] as const) {
+      for (const kind of ['compliance_due', 'compliance_expired']) {
+        const view = notificationView({ kind, params: { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'vignette', date: '2030-01-31' } }, t, language);
+        expect(view.title).not.toBe('notifications.kinds.' + kind + '.title');
+        expect(view.body).not.toMatch(/[{}—]/);
+      }
+    }
+    expect(notificationView({ kind: 'compliance_due', params: { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'vignette', date: '2030-01-31' } }, tFr, 'fr').body).toContain('la vignette');
+    expect(notificationRoute('vehicle', 'v1')).toEqual({ pathname: '/flotte/[id]', params: { id: 'v1' } });
+  });
 });

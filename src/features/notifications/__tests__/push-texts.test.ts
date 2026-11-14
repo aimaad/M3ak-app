@@ -30,4 +30,16 @@ describe('textes des notifications push', () => {
       expect(renderPush(kind, params, 'ar').title).not.toBe('BIBIP');
     }
   });
+  it('rappels des obligations : assurance, visite technique et vignette, en français et en arabe, sans variable vide', () => {
+    for (const maintenance of ['assurance', 'visite_technique', 'vignette']) {
+      for (const kind of ['compliance_due', 'compliance_expired']) {
+        for (const locale of ['fr', 'ar'] as const) {
+          const text = renderPush(kind, { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance, date: '2030-06-12' }, locale);
+          expect(text.body).not.toMatch(/[{}—]/);
+          expect(text.title).not.toMatch(/[{}]/);
+        }
+      }
+    }
+    expect(renderPush('compliance_due', { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'vignette', date: '2030-06-12' }, 'fr').body).toContain('la vignette');
+  });
 });

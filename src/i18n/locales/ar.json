@@ -2896,6 +2896,14 @@
       "customer_created": {
         "title": "زبون جديد",
         "body": "{{customer}}"
+      },
+      "compliance_due": {
+        "title": "التزام يجب تجديده",
+        "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} ينتهي في {{date}}."
+      },
+      "compliance_expired": {
+        "title": "التزام منتهٍ",
+        "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} انتهى في {{date}}. جدّده من بطاقة السيارة."
       }
     },
     "maintenance": {
@@ -2904,7 +2912,8 @@
       "visite_technique": "الفحص التقني",
       "freins": "الفرامل",
       "pneus": "العجلات",
-      "autre": "الصيانة"
+      "autre": "الصيانة",
+      "vignette": "القسيمة"
     },
     "branch": "الفرع",
     "total": "{{count}} إشعار",

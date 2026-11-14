@@ -2792,6 +2792,14 @@
       "customer_created": {
         "title": "Nouveau client",
         "body": "{{customer}}"
+      },
+      "compliance_due": {
+        "title": "Obligation à renouveler",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} arrive à échéance le {{date}}."
+      },
+      "compliance_expired": {
+        "title": "Obligation expirée",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} a expiré le {{date}}. Renouvelez-la dans la fiche du véhicule."
       }
     },
     "maintenance": {
@@ -2800,7 +2808,8 @@
       "visite_technique": "la visite technique",
       "freins": "les freins",
       "pneus": "les pneus",
-      "autre": "l'entretien"
+      "autre": "l'entretien",
+      "vignette": "la vignette"
     },
     "branch": "Filiale",
     "total": "{{count}} notification(s)",
