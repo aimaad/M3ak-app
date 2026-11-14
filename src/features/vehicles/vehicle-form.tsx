@@ -151,6 +151,8 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [exit, setExit] = useState<'back' | 'list' | null>(null);
+  // « Quitter » confirmé : la garde doit être levée AVANT de rejouer la navigation, sinon elle l'intercepte et redemande.
+  const [leaving, setLeaving] = useState<{ action: Parameters<typeof navigation.dispatch>[0] } | null>(null);
   const [faces, setFaces] = useState<Record<Face, string | null>>({ recto: null, verso: null });
   const [camera, setCamera] = useState<Face | null>(null);
   const [problem, setProblem] = useState<{ face: Face; reason: 'too_small' | 'unreadable' } | null>(null);
@@ -171,12 +173,15 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
   const ai = (key: FieldKey) => aiFilled.includes(key);
 
   // Quitter avec des modifications non enregistrées : confirmation.
-  usePreventRemove(dirty && !saving && exit === null, ({ data }) => {
+  usePreventRemove(dirty && !saving && exit === null && leaving === null, ({ data }) => {
     Alert.alert(t('form.leaveTitle'), t('form.leaveBody'), [
       { text: t('form.stay'), style: 'cancel' },
-      { text: t('form.leave'), style: 'destructive', onPress: () => navigation.dispatch(data.action) },
+      { text: t('form.leave'), style: 'destructive', onPress: () => setLeaving({ action: data.action }) },
     ]);
   });
+  useEffect(() => {
+    if (leaving) navigation.dispatch(leaving.action);
+  }, [leaving, navigation]);
   useEffect(() => {
     if (exit === 'back') router.back();
     else if (exit === 'list') router.replace('/flotte');

@@ -26,6 +26,7 @@ const mockState = {
   scan: { ok: true, fields: {} } as { ok: boolean; error?: string; fields?: Record<string, unknown> },
   preventRemove: null as null | { enabled: boolean; callback: (event: { data: { action: unknown } }) => void },
   dispatched: [] as unknown[],
+  guardOnDispatch: [] as boolean[],
 };
 const mockRouter = { push: jest.fn(), back: jest.fn(), replace: jest.fn() };
 
@@ -34,7 +35,7 @@ jest.mock('expo-router', () => ({
   get router() {
     return mockRouter;
   },
-  useNavigation: () => ({ dispatch: (action: unknown) => mockState.dispatched.push(action) }),
+  useNavigation: () => ({ dispatch: (action: unknown) => { mockState.dispatched.push(action); mockState.guardOnDispatch.push(!!mockState.preventRemove?.enabled); } }),
   usePreventRemove: (enabled: boolean, callback: (event: { data: { action: unknown } }) => void) => {
     mockState.preventRemove = { enabled, callback };
   },
@@ -96,7 +97,7 @@ const allFields = (patch: Record<string, unknown>) => ({ immatriculation: field(
 describe('« Modifier la fiche technique »', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', branchId: 'b1', maintenance: [], compliance: [], rentals: [], updates: [], updateFails: false, updateError: null, archived: [], created: [], uploads: [], uploadFails: false, photoCheck: { ok: true }, scan: { ok: true, fields: {} }, preventRemove: null, dispatched: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', branchId: 'b1', maintenance: [], compliance: [], rentals: [], updates: [], updateFails: false, updateError: null, archived: [], created: [], uploads: [], uploadFails: false, photoCheck: { ok: true }, scan: { ok: true, fields: {} }, preventRemove: null, dispatched: [], guardOnDispatch: [] });
   });
 
   it('en-tête : « Fiche technique » et « Dacia Logan · plaque » ; barre d’enregistrement absente tant que rien ne change', async () => {
@@ -192,7 +193,10 @@ describe('« Modifier la fiche technique »', () => {
     mockState.preventRemove?.callback({ data: { action: 'GO_BACK' } });
     expect(alert).toHaveBeenCalledWith('Quitter sans enregistrer ?', 'Vos modifications seront perdues.', expect.any(Array));
     (alert.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((button) => button.text === 'Quitter')?.onPress?.();
-    expect(mockState.dispatched).toEqual(['GO_BACK']);
+    await waitFor(() => expect(mockState.dispatched).toEqual(['GO_BACK']));
+    // La garde est levée au moment de quitter : sinon la confirmation reviendrait en boucle.
+    expect(mockState.guardOnDispatch).toEqual([false]);
+    expect(mockState.preventRemove?.enabled).toBe(false);
   });
 
   it('employé : le bloc « Tarification » n’existe pas (pas rendu), et ses prix ne sont jamais envoyés', async () => {
