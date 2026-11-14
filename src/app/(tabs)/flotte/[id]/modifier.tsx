@@ -1,16 +1,14 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { mergeDocuments } from '@/features/storage/documents';
-import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/api';
 import { parseVehicleSection } from '@/features/vehicles/use-section-scroll';
-import { useUpdateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicle } from '@/features/vehicles/hooks';
-import type { PendingVehicleDocument, VehicleInput } from '@/features/vehicles/types';
+import { useUpdateVehicle, useVehicle } from '@/features/vehicles/hooks';
+import type { VehicleInput } from '@/features/vehicles/types';
 import { duplicateVehicleField, fromIsoDate } from '@/features/vehicles/validation';
 import { VehicleForm } from '@/features/vehicles/vehicle-form';
 import type { VehicleFormValues } from '@/features/vehicles/validation';
@@ -21,51 +19,18 @@ export default function ModifierVehiculeScreen() {
   const { id, section, field } = useLocalSearchParams<{ id: string; section?: string; field?: string }>();
   const { t } = useLanguage();
   const { data: vehicle, isLoading, isError } = useVehicle(id);
+  // Anciens liens : les photos et les documents ne sont plus dans ce formulaire, on ouvre directement leur écran.
+  const wanted = parseVehicleSection(section);
   const updateVehicle = useUpdateVehicle();
-  const updateDocuments = useUpdateVehicleDocuments();
-  const updatePhotos = useUpdateVehiclePhotos();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleSubmit(
-    input: VehicleInput,
-    pendingDocuments: PendingVehicleDocument[],
-    pendingPhotos: string[]
-  ) {
+  async function handleSubmit(input: VehicleInput) {
     if (!vehicle) return;
     setSubmitError(null);
     setIsSubmitting(true);
-
     try {
       await updateVehicle.mutateAsync({ id: vehicle.id, input });
-
-      if (pendingDocuments.length > 0) {
-        try {
-          const uploaded = await Promise.all(
-            pendingDocuments.map((doc) =>
-              uploadVehicleDocument(vehicle.agencyId, vehicle.id, doc.type, doc.localUri, doc.expiresAt)
-            )
-          );
-          await updateDocuments.mutateAsync({
-            id: vehicle.id,
-            documents: mergeDocuments(vehicle.documents, uploaded),
-          });
-        } catch {
-          Alert.alert(t('common.appName'), t('vehicle.form.uploadError'));
-        }
-      }
-
-      if (pendingPhotos.length > 0) {
-        try {
-          const uploaded = await Promise.all(
-            pendingPhotos.map((uri) => uploadVehiclePhoto(vehicle.agencyId, vehicle.id, uri))
-          );
-          await updatePhotos.mutateAsync({ id: vehicle.id, photos: [...vehicle.photos, ...uploaded] });
-        } catch {
-          Alert.alert(t('common.appName'), t('vehicle.form.uploadError'));
-        }
-      }
-
       router.back();
     } catch (error) {
       const duplicateField = duplicateVehicleField(error);
@@ -80,6 +45,9 @@ export default function ModifierVehiculeScreen() {
       setIsSubmitting(false);
     }
   }
+
+  if (wanted === 'photos') return <Redirect href={{ pathname: '/flotte/[id]/photos', params: { id } }} />;
+  if (wanted === 'documents') return <Redirect href={{ pathname: '/flotte/[id]', params: { id, edit: 'documents' } }} />;
 
   const initialValues: VehicleFormValues | undefined = vehicle
     ? {
@@ -130,9 +98,7 @@ export default function ModifierVehiculeScreen() {
           <VehicleForm
             key={vehicle.id}
             initialValues={initialValues}
-            existingDocuments={vehicle.documents}
-            existingPhotosCount={vehicle.photos.length}
-            scrollToPhotos={parseVehicleSection(section) === 'photos'}
+            vehicleId={vehicle.id}
             scrollToField={typeof field === 'string' ? field : null}
             initialBranchId={vehicle.branchId}
             submitLabel={t('vehicle.form.save')}

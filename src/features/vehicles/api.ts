@@ -197,11 +197,15 @@ export async function updateVehicleStatus(id: string, statut: VehicleInput['stat
 }
 
 export async function updateVehicle(id: string, input: VehicleInput): Promise<Vehicle> {
-  assertManuallySettableStatus(input.statut);
+  // Un statut géré par le module locations (en location, à inspecter) n'est jamais écrasé à la main : on le laisse tel quel et on
+  // enregistre le reste (avant, toute modification d'un véhicule en location échouait).
+  const row = toRow(input);
+  const { statut, ...withoutStatus } = row;
+  const payload = SYSTEM_MANAGED_STATUSES.includes(input.statut) ? withoutStatus : { ...withoutStatus, statut };
 
   const { data, error } = await getSupabase()
     .from('vehicles')
-    .update(toRow(input))
+    .update(payload)
     .eq('id', id)
     .select()
     .single();

@@ -3561,5 +3561,26 @@
       "coffre": "Coffre",
       "autre": "Autre"
     }
+  },
+  "vehicleForm": {
+    "sections": {
+      "identity": "Identification",
+      "characteristics": "Caractéristiques",
+      "usage": "Kilométrage et carburant",
+      "availability": "Disponibilité",
+      "description": "Description",
+      "media": "Photos et documents"
+    },
+    "mediaHint": "Les photos et les documents se gèrent directement sur la fiche du véhicule.",
+    "openPhotos": "Gérer les photos",
+    "openDocuments": "Gérer les documents",
+    "save": "Enregistrer",
+    "saving": "Enregistrement…",
+    "cancel": "Annuler",
+    "dirty": "Modifications non enregistrées",
+    "clean": "Aucune modification",
+    "errorsOne": "1 champ à corriger : {{fields}}",
+    "errorsMany": "{{count}} champs à corriger : {{fields}}",
+    "pricingNote": "Visible du propriétaire seulement."
   }
 }

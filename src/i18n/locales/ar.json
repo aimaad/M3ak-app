@@ -3665,5 +3665,26 @@
       "coffre": "الصندوق",
       "autre": "أخرى"
     }
+  },
+  "vehicleForm": {
+    "sections": {
+      "identity": "التعريف",
+      "characteristics": "المواصفات",
+      "usage": "المسافة والوقود",
+      "availability": "التوفر",
+      "description": "الوصف",
+      "media": "الصور والوثائق"
+    },
+    "mediaHint": "تُدار الصور والوثائق مباشرة من بطاقة السيارة.",
+    "openPhotos": "إدارة الصور",
+    "openDocuments": "إدارة الوثائق",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ…",
+    "cancel": "إلغاء",
+    "dirty": "تعديلات غير محفوظة",
+    "clean": "لا يوجد تعديل",
+    "errorsOne": "حقل واحد للتصحيح: {{fields}}",
+    "errorsMany": "{{count}} حقول للتصحيح: {{fields}}",
+    "pricingNote": "ظاهر للمالك فقط."
   }
 }

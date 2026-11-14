@@ -1,45 +1,27 @@
-import { useState } from 'react';
+import { router } from 'expo-router';
+import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { useSectionScroll } from './use-section-scroll';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/components/button';
 import { ChipGroup } from '@/components/chip-group';
-import { DocumentPhotoField } from '@/components/document-photo-field';
-import { ThemedText } from '@/components/themed-text';
 import { TextField } from '@/components/text-field';
-import { useMyProfile, useMyAgency } from '@/features/agency/hooks';
+import { ThemedText } from '@/components/themed-text';
+import { Brand, Palette } from '@/constants/theme';
+import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import { useBranches } from '@/features/branches/hooks';
-import { findDocument } from '@/features/storage/documents';
 import { clampPercentInput } from '@/lib/percent';
 import { useLanguage } from '@/i18n/use-language';
 
-import { VEHICLE_DOCUMENTS_BUCKET } from './api';
+import { canSeePrices } from './fleet-card';
 import { canManuallyChangeStatus } from './status-transitions';
-import {
-  FUEL_TYPES,
-  MANUAL_VEHICLE_STATUSES,
-  VEHICLE_CATEGORIES,
-  VEHICLE_DOCUMENT_TYPES,
-  VEHICLE_TRANSMISSIONS,
-} from './types';
-import { isFormValid, toVehicleInput, validateVehicleForm, type VehicleFormValues } from './validation';
-import { VehiclePhotoPicker } from './vehicle-photo-picker';
-import type {
-  PendingVehicleDocument,
-  VehicleCategory,
-  VehicleDocument,
-  VehicleInput,
-  VehicleStatus,
-  VehicleTransmission,
-} from './types';
-import { Palette, Brand } from '@/constants/theme';
+import { FUEL_TYPES, MANUAL_VEHICLE_STATUSES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type VehicleCategory, type VehicleInput, type VehicleStatus, type VehicleTransmission } from './types';
+import { useSectionScroll } from './use-section-scroll';
+import { toVehicleInput, validateVehicleForm, type VehicleFormValues } from './validation';
 
 type VehicleFormProps = {
   initialValues?: VehicleFormValues;
-  existingDocuments?: VehicleDocument[];
-  existingPhotosCount?: number;
-  /** Ouvre le formulaire directement sur la section Photos (rond appareil photo de la carte véhicule). */
-  scrollToPhotos?: boolean;
+  /** Pour les liens « Gérer les photos » / « Gérer les documents » ; absent = section masquée. */
+  vehicleId?: string;
   /** Ouvre le formulaire directement sur ce champ (tuile « À compléter » de la fiche technique). */
   scrollToField?: string | null;
   initialBranchId?: string | null;
@@ -47,381 +29,231 @@ type VehicleFormProps = {
   submittingLabel: string;
   isSubmitting: boolean;
   submitError?: string | null;
-  onSubmit: (
-    input: VehicleInput,
-    pendingDocuments: PendingVehicleDocument[],
-    pendingPhotos: string[]
-  ) => void;
+  onSubmit: (input: VehicleInput) => void;
 };
 
 const EMPTY_VALUES: VehicleFormValues = {
-  marque: '',
-  modele: '',
-  immatriculation: '',
-  vin: '',
-  finition: '',
-  annee: '',
-  dateMiseEnCirculation: '',
-  puissanceFiscale: '',
-  categorie: null,
-  couleur: '',
-  nombrePlaces: '',
-  transmission: null,
-  carburant: 'essence',
-  kilometrage: '',
-  niveauCarburant: '',
-  prixJour: '',
-  prixSemaine: '',
-  prixMois: '',
-  description: '',
-  statut: 'disponible',
+  marque: '', modele: '', immatriculation: '', vin: '', finition: '', annee: '', dateMiseEnCirculation: '', puissanceFiscale: '', categorie: null,
+  couleur: '', nombrePlaces: '', transmission: null, carburant: 'essence', kilometrage: '', niveauCarburant: '', prixJour: '', prixSemaine: '',
+  prixMois: '', description: '', statut: 'disponible',
 };
 
-function SectionTitle({ children }: { children: string }) {
+/** Libellé du champ en erreur, pour le bandeau de synthèse (clé de `vehicle.fields.*`). */
+const FIELD_ORDER: (keyof VehicleFormValues)[] = ['marque', 'modele', 'immatriculation', 'annee', 'dateMiseEnCirculation', 'puissanceFiscale', 'nombrePlaces', 'kilometrage', 'niveauCarburant', 'prixJour', 'prixSemaine', 'prixMois'];
+
+function Section({ title, note, children }: { title: string; note?: string; children: ReactNode }) {
   return (
-    <ThemedText type="smallBold" className="mt-2">
+    <View className="gap-4 rounded-3xl border border-border bg-card p-4">
+      <View className="gap-0.5">
+        <ThemedText type="smallBold" accessibilityRole="header">
+          {title}
+        </ThemedText>
+        {note ? (
+          <ThemedText type="small" themeColor="textSecondary">
+            {note}
+          </ThemedText>
+        ) : null}
+      </View>
       {children}
-    </ThemedText>
+    </View>
   );
 }
 
-export function VehicleForm({
-  initialValues,
-  existingDocuments = [],
-  existingPhotosCount = 0,
-  scrollToPhotos = false,
-  scrollToField = null,
-  initialBranchId = null,
-  submitLabel,
-  submittingLabel,
-  isSubmitting,
-  submitError,
-  onSubmit,
-}: VehicleFormProps) {
+function Labeled({ label, children, onLayout }: { label: string; children: ReactNode; onLayout?: (event: import('react-native').LayoutChangeEvent) => void }) {
+  return (
+    <View className="gap-1.5" onLayout={onLayout}>
+      <ThemedText type="small" themeColor="textSecondary">
+        {label}
+      </ThemedText>
+      {children}
+    </View>
+  );
+}
+
+/** Formulaire complet de modification d'un véhicule : sections claires, barre « Enregistrer » toujours visible, bandeau des champs à corriger. */
+export function VehicleForm({ initialValues, vehicleId, scrollToField = null, initialBranchId = null, submitLabel, submittingLabel, isSubmitting, submitError, onSubmit }: VehicleFormProps) {
   const { t } = useLanguage();
-  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll<string>(scrollToPhotos ? 'photos' : scrollToField);
+  const insets = useSafeAreaInsets();
+  const { scrollRef, onSectionLayout, onScrollBeginDrag } = useSectionScroll<string>(scrollToField);
   const [values, setValues] = useState<VehicleFormValues>(initialValues ?? EMPTY_VALUES);
   const [touched, setTouched] = useState(false);
-  const [pendingDocuments, setPendingDocuments] = useState<PendingVehicleDocument[]>([]);
-  const [documentExpiries, setDocumentExpiries] = useState<Record<string, string>>({});
-  const [pendingPhotos, setPendingPhotos] = useState<string[]>([]);
   const [branchId, setBranchId] = useState<string | null>(initialBranchId);
+  const [initial] = useState(() => JSON.stringify([initialValues ?? EMPTY_VALUES, initialBranchId]));
 
-  // Seuls les membres sans filiale (accès à toutes les filiales) choisissent
-  // la filiale du véhicule ; un employé de filiale est rattaché automatiquement.
+  // Seuls les membres sans filiale (accès à toutes les filiales) choisissent la filiale du véhicule.
   const agencyQuery = useMyAgency();
   const agencyId = agencyQuery.data?.agencyId;
   const profileQuery = useMyProfile(agencyId);
-  const branchesQuery = useBranches(agencyId);
-  const branches = branchesQuery.data ?? [];
+  const branches = useBranches(agencyId).data ?? [];
   const canChooseBranch = profileQuery.data?.branchId === null && branches.length > 0;
+  const showPrices = canSeePrices(agencyQuery.data?.role);
 
   const errors = validateVehicleForm(values);
-  const showErrors = touched;
   const statusLocked = !canManuallyChangeStatus(values.statut);
+  const dirty = JSON.stringify([values, branchId]) !== initial;
+  // Le prix n'est pas modifiable (ni donc bloquant) pour qui ne le voit pas.
+  const relevantErrors = FIELD_ORDER.filter((field) => (errors as Record<string, unknown>)[field] && (showPrices || !field.startsWith('prix')));
 
   function update<K extends keyof VehicleFormValues>(key: K, value: VehicleFormValues[K]) {
-    setValues((prev) => ({ ...prev, [key]: value }));
-  }
-
-  function pickDocument(type: PendingVehicleDocument['type'], localUri: string) {
-    setPendingDocuments((prev) => [...prev.filter((doc) => doc.type !== type), { type, localUri, expiresAt: null }]);
+    setValues((previous) => ({ ...previous, [key]: value }));
   }
 
   function handleSubmit() {
     setTouched(true);
-    if (!isFormValid(errors)) return;
-
-    const documentsWithExpiry = pendingDocuments.map((doc) => ({
-      ...doc,
-      expiresAt: documentExpiries[doc.type]?.trim() ? documentExpiries[doc.type] : null,
-    }));
-    onSubmit(
-      canChooseBranch ? { ...toVehicleInput(values), branchId } : toVehicleInput(values),
-      documentsWithExpiry,
-      pendingPhotos
-    );
+    if (relevantErrors.length > 0) return;
+    onSubmit(canChooseBranch ? { ...toVehicleInput(values), branchId } : toVehicleInput(values));
   }
 
+  const message = (field: keyof VehicleFormValues) => (touched && (errors as Record<string, string | undefined>)[field] ? t(`vehicle.form.errors.${(errors as Record<string, string>)[field]}`) : undefined);
+  const label = (key: string) => t(`vehicle.fields.${key}`);
+  const errorSummary =
+    touched && relevantErrors.length > 0
+      ? t(relevantErrors.length === 1 ? 'vehicleForm.errorsOne' : 'vehicleForm.errorsMany', { count: relevantErrors.length, fields: relevantErrors.map((field) => label(field)).join(', ') })
+      : null;
+
   return (
-    <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
-      <SectionTitle>{t('vehicle.sections.general')}</SectionTitle>
-      <TextField
-        label={t('vehicle.fields.marque')}
-        value={values.marque}
-        onChangeText={(v) => update('marque', v)}
-        error={showErrors && errors.marque ? t(`vehicle.form.errors.${errors.marque}`) : undefined}
-      />
-      <TextField
-        label={t('vehicle.fields.modele')}
-        value={values.modele}
-        onChangeText={(v) => update('modele', v)}
-        error={showErrors && errors.modele ? t(`vehicle.form.errors.${errors.modele}`) : undefined}
-      />
-      <TextField
-        label={t('vehicle.fields.immatriculation')}
-        value={values.immatriculation}
-        onChangeText={(v) => update('immatriculation', v)}
-        error={
-          showErrors && errors.immatriculation
-            ? t(`vehicle.form.errors.${errors.immatriculation}`)
-            : undefined
-        }
-      />
-      <View onLayout={onSectionLayout('annee')}>
-        <TextField
-          label={t('vehicle.fields.annee')}
-          value={values.annee}
-          onChangeText={(v) => update('annee', v)}
-          keyboardType="number-pad"
-          error={showErrors && errors.annee ? t(`vehicle.form.errors.${errors.annee}`) : undefined}
-        />
-      </View>
-      <TextField
-        label={t('vehicle.fields.dateMiseEnCirculation')}
-        value={values.dateMiseEnCirculation ?? ''}
-        onChangeText={(v) => update('dateMiseEnCirculation', v)}
-        placeholder={t('vehicle.fields.datePlaceholder')}
-        error={showErrors && errors.dateMiseEnCirculation ? t(`vehicle.form.errors.${errors.dateMiseEnCirculation}`) : undefined}
-      />
-      <View onLayout={onSectionLayout('puissanceFiscale')}>
-        <TextField
-          label={t('vehicle.fields.puissanceFiscale')}
-          value={values.puissanceFiscale ?? ''}
-          onChangeText={(v) => update('puissanceFiscale', v)}
-          keyboardType="number-pad"
-          error={showErrors && errors.puissanceFiscale ? t(`vehicle.form.errors.${errors.puissanceFiscale}`) : undefined}
-        />
-      </View>
-      <View onLayout={onSectionLayout('finition')}>
-        <TextField
-          label={t('vehicle.fields.finition')}
-          value={values.finition}
-          onChangeText={(v) => update('finition', v)}
-          optional
-        />
-      </View>
-      <View onLayout={onSectionLayout('vin')}>
-        <TextField
-          label={t('vehicle.fields.vin')}
-          value={values.vin}
-          onChangeText={(v) => update('vin', v)}
-          autoCapitalize="characters"
-          optional
-        />
-      </View>
-      <View onLayout={onSectionLayout('couleur')}>
-        <TextField
-          label={t('vehicle.fields.couleur')}
-          value={values.couleur}
-          onChangeText={(v) => update('couleur', v)}
-        />
-      </View>
-
-      <SectionTitle>{t('vehicle.sections.caracteristiques')}</SectionTitle>
-      <View className="gap-1.5" onLayout={onSectionLayout('categorie')}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('vehicle.fields.categorie')}
-        </ThemedText>
-        <ChipGroup
-          options={VEHICLE_CATEGORIES}
-          selected={values.categorie}
-          getLabel={(c: VehicleCategory) => t(`vehicle.category.${c}`)}
-          onSelect={(c) => update('categorie', c)}
-        />
-      </View>
-      <View className="gap-1.5" onLayout={onSectionLayout('transmission')}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('vehicle.fields.transmission')}
-        </ThemedText>
-        <ChipGroup
-          options={VEHICLE_TRANSMISSIONS}
-          selected={values.transmission}
-          getLabel={(tr: VehicleTransmission) => t(`vehicle.transmission.${tr}`)}
-          onSelect={(tr) => update('transmission', tr)}
-        />
-      </View>
-      {canChooseBranch ? (
-        <View className="gap-1.5">
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('vehicle.fields.branch')}
-          </ThemedText>
-          <View className="flex-row flex-wrap gap-2">
-            <Pressable
-              onPress={() => setBranchId(null)}
-              className={`rounded-full border px-4 py-2 ${
-                branchId === null ? 'border-graphite bg-graphite' : 'border-border bg-card'
-              }`}
-            >
-              <ThemedText type="small" style={{ color: branchId === null ? Brand.white : Palette.textPrimary }}>
-                {t('vehicle.fields.allBranches')}
+    <View className="flex-1">
+      <ScrollView ref={scrollRef} onScrollBeginDrag={onScrollBeginDrag} contentContainerClassName="gap-4 px-6 pb-6 pt-1" keyboardShouldPersistTaps="handled">
+        {errorSummary || submitError ? (
+          <View accessibilityRole="alert" className="gap-1 rounded-2xl bg-error-soft px-4 py-3">
+            {errorSummary ? (
+              <ThemedText type="small" style={{ color: Palette.error }}>
+                {errorSummary}
               </ThemedText>
-            </Pressable>
-            {branches.map((branch) => {
-              const isSelected = branchId === branch.id;
-              return (
-                <Pressable
-                  key={branch.id}
-                  onPress={() => setBranchId(branch.id)}
-                  className={`rounded-full border px-4 py-2 ${
-                    isSelected ? 'border-graphite bg-graphite' : 'border-border bg-card'
-                  }`}
-                >
-                  <ThemedText type="small" style={{ color: isSelected ? Brand.white : Palette.textPrimary }}>
-                    {branch.nom}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
+            ) : null}
+            {submitError ? (
+              <ThemedText type="small" style={{ color: Palette.error }}>
+                {submitError}
+              </ThemedText>
+            ) : null}
           </View>
-        </View>
-      ) : null}
-      <View className="gap-1.5" onLayout={onSectionLayout('carburant')}>
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('vehicle.fields.carburant')}
-        </ThemedText>
-        <ChipGroup options={FUEL_TYPES} selected={values.carburant} getLabel={(f) => t(`vehicle.fuel.${f}`)} onSelect={(f) => update('carburant', f)} />
-      </View>
-      <View onLayout={onSectionLayout('nombrePlaces')}>
-        <TextField
-          label={t('vehicle.fields.nombrePlaces')}
-          value={values.nombrePlaces}
-          onChangeText={(v) => update('nombrePlaces', v)}
-          keyboardType="number-pad"
-          error={showErrors && errors.nombrePlaces ? t(`vehicle.form.errors.${errors.nombrePlaces}`) : undefined}
-        />
-      </View>
-      <View onLayout={onSectionLayout('niveauCarburant')}>
-        <TextField
-          label={t('vehicle.fields.niveauCarburant')}
-          value={values.niveauCarburant}
-          onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))}
-          keyboardType="number-pad"
-          placeholder={t('vehicle.fields.niveauCarburantPlaceholder')}
-          error={
-            showErrors && errors.niveauCarburant ? t(`vehicle.form.errors.${errors.niveauCarburant}`) : undefined
-          }
-        />
-      </View>
-
-      <SectionTitle>{t('vehicle.sections.tarification')}</SectionTitle>
-      <TextField
-        label={t('vehicle.fields.prixJour')}
-        value={values.prixJour}
-        onChangeText={(v) => update('prixJour', v)}
-        keyboardType="number-pad"
-        error={showErrors && errors.prixJour ? t(`vehicle.form.errors.${errors.prixJour}`) : undefined}
-      />
-      <TextField
-        label={t('vehicle.fields.prixSemaine')}
-        value={values.prixSemaine}
-        onChangeText={(v) => update('prixSemaine', v)}
-        keyboardType="number-pad"
-        optional
-        error={showErrors && errors.prixSemaine ? t(`vehicle.form.errors.${errors.prixSemaine}`) : undefined}
-      />
-      <TextField
-        label={t('vehicle.fields.prixMois')}
-        value={values.prixMois}
-        onChangeText={(v) => update('prixMois', v)}
-        keyboardType="number-pad"
-        optional
-        error={showErrors && errors.prixMois ? t(`vehicle.form.errors.${errors.prixMois}`) : undefined}
-      />
-
-      <View className="gap-4" onLayout={onSectionLayout('photos')}>
-        <SectionTitle>{t('vehicle.sections.photos')}</SectionTitle>
-        <VehiclePhotoPicker
-          label={t('vehicle.photosHint')}
-          localUris={pendingPhotos}
-          onAdd={(uri) => setPendingPhotos((prev) => [...prev, uri])}
-          onRemove={(uri) => setPendingPhotos((prev) => prev.filter((u) => u !== uri))}
-        />
-        {existingPhotosCount > 0 ? (
-          <ThemedText type="small" themeColor="textSecondary">
-            {t('vehicle.existingPhotosHint', { count: existingPhotosCount })}
-          </ThemedText>
         ) : null}
-      </View>
 
-      <SectionTitle>{t('vehicle.sections.documents')}</SectionTitle>
-      {VEHICLE_DOCUMENT_TYPES.map((type) => {
-        const existing = findDocument(existingDocuments, type);
-        return (
-          <View key={type} className="gap-2">
-            <DocumentPhotoField
-              label={t(`vehicle.documents.${type}`)}
-              bucket={VEHICLE_DOCUMENTS_BUCKET}
-              localUri={pendingDocuments.find((d) => d.type === type)?.localUri ?? null}
-              existingPath={existing?.path}
-              onPick={(uri) => pickDocument(type, uri)}
-            />
-            <TextField
-              placeholder={t('vehicle.documentExpiryPlaceholder')}
-              value={documentExpiries[type] ?? ''}
-              onChangeText={(v) => setDocumentExpiries((prev) => ({ ...prev, [type]: v }))}
-            />
+        <Section title={t('vehicleForm.sections.identity')}>
+          <TextField label={label('marque')} value={values.marque} onChangeText={(v) => update('marque', v)} error={message('marque')} />
+          <TextField label={label('modele')} value={values.modele} onChangeText={(v) => update('modele', v)} error={message('modele')} />
+          <View onLayout={onSectionLayout('finition')}>
+            <TextField label={label('finition')} value={values.finition} onChangeText={(v) => update('finition', v)} optional />
           </View>
-        );
-      })}
+          <TextField label={label('immatriculation')} value={values.immatriculation} onChangeText={(v) => update('immatriculation', v)} error={message('immatriculation')} />
+          <View onLayout={onSectionLayout('vin')}>
+            <TextField label={label('vin')} value={values.vin} onChangeText={(v) => update('vin', v)} autoCapitalize="characters" optional />
+          </View>
+        </Section>
 
-      <SectionTitle>{t('vehicle.sections.operationnel')}</SectionTitle>
-      <View onLayout={onSectionLayout('kilometrage')}>
-        <TextField
-          label={t('vehicle.fields.kilometrage')}
-          value={values.kilometrage}
-          onChangeText={(v) => update('kilometrage', v)}
-          keyboardType="number-pad"
-          error={
-            showErrors && errors.kilometrage ? t(`vehicle.form.errors.${errors.kilometrage}`) : undefined
-          }
-        />
-      </View>
+        <Section title={t('vehicleForm.sections.characteristics')}>
+          <Labeled label={label('categorie')} onLayout={onSectionLayout('categorie')}>
+            <ChipGroup options={VEHICLE_CATEGORIES} selected={values.categorie} getLabel={(c: VehicleCategory) => t(`vehicle.category.${c}`)} onSelect={(c) => update('categorie', c)} />
+          </Labeled>
+          <Labeled label={label('transmission')} onLayout={onSectionLayout('transmission')}>
+            <ChipGroup options={VEHICLE_TRANSMISSIONS} selected={values.transmission} getLabel={(tr: VehicleTransmission) => t(`vehicle.transmission.${tr}`)} onSelect={(tr) => update('transmission', tr)} />
+          </Labeled>
+          <Labeled label={label('carburant')} onLayout={onSectionLayout('carburant')}>
+            <ChipGroup options={FUEL_TYPES} selected={values.carburant} getLabel={(f) => t(`vehicle.fuel.${f}`)} onSelect={(f) => update('carburant', f)} />
+          </Labeled>
+          <View onLayout={onSectionLayout('nombrePlaces')}>
+            <TextField label={label('nombrePlaces')} value={values.nombrePlaces} onChangeText={(v) => update('nombrePlaces', v.replace(/\D/g, ''))} keyboardType="number-pad" error={message('nombrePlaces')} />
+          </View>
+          <View onLayout={onSectionLayout('couleur')}>
+            <TextField label={label('couleur')} value={values.couleur} onChangeText={(v) => update('couleur', v)} />
+          </View>
+          <View onLayout={onSectionLayout('annee')}>
+            <TextField label={label('annee')} value={values.annee} onChangeText={(v) => update('annee', v.replace(/\D/g, ''))} keyboardType="number-pad" error={message('annee')} />
+          </View>
+          <TextField label={label('dateMiseEnCirculation')} value={values.dateMiseEnCirculation ?? ''} onChangeText={(v) => update('dateMiseEnCirculation', v)} placeholder={t('vehicle.fields.datePlaceholder')} error={message('dateMiseEnCirculation')} />
+          <View onLayout={onSectionLayout('puissanceFiscale')}>
+            <TextField label={label('puissanceFiscale')} value={values.puissanceFiscale ?? ''} onChangeText={(v) => update('puissanceFiscale', v.replace(/\D/g, ''))} keyboardType="number-pad" error={message('puissanceFiscale')} />
+          </View>
+        </Section>
 
-      <View className="gap-1.5">
-        <ThemedText type="small" themeColor="textSecondary">
-          {t('vehicle.fields.statut')}
+        <Section title={t('vehicleForm.sections.usage')}>
+          <View onLayout={onSectionLayout('kilometrage')}>
+            <TextField label={label('kilometrage')} value={values.kilometrage} onChangeText={(v) => update('kilometrage', v.replace(/\D/g, ''))} keyboardType="number-pad" error={message('kilometrage')} />
+          </View>
+          <View onLayout={onSectionLayout('niveauCarburant')}>
+            <TextField label={label('niveauCarburant')} value={values.niveauCarburant} onChangeText={(v) => update('niveauCarburant', clampPercentInput(v))} keyboardType="number-pad" placeholder={t('vehicle.fields.niveauCarburantPlaceholder')} error={message('niveauCarburant')} />
+          </View>
+        </Section>
+
+        {showPrices ? (
+          <Section title={t('vehicle.sections.tarification')} note={t('vehicleForm.pricingNote')}>
+            <TextField label={label('prixJour')} value={values.prixJour} onChangeText={(v) => update('prixJour', v.replace(/\D/g, ''))} keyboardType="number-pad" error={message('prixJour')} />
+            <TextField label={label('prixSemaine')} value={values.prixSemaine} onChangeText={(v) => update('prixSemaine', v.replace(/\D/g, ''))} keyboardType="number-pad" optional error={message('prixSemaine')} />
+            <TextField label={label('prixMois')} value={values.prixMois} onChangeText={(v) => update('prixMois', v.replace(/\D/g, ''))} keyboardType="number-pad" optional error={message('prixMois')} />
+          </Section>
+        ) : null}
+
+        <Section title={t('vehicleForm.sections.availability')}>
+          <Labeled label={label('statut')}>
+            {statusLocked ? (
+              <View className="rounded-2xl border border-dashed border-border bg-surface px-4 py-3">
+                <ThemedText type="small" themeColor="textSecondary">
+                  {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
+                </ThemedText>
+              </View>
+            ) : (
+              <ChipGroup options={MANUAL_VEHICLE_STATUSES} selected={values.statut} getLabel={(s: VehicleStatus) => t(`flotte.status.${s}`)} onSelect={(s) => update('statut', s)} />
+            )}
+          </Labeled>
+          {canChooseBranch ? (
+            <Labeled label={label('branch')}>
+              <View className="flex-row flex-wrap gap-2">
+                {[{ id: null as string | null, nom: t('vehicle.fields.allBranches') }, ...branches.map((branch) => ({ id: branch.id as string | null, nom: branch.nom }))].map((option) => {
+                  const selected = branchId === option.id;
+                  return (
+                    <Pressable key={option.id ?? 'all'} onPress={() => setBranchId(option.id)} accessibilityRole="button" accessibilityState={{ selected }} className={`rounded-full border px-4 py-2 ${selected ? 'border-graphite bg-graphite' : 'border-border bg-card'}`}>
+                      <ThemedText type="small" style={{ color: selected ? Brand.white : Palette.textPrimary }}>
+                        {option.nom}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </Labeled>
+          ) : null}
+        </Section>
+
+        <Section title={t('vehicleForm.sections.description')}>
+          <TextField value={values.description} onChangeText={(v) => update('description', v)} multiline numberOfLines={3} className="min-h-20" accessibilityLabel={label('description')} />
+        </Section>
+
+        {vehicleId ? (
+          <Section title={t('vehicleForm.sections.media')} note={t('vehicleForm.mediaHint')}>
+            <View className="flex-row gap-2">
+              <Pressable onPress={() => router.push({ pathname: '/flotte/[id]/photos', params: { id: vehicleId } })} accessibilityRole="button" className="min-h-12 flex-1 items-center justify-center rounded-2xl border border-border bg-card px-3 py-3">
+                <ThemedText type="small">{t('vehicleForm.openPhotos')}</ThemedText>
+              </Pressable>
+              <Pressable onPress={() => router.push({ pathname: '/flotte/[id]', params: { id: vehicleId, edit: 'documents' } })} accessibilityRole="button" className="min-h-12 flex-1 items-center justify-center rounded-2xl border border-border bg-card px-3 py-3">
+                <ThemedText type="small">{t('vehicleForm.openDocuments')}</ThemedText>
+              </Pressable>
+            </View>
+          </Section>
+        ) : null}
+      </ScrollView>
+
+      <View className="gap-2 border-t border-border bg-background px-6 pt-3" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+        <ThemedText type="small" themeColor="textSecondary" style={{ textAlign: 'center' }}>
+          {dirty ? t('vehicleForm.dirty') : t('vehicleForm.clean')}
         </ThemedText>
-        {statusLocked ? (
-          <View className="rounded-2xl border border-dashed border-border bg-card px-4 py-3">
-            <ThemedText type="small" themeColor="textSecondary">
-              {t('vehicle.statusLockedHint', { status: t(`flotte.status.${values.statut}`) })}
+        <View className="flex-row gap-3">
+          <Pressable onPress={() => router.back()} disabled={isSubmitting} accessibilityRole="button" accessibilityLabel={t('vehicleForm.cancel')} className="min-h-12 flex-1 items-center justify-center rounded-full border border-border">
+            <ThemedText type="smallBold">{t('vehicleForm.cancel')}</ThemedText>
+          </Pressable>
+          <Pressable
+            onPress={handleSubmit}
+            disabled={isSubmitting || !dirty}
+            accessibilityRole="button"
+            accessibilityLabel={isSubmitting ? submittingLabel : submitLabel}
+            accessibilityState={{ disabled: isSubmitting || !dirty, busy: isSubmitting }}
+            className="min-h-12 flex-[1.5] items-center justify-center rounded-full bg-primary"
+            style={{ opacity: isSubmitting || !dirty ? 0.5 : 1 }}
+          >
+            <ThemedText type="smallBold" style={{ color: Brand.white }}>
+              {isSubmitting ? submittingLabel : submitLabel}
             </ThemedText>
-          </View>
-        ) : (
-          <ChipGroup
-            options={MANUAL_VEHICLE_STATUSES}
-            selected={values.statut}
-            getLabel={(s: VehicleStatus) => t(`flotte.status.${s}`)}
-            onSelect={(s) => update('statut', s)}
-          />
-        )}
-      </View>
-
-      <TextField
-        label={t('vehicle.fields.description')}
-        value={values.description}
-        onChangeText={(v) => update('description', v)}
-        multiline
-        numberOfLines={3}
-        className="min-h-20"
-      />
-
-      {submitError ? (
-        <View className="rounded-2xl bg-error-soft px-4 py-3">
-          <ThemedText type="small" style={{ color: Palette.error }}>
-            {submitError}
-          </ThemedText>
+          </Pressable>
         </View>
-      ) : null}
-
-      <Button
-        label={isSubmitting ? submittingLabel : submitLabel}
-        onPress={handleSubmit}
-        disabled={isSubmitting}
-        loading={isSubmitting}
-        style={{ marginTop: 8 }}
-      />
-    </ScrollView>
+      </View>
+    </View>
   );
 }

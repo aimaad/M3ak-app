@@ -36,7 +36,7 @@ import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-s
 import { useLanguage } from '@/i18n/use-language';
 
 export default function VehicleDetailScreen() {
-  const { id, section: sectionParam } = useLocalSearchParams<{ id: string; section?: string }>();
+  const { id, section: sectionParam, edit: editParam } = useLocalSearchParams<{ id: string; section?: string; edit?: string }>();
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const { scrollRef, onSectionLayout: onSectionLayoutAuto, onScrollBeginDrag } = useSectionScroll(parseVehicleSection(sectionParam));
@@ -69,7 +69,7 @@ export default function VehicleDetailScreen() {
   const block = vehicle ? archiveBlock(vehicle, rentals, customers, now) : null;
   const [menuOpen, setMenuOpen] = useState(false);
   /** Fiche technique ou documents en cours de modification SUR PLACE (sans quitter la fiche). */
-  const [editing, setEditing] = useState<'specs' | 'documents' | null>(null);
+  const [editing, setEditing] = useState<'specs' | 'documents' | null>(editParam === 'documents' || editParam === 'specs' ? editParam : null);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
