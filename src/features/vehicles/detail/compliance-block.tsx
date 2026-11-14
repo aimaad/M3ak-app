@@ -72,14 +72,8 @@ function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUr
   const show = Object.keys(errors).length > 0;
   return (
     <View style={{ gap: 16 }}>
-      <View style={{ flexDirection: 'row', gap: 12 }}>
-        <View style={{ flex: 1 }}>
-          <DateField label={t('vehicleDetail.compliance.validFrom')} value={toIsoDate(draft.validFrom)} onChange={(iso) => setDraft({ ...draft, validFrom: fromIsoDate(iso) })} error={message('validFrom')} showError={show} />
-        </View>
-        <View style={{ flex: 1 }}>
-          <DateField label={t('vehicleDetail.compliance.validUntil')} value={toIsoDate(draft.validUntil)} onChange={(iso) => setDraft({ ...draft, validUntil: fromIsoDate(iso) })} error={message('validUntil')} showError={show} />
-        </View>
-      </View>
+      <DateField label={t('vehicleDetail.compliance.validFrom')} value={toIsoDate(draft.validFrom)} onChange={(iso) => setDraft({ ...draft, validFrom: fromIsoDate(iso) })} error={message('validFrom')} showError={show} />
+      <DateField label={t('vehicleDetail.compliance.validUntil')} value={toIsoDate(draft.validUntil)} onChange={(iso) => setDraft({ ...draft, validUntil: fromIsoDate(iso) })} error={message('validUntil')} showError={show} />
       <FormField label={t(`vehicleDetail.compliance.ref.${kind}`)} value={draft.reference} onChangeText={(value) => setDraft({ ...draft, reference: value })} placeholder={t(`vehicleDetail.compliance.refPlaceholder.${kind}`)} error={message('reference')} showError={show} ltr />
       {kind !== 'vignette' ? <FormField label={t(`vehicleDetail.compliance.provider.${kind}`)} value={draft.provider} onChangeText={(value) => setDraft({ ...draft, provider: value })} placeholder={t(`vehicleDetail.compliance.providerPlaceholder.${kind}`)} error={message('provider')} showError={show} autoCapitalize="words" /> : null}
       {showAmount ? <FormField label={t('vehicleDetail.compliance.amount')} value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" unit="MAD" placeholder={t('vehicleDetail.compliance.amountPlaceholder')} error={message('amount')} showError={show} /> : null}
