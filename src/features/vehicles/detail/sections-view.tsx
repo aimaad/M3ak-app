@@ -9,6 +9,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { VEHICLE_DOCUMENTS_BUCKET } from '../api';
 import { VEHICLE_DOCUMENT_TYPES, type Vehicle, type VehicleDocumentType } from '../types';
+import { EDITABLE_DOCUMENT_TYPES } from './edit-draft';
 import type { HistoryEvent } from './history';
 import type { SpecKey, SpecTile } from './specs';
 
@@ -113,6 +114,7 @@ const EVENT_STYLE = {
   rental: { icon: 'swap-horizontal' as IconName, background: Brand.graphite, ink: Brand.white },
   inspection: { icon: 'checkmark-done-outline' as IconName, background: Palette.successSoft, ink: Palette.success },
   maintenance: { icon: 'construct-outline' as IconName, background: Palette.surfaceAlt, ink: Brand.graphite },
+  compliance: { icon: 'shield-checkmark-outline' as IconName, background: Palette.successSoft, ink: Palette.success },
 };
 
 export function describeEvent(event: HistoryEvent, t: (key: string, params?: Record<string, unknown>) => string, language: string): { title: string; sub: string; amount: string | null } {
@@ -134,6 +136,12 @@ export function describeEvent(event: HistoryEvent, t: (key: string, params?: Rec
         amount: null,
       };
     }
+    case 'compliance':
+      return {
+        title: t('vehicleDetail.history.renewed', { kind: t(`vehicleDetail.compliance.kind.${event.complianceKind}`) }),
+        sub: t('vehicleDetail.history.renewedSub', { date: shortDate(event.at, language), until: shortDate(event.validUntil, language) }),
+        amount: event.amount != null ? t('vehicleDetail.history.amount', { amount: formatAmount(event.amount) }) : null,
+      };
     default: {
       const date = shortDate(event.at, language);
       return {
@@ -201,6 +209,9 @@ export function HistoryCard({ events, onOpen, onSeeAll }: { events: HistoryEvent
 
 // ------------------------------------------------------------------ documents
 
+/** Un document de l'assurance ou de la visite n'apparaît ici que s'il existe (il se gère dans « Obligations légales »). */
+const hasFile = (vehicle: Vehicle, type: VehicleDocumentType) => vehicle.documents.some((doc) => doc.type === type && !!doc.path);
+
 function DocumentThumb({ vehicle, type, onOpen, onAdd }: { vehicle: Vehicle; type: VehicleDocumentType; onOpen: (url: string, label: string) => void; onAdd: () => void }) {
   const { t } = useLanguage();
   const document = vehicle.documents.find((doc) => doc.type === type);
@@ -238,7 +249,7 @@ export function DocumentsRow({ vehicle, onAdd }: { vehicle: Vehicle; onAdd: () =
     <View style={{ gap: 10 }}>
       <SectionHeader title={t('vehicleDetail.documents.title')} actionLabel={t('vehicleDetail.specs.edit')} onAction={onAdd} actionA11y={t('vehicleDetail.editor.editA11y', { section: t('vehicleDetail.documents.title') })} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-        {VEHICLE_DOCUMENT_TYPES.map((type) => (
+        {VEHICLE_DOCUMENT_TYPES.filter((type) => EDITABLE_DOCUMENT_TYPES.includes(type as never) || hasFile(vehicle, type)).map((type) => (
           <DocumentThumb key={type} vehicle={vehicle} type={type} onOpen={(url, label) => setViewing({ url, label })} onAdd={onAdd} />
         ))}
         <Pressable onPress={onAdd} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.documents.add')} style={{ width: 112, gap: 8 }}>

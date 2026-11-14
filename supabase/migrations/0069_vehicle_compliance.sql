@@ -78,6 +78,7 @@ as $$
 declare
   v_latest public.vehicle_compliance;
   v_path text;
+  v_entry jsonb;
 begin
   if p_kind not in ('assurance', 'visite_technique') then
     return;
@@ -98,18 +99,24 @@ begin
   insert into public.maintenance_items (agency_id, vehicle_id, type, echeance_date, statut)
   values (p_agency, p_vehicle, p_kind::public.maintenance_type, v_latest.valid_until, 'a_venir');
 
-  select d ->> 'path' into v_path
+  -- Entrée « document » existante de ce type : une date saisie à l'ajout du véhicule est enregistrée SANS fichier (chemin vide).
+  select d into v_entry
   from public.vehicles v, jsonb_array_elements(case when jsonb_typeof(v.documents) = 'array' then v.documents else '[]'::jsonb end) d
   where v.id = p_vehicle and d ->> 'type' = p_kind
   limit 1;
-  v_path := coalesce(v_latest.document_path, v_path);
+  v_path := coalesce(v_latest.document_path, nullif(v_entry ->> 'path', ''));
 
-  if v_path is not null then
+  -- Rien à écrire s'il n'y a ni entrée ni photo : l'échéance d'entretien ci-dessus suffit aux anciens écrans.
+  if v_entry is not null or v_path is not null then
     update public.vehicles v
     set documents = coalesce((
           select jsonb_agg(d) from jsonb_array_elements(case when jsonb_typeof(v.documents) = 'array' then v.documents else '[]'::jsonb end) d
           where d ->> 'type' <> p_kind), '[]'::jsonb)
-        || jsonb_build_array(jsonb_build_object('type', p_kind, 'path', v_path, 'uploadedAt', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), 'expiresAt', v_latest.valid_until))
+        || jsonb_build_array(jsonb_build_object(
+             'type', p_kind,
+             'path', coalesce(v_path, ''),
+             'uploadedAt', coalesce(v_entry ->> 'uploadedAt', to_char(now() at time zone 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')),
+             'expiresAt', v_latest.valid_until))
     where v.id = p_vehicle;
   end if;
 end;
@@ -180,6 +187,42 @@ create policy "agency_compliance_settings_update" on public.agency_compliance_se
 
 grant select, insert, update on public.agency_compliance_settings to authenticated;
 
+-- Pont dans l'autre sens : les écrans qui écrivent encore les documents du véhicule (ajout d'un véhicule : date saisie SANS photo, puis
+-- photo ajoutée plus tard) alimentent aussi les périodes. Pas de boucle : on ne repasse pas ici quand c'est la synchronisation ci-dessus qui
+-- réécrit les documents (profondeur de déclencheur > 1) ; une période déjà connue n'est jamais dupliquée.
+create or replace function public.vehicle_documents_to_compliance()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if pg_trigger_depth() > 1 then
+    return null;
+  end if;
+
+  insert into public.vehicle_compliance (agency_id, vehicle_id, kind, valid_until, document_path)
+  select NEW.agency_id, NEW.id, d ->> 'type', left(d ->> 'expiresAt', 10)::date, nullif(d ->> 'path', '')
+  from jsonb_array_elements(case when jsonb_typeof(NEW.documents) = 'array' then NEW.documents else '[]'::jsonb end) d
+  where d ->> 'type' in ('assurance', 'visite_technique') and (d ->> 'expiresAt') ~ '^\d{4}-\d{2}-\d{2}'
+  on conflict (vehicle_id, kind, valid_until) do nothing;
+
+  -- La photo arrive après la date : elle est rattachée à la période de même date qui n'en avait pas.
+  update public.vehicle_compliance c
+  set document_path = nullif(d ->> 'path', '')
+  from jsonb_array_elements(case when jsonb_typeof(NEW.documents) = 'array' then NEW.documents else '[]'::jsonb end) d
+  where c.vehicle_id = NEW.id and c.kind = d ->> 'type' and c.document_path is null
+    and (d ->> 'expiresAt') ~ '^\d{4}-\d{2}-\d{2}' and c.valid_until = left(d ->> 'expiresAt', 10)::date
+    and nullif(d ->> 'path', '') is not null;
+  return null;
+end;
+$$;
+
+drop trigger if exists trg_vehicle_documents_to_compliance on public.vehicles;
+create trigger trg_vehicle_documents_to_compliance
+  after insert or update of documents on public.vehicles
+  for each row execute function public.vehicle_documents_to_compliance();
+
 -- Reprise de l'existant (rejouable). La synchronisation est suspendue pendant la reprise (sinon elle réécrirait les documents et les
 -- échéances AVANT qu'on les lise) puis rejouée une fois pour chaque véhicule et chaque type.
 alter table public.vehicle_compliance disable trigger trg_vehicle_compliance_sync;
@@ -193,7 +236,7 @@ where mi.type::text in ('assurance', 'visite_technique')
 on conflict (vehicle_id, kind, valid_until) do nothing;
 
 insert into public.vehicle_compliance (agency_id, vehicle_id, kind, valid_until, document_path)
-select v.agency_id, v.id, d ->> 'type', left(d ->> 'expiresAt', 10)::date, d ->> 'path'
+select v.agency_id, v.id, d ->> 'type', left(d ->> 'expiresAt', 10)::date, nullif(d ->> 'path', '')
 from public.vehicles v
 cross join lateral jsonb_array_elements(case when jsonb_typeof(v.documents) = 'array' then v.documents else '[]'::jsonb end) d
 where d ->> 'type' in ('assurance', 'visite_technique')

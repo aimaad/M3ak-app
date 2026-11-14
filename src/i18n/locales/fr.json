@@ -3493,7 +3493,9 @@
       "maintenanceSubGarage": "{{date}} · {{garage}}",
       "amount": "{{amount}} MAD",
       "screenTitle": "Historique du véhicule",
-      "a11y": "{{title}}. {{sub}}"
+      "a11y": "{{title}}. {{sub}}",
+      "renewed": "{{kind}} renouvelée",
+      "renewedSub": "{{date}} · jusqu'au {{until}}"
     },
     "documents": {
       "title": "Documents",
@@ -3533,7 +3535,82 @@
       "dateNeedsPhoto": "Ajoutez d'abord la photo pour saisir la date d'expiration.",
       "dateLabel": "Date d'expiration (facultatif)",
       "chooseLabel": "Photo : {{label}}",
-      "noChange": "Aucune modification."
+      "noChange": "Aucune modification.",
+      "insuranceElsewhere": "L'assurance, la visite technique et la vignette se gèrent dans « Échéances » (périodes, renouvellements, photo du papier)."
+    },
+    "compliance": {
+      "title": "Obligations légales",
+      "maintenance": "Entretiens",
+      "kind": {
+        "assurance": "Assurance",
+        "visite_technique": "Visite technique",
+        "vignette": "Vignette (taxe annuelle)"
+      },
+      "state": {
+        "none": "Non renseignée",
+        "valid": "À jour",
+        "soon": "Bientôt",
+        "urgent": "Urgent",
+        "expired": "Expirée"
+      },
+      "period": "Du {{from}} au {{to}}",
+      "periodUntil": "Jusqu'au {{to}}",
+      "today": "Expire aujourd'hui",
+      "daysLeft": "Dans {{n}} jours",
+      "daysLeftOne": "Demain",
+      "expiredAgo": "Expirée depuis {{n}} jours",
+      "expiredAgoOne": "Expirée depuis 1 jour",
+      "deadline": "Date limite : {{date}}",
+      "deadlineOver": "Date limite dépassée : {{date}}",
+      "nextDeadline": "Prochaine date limite : {{date}}",
+      "none": "Aucune période enregistrée",
+      "paperMissing": "Papier non ajouté",
+      "paperOk": "Papier enregistré",
+      "ref": {
+        "assurance": "N° de police",
+        "visite_technique": "N° du procès-verbal",
+        "vignette": "N° de quittance"
+      },
+      "provider": {
+        "assurance": "Assureur",
+        "visite_technique": "Centre de visite",
+        "vignette": "Organisme"
+      },
+      "amount": "Montant (MAD)",
+      "notes": "Notes (facultatif)",
+      "photo": "Photo du papier (facultatif)",
+      "validFrom": "Début (facultatif)",
+      "validUntil": "Fin de validité",
+      "dateHint": "JJ/MM/AAAA",
+      "renew": "Renouveler",
+      "renewTitle": "Renouveler : {{kind}}",
+      "firstTitle": "Enregistrer : {{kind}}",
+      "correct": "Corriger",
+      "correctTitle": "Corriger cette période",
+      "delete": "Supprimer",
+      "deleteTitle": "Supprimer cette période ?",
+      "deleteBody": "Elle sera retirée de l'historique. Cette action est définitive.",
+      "history": "Historique",
+      "historyEmpty": "Aucune période enregistrée.",
+      "current": "En cours",
+      "periodicity": "Visite technique tous les {{n}} mois",
+      "periodicityChange": "Modifier",
+      "periodicityHint": "Vérifiez la périodicité avec votre centre de visite agréé : elle peut changer.",
+      "periodicityMonths": "{{n}} mois",
+      "periodicitySaved": "Périodicité enregistrée.",
+      "errors": {
+        "required": "Ce champ est obligatoire.",
+        "invalid_date": "Date invalide : écrivez-la au format JJ/MM/AAAA.",
+        "ends_before_start": "La fin doit être après le début.",
+        "ends_before_current": "La nouvelle période doit finir après la période en cours ({{date}}).",
+        "invalid_amount": "Entrez un montant positif.",
+        "too_long": "Texte trop long."
+      },
+      "saveError": "Impossible d'enregistrer. Vérifiez la connexion puis réessayez.",
+      "alreadyRecorded": "Cette période est déjà enregistrée.",
+      "forbidden": "Seuls le propriétaire et le responsable peuvent faire cette modification.",
+      "uploadError": "La photo n'a pas pu être envoyée : rien n'a été enregistré. Réessayez.",
+      "rowA11y": "{{kind}} : {{state}}. {{line}}"
     }
   },
   "vehiclePhotos": {

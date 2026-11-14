@@ -1,5 +1,5 @@
-import type { Vehicle, VehicleDocument } from '../../types';
-import { documentChanges, documentsDraft, hasSpecsChanges, specsDraft, specsPatch, validateDocuments, validateSpecs } from '../edit-draft';
+import type { Vehicle } from '../../types';
+import { documentChanges, documentsDraft, EDITABLE_DOCUMENT_TYPES, hasSpecsChanges, specsDraft, specsPatch, validateSpecs } from '../edit-draft';
 
 const vehicle = { id: 'v1', categorie: 'economique', transmission: null, carburant: 'diesel', kilometrage: 59_000, couleur: 'Blanc', annee: 2021, nombrePlaces: 5, puissanceFiscale: null, documents: [] } as unknown as Vehicle;
 
@@ -26,34 +26,19 @@ describe('fiche technique : brouillon et validation', () => {
   });
 });
 
-describe('documents : brouillon et changements', () => {
-  const doc = (type: VehicleDocument['type'], expiresAt: string | null): VehicleDocument => ({ type, path: `p-${type}`, uploadedAt: '2026-01-01T00:00:00Z', expiresAt });
-
-  it('date d’expiration affichée en JJ/MM/AAAA ; sans modification : aucun changement', () => {
-    const existing = [doc('assurance', '2026-12-26')];
-    const draft = documentsDraft({ ...vehicle, documents: existing } as Vehicle);
-    expect(draft.assurance.expiry).toBe('26/12/2026');
-    expect(documentChanges(existing, draft)).toEqual([]);
+describe('documents (carte grise) : brouillon et changements', () => {
+  it('sans nouvelle photo : aucun changement', () => {
+    expect(documentChanges(documentsDraft())).toEqual([]);
   });
 
-  it('date corrigée sur un document déjà là : changement sans nouvelle photo', () => {
-    const existing = [doc('assurance', '2026-12-26')];
-    const draft = documentsDraft({ ...vehicle, documents: existing } as Vehicle);
-    draft.assurance.expiry = '31/01/2027';
-    expect(documentChanges(existing, draft)).toEqual([{ type: 'assurance', localUri: null, expiresAt: '2027-01-31' }]);
+  it('nouvelles photos : recto et verso à envoyer', () => {
+    const draft = documentsDraft();
+    draft.carte_grise = { localUri: 'file:///recto.jpg' };
+    draft.carte_grise_verso = { localUri: 'file:///verso.jpg' };
+    expect(documentChanges(draft)).toEqual([{ type: 'carte_grise', localUri: 'file:///recto.jpg' }, { type: 'carte_grise_verso', localUri: 'file:///verso.jpg' }]);
   });
 
-  it('nouvelle photo : à envoyer, avec sa date', () => {
-    const draft = documentsDraft(vehicle);
-    draft.visite_technique = { localUri: 'file:///v.jpg', expiry: '23/11/2026' };
-    expect(documentChanges([], draft)).toEqual([{ type: 'visite_technique', localUri: 'file:///v.jpg', expiresAt: '2026-11-23' }]);
-  });
-
-  it('une date sans document (ni photo) n’est pas enregistrée ; date invalide refusée', () => {
-    const draft = documentsDraft(vehicle);
-    draft.assurance.expiry = '12/12/2026';
-    expect(documentChanges([], draft)).toEqual([]);
-    draft.assurance.expiry = '32/13/2026';
-    expect(validateDocuments(draft)).toEqual({ assurance: 'invalid_date' });
+  it('seuls la carte grise recto et verso sont modifiables ici (l’assurance et la visite sont dans les obligations)', () => {
+    expect(EDITABLE_DOCUMENT_TYPES).toEqual(['carte_grise', 'carte_grise_verso']);
   });
 });

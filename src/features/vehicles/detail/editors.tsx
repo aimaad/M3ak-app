@@ -12,8 +12,8 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { uploadVehicleDocument, VEHICLE_DOCUMENTS_BUCKET } from '../api';
 import { useUpdateVehicleDocuments, useUpdateVehicleSpecs } from '../hooks';
-import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_DOCUMENT_TYPES, VEHICLE_TRANSMISSIONS, type Vehicle, type VehicleDocument, type VehicleDocumentType } from '../types';
-import { documentChanges, documentsDraft, hasSpecsChanges, specsDraft, specsPatch, validateDocuments, validateSpecs, type DocumentsDraft, type SpecsDraft } from './edit-draft';
+import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type Vehicle, type VehicleDocument } from '../types';
+import { documentChanges, documentsDraft, EDITABLE_DOCUMENT_TYPES, hasSpecsChanges, specsDraft, specsPatch, validateSpecs, type DocumentsDraft, type EditableDocumentType, type SpecsDraft } from './edit-draft';
 
 const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 16, gap: 14 } as const;
 
@@ -95,36 +95,24 @@ export function SpecsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClose: (
   );
 }
 
-/** Documents modifiables SUR PLACE : nouvelle photo (caméra ou galerie) et date d'expiration, envoyées ensemble à l'enregistrement. */
+/** Documents modifiables SUR PLACE : photos de la carte grise (recto et verso), envoyées ensemble à l'enregistrement. */
 export function DocumentsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClose: () => void }) {
   const { t } = useLanguage();
   const agency = useMyAgency();
   const updateDocuments = useUpdateVehicleDocuments();
-  const [draft, setDraft] = useState<DocumentsDraft>(() => documentsDraft(vehicle));
-  const [touched, setTouched] = useState(false);
+  const [draft, setDraft] = useState<DocumentsDraft>(() => documentsDraft());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const errors = validateDocuments(draft);
-  const hasFile = (type: VehicleDocumentType) => !!draft[type].localUri || vehicle.documents.some((doc) => doc.type === type);
 
   async function save() {
-    setTouched(true);
     setError(null);
-    if (Object.keys(errors).length > 0) return;
-    const changes = documentChanges(vehicle.documents, draft);
+    const changes = documentChanges(draft);
     if (changes.length === 0) return onClose();
     if (!agency.data) return;
     setBusy(true);
     try {
       const incoming: VehicleDocument[] = [];
-      for (const change of changes) {
-        if (change.localUri) {
-          incoming.push(await uploadVehicleDocument(agency.data.agencyId, vehicle.id, change.type, change.localUri, change.expiresAt));
-        } else {
-          const current = vehicle.documents.find((doc) => doc.type === change.type);
-          if (current) incoming.push({ ...current, expiresAt: change.expiresAt });
-        }
-      }
+      for (const change of changes) incoming.push(await uploadVehicleDocument(agency.data.agencyId, vehicle.id, change.type, change.localUri, null));
       await updateDocuments.mutateAsync({ id: vehicle.id, documents: mergeDocuments(vehicle.documents, incoming) });
       onClose();
     } catch {
@@ -139,30 +127,19 @@ export function DocumentsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClos
       <HText font="display" weight="bold" size={17} accessibilityRole="header">
         {t('vehicleDetail.documents.title')}
       </HText>
-      {VEHICLE_DOCUMENT_TYPES.map((type) => (
-        <View key={type} style={{ gap: 8 }}>
-          <DocumentPhotoField
-            label={t(`vehicle.documents.${type}`)}
-            bucket={VEHICLE_DOCUMENTS_BUCKET}
-            localUri={draft[type].localUri}
-            existingPath={vehicle.documents.find((doc) => doc.type === type)?.path}
-            onPick={(uri) => setDraft((previous) => ({ ...previous, [type]: { ...previous[type], localUri: uri } }))}
-          />
-          {hasFile(type) ? (
-            <TextField
-              label={t('vehicleDetail.editor.dateLabel')}
-              placeholder={t('vehicleDetail.editor.dateHint')}
-              value={draft[type].expiry}
-              onChangeText={(value) => setDraft((previous) => ({ ...previous, [type]: { ...previous[type], expiry: value } }))}
-              error={touched && errors[type] ? t('vehicle.form.errors.invalid_date') : undefined}
-            />
-          ) : (
-            <HText size={12} color={Palette.textSecondary}>
-              {t('vehicleDetail.editor.dateNeedsPhoto')}
-            </HText>
-          )}
-        </View>
+      {EDITABLE_DOCUMENT_TYPES.map((type: EditableDocumentType) => (
+        <DocumentPhotoField
+          key={type}
+          label={t(`vehicle.documents.${type}`)}
+          bucket={VEHICLE_DOCUMENTS_BUCKET}
+          localUri={draft[type].localUri}
+          existingPath={vehicle.documents.find((doc) => doc.type === type && doc.path)?.path}
+          onPick={(uri) => setDraft((previous) => ({ ...previous, [type]: { localUri: uri } }))}
+        />
       ))}
+      <HText size={12} color={Palette.textSecondary}>
+        {t('vehicleDetail.editor.insuranceElsewhere')}
+      </HText>
       <Buttons onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
     </View>
   );

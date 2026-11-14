@@ -15,6 +15,7 @@ import { useLanguage } from '@/i18n/use-language';
 import { useUpdateVehicleDocuments } from '../hooks';
 import type { Vehicle } from '../types';
 import { fromIsoDate } from '../validation';
+import { ComplianceBlock } from './compliance-block';
 import { ADDABLE_DUE_TYPES, draftOf, dueSuggestion, emptyDraft, planDueSave, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
 
@@ -126,7 +127,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
 }
 
 /** Une ligne d'échéance dépliée : correction de la date et du kilométrage, « Marquer comme fait » (écran d'entretien), « Supprimer ». */
-function EditDue({ row, vehicle, now, canDelete, onClose, onAddDocument }: { row: DueRow; vehicle: Vehicle; now: Date; canDelete: boolean; onClose: () => void; onAddDocument?: () => void }) {
+function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehicle: Vehicle; now: Date; canDelete: boolean; onClose: () => void }) {
   const { t } = useLanguage();
   const agency = useMyAgency();
   const create = useCreateMaintenanceItem();
@@ -177,13 +178,6 @@ function EditDue({ row, vehicle, now, canDelete, onClose, onAddDocument }: { row
     <View style={{ gap: 14, paddingBottom: 12 }}>
       <DueFields type={row.type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
       <FormButtons onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
-      {row.missingFile && onAddDocument ? (
-        <Pressable onPress={onAddDocument} accessibilityRole="button" style={link}>
-          <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
-            {t('vehicleDetail.dues.edit.addDocument')}
-          </HText>
-        </Pressable>
-      ) : null}
       {row.maintenanceId ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Pressable onPress={() => router.push({ pathname: '/maintenance/[id]', params: { id: row.maintenanceId as string } })} accessibilityRole="button" style={link}>
@@ -208,7 +202,9 @@ function EditDue({ row, vehicle, now, canDelete, onClose, onAddDocument }: { row
  * Échéances complètes, modifiables SUR PLACE : une ligne par échéance (assurance, visite technique, entretiens) ; un toucher la déplie
  * pour corriger la date et le kilométrage ; « + Ajouter » ouvre le formulaire dans la carte.
  */
-export function DuesSection({ vehicle, rows, now, onAddDocument }: { vehicle: Vehicle; rows: DueRow[]; now: Date; onAddDocument?: () => void }) {
+export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle; rows: DueRow[]; now: Date }) {
+  // L'assurance et la visite technique sont dans « Obligations légales » (ComplianceBlock) : ici, seulement les entretiens.
+  const rows = allRows.filter((row) => row.type !== 'assurance' && row.type !== 'visite_technique');
   const { t, language } = useLanguage();
   const agency = useMyAgency();
   const [open, setOpen] = useState<string | 'new' | null>(null);
@@ -244,6 +240,12 @@ export function DuesSection({ vehicle, rows, now, onAddDocument }: { vehicle: Ve
           </HText>
         </Pressable>
       </View>
+
+      <ComplianceBlock vehicle={vehicle} now={now} />
+
+      <HText weight="semibold" size={11} track={0.14} color={Palette.textSecondary} style={{ marginTop: 12, marginBottom: 2 }}>
+        {t('vehicleDetail.compliance.maintenance').toLocaleUpperCase()}
+      </HText>
 
       {open === 'new' ? <AddDue vehicle={vehicle} now={now} onClose={() => setOpen(null)} /> : null}
 
@@ -289,7 +291,7 @@ export function DuesSection({ vehicle, rows, now, onAddDocument }: { vehicle: Ve
               </View>
               <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.textSecondary} />
             </Pressable>
-            {expanded ? <EditDue row={row} vehicle={vehicle} now={now} canDelete={canDelete} onClose={() => setOpen(null)} onAddDocument={onAddDocument} /> : null}
+            {expanded ? <EditDue row={row} vehicle={vehicle} now={now} canDelete={canDelete} onClose={() => setOpen(null)} /> : null}
           </View>
         );
       })}

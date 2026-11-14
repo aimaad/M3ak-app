@@ -48,7 +48,7 @@ where mi.type::text in ('assurance', 'visite_technique')
 on conflict (vehicle_id, kind, valid_until) do nothing;
 
 insert into public.vehicle_compliance (agency_id, vehicle_id, kind, valid_until, document_path)
-select v.agency_id, v.id, d ->> 'type', left(d ->> 'expiresAt', 10)::date, d ->> 'path'
+select v.agency_id, v.id, d ->> 'type', left(d ->> 'expiresAt', 10)::date, nullif(d ->> 'path', '')
 from public.vehicles v
 cross join lateral jsonb_array_elements(case when jsonb_typeof(v.documents) = 'array' then v.documents else '[]'::jsonb end) d
 where d ->> 'type' in ('assurance', 'visite_technique')
@@ -130,5 +130,21 @@ select pg_temp.ck('sync : l''ancienne échéance de visite technique est remplac
 select pg_temp.ck('sync : une visite déjà effectuée reste dans l''historique des entretiens', (select count(*) = 1 from maintenance_items where vehicle_id = 'f1000000-0000-0000-0000-000000000001' and type = 'visite_technique' and statut = 'effectuee'), '');
 delete from vehicle_compliance where vehicle_id = 'f1000000-0000-0000-0000-000000000001' and kind = 'visite_technique' and valid_until = '2027-05-20';
 select pg_temp.ck('sync : on supprime la période en cours → la précédente (2027-04-01) redevient la période en cours', (select (d ->> 'expiresAt') = '2027-04-01' from vehicles v, jsonb_array_elements(v.documents) d where v.id = 'f1000000-0000-0000-0000-000000000001' and d ->> 'type' = 'visite_technique'), '');
+
+-- Pont : un véhicule créé avec une date SANS photo (chemin vide), comme à l'ajout d'un véhicule.
+insert into vehicles (id, agency_id, immatriculation, marque, modele, prix_jour, statut, documents) values
+  ('f3000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '3-A-3', 'Fiat', 'Tipo', 300, 'disponible', '[]'::jsonb);
+update vehicles set documents = '[{"type":"assurance","path":"","uploadedAt":"2026-11-01T00:00:00Z","expiresAt":"2027-02-10"}]'::jsonb where id = 'f3000000-0000-0000-0000-000000000003';
+select pg_temp.ck('pont : la date saisie à l''ajout (sans photo) devient une période, sans photo', (select count(*) = 1 and bool_and(document_path is null) from vehicle_compliance where vehicle_id = 'f3000000-0000-0000-0000-000000000003' and kind = 'assurance' and valid_until = '2027-02-10'), '');
+select pg_temp.ck('pont : pas de boucle ni de doublon (une seule période, une seule échéance d''entretien)', (select count(*) = 1 from vehicle_compliance where vehicle_id = 'f3000000-0000-0000-0000-000000000003') and (select count(*) = 1 from maintenance_items where vehicle_id = 'f3000000-0000-0000-0000-000000000003' and type = 'assurance'), '');
+update vehicles set documents = '[{"type":"assurance","path":"A/f3/ass.jpg","uploadedAt":"2026-11-02T00:00:00Z","expiresAt":"2027-02-10"}]'::jsonb where id = 'f3000000-0000-0000-0000-000000000003';
+select pg_temp.ck('pont : la photo ajoutée plus tard est rattachée à la période de même date', (select document_path = 'A/f3/ass.jpg' from vehicle_compliance where vehicle_id = 'f3000000-0000-0000-0000-000000000003' and kind = 'assurance'), '');
+insert into vehicle_compliance (vehicle_id, kind, valid_until) values ('f3000000-0000-0000-0000-000000000003', 'assurance', '2028-02-09');
+select pg_temp.ck('sync : renouvellement sans photo : la date du document suit, sa photo est conservée', (select (d ->> 'expiresAt') = '2028-02-09' and (d ->> 'path') = 'A/f3/ass.jpg' from vehicles v, jsonb_array_elements(v.documents) d where v.id = 'f3000000-0000-0000-0000-000000000003' and d ->> 'type' = 'assurance'), '');
+-- Une date saisie sans photo puis un renouvellement sans photo : l'entrée sans fichier garde son chemin vide et reçoit la nouvelle date.
+insert into vehicles (id, agency_id, immatriculation, marque, modele, prix_jour, statut, documents) values
+  ('f4000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '4-A-4', 'Fiat', 'Doblo', 300, 'disponible', '[{"type":"visite_technique","path":"","uploadedAt":"2026-11-01T00:00:00Z","expiresAt":"2026-12-01"}]'::jsonb);
+insert into vehicle_compliance (vehicle_id, kind, valid_until) values ('f4000000-0000-0000-0000-000000000004', 'visite_technique', '2027-06-01');
+select pg_temp.ck('sync : entrée sans fichier : nouvelle date, chemin toujours vide', (select (d ->> 'expiresAt') = '2027-06-01' and (d ->> 'path') = '' from vehicles v, jsonb_array_elements(v.documents) d where v.id = 'f4000000-0000-0000-0000-000000000004' and d ->> 'type' = 'visite_technique'), '');
 
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

@@ -3597,7 +3597,9 @@
       "maintenanceSubGarage": "{{date}} · {{garage}}",
       "amount": "{{amount}} درهم",
       "screenTitle": "سجل السيارة",
-      "a11y": "{{title}}. {{sub}}"
+      "a11y": "{{title}}. {{sub}}",
+      "renewed": "تجديد: {{kind}}",
+      "renewedSub": "{{date}} · إلى غاية {{until}}"
     },
     "documents": {
       "title": "الوثائق",
@@ -3637,7 +3639,82 @@
       "dateNeedsPhoto": "أضف الصورة أولًا لإدخال تاريخ الانتهاء.",
       "dateLabel": "تاريخ الانتهاء (اختياري)",
       "chooseLabel": "صورة: {{label}}",
-      "noChange": "لا يوجد تعديل."
+      "noChange": "لا يوجد تعديل.",
+      "insuranceElsewhere": "التأمين والفحص التقني والقسيمة تُدار في «المواعيد» (الفترات والتجديدات وصورة الوثيقة)."
+    },
+    "compliance": {
+      "title": "الالتزامات القانونية",
+      "maintenance": "الصيانة",
+      "kind": {
+        "assurance": "التأمين",
+        "visite_technique": "الفحص التقني",
+        "vignette": "القسيمة (الضريبة السنوية)"
+      },
+      "state": {
+        "none": "غير مسجّل",
+        "valid": "ساري",
+        "soon": "قريبًا",
+        "urgent": "عاجل",
+        "expired": "منتهٍ"
+      },
+      "period": "من {{from}} إلى {{to}}",
+      "periodUntil": "إلى غاية {{to}}",
+      "today": "ينتهي اليوم",
+      "daysLeft": "بعد {{n}} أيام",
+      "daysLeftOne": "غدًا",
+      "expiredAgo": "منتهٍ منذ {{n}} أيام",
+      "expiredAgoOne": "منتهٍ منذ يوم",
+      "deadline": "الأجل: {{date}}",
+      "deadlineOver": "تجاوز الأجل: {{date}}",
+      "nextDeadline": "الأجل القادم: {{date}}",
+      "none": "لا توجد فترة مسجلة",
+      "paperMissing": "الوثيقة غير مضافة",
+      "paperOk": "الوثيقة مسجلة",
+      "ref": {
+        "assurance": "رقم العقد",
+        "visite_technique": "رقم المحضر",
+        "vignette": "رقم الوصل"
+      },
+      "provider": {
+        "assurance": "شركة التأمين",
+        "visite_technique": "مركز الفحص",
+        "vignette": "الجهة"
+      },
+      "amount": "المبلغ (درهم)",
+      "notes": "ملاحظات (اختياري)",
+      "photo": "صورة الوثيقة (اختياري)",
+      "validFrom": "البداية (اختياري)",
+      "validUntil": "نهاية الصلاحية",
+      "dateHint": "يوم/شهر/سنة",
+      "renew": "تجديد",
+      "renewTitle": "تجديد: {{kind}}",
+      "firstTitle": "تسجيل: {{kind}}",
+      "correct": "تصحيح",
+      "correctTitle": "تصحيح هذه الفترة",
+      "delete": "حذف",
+      "deleteTitle": "حذف هذه الفترة؟",
+      "deleteBody": "ستُزال من السجل. لا يمكن التراجع.",
+      "history": "السجل",
+      "historyEmpty": "لا توجد فترات مسجلة.",
+      "current": "الحالية",
+      "periodicity": "الفحص التقني كل {{n}} أشهر",
+      "periodicityChange": "تعديل",
+      "periodicityHint": "تحقق من المدة مع مركز الفحص المعتمد: قد تتغير.",
+      "periodicityMonths": "{{n}} أشهر",
+      "periodicitySaved": "تم حفظ المدة.",
+      "errors": {
+        "required": "هذا الحقل إجباري.",
+        "invalid_date": "تاريخ غير صالح: اكتبه بصيغة يوم/شهر/سنة.",
+        "ends_before_start": "يجب أن تكون النهاية بعد البداية.",
+        "ends_before_current": "يجب أن تنتهي الفترة الجديدة بعد الحالية ({{date}}).",
+        "invalid_amount": "أدخل مبلغًا موجبًا.",
+        "too_long": "النص طويل جدًا."
+      },
+      "saveError": "تعذر الحفظ. تحقق من الاتصال ثم أعد المحاولة.",
+      "alreadyRecorded": "هذه الفترة مسجلة من قبل.",
+      "forbidden": "المالك والمسؤول فقط يمكنهما هذا التعديل.",
+      "uploadError": "تعذر إرسال الصورة: لم يتم حفظ شيء. أعد المحاولة.",
+      "rowA11y": "{{kind}}: {{state}}. {{line}}"
     }
   },
   "vehiclePhotos": {

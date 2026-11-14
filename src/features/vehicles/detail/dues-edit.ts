@@ -10,7 +10,7 @@ import { fromIsoDate, toIsoDate } from '../validation';
 import type { DueRow } from './dues';
 
 /** Types qu'on peut ajouter à la main (une panne est un incident, pas une échéance : elle se signale depuis l'entretien). */
-export const ADDABLE_DUE_TYPES: MaintenanceType[] = ['assurance', 'visite_technique', 'vidange', 'freins', 'pneus', 'autre'];
+export const ADDABLE_DUE_TYPES: MaintenanceType[] = ['vidange', 'freins', 'pneus', 'autre'];
 const DOCUMENT_TYPES: MaintenanceType[] = ['assurance', 'visite_technique'];
 
 const addMonths = (now: Date, months: number) => {

@@ -19,6 +19,7 @@ import { archiveBlock, blockingCountFromError, isArchiveBlockedError } from '@/f
 import { archiveReasonText, ArchiveSection } from '@/features/vehicles/detail/archive-section';
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
 import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-view';
+import { useVehicleCompliance } from '@/features/compliance/hooks';
 import { useVehicleInspections } from '@/features/inspections/hooks';
 import { buildDues } from '@/features/vehicles/detail/dues';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
@@ -64,9 +65,10 @@ export default function VehicleDetailScreen() {
     };
   }, [vehicle, rentals, maintenanceItems, now, paymentsQuery.data]);
   const inspectionsQuery = useVehicleInspections(id);
+  const complianceQuery = useVehicleCompliance(id);
   const history = useMemo(
-    () => buildHistory({ rentals, inspections: inspectionsQuery.data ?? [], maintenance: maintenanceItems, customers, showAmounts: showPrice }),
-    [rentals, inspectionsQuery.data, maintenanceItems, customers, showPrice]
+    () => buildHistory({ rentals, inspections: inspectionsQuery.data ?? [], maintenance: maintenanceItems, compliance: complianceQuery.data ?? [], customers, showAmounts: showPrice }),
+    [rentals, inspectionsQuery.data, maintenanceItems, complianceQuery.data, customers, showPrice]
   );
   const block = vehicle ? archiveBlock(vehicle, rentals, customers, now) : null;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -170,6 +172,7 @@ export default function VehicleDetailScreen() {
   }
 
   function openEvent(event: HistoryEvent) {
+    if (event.kind === 'compliance') return;
     if (event.kind === 'maintenance') router.push({ pathname: '/maintenance/[id]', params: { id: event.maintenanceId } });
     else router.push({ pathname: '/locations/[id]', params: { id: event.rentalId } });
   }
@@ -256,7 +259,7 @@ export default function VehicleDetailScreen() {
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>
             ) : null}
-            <DuesSection vehicle={vehicle} rows={figures?.dues ?? []} now={now} onAddDocument={() => setEditing('documents')} />
+            <DuesSection vehicle={vehicle} rows={figures?.dues ?? []} now={now} />
             {editing === 'specs' ? (
               <SpecsEditor vehicle={vehicle} onClose={() => setEditing(null)} />
             ) : (

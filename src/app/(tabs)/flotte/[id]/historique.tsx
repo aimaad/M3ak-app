@@ -7,6 +7,7 @@ import { ScreenHeader } from '@/components/screen-header';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Palette } from '@/constants/theme';
+import { useVehicleCompliance } from '@/features/compliance/hooks';
 import { useVehicleInspections } from '@/features/inspections/hooks';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
 import { HistoryList } from '@/features/vehicles/detail/sections-view';
@@ -20,13 +21,15 @@ export default function VehicleHistoryScreen() {
   const { t } = useLanguage();
   const detail = useVehicleDetail(id);
   const inspectionsQuery = useVehicleInspections(id);
+  const complianceQuery = useVehicleCompliance(id);
   const showAmounts = canSeePrices(detail.role);
   const events = useMemo(
-    () => buildHistory({ rentals: detail.rentals, inspections: inspectionsQuery.data ?? [], maintenance: detail.maintenance, customers: detail.customers, showAmounts }),
-    [detail.rentals, inspectionsQuery.data, detail.maintenance, detail.customers, showAmounts]
+    () => buildHistory({ rentals: detail.rentals, inspections: inspectionsQuery.data ?? [], maintenance: detail.maintenance, compliance: complianceQuery.data ?? [], customers: detail.customers, showAmounts }),
+    [detail.rentals, inspectionsQuery.data, detail.maintenance, complianceQuery.data, detail.customers, showAmounts]
   );
 
   function open(event: HistoryEvent) {
+    if (event.kind === 'compliance') return;
     if (event.kind === 'maintenance') router.push({ pathname: '/maintenance/[id]', params: { id: event.maintenanceId } });
     else router.push({ pathname: '/locations/[id]', params: { id: event.rentalId } });
   }

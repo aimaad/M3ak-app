@@ -2,11 +2,9 @@
  * Modification sur place de la fiche technique et des documents : brouillons (tout en texte, comme les champs), validation avec les MÊMES
  * règles que le formulaire de modification, et patch à enregistrer. Fonctions pures.
  */
-import { parseFrDate } from '@/features/audit/types';
-
 import type { VehicleSpecsPatch } from '../api';
-import type { FuelType, Vehicle, VehicleCategory, VehicleDocument, VehicleDocumentType, VehicleTransmission } from '../types';
-import { fromIsoDate, toIsoDate, validateVehicleForm, type VehicleFormErrorCode, type VehicleFormValues } from '../validation';
+import type { FuelType, Vehicle, VehicleCategory, VehicleDocumentType, VehicleTransmission } from '../types';
+import { validateVehicleForm, type VehicleFormErrorCode, type VehicleFormValues } from '../validation';
 
 export type SpecsDraft = {
   categorie: VehicleCategory | null;
@@ -74,34 +72,22 @@ export const hasSpecsChanges = (vehicle: Vehicle, draft: SpecsDraft) => Object.k
 
 // ------------------------------------------------------------------ documents
 
-export type DocumentDraft = { localUri: string | null; /** JJ/MM/AAAA, comme à la saisie */ expiry: string };
-export type DocumentsDraft = Record<VehicleDocumentType, DocumentDraft>;
+export type DocumentDraft = { localUri: string | null };
 
-const TYPES: VehicleDocumentType[] = ['carte_grise', 'carte_grise_verso', 'assurance', 'visite_technique'];
+/** Documents modifiables ici : la carte grise (recto et verso). L'assurance et la visite technique se gèrent dans « Obligations légales » (périodes, renouvellements, photo du papier). */
+export type EditableDocumentType = Extract<VehicleDocumentType, 'carte_grise' | 'carte_grise_verso'>;
+export const EDITABLE_DOCUMENT_TYPES: EditableDocumentType[] = ['carte_grise', 'carte_grise_verso'];
+export type DocumentsDraft = Record<EditableDocumentType, DocumentDraft>;
 
-export function documentsDraft(vehicle: Vehicle): DocumentsDraft {
-  const draft = {} as DocumentsDraft;
-  for (const type of TYPES) draft[type] = { localUri: null, expiry: fromIsoDate(vehicle.documents.find((doc) => doc.type === type)?.expiresAt) };
-  return draft;
+const TYPES = EDITABLE_DOCUMENT_TYPES;
+
+export function documentsDraft(): DocumentsDraft {
+  return { carte_grise: { localUri: null }, carte_grise_verso: { localUri: null } };
 }
 
-/** Une date d'expiration remplie doit être une vraie date JJ/MM/AAAA (le passé est permis : un document expiré se saisit aussi). */
-export function validateDocuments(draft: DocumentsDraft): Partial<Record<VehicleDocumentType, 'invalid_date'>> {
-  const errors: Partial<Record<VehicleDocumentType, 'invalid_date'>> = {};
-  for (const type of TYPES) if (draft[type].expiry.trim() && !parseFrDate(draft[type].expiry)) errors[type] = 'invalid_date';
-  return errors;
-}
+export type DocumentChange = { type: EditableDocumentType; localUri: string };
 
-export type DocumentChange = { type: VehicleDocumentType; localUri: string | null; expiresAt: string | null };
-
-/** Documents à enregistrer : nouvelle photo (à envoyer) et/ou nouvelle date d'expiration d'un document déjà là. */
-export function documentChanges(existing: VehicleDocument[], draft: DocumentsDraft): DocumentChange[] {
-  const changes: DocumentChange[] = [];
-  for (const type of TYPES) {
-    const current = existing.find((doc) => doc.type === type);
-    const expiresAt = toIsoDate(draft[type].expiry);
-    const dateChanged = (current?.expiresAt ? current.expiresAt.slice(0, 10) : null) !== expiresAt;
-    if (draft[type].localUri || (current && dateChanged)) changes.push({ type, localUri: draft[type].localUri, expiresAt });
-  }
-  return changes;
+/** Photos à envoyer (la carte grise n'a pas de date d'expiration). */
+export function documentChanges(draft: DocumentsDraft): DocumentChange[] {
+  return TYPES.flatMap((type) => (draft[type].localUri ? [{ type, localUri: draft[type].localUri as string }] : []));
 }

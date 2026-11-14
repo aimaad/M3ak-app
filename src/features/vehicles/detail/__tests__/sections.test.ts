@@ -95,4 +95,15 @@ describe('historique', () => {
     const events = buildHistory({ rentals, inspections: [], maintenance: [], customers, showAmounts: true, limit: 4 });
     expect(events.map((event) => event.key)).toEqual(['rental:r0', 'rental:r1', 'rental:r2', 'rental:r3']);
   });
+
+  it('renouvellements d’obligations : événements avec le montant (propriétaire) ; l’entretien « assurance » fait n’est pas répété', () => {
+    const compliance = [{ id: 'c1', kind: 'assurance', validUntil: '2027-12-26', amount: 4200, createdAt: day(-1) }] as never;
+    const maintenance = [maint({ id: 'a', type: 'assurance', statut: 'effectuee', dateIntervention: day(-2) }), maint({ id: 'v', type: 'vidange', statut: 'effectuee', dateIntervention: day(-3) })];
+    const owner = buildHistory({ rentals: [], inspections: [], maintenance, compliance, customers, showAmounts: true });
+    expect(owner.map((event) => event.key)).toEqual(['compliance:c1', 'maintenance:v']);
+    expect(owner[0]).toMatchObject({ kind: 'compliance', complianceKind: 'assurance', amount: 4200 });
+    const employee = buildHistory({ rentals: [], inspections: [], maintenance: [], compliance, customers, showAmounts: false });
+    expect(employee[0]).toMatchObject({ amount: null });
+    expect(JSON.stringify(employee)).not.toMatch(/4200/);
+  });
 });
