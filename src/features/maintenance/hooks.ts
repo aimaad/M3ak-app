@@ -3,10 +3,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   completeMaintenanceItem,
   createMaintenanceItem,
+  deleteMaintenanceItem,
   getMaintenanceItem,
   listMaintenanceItems,
   listMaintenanceItemsForVehicle,
   startMaintenanceItem,
+  updateMaintenanceDue,
 } from './api';
 import type { MaintenanceCompletionInput, MaintenanceInput } from './types';
 
@@ -71,5 +73,27 @@ export function useCompleteMaintenanceItem() {
     mutationFn: ({ id, completion }: { id: string; completion: MaintenanceCompletionInput }) =>
       completeMaintenanceItem(id, completion),
     onSuccess: (item) => invalidate(item),
+  });
+}
+
+export function useUpdateMaintenanceDue() {
+  const invalidate = useInvalidateMaintenance();
+
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null } }) => updateMaintenanceDue(id, patch),
+    onSuccess: (item) => invalidate(item),
+  });
+}
+
+export function useDeleteMaintenanceItem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id }: { id: string; vehicleId: string }) => deleteMaintenanceItem(id),
+    onSuccess: (_void, { id, vehicleId }) => {
+      queryClient.invalidateQueries({ queryKey: maintenanceKey });
+      queryClient.invalidateQueries({ queryKey: maintenanceItemKey(id) });
+      queryClient.invalidateQueries({ queryKey: vehicleMaintenanceKey(vehicleId) });
+    },
   });
 }

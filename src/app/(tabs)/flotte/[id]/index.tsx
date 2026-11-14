@@ -20,10 +20,11 @@ import { archiveReasonText, ArchiveSection } from '@/features/vehicles/detail/ar
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
 import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-view';
 import { useVehicleInspections } from '@/features/inspections/hooks';
-import { buildDues, type DueRow } from '@/features/vehicles/detail/dues';
+import { buildDues } from '@/features/vehicles/detail/dues';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
 import { DocumentsEditor, SpecsEditor } from '@/features/vehicles/detail/editors';
-import { DocumentsRow, DuesCard, HistoryCard, SpecsGrid } from '@/features/vehicles/detail/sections-view';
+import { DuesSection } from '@/features/vehicles/detail/dues-section';
+import { DocumentsRow, HistoryCard, SpecsGrid } from '@/features/vehicles/detail/sections-view';
 import { buildSpecs } from '@/features/vehicles/detail/specs';
 import { DetailHeader } from '@/features/vehicles/detail/detail-header';
 import { displayName } from '@/features/vehicles/detail/names';
@@ -168,12 +169,6 @@ export default function VehicleDetailScreen() {
     void Share.share({ message: shareMessage(vehicle, { showPrice, perDay: t('flotte.perDay') }) }).catch(() => undefined);
   }
 
-  function openDue(row: DueRow) {
-    if (!vehicle) return;
-    if (row.maintenanceId) router.push({ pathname: '/maintenance/[id]', params: { id: row.maintenanceId } });
-    else setEditing('documents');
-  }
-
   function openEvent(event: HistoryEvent) {
     if (event.kind === 'maintenance') router.push({ pathname: '/maintenance/[id]', params: { id: event.maintenanceId } });
     else router.push({ pathname: '/locations/[id]', params: { id: event.rentalId } });
@@ -261,7 +256,7 @@ export default function VehicleDetailScreen() {
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>
             ) : null}
-            <DuesCard rows={figures?.dues ?? []} onOpen={openDue} onAdd={() => router.push('/maintenance/nouveau')} />
+            <DuesSection vehicle={vehicle} rows={figures?.dues ?? []} now={now} onAddDocument={() => setEditing('documents')} />
             {editing === 'specs' ? (
               <SpecsEditor vehicle={vehicle} onClose={() => setEditing(null)} />
             ) : (

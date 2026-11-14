@@ -93,6 +93,29 @@ export async function createMaintenanceItem(
   return fromRow(data as MaintenanceRow);
 }
 
+/** Corrige date, kilométrage et notes d'une échéance pas encore commencée (le statut repart à « à venir » : l'urgence se recalcule). */
+export async function updateMaintenanceDue(
+  id: string,
+  patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null }
+): Promise<MaintenanceItem> {
+  const { data, error } = await getSupabase()
+    .from('maintenance_items')
+    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir' })
+    .eq('id', id)
+    .in('statut', ['a_venir', 'due', 'en_retard'])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return fromRow(data as MaintenanceRow);
+}
+
+/** Supprime une échéance (propriétaire et responsable seulement, côté base aussi). */
+export async function deleteMaintenanceItem(id: string): Promise<void> {
+  const { error } = await getSupabase().from('maintenance_items').delete().eq('id', id);
+  if (error) throw error;
+}
+
 export async function startMaintenanceItem(id: string): Promise<MaintenanceItem> {
   const { data, error } = await getSupabase()
     .from('maintenance_items')

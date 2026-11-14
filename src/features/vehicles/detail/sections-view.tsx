@@ -9,7 +9,6 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { VEHICLE_DOCUMENTS_BUCKET } from '../api';
 import { VEHICLE_DOCUMENT_TYPES, type Vehicle, type VehicleDocumentType } from '../types';
-import type { DueRow } from './dues';
 import type { HistoryEvent } from './history';
 import type { SpecKey, SpecTile } from './specs';
 
@@ -34,72 +33,6 @@ function SectionHeader({ title, actionLabel, onAction, actionA11y }: { title: st
 }
 
 const shortDate = (iso: string, language: string) => new Date(iso).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short' });
-
-// ------------------------------------------------------------------ échéances
-
-const DUE_ICON: Record<DueRow['icon'], IconName> = { shield: 'shield-checkmark-outline', calendar: 'calendar-outline', wrench: 'construct-outline' };
-
-export function DuesCard({ rows, onOpen, onAdd }: { rows: DueRow[]; onOpen: (row: DueRow) => void; onAdd: () => void }) {
-  const { t, language } = useLanguage();
-  const dueText = (row: DueRow) => {
-    switch (row.due.kind) {
-      case 'days':
-        return row.due.days === 0 ? t('vehicleDetail.dues.today') : t('vehicleDetail.dues.daysLeft', { n: row.due.days });
-      case 'km':
-        return t('vehicleDetail.dues.kmLeft', { km: formatAmount(row.due.km) });
-      case 'expired':
-        return t('vehicleDetail.dues.expired');
-      default:
-        return t('vehicleDetail.dues.none');
-    }
-  };
-  const subText = (row: DueRow) => {
-    if (row.missingFile) return t('vehicleDetail.dues.addPhoto');
-    if (row.date) return t(row.urgency === 'expired' ? 'vehicleDetail.dues.subDateOverdue' : 'vehicleDetail.dues.subDate', { date: shortDate(row.date, language) });
-    if (row.targetKm !== null) return t(row.urgency === 'expired' ? 'vehicleDetail.dues.subKmOverdue' : 'vehicleDetail.dues.subKm', { km: formatAmount(row.targetKm) });
-    return t('vehicleDetail.dues.subNoDate');
-  };
-  return (
-    <View style={[CARD, { gap: 4 }]}>
-      <SectionHeader title={t('vehicleDetail.dues.title')} actionLabel={t('vehicleDetail.dues.add')} onAction={onAdd} />
-      {rows.map((row) => {
-        const hot = row.urgency === 'hot' || row.urgency === 'expired';
-        const label = t(`maintenance.types.${row.type}`);
-        const due = dueText(row);
-        const sub = subText(row);
-        return (
-          <Pressable
-            key={row.key}
-            onPress={() => onOpen(row)}
-            accessibilityRole="button"
-            accessibilityLabel={t('vehicleDetail.dues.a11y', { label, due, sub })}
-            style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, minHeight: 56, borderTopWidth: 1, borderTopColor: Brand.gaugeTrack }}
-          >
-            <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: hot ? Palette.primary : Palette.surfaceAlt }}>
-              <Ionicons name={DUE_ICON[row.icon]} size={18} color={hot ? Brand.white : Brand.graphite} />
-            </View>
-            <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-                <HText weight="semibold" size={14}>
-                  {label}
-                </HText>
-                <HText font="display" weight="bold" size={14} color={hot ? Brand.orangeUrgentText : Palette.textPrimary}>
-                  {due}
-                </HText>
-              </View>
-              <View style={{ height: 5, borderRadius: 3, backgroundColor: Brand.gaugeTrack, overflow: 'hidden', flexDirection: 'row' }}>
-                <View style={{ width: `${Math.round(row.fill * 100)}%`, borderRadius: 3, backgroundColor: hot ? Palette.primary : Brand.graphite }} />
-              </View>
-              <HText size={11} color={row.missingFile ? Brand.orangeUrgentText : Palette.textSecondary} weight={row.missingFile ? 'semibold' : 'regular'}>
-                {sub}
-              </HText>
-            </View>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-}
 
 // ------------------------------------------------------------------ fiche technique
 

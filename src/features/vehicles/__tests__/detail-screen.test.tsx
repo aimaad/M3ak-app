@@ -25,6 +25,7 @@ const mockState = {
   archiveError: null as unknown,
   specsCalls: [] as unknown[],
   priceCalls: [] as unknown[],
+  dueCalls: { update: [] as unknown[], create: [] as unknown[], remove: [] as unknown[] },
   priceFails: false,
   docCalls: [] as unknown[],
   uploaded: [] as unknown[],
@@ -43,7 +44,12 @@ jest.mock('expo-router', () => ({
 jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { agencyId: 'a1', role: mockState.role } }) }));
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => ({ data: [{ id: 'c1', nomComplet: 'FOUAD BENNANI', telephone: '+212 6 11 22 33 44' }] }) }));
 jest.mock('@/features/rentals/hooks', () => ({ useVehicleRentals: () => ({ data: mockState.rentals, refetch: jest.fn() }) }));
-jest.mock('@/features/maintenance/hooks', () => ({ useVehicleMaintenanceItems: () => ({ data: mockState.maintenance, refetch: jest.fn() }) }));
+jest.mock('@/features/maintenance/hooks', () => ({
+  useVehicleMaintenanceItems: () => ({ data: mockState.maintenance, refetch: jest.fn() }),
+  useCreateMaintenanceItem: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.dueCalls.create.push(args); options?.onSuccess?.(); }, mutateAsync: async (args: unknown) => { mockState.dueCalls.create.push(args); } }),
+  useUpdateMaintenanceDue: () => ({ mutateAsync: async (args: unknown) => { mockState.dueCalls.update.push(args); } }),
+  useDeleteMaintenanceItem: () => ({ mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.dueCalls.remove.push(args); options?.onSuccess?.(); } }),
+}));
 jest.mock('@/features/inspections/hooks', () => ({ useVehicleInspections: () => ({ data: mockState.inspections }) }));
 jest.mock('@/features/payments/hooks', () => ({ useAllPayments: (enabled = true) => ({ data: enabled ? mockState.payments : undefined }) }));
 jest.mock('@/features/vehicles/hooks', () => ({
@@ -78,7 +84,7 @@ const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], priceFails: false, docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], dueCalls: { update: [], create: [], remove: [] }, priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -313,11 +319,13 @@ describe('fiche véhicule', () => {
       expect(screen.getAllByText('Ajouter la photo').length).toBeGreaterThanOrEqual(2);
     });
 
-    it('échéances : une vidange proche s’affiche en jours et ouvre l’entretien', async () => {
+    it('échéances : une vidange proche s’affiche en jours ; un toucher la déplie sur place (pas de changement de page)', async () => {
       mockState.maintenance = [{ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null }];
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/maintenance/[id]', params: { id: 'm9' } });
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
+      expect(screen.getByText('Marquer comme fait')).toBeTruthy();
     });
 
     it('historique : aucune ligne → message ; avec une location terminée → ligne et montant (propriétaire)', async () => {
@@ -532,6 +540,87 @@ describe('fiche véhicule', () => {
       mockState.role = 'employee';
       await render(<VehicleDetailScreen />);
       expect(screen.queryByLabelText('Modifier le prix')).toBeNull();
+    });
+  });
+
+  describe('échéances modifiables sur place', () => {
+    const vidange = () => ({ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null });
+
+    it('corriger la date d’un entretien : Enregistrer envoie la mise à jour', async () => {
+      mockState.maintenance = [vidange()];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      await fireEvent.changeText(screen.getByPlaceholderText('JJ/MM/AAAA'), '31/01/2027');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await waitFor(() => expect(mockState.dueCalls.update).toEqual([{ id: 'm9', patch: { echeanceDate: '2027-01-31', echeanceKm: null, notes: null } }]));
+    });
+
+    it('la suggestion « Dans 12 mois » remplit la date', async () => {
+      mockState.maintenance = [vidange()];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      await fireEvent.press(screen.getByText(/^Dans 12 mois : /));
+      expect(screen.getByPlaceholderText('JJ/MM/AAAA').props.value).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+    });
+
+    it('date invalide ou vide : message, rien n’est envoyé', async () => {
+      mockState.maintenance = [vidange()];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      await fireEvent.changeText(screen.getByPlaceholderText('JJ/MM/AAAA'), '');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(screen.getByText("Renseignez une date ou un kilométrage d'échéance.")).toBeTruthy();
+      expect(mockState.dueCalls.update).toEqual([]);
+    });
+
+    it('« + Ajouter » : formulaire dans la carte, nouvelle échéance créée pour CE véhicule', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(screen.getByText('Nouvelle échéance')).toBeTruthy();
+      await fireEvent.press(screen.getAllByText('Freins')[0]);
+      await fireEvent.press(screen.getByText(/^À 70.?000 km$/)); // 40 000 + 30 000
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'freins', echeanceDate: null, echeanceKm: 70000, notes: null } }]);
+    });
+
+    it('assurance sans entretien ni document : la date saisie crée l’échéance', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : Aucune date\./));
+      await fireEvent.changeText(screen.getByPlaceholderText('JJ/MM/AAAA'), '26/12/2026');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await waitFor(() => expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'assurance', echeanceDate: '2026-12-26', echeanceKm: null, notes: null } }]));
+    });
+
+    it('ligne sans photo : « Ajouter la photo du document » ouvre l’éditeur de documents', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : Aucune date\./));
+      await fireEvent.press(screen.getByText('Ajouter la photo du document'));
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(screen.getAllByText('Caméra').length).toBeGreaterThan(0); // l'éditeur de documents est ouvert sur place
+    });
+
+    it('« Marquer comme fait » ouvre l’écran de l’entretien ; « Supprimer » demande confirmation (propriétaire)', async () => {
+      const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
+      mockState.maintenance = [vidange()];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      await fireEvent.press(screen.getByText('Marquer comme fait'));
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/maintenance/[id]', params: { id: 'm9' } });
+      await fireEvent.press(screen.getByText("Supprimer l'échéance"));
+      expect(alert).toHaveBeenCalledWith('Supprimer cette échéance ?', expect.any(String), expect.any(Array));
+      expect(mockState.dueCalls.remove).toEqual([]); // rien avant confirmation
+      (alert.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((button) => button.text === "Supprimer l'échéance")?.onPress?.();
+      expect(mockState.dueCalls.remove).toEqual([{ id: 'm9', vehicleId: 'v1' }]);
+    });
+
+    it('employé : peut corriger une échéance, mais pas la supprimer', async () => {
+      mockState.role = 'employee';
+      mockState.maintenance = [vidange()];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
+      expect(screen.queryByText("Supprimer l'échéance")).toBeNull();
     });
   });
 });

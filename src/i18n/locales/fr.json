@@ -3435,7 +3435,29 @@
       "subKmOverdue": "Prévue à {{km}} km",
       "subNoDate": "Date à renseigner",
       "addPhoto": "Ajouter la photo",
-      "a11y": "{{label}} : {{due}}. {{sub}}"
+      "a11y": "{{label}} : {{due}}. {{sub}}",
+      "edit": {
+        "addTitle": "Nouvelle échéance",
+        "type": "Type",
+        "dateLabel": "Date d'échéance",
+        "dateHint": "JJ/MM/AAAA",
+        "kmLabel": "Kilométrage d'échéance",
+        "kmCurrent": "Kilométrage actuel : {{km}} km",
+        "notesLabel": "Notes (facultatif)",
+        "suggestDate": "Dans 12 mois : {{date}}",
+        "suggestKm": "À {{km}} km",
+        "markDone": "Marquer comme fait",
+        "delete": "Supprimer l'échéance",
+        "deleteTitle": "Supprimer cette échéance ?",
+        "deleteBody": "Elle sera retirée de la liste. Cette action est définitive.",
+        "needOne": "Renseignez une date ou un kilométrage d'échéance.",
+        "saveError": "Impossible d'enregistrer l'échéance. Réessayez.",
+        "deleteError": "Impossible de supprimer l'échéance.",
+        "rowA11y": "Modifier l'échéance : {{label}}",
+        "closeRow": "Fermer",
+        "empty": "Aucune échéance enregistrée.",
+        "addDocument": "Ajouter la photo du document"
+      }
     },
     "specs": {
       "title": "Fiche technique",
