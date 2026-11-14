@@ -90,7 +90,7 @@ export function DateField({ label, value, onChange, minimumDate, maximumDate, re
         <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)}>
           <Pressable style={{ flex: 1, backgroundColor: Palette.overlay }} onPress={() => setOpen(false)} accessibilityLabel={t('form.close')} />
           <View style={{ backgroundColor: Brand.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 32, gap: 8 }}>
-            <DateTimePicker value={pending} mode="date" display="inline" locale={locale} minimumDate={minimumDate} maximumDate={maximumDate} accentColor={Brand.orange} onChange={(_event, date) => date && setPending(date)} />
+            <DateTimePicker value={pending} mode="date" display="inline" themeVariant="light" locale={locale} minimumDate={minimumDate} maximumDate={maximumDate} accentColor={Brand.orange} onChange={(_event, date) => date && setPending(date)} />
             <Pressable onPress={() => { onChange(toIsoDay(pending)); setOpen(false); }} accessibilityRole="button" style={{ height: 54, borderRadius: 27, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
               <HText weight="semibold" size={15} color={Brand.white}>
                 {t('form.done')}
