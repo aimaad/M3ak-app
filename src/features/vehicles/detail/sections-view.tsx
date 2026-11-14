@@ -124,7 +124,7 @@ export function SpecsGrid({ tiles, description, onEdit, onTile }: { tiles: SpecT
   };
   return (
     <View style={{ gap: 10 }}>
-      <SectionHeader title={t('vehicleDetail.specs.title')} actionLabel={t('vehicleDetail.specs.edit')} onAction={onEdit} />
+      <SectionHeader title={t('vehicleDetail.specs.title')} actionLabel={t('vehicleDetail.specs.edit')} onAction={onEdit} actionA11y={t('vehicleDetail.editor.editA11y', { section: t('vehicleDetail.specs.title') })} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
         {tiles.map((tile) => {
           const label = t(`vehicleDetail.specs.${tile.key}`);
@@ -303,7 +303,7 @@ export function DocumentsRow({ vehicle, onAdd }: { vehicle: Vehicle; onAdd: () =
   const [viewing, setViewing] = useState<{ url: string; label: string } | null>(null);
   return (
     <View style={{ gap: 10 }}>
-      <SectionHeader title={t('vehicleDetail.documents.title')} />
+      <SectionHeader title={t('vehicleDetail.documents.title')} actionLabel={t('vehicleDetail.specs.edit')} onAction={onAdd} actionA11y={t('vehicleDetail.editor.editA11y', { section: t('vehicleDetail.documents.title') })} />
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
         {VEHICLE_DOCUMENT_TYPES.map((type) => (
           <DocumentThumb key={type} vehicle={vehicle} type={type} onOpen={(url, label) => setViewing({ url, label })} onAdd={onAdd} />

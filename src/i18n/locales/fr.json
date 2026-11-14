@@ -3498,6 +3498,19 @@
       "serverRefused": "Archivage refusé : {{count}} location à terminer ou annuler d'abord. Actualisez la fiche.",
       "serverRefusedMany": "Archivage refusé : {{count}} locations à terminer ou annuler d'abord. Actualisez la fiche.",
       "serverRefusedNoCount": "Archivage refusé : des locations sont encore ouvertes. Actualisez la fiche."
+    },
+    "editor": {
+      "save": "Enregistrer",
+      "saving": "Enregistrement…",
+      "cancel": "Annuler",
+      "saveError": "Impossible d'enregistrer. Vérifiez la connexion puis réessayez.",
+      "uploadError": "Une photo n'a pas pu être envoyée. Rien n'a été perdu : réessayez.",
+      "editA11y": "Modifier : {{section}}",
+      "dateHint": "JJ/MM/AAAA",
+      "dateNeedsPhoto": "Ajoutez d'abord la photo pour saisir la date d'expiration.",
+      "dateLabel": "Date d'expiration (facultatif)",
+      "chooseLabel": "Photo : {{label}}",
+      "noChange": "Aucune modification."
     }
   },
   "vehiclePhotos": {

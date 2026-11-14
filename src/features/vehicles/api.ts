@@ -210,6 +210,28 @@ export async function updateVehicle(id: string, input: VehicleInput): Promise<Ve
   return fromRow(data as VehicleRow);
 }
 
+export type VehicleSpecsPatch = Partial<Pick<VehicleInput, 'categorie' | 'transmission' | 'carburant' | 'kilometrage' | 'couleur' | 'annee' | 'nombrePlaces' | 'puissanceFiscale'>>;
+
+/**
+ * Modification de la fiche technique sur place : seules les colonnes de la fiche technique changent (ni statut, ni prix, ni immatriculation).
+ * Contrairement à `updateVehicle`, elle marche aussi pour un véhicule en location ou à inspecter.
+ */
+export async function updateVehicleSpecs(id: string, patch: VehicleSpecsPatch): Promise<Vehicle> {
+  const row = {
+    ...(patch.categorie !== undefined ? { categorie: patch.categorie } : {}),
+    ...(patch.transmission !== undefined ? { transmission: patch.transmission } : {}),
+    ...(patch.carburant !== undefined ? { carburant: patch.carburant } : {}),
+    ...(patch.kilometrage !== undefined ? { kilometrage: patch.kilometrage } : {}),
+    ...(patch.couleur !== undefined ? { couleur: patch.couleur } : {}),
+    ...(patch.annee !== undefined ? { annee: patch.annee } : {}),
+    ...(patch.nombrePlaces !== undefined ? { nombre_places: patch.nombrePlaces } : {}),
+    ...(patch.puissanceFiscale !== undefined ? { puissance_fiscale: patch.puissanceFiscale } : {}),
+  };
+  const { data, error } = await getSupabase().from('vehicles').update(row).eq('id', id).select().single();
+  if (error) throw error;
+  return fromRow(data as VehicleRow);
+}
+
 export async function archiveVehicle(id: string): Promise<Vehicle> {
   const { data, error } = await getSupabase()
     .from('vehicles')

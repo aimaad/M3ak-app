@@ -9,7 +9,9 @@ import {
   updateVehicle,
   updateVehicleDocuments,
   updateVehiclePhotos,
+  updateVehicleSpecs,
   updateVehicleStatus,
+  type VehicleSpecsPatch,
 } from './api';
 import type { Vehicle, VehicleDocument, VehicleInput, VehiclePhoto } from './types';
 
@@ -83,6 +85,18 @@ export function useArchiveVehicle() {
 
 export function useReactivateVehicle() {
   return useVehicleStatusMutation(reactivateVehicle);
+}
+
+export function useUpdateVehicleSpecs() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: VehicleSpecsPatch }) => updateVehicleSpecs(id, patch),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: vehiclesKey });
+      queryClient.invalidateQueries({ queryKey: vehicleKey(data.id) });
+    },
+  });
 }
 
 export function useUpdateVehicleDocuments() {

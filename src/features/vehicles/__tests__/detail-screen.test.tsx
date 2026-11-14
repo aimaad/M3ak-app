@@ -23,6 +23,9 @@ const mockState = {
   payments: [] as unknown[],
   inspections: [] as unknown[],
   archiveError: null as unknown,
+  specsCalls: [] as unknown[],
+  docCalls: [] as unknown[],
+  uploaded: [] as unknown[],
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn(), canGoBack: () => true };
 const base = { id: 'v1', agencyId: 'a1', branchId: null, marque: 'DACIA', modele: 'LOGAN', immatriculation: '8921 | ب | 14', vin: null, categorie: 'economique', carburant: 'diesel', annee: 2021, kilometrage: 40000, prixJour: 500, prixSemaine: null, prixMois: null, finition: null, niveauCarburant: null, description: null, photoUrl: null, photos: [], documents: [], archivedAt: null, createdAt: at(-100), updatedAt: at(-1), transmission: null, couleur: 'Blanc', nombrePlaces: 5 };
@@ -44,6 +47,8 @@ jest.mock('@/features/payments/hooks', () => ({ useAllPayments: (enabled = true)
 jest.mock('@/features/vehicles/hooks', () => ({
   useVehicle: () => ({ data: mockState.vehicle, isLoading: false, isError: false, refetch: jest.fn() }),
   useUpdateVehiclePhotos: () => ({ mutateAsync: jest.fn() }),
+  useUpdateVehicleSpecs: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.specsCalls.push(args); options?.onSuccess?.(); } }),
+  useUpdateVehicleDocuments: () => ({ mutateAsync: async (args: unknown) => { mockState.docCalls.push(args); } }),
   useUpdateVehicleStatus: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.statusCalls.push(args); options?.onSuccess?.(); } }),
   useArchiveVehicle: () => ({
     mutate: (id: string, options?: { onError?: (error: unknown) => void }) => {
@@ -55,7 +60,8 @@ jest.mock('@/features/vehicles/hooks', () => ({
 }));
 jest.mock('@/components/undo-toast', () => ({ useUndo: () => ({ showUndo: jest.fn() }) }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
-jest.mock('@/features/vehicles/api', () => ({ VEHICLE_PHOTOS_BUCKET: 'vehicle-photos', VEHICLE_DOCUMENTS_BUCKET: 'vehicle-documents', deleteVehiclePhotoFile: jest.fn() }));
+jest.mock('@/features/vehicles/api', () => ({ VEHICLE_PHOTOS_BUCKET: 'vehicle-photos', VEHICLE_DOCUMENTS_BUCKET: 'vehicle-documents', deleteVehiclePhotoFile: jest.fn(), uploadVehicleDocument: async (...args: unknown[]) => { mockState.uploaded.push(args); return { type: args[2], path: 'new-path', uploadedAt: '2026-11-14T10:00:00Z', expiresAt: args[4] }; } }));
+jest.mock('expo-image-picker', () => ({ requestCameraPermissionsAsync: async () => ({ granted: true }), requestMediaLibraryPermissionsAsync: async () => ({ granted: true }), launchCameraAsync: async () => ({ canceled: false, assets: [{ uri: 'file:///doc.jpg' }] }), launchImageLibraryAsync: async () => ({ canceled: false, assets: [{ uri: 'file:///doc.jpg' }] }) }));
 jest.mock('@/i18n/use-language', () => ({ useLanguage: () => ({ language: mockState.language, t: (key: string, o?: Record<string, unknown>) => mockTranslate(mockState.language, key, o) }) }));
 jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }: { children: React.ReactNode }) => children, useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
@@ -69,7 +75,7 @@ const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -277,11 +283,13 @@ describe('fiche véhicule', () => {
   });
 
   describe('échéances, fiche technique, historique, documents', () => {
-    it('fiche technique : boîte et puissance « À compléter » ; appui → formulaire sur ce champ', async () => {
+    it('fiche technique : boîte et puissance « À compléter » ; appui sur une tuile → modification SUR PLACE (pas de changement de page)', async () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getAllByText('À compléter')).toHaveLength(2);
       await fireEvent.press(screen.getByLabelText('Boîte : à compléter. Appuyez pour le renseigner'));
-      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', field: 'transmission' } });
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
+      expect(screen.getByText('Manuelle')).toBeTruthy();
     });
 
     it('description : affichée seulement si elle existe', async () => {
@@ -342,7 +350,8 @@ describe('fiche véhicule', () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getByText('Documents')).toBeTruthy();
       await fireEvent.press(screen.getByLabelText('Ajouter'));
-      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', section: 'documents' } });
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(screen.getByLabelText('Enregistrer')).toBeTruthy(); // l'éditeur de documents s'ouvre sur place
     });
   });
 
@@ -408,6 +417,70 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getAllByLabelText('Archiver ce véhicule').at(-1) as never);
       (alert.mock.calls[0][2] as { text: string; onPress?: () => void }[]).find((button) => button.text === 'Archiver')?.onPress?.();
       expect(alert).toHaveBeenLastCalledWith('BIBIP', 'Archivage refusé : 2 locations à terminer ou annuler d\'abord. Actualisez la fiche.');
+    });
+  });
+
+  describe('modification sur place', () => {
+    it('« Modifier » de la fiche technique : champs à la place des tuiles ; enregistrer envoie seulement ce qui a changé', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      await fireEvent.press(screen.getByText('Manuelle'));
+      await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Gris');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.specsCalls).toEqual([{ id: 'v1', patch: { transmission: 'manuelle', couleur: 'Gris' } }]);
+      expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // retour à l'affichage normal
+    });
+
+    it('valeur invalide : message, rien n’est enregistré', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
+      await fireEvent.changeText(screen.getByDisplayValue('5'), '12');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(screen.getByText('Entrez un nombre de places entre 1 et 9.')).toBeTruthy();
+      expect(mockState.specsCalls).toEqual([]);
+    });
+
+    it('« Annuler » : on revient à l’affichage sans rien enregistrer', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
+      await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Gris');
+      await fireEvent.press(screen.getByLabelText('Annuler'));
+      expect(mockState.specsCalls).toEqual([]);
+      expect(screen.getByLabelText('Modifier : Fiche technique')).toBeTruthy();
+    });
+
+    it('documents : « Modifier » ouvre l’éditeur ; une nouvelle photo avec sa date est envoyée puis enregistrée', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier : Documents'));
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      const cameras = screen.getAllByText('Caméra');
+      await fireEvent.press(cameras[2]); // assurance
+      await fireEvent.changeText(await screen.findByPlaceholderText('JJ/MM/AAAA'), '26/12/2026');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await waitFor(() => expect(mockState.docCalls).toHaveLength(1));
+      expect(mockState.uploaded[0]).toEqual(['a1', 'v1', 'assurance', 'file:///doc.jpg', '2026-12-26']);
+      expect(mockState.docCalls[0]).toMatchObject({ id: 'v1', documents: [{ type: 'assurance', path: 'new-path', expiresAt: '2026-12-26' }] });
+    });
+
+    it('documents : date invalide refusée, rien n’est envoyé', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier : Documents'));
+      await fireEvent.press(screen.getAllByText('Caméra')[2]);
+      await fireEvent.changeText(await screen.findByPlaceholderText('JJ/MM/AAAA'), '32/13/2026');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(await screen.findByText(/Date invalide/)).toBeTruthy();
+      expect(mockState.uploaded).toEqual([]);
+    });
+
+    it('véhicule en location : la fiche technique reste modifiable sur place', async () => {
+      mockState.vehicle = { ...base, statut: 'en_location' };
+      mockState.rentals = [rentalRow({})];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
+      await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Noir');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.specsCalls).toEqual([{ id: 'v1', patch: { couleur: 'Noir' } }]);
     });
   });
 });

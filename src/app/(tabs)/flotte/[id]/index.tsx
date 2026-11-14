@@ -22,6 +22,7 @@ import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-vie
 import { useVehicleInspections } from '@/features/inspections/hooks';
 import { buildDues, type DueRow } from '@/features/vehicles/detail/dues';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
+import { DocumentsEditor, SpecsEditor } from '@/features/vehicles/detail/editors';
 import { DocumentsRow, DuesCard, HistoryCard, SpecsGrid } from '@/features/vehicles/detail/sections-view';
 import { buildSpecs } from '@/features/vehicles/detail/specs';
 import { DetailHeader } from '@/features/vehicles/detail/detail-header';
@@ -67,6 +68,8 @@ export default function VehicleDetailScreen() {
   );
   const block = vehicle ? archiveBlock(vehicle, rentals, customers, now) : null;
   const [menuOpen, setMenuOpen] = useState(false);
+  /** Fiche technique ou documents en cours de modification SUR PLACE (sans quitter la fiche). */
+  const [editing, setEditing] = useState<'specs' | 'documents' | null>(null);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
@@ -167,7 +170,7 @@ export default function VehicleDetailScreen() {
   function openDue(row: DueRow) {
     if (!vehicle) return;
     if (row.maintenanceId) router.push({ pathname: '/maintenance/[id]', params: { id: row.maintenanceId } });
-    else router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'documents' } });
+    else setEditing('documents');
   }
 
   function openEvent(event: HistoryEvent) {
@@ -247,12 +250,11 @@ export default function VehicleDetailScreen() {
               </>
             ) : null}
             <DuesCard rows={figures?.dues ?? []} onOpen={openDue} onAdd={() => router.push('/maintenance/nouveau')} />
-            <SpecsGrid
-              tiles={buildSpecs(vehicle)}
-              description={vehicle.description?.trim() || null}
-              onEdit={goEdit}
-              onTile={(tile) => router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, field: tile.field } })}
-            />
+            {editing === 'specs' ? (
+              <SpecsEditor vehicle={vehicle} onClose={() => setEditing(null)} />
+            ) : (
+              <SpecsGrid tiles={buildSpecs(vehicle)} description={vehicle.description?.trim() || null} onEdit={() => setEditing('specs')} onTile={() => setEditing('specs')} />
+            )}
             <HistoryCard events={history.slice(0, 4)} onOpen={openEvent} onSeeAll={() => router.push({ pathname: '/flotte/[id]/historique', params: { id: vehicle.id } })} />
             {showPrice ? (
             <View>
@@ -281,7 +283,7 @@ export default function VehicleDetailScreen() {
             ) : null}
 
             <View onLayout={onSectionLayout('documents')}>
-              <DocumentsRow vehicle={vehicle} onAdd={() => router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, section: 'documents' } })} />
+              {editing === 'documents' ? <DocumentsEditor vehicle={vehicle} onClose={() => setEditing(null)} /> : <DocumentsRow vehicle={vehicle} onAdd={() => setEditing('documents')} />}
             </View>
             <View className="gap-2" onLayout={onSectionLayout('entretien')}>
               <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
