@@ -69,7 +69,7 @@ export async function createComplianceRecord(agencyId: string, input: Compliance
       amount: input.amount,
       document_path: input.documentPath,
       notes: input.notes,
-      period_months: input.periodMonths ?? null,
+      ...(input.periodMonths != null ? { period_months: input.periodMonths } : {}),
     })
     .select()
     .single();

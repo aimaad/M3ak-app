@@ -33,7 +33,7 @@ const mockState = {
   correctCalls: [] as unknown[],
   deleteCalls: [] as unknown[],
   settingsCalls: [] as unknown[],
-  dueCalls: { update: [] as unknown[], create: [] as unknown[], remove: [] as unknown[] },
+  dueCalls: { update: [] as unknown[], create: [] as unknown[], remove: [] as unknown[], createError: null as unknown },
   priceFails: false,
   docCalls: [] as unknown[],
   uploaded: [] as unknown[],
@@ -45,10 +45,10 @@ const rentalRow = (extra: Record<string, unknown>) => ({ id: 'r1', vehicleId: 'v
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(), setItem: jest.fn() }));
 jest.mock('@react-native-community/datetimepicker', () => ({
   __esModule: true,
-  default: ({ onChange, value }: { onChange: (event: unknown, date?: Date) => void; value: Date }) => {
+  default: ({ onValueChange, value }: { onValueChange: (event: unknown, date: Date) => void; value: Date }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Pressable } = require('react-native');
-    return <Pressable accessibilityLabel="PICKER-DAY" onPress={() => onChange({ type: 'set' }, mockState.pickDate ?? value)} />;
+    return <Pressable accessibilityLabel="PICKER-DAY" onPress={() => onValueChange({}, mockState.pickDate ?? value)} />;
   },
   DateTimePickerAndroid: { open: jest.fn() },
 }));
@@ -77,7 +77,7 @@ jest.mock('@/features/compliance/hooks', () => ({
 }));
 jest.mock('@/features/maintenance/hooks', () => ({
   useVehicleMaintenanceItems: () => ({ data: mockState.maintenance, refetch: jest.fn() }),
-  useCreateMaintenanceItem: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.dueCalls.create.push(args); options?.onSuccess?.(); }, mutateAsync: async (args: unknown) => { mockState.dueCalls.create.push(args); } }),
+  useCreateMaintenanceItem: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => { if (mockState.dueCalls.createError) return options?.onError?.(mockState.dueCalls.createError); mockState.dueCalls.create.push(args); options?.onSuccess?.(); }, mutateAsync: async (args: unknown) => { mockState.dueCalls.create.push(args); } }),
   useUpdateMaintenanceDue: () => ({ mutateAsync: async (args: unknown) => { mockState.dueCalls.update.push(args); } }),
   useDeleteMaintenanceItem: () => ({ mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.dueCalls.remove.push(args); options?.onSuccess?.(); } }),
 }));
@@ -124,7 +124,7 @@ const hiddenEls = { includeHiddenElements: true };
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [] }, priceFails: false, docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null }, priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -635,6 +635,15 @@ describe('fiche véhicule', () => {
       expect(screen.getByLabelText('Une seule fois').props.accessibilityState.checked).toBe(true);
       await fireEvent.press(screen.getByLabelText('Périodique'));
       expect(screen.getByDisplayValue('10 000')).toBeTruthy();
+    });
+
+    it('échec de l’enregistrement : la raison est dite (base pas à jour → migration 0071), jamais un message vide', async () => {
+      mockState.dueCalls.createError = { code: 'PGRST204', message: "Could not find the 'repeat_km' column of 'maintenance_items' in the schema cache" };
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.press(screen.getByText(/^À \d+.?\d* km$/));
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(await screen.findByText(/appliquez la migration 0071/)).toBeTruthy();
     });
 
     it('périodicité : une échéance existante montre sa périodicité enregistrée', async () => {

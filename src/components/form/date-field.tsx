@@ -1,4 +1,4 @@
-import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { createElement, useState } from 'react';
 import { Modal, Platform, Pressable, View } from 'react-native';
@@ -28,7 +28,7 @@ export function DateField({ label, value, onChange, minimumDate, maximumDate, re
   function pick() {
     const current = value ? parseIsoDay(value) : new Date();
     if (Platform.OS === 'android') {
-      DateTimePickerAndroid.open({ value: current, mode: 'date', minimumDate, maximumDate, onChange: (event: DateTimePickerEvent, date?: Date) => { if (event.type === 'set' && date) onChange(toIsoDay(date)); } });
+      DateTimePickerAndroid.open({ value: current, mode: 'date', minimumDate, maximumDate, onValueChange: (_event, date) => onChange(toIsoDay(date)) });
       return;
     }
     setPending(current);
@@ -91,7 +91,7 @@ export function DateField({ label, value, onChange, minimumDate, maximumDate, re
           <Pressable style={{ flex: 1, backgroundColor: Palette.overlay }} onPress={() => setOpen(false)} accessibilityLabel={t('form.close')} />
           <View style={{ backgroundColor: Brand.white, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 32, gap: 8 }}>
             <View style={{ alignItems: 'center' }}>
-              <DateTimePicker value={pending} mode="date" display="inline" themeVariant="light" locale={locale} minimumDate={minimumDate} maximumDate={maximumDate} accentColor={Brand.orange} onChange={(_event, date) => date && setPending(date)} />
+              <DateTimePicker value={pending} mode="date" display="inline" themeVariant="light" locale={locale} minimumDate={minimumDate} maximumDate={maximumDate} accentColor={Brand.orange} onValueChange={(_event, date) => setPending(date)} />
             </View>
             <Pressable onPress={() => { onChange(toIsoDay(pending)); setOpen(false); }} accessibilityRole="button" style={{ height: 54, borderRadius: 27, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
               <HText weight="semibold" size={15} color={Brand.white}>

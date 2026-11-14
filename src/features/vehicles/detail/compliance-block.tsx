@@ -27,6 +27,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { canSeePrices } from '../fleet-card';
 import type { Vehicle } from '../types';
+import { describeSaveError, isSchemaOutdatedError } from '../save-error';
 import { fromIsoDate, toIsoDate } from '../validation';
 
 const ICON: Record<ComplianceKind, keyof typeof Ionicons.glyphMap> = { assurance: 'shield-checkmark-outline', visite_technique: 'clipboard-outline', vignette: 'receipt-outline' };
@@ -134,7 +135,7 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
     if (Object.keys(errors).length > 0 || !agency.data) return;
     renew.mutate(
       { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null, periodic ? months : null), localDocumentUri: localUri },
-      { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : localUri ? t('vehicleDetail.compliance.uploadError') : t('vehicleDetail.compliance.saveError')) }
+      { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : isSchemaOutdatedError(failure) ? describeSaveError(failure, t, 'vehicleDetail.compliance.saveError') : localUri ? t('vehicleDetail.compliance.uploadError') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
     );
   }
 
@@ -189,7 +190,7 @@ function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicl
     const input = renewalInput(vehicle.id, record.kind, draft, record.documentPath);
     correct.mutate(
       { id: record.id, vehicleId: vehicle.id, patch: { validFrom: input.validFrom, validUntil: input.validUntil, reference: input.reference, provider: input.provider, amount: showAmount ? input.amount : record.amount, notes: input.notes } },
-      { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : t('vehicleDetail.compliance.saveError')) }
+      { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
     );
   }
 

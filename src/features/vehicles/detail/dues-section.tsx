@@ -13,6 +13,7 @@ import type { MaintenanceType } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
 
 import { useUpdateVehicleDocuments } from '../hooks';
+import { describeSaveError } from '../save-error';
 import type { Vehicle } from '../types';
 import { fromIsoDate, toIsoDate } from '../validation';
 import { ComplianceBlock } from './compliance-block';
@@ -123,7 +124,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
     if (Object.keys(validateDue(draft)).length > 0 || !agency.data || !plan.createItem) return;
     create.mutate(
       { agencyId: agency.data.agencyId, input: { vehicleId: vehicle.id, ...plan.createItem } },
-      { onSuccess: onClose, onError: () => setError(t('vehicleDetail.dues.edit.saveError')) }
+      { onSuccess: onClose, onError: (failure) => setError(describeSaveError(failure, t, 'vehicleDetail.dues.edit.saveError')) }
     );
   }
 
@@ -170,8 +171,8 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
         await updateDocuments.mutateAsync({ id: vehicle.id, documents: vehicle.documents.map((doc) => (doc.type === type ? { ...doc, expiresAt } : doc)) });
       }
       onClose();
-    } catch {
-      setError(t('vehicleDetail.dues.edit.saveError'));
+    } catch (failure) {
+      setError(describeSaveError(failure, t, 'vehicleDetail.dues.edit.saveError'));
     } finally {
       setBusy(false);
     }

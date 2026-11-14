@@ -3689,6 +3689,10 @@
         "urgent": "urgente",
         "expired": "expirée"
       }
+    },
+    "saveErrors": {
+      "schemaOutdated": "La base de données n'est pas à jour : appliquez la migration 0071 (périodicité des échéances) dans Supabase, puis réessayez.",
+      "detail": "Détail : {{detail}}"
     }
   },
   "vehiclePhotos": {

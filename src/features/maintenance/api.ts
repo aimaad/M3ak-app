@@ -86,8 +86,9 @@ export async function createMaintenanceItem(
       echeance_date: input.echeanceDate,
       echeance_km: input.echeanceKm,
       notes: input.notes,
-      repeat_km: input.repeatKm ?? null,
-      repeat_months: input.repeatMonths ?? null,
+      // La périodicité n'est envoyée que si elle est réglée : une échéance ponctuelle s'enregistre même si la migration 0071 manque.
+      ...(input.repeatKm != null ? { repeat_km: input.repeatKm } : {}),
+      ...(input.repeatMonths != null ? { repeat_months: input.repeatMonths } : {}),
       // Une panne est un incident signalé maintenant, pas une échéance à venir :
       // elle démarre directement "en_cours" (le véhicule est immobilisé aussitôt).
       statut: input.type === 'panne' ? 'en_cours' : 'a_venir',
@@ -106,7 +107,7 @@ export async function updateMaintenanceDue(
 ): Promise<MaintenanceItem> {
   const { data, error } = await getSupabase()
     .from('maintenance_items')
-    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir', ...(patch.repeatKm !== undefined ? { repeat_km: patch.repeatKm } : {}), ...(patch.repeatMonths !== undefined ? { repeat_months: patch.repeatMonths } : {}) })
+    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir', ...(patch.repeatKm != null ? { repeat_km: patch.repeatKm } : patch.repeatKm === null ? { repeat_km: null } : {}), ...(patch.repeatMonths != null ? { repeat_months: patch.repeatMonths } : patch.repeatMonths === null ? { repeat_months: null } : {}) })
     .eq('id', id)
     .in('statut', ['a_venir', 'due', 'en_retard'])
     .select()

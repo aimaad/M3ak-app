@@ -44,6 +44,7 @@ import { useCreateMaintenanceItem, useVehicleMaintenanceItems } from '@/features
 import { useVehicleRentals } from '@/features/rentals/hooks';
 import { mergeDocuments } from '@/features/storage/documents';
 import { useSignedUrl } from '@/features/storage/hooks';
+import { describeSaveError } from './save-error';
 import { availabilityAlertList, availabilityAlerts, isStatusLockedError, statusBlockText, statusChangeBlocked } from './status-guard';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -101,7 +102,7 @@ function AddOilSheet({ vehicleId, visible, onClose }: { vehicleId: string; visib
           setKm('');
           onClose();
         },
-        onError: () => setError(t('vehicleForm.edit.due.sheetFailed')),
+        onError: (failure) => setError(describeSaveError(failure, t, 'vehicleForm.edit.due.sheetFailed')),
       }
     );
   }

@@ -3793,6 +3793,10 @@
         "urgent": "عاجل",
         "expired": "منتهية"
       }
+    },
+    "saveErrors": {
+      "schemaOutdated": "قاعدة البيانات غير محدَّثة: طبّق الترحيل 0071 (دورية المواعيد) في Supabase ثم أعد المحاولة.",
+      "detail": "التفاصيل: {{detail}}"
     }
   },
   "vehiclePhotos": {
