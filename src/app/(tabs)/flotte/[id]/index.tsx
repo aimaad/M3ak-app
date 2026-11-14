@@ -14,7 +14,7 @@ import { HText } from '@/features/dashboard/home-ui';
 import { useAllPayments } from '@/features/payments/hooks';
 import { canSeePrices, formatDayLabel, occupancyByVehicle } from '@/features/vehicles/fleet-card';
 import { lateBadgeText, lateDurationText } from '@/features/vehicles/fleet-card-text';
-import { useArchiveVehicle, useReactivateVehicle, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
+import { useArchiveVehicle, useReactivateVehicle, useUpdateVehiclePrice, useUpdateVehicleStatus } from '@/features/vehicles/hooks';
 import { archiveBlock, blockingCountFromError, isArchiveBlockedError } from '@/features/vehicles/archive-guard';
 import { archiveReasonText, ArchiveSection } from '@/features/vehicles/detail/archive-section';
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
@@ -44,6 +44,7 @@ export default function VehicleDetailScreen() {
   const { vehicle, rentals, maintenance: maintenanceItems, customers, role, isManager, item, context, now } = detail;
   const showPrice = canSeePrices(role);
   const updateStatus = useUpdateVehicleStatus();
+  const updatePrice = useUpdateVehiclePrice();
   const archiveVehicle = useArchiveVehicle();
   const reactivateVehicle = useReactivateVehicle();
   const { showUndo } = useUndo();
@@ -178,6 +179,17 @@ export default function VehicleDetailScreen() {
     else router.push({ pathname: '/locations/[id]', params: { id: event.rentalId } });
   }
 
+  /** Prix par jour modifié sur place : vrai si c'est enregistré. */
+  async function savePrice(prixJour: number): Promise<boolean> {
+    if (!vehicle) return false;
+    try {
+      await updatePrice.mutateAsync({ id: vehicle.id, prixJour });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   function openCalendarTap(tap: NonNullable<CalendarTap>) {
     if (!vehicle) return;
     if (tap.type === 'rental') router.push({ pathname: '/locations/[id]', params: { id: tap.rentalId } });
@@ -244,7 +256,7 @@ export default function VehicleDetailScreen() {
                 <KeyFigures
                   occupation={figures.occupation}
                   rentals={figures.rentals}
-                  money={showPrice ? { revenue: figures.revenue, curve: figures.curve, cashed: figures.cashedKnown ? figures.cashed : null, pricePerDay: vehicle.prixJour, onEditPrice: goEdit } : undefined}
+                  money={showPrice ? { revenue: figures.revenue, curve: figures.curve, cashed: figures.cashedKnown ? figures.cashed : null, pricePerDay: vehicle.prixJour, onSavePrice: savePrice } : undefined}
                 />
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>

@@ -9,6 +9,7 @@ import {
   updateVehicle,
   updateVehicleDocuments,
   updateVehiclePhotos,
+  updateVehiclePrice,
   updateVehicleSpecs,
   updateVehicleStatus,
   type VehicleSpecsPatch,
@@ -85,6 +86,18 @@ export function useArchiveVehicle() {
 
 export function useReactivateVehicle() {
   return useVehicleStatusMutation(reactivateVehicle);
+}
+
+export function useUpdateVehiclePrice() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, prixJour }: { id: string; prixJour: number }) => updateVehiclePrice(id, prixJour),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: vehiclesKey });
+      queryClient.invalidateQueries({ queryKey: vehicleKey(data.id) });
+    },
+  });
 }
 
 export function useUpdateVehicleSpecs() {

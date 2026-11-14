@@ -214,6 +214,13 @@ export async function updateVehicle(id: string, input: VehicleInput): Promise<Ve
   return fromRow(data as VehicleRow);
 }
 
+/** Prix par jour seul (modification sur place depuis la fiche) : rien d'autre n'est touché. */
+export async function updateVehiclePrice(id: string, prixJour: number): Promise<Vehicle> {
+  const { data, error } = await getSupabase().from('vehicles').update({ prix_jour: prixJour }).eq('id', id).select().single();
+  if (error) throw error;
+  return fromRow(data as VehicleRow);
+}
+
 export type VehicleSpecsPatch = Partial<Pick<VehicleInput, 'categorie' | 'transmission' | 'carburant' | 'kilometrage' | 'couleur' | 'annee' | 'nombrePlaces' | 'puissanceFiscale'>>;
 
 /**

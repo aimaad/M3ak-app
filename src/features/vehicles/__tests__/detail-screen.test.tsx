@@ -24,6 +24,8 @@ const mockState = {
   inspections: [] as unknown[],
   archiveError: null as unknown,
   specsCalls: [] as unknown[],
+  priceCalls: [] as unknown[],
+  priceFails: false,
   docCalls: [] as unknown[],
   uploaded: [] as unknown[],
 };
@@ -47,6 +49,7 @@ jest.mock('@/features/payments/hooks', () => ({ useAllPayments: (enabled = true)
 jest.mock('@/features/vehicles/hooks', () => ({
   useVehicle: () => ({ data: mockState.vehicle, isLoading: false, isError: false, refetch: jest.fn() }),
   useUpdateVehiclePhotos: () => ({ mutateAsync: jest.fn() }),
+  useUpdateVehiclePrice: () => ({ mutateAsync: async (args: unknown) => { if (mockState.priceFails) throw new Error('offline'); mockState.priceCalls.push(args); } }),
   useUpdateVehicleSpecs: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.specsCalls.push(args); options?.onSuccess?.(); } }),
   useUpdateVehicleDocuments: () => ({ mutateAsync: async (args: unknown) => { mockState.docCalls.push(args); } }),
   useUpdateVehicleStatus: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.statusCalls.push(args); options?.onSuccess?.(); } }),
@@ -75,7 +78,7 @@ const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -481,6 +484,54 @@ describe('fiche véhicule', () => {
       await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Noir');
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       expect(mockState.specsCalls).toEqual([{ id: 'v1', patch: { couleur: 'Noir' } }]);
+    });
+  });
+
+  describe('prix par jour modifiable sur place', () => {
+    it('« Modifier » transforme « 500 MAD » en champ au même endroit (pas de changement de page) ; Enregistrer envoie le nouveau prix', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('500 MAD')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Modifier le prix'));
+      expect(mockRouter.push).not.toHaveBeenCalled();
+      expect(screen.queryByText('500 MAD')).toBeNull();
+      await fireEvent.changeText(screen.getByDisplayValue('500'), '550');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await waitFor(() => expect(mockState.priceCalls).toEqual([{ id: 'v1', prixJour: 550 }]));
+      await waitFor(() => expect(screen.getByLabelText('Modifier le prix')).toBeTruthy()); // retour à l'affichage
+    });
+
+    it('prix invalide (0 ou vide) : message, rien n’est envoyé', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier le prix'));
+      await fireEvent.changeText(screen.getByDisplayValue('500'), '0');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(screen.getByText('Entrez un prix supérieur à 0.')).toBeTruthy();
+      expect(mockState.priceCalls).toEqual([]);
+    });
+
+    it('échec de l’enregistrement : message, le champ reste ouvert', async () => {
+      mockState.priceFails = true;
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier le prix'));
+      await fireEvent.changeText(screen.getByDisplayValue('500'), '600');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(await screen.findByText("Impossible d'enregistrer le prix. Réessayez.")).toBeTruthy();
+      expect(screen.getByDisplayValue('600')).toBeTruthy();
+    });
+
+    it('« Annuler » : le prix d’origine revient, rien n’est enregistré', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier le prix'));
+      await fireEvent.changeText(screen.getByDisplayValue('500'), '999');
+      await fireEvent.press(screen.getByLabelText('Annuler'));
+      expect(screen.getByText('500 MAD')).toBeTruthy();
+      expect(mockState.priceCalls).toEqual([]);
+    });
+
+    it('employé : pas de prix, donc pas de « Modifier le prix »', async () => {
+      mockState.role = 'employee';
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByLabelText('Modifier le prix')).toBeNull();
     });
   });
 });

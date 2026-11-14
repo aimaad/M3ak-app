@@ -3406,7 +3406,8 @@
       "occupationA11y": "Occupation sur 30 jours : {{percent}} %",
       "rentals": "Locations depuis l'ajout",
       "pricePerDay": "Prix par jour",
-      "priceEdit": "Modifier le prix"
+      "priceEdit": "Modifier le prix",
+      "priceError": "Impossible d'enregistrer le prix. Réessayez."
     },
     "calendar": {
       "title": "14 prochains jours",

@@ -1,4 +1,5 @@
-import { Pressable, View } from 'react-native';
+import { useState } from 'react';
+import { Pressable, TextInput, View } from 'react-native';
 import Svg, { Circle, Polyline } from 'react-native-svg';
 
 import { Brand, Palette } from '@/constants/theme';
@@ -55,9 +56,97 @@ function Sparkline({ values }: { values: number[] }) {
   );
 }
 
+/** Prix par jour : « 500 MAD » ; « Modifier » transforme le montant en champ de saisie, au même endroit, avec Enregistrer / Annuler. */
+function PriceBanner({ price, onSave }: { price: number; onSave?: (price: number) => Promise<boolean> }) {
+  const { t } = useLanguage();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function open() {
+    setDraft(String(price));
+    setError(null);
+    setEditing(true);
+  }
+
+  async function save() {
+    const value = Number(draft.trim());
+    if (draft.trim() === '' || !Number.isFinite(value) || value <= 0) return setError(t('vehicle.form.errors.invalid_price'));
+    if (value === price) return setEditing(false);
+    setBusy(true);
+    setError(null);
+    const ok = await onSave?.(value).catch(() => false);
+    setBusy(false);
+    if (ok) setEditing(false);
+    else setError(t('vehicleDetail.figures.priceError'));
+  }
+
+  const link = { minHeight: 44, justifyContent: 'center' } as const;
+  return (
+    <View style={{ width: '100%', backgroundColor: Brand.graphite, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 12, gap: 6 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <HText size={13} color={Brand.mutedOnDark}>
+          {t('vehicleDetail.figures.pricePerDay')}
+        </HText>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          {editing ? (
+            <>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, borderBottomWidth: 1.5, borderBottomColor: Brand.orangeLight }}>
+                <TextInput
+                  value={draft}
+                  onChangeText={(value) => setDraft(value.replace(/[^\d]/g, ''))}
+                  keyboardType="number-pad"
+                  autoFocus
+                  selectTextOnFocus
+                  editable={!busy}
+                  onSubmitEditing={() => void save()}
+                  accessibilityLabel={t('vehicleDetail.figures.pricePerDay')}
+                  style={{ minWidth: 70, paddingVertical: 4, fontSize: 18, fontWeight: '700', color: Brand.white, textAlign: 'right' }}
+                />
+                <HText weight="semibold" size={13} color={Brand.mutedOnDark}>
+                  {t('vehicleDetail.figures.currency')}
+                </HText>
+              </View>
+              <Pressable onPress={() => void save()} disabled={busy} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.editor.save')} accessibilityState={{ disabled: busy, busy }} hitSlop={8} style={link}>
+                <HText weight="semibold" size={12} color={Brand.orangeLight}>
+                  {busy ? t('vehicleDetail.editor.saving') : t('vehicleDetail.editor.save')}
+                </HText>
+              </Pressable>
+              <Pressable onPress={() => setEditing(false)} disabled={busy} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.editor.cancel')} hitSlop={8} style={link}>
+                <HText weight="semibold" size={12} color={Brand.mutedOnDark}>
+                  {t('vehicleDetail.editor.cancel')}
+                </HText>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <HText font="display" weight="bold" size={18} color={Brand.white}>
+                {`${formatAmount(price)} ${t('vehicleDetail.figures.currency')}`}
+              </HText>
+              {onSave ? (
+                <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.figures.priceEdit')} hitSlop={8} style={link}>
+                  <HText weight="semibold" size={12} color={Brand.orangeLight}>
+                    {t('vehicle.edit')}
+                  </HText>
+                </Pressable>
+              ) : null}
+            </>
+          )}
+        </View>
+      </View>
+      {error ? (
+        <HText size={12} color={Brand.errorOnDark} accessibilityRole="alert">
+          {error}
+        </HText>
+      ) : null}
+    </View>
+  );
+}
+
 export type KeyFiguresProps = {
   /** Propriétaire seulement : revenus, encaissé, prix par jour. Absent pour les autres rôles. */
-  money?: { revenue: RevenueFigure; curve: number[]; cashed: number | null; pricePerDay: number; onEditPrice?: () => void };
+  money?: { revenue: RevenueFigure; curve: number[]; cashed: number | null; pricePerDay: number; /** Enregistre le nouveau prix par jour ; vrai si c'est enregistré. Absent : pas de bouton « Modifier ». */ onSavePrice?: (price: number) => Promise<boolean> };
   occupation: number;
   rentals: number;
 };
@@ -125,25 +214,7 @@ export function KeyFigures({ money, occupation, rentals }: KeyFiguresProps) {
         </HText>
       </View>
 
-      {money ? (
-        <View style={{ width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: Brand.graphite, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 12 }}>
-          <HText size={13} color={Brand.mutedOnDark}>
-            {t('vehicleDetail.figures.pricePerDay')}
-          </HText>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <HText font="display" weight="bold" size={18} color={Brand.white}>
-              {`${formatAmount(money.pricePerDay)} ${t('vehicleDetail.figures.currency')}`}
-            </HText>
-            {money.onEditPrice ? (
-              <Pressable onPress={money.onEditPrice} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.figures.priceEdit')} hitSlop={8} style={{ minHeight: 44, justifyContent: 'center' }}>
-                <HText weight="semibold" size={12} color={Brand.orangeLight}>
-                  {t('vehicle.edit')}
-                </HText>
-              </Pressable>
-            ) : null}
-          </View>
-        </View>
-      ) : null}
+      {money ? <PriceBanner price={money.pricePerDay} onSave={money.onSavePrice} /> : null}
     </View>
   );
 }
