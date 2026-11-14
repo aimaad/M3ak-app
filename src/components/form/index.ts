@@ -1,6 +1,6 @@
 /** Kit de formulaire BIBIP : champs, nombres, prix, dates, choix, boutons, barre d'enregistrement, photos et documents. */
 export { Button, DangerLink, type FormButtonVariant } from './button';
-export { ColorSwatches, ChoiceTiles, Segmented } from './choices';
+export { ColorSwatches, ChoiceTiles, Segmented, TileIconView, type TileIcon } from './choices';
 export { CameraCapture } from './camera-capture';
 export { DateField } from './date-field';
 export { AngleGrid, CARD_RATIO, DocumentList, DocumentSlot, PhotoTile, type AngleSlot, type DocumentRow, type PhotoState } from './documents';

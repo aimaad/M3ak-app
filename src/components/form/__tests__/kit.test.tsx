@@ -366,4 +366,12 @@ describe('arabe (RTL)', () => {
     expect(screen.getByLabelText('حفظ')).toBeTruthy();
     mockState.language = 'fr';
   });
+
+  it('ChoiceTiles : une tuile peut avoir une image comme icône (teintée) et reste choisissable', async () => {
+    const onChange = jest.fn();
+    await render(<ChoiceTiles<'a' | 'b'> label="Type" value="a" onChange={onChange} options={[{ value: 'a', label: 'Freins', icon: 1 }, { value: 'b', label: 'Pneus', icon: 'ellipse-outline' }]} />);
+    expect(screen.getByLabelText('Freins').props.accessibilityState.checked).toBe(true);
+    await fireEvent.press(screen.getByLabelText('Pneus'));
+    expect(onChange).toHaveBeenCalledWith('b');
+  });
 });

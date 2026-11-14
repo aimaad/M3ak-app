@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View, type ImageSourcePropType } from 'react-native';
 
 import { Brand, Palette } from '@/constants/theme';
 import { HText } from '@/features/dashboard/home-ui';
@@ -10,6 +10,14 @@ import { FormField } from './form-field';
 import { colorKey, SWATCH_KEYS, type SwatchKey } from './logic';
 
 type Option<T extends string> = { value: T; label: string };
+
+/** Icône d'une tuile : un nom Ionicons, ou une image (trait noir sur fond transparent, teintée comme le texte). */
+export type TileIcon = keyof typeof Ionicons.glyphMap | ImageSourcePropType;
+
+export function TileIconView({ icon, color, size = 22 }: { icon: TileIcon; color: string; size?: number }) {
+  if (typeof icon === 'string') return <Ionicons name={icon} size={size} color={color} />;
+  return <Image source={icon} accessible={false} style={{ width: size + 10, height: size + 10, tintColor: color }} resizeMode="contain" />;
+}
 
 /** Libellé d'un choix, avec « À choisir » en orange quand rien n'est encore sélectionné. */
 function ChoiceLabel({ label, needsChoice }: { label: string; needsChoice: boolean }) {
@@ -60,7 +68,7 @@ export function Segmented<T extends string>({ label, options, value, onChange }:
 }
 
 /** Tuiles 92 × 72 avec icône, sur UNE seule ligne qui défile ; la tuile choisie est en graphite, texte blanc. */
-export function ChoiceTiles<T extends string>({ label, options, value, onChange }: { label: string; options: (Option<T> & { icon: keyof typeof Ionicons.glyphMap })[]; value: T | null; onChange: (value: T) => void }) {
+export function ChoiceTiles<T extends string>({ label, options, value, onChange }: { label: string; options: (Option<T> & { icon: TileIcon })[]; value: T | null; onChange: (value: T) => void }) {
   return (
     <View style={{ gap: 8 }}>
       <ChoiceLabel label={label} needsChoice={value === null} />
@@ -76,7 +84,7 @@ export function ChoiceTiles<T extends string>({ label, options, value, onChange 
               accessibilityLabel={option.label}
               style={{ width: 92, height: 72, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1, borderColor: on ? Brand.graphite : Palette.border, backgroundColor: on ? Brand.graphite : Brand.white }}
             >
-              <Ionicons name={option.icon} size={22} color={on ? Brand.white : Brand.graphite} />
+              <TileIconView icon={option.icon} color={on ? Brand.white : Brand.graphite} />
               <HText weight="semibold" size={12} color={on ? Brand.white : Palette.textPrimary} numberOfLines={1}>
                 {option.label}
               </HText>

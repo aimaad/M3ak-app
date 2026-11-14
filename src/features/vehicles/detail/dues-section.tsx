@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { Button, ChoiceTiles, DangerLink, DateField, FormField, Segmented } from '@/components/form';
+import { Button, ChoiceTiles, DangerLink, DateField, FormField, Segmented, TileIconView } from '@/components/form';
+import { DUE_TYPE_IMAGE } from '@/constants/due-icons';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
@@ -23,7 +24,6 @@ const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palett
 const DUE_ICON: Record<DueRow['icon'], keyof typeof Ionicons.glyphMap> = { shield: 'shield-checkmark-outline', calendar: 'calendar-outline', wrench: 'construct-outline' };
 const shortDate = (iso: string, language: string) => new Date(iso).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short' });
 
-const DUE_TYPE_ICON: Partial<Record<MaintenanceType, keyof typeof Ionicons.glyphMap>> = { vidange: 'water-outline', freins: 'disc-outline', pneus: 'ellipse-outline', autre: 'construct-outline' };
 
 /** Un seul bouton orange par formulaire (Enregistrer), « Annuler » en secondaire, le message d'échec dessous. */
 function DueActions({ onSave, onCancel, busy, error }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null }) {
@@ -132,7 +132,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t('vehicleDetail.dues.edit.addTitle')}
       </HText>
-      <ChoiceTiles<MaintenanceType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={(next) => { setType(next); setDraft((previous) => ({ ...previous, repeatKm: newDraft(next).repeatKm, repeatMonths: newDraft(next).repeatMonths })); }} options={ADDABLE_DUE_TYPES.map((value) => ({ value, label: t(`maintenance.types.${value}`), icon: DUE_TYPE_ICON[value] ?? 'ellipse-outline' }))} />
+      <ChoiceTiles<MaintenanceType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={(next) => { setType(next); setDraft((previous) => ({ ...previous, repeatKm: newDraft(next).repeatKm, repeatMonths: newDraft(next).repeatMonths })); }} options={ADDABLE_DUE_TYPES.map((value) => ({ value, label: t(`maintenance.types.${value}`), icon: DUE_TYPE_IMAGE[value] ?? 'ellipse-outline' }))} />
       <DueFields type={type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
       <DueActions onSave={save} onCancel={onClose} busy={create.isPending} error={error} />
     </View>
@@ -282,7 +282,7 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
               style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, minHeight: 56 }}
             >
               <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: hot ? Palette.primary : Palette.surfaceAlt }}>
-                <Ionicons name={DUE_ICON[row.icon]} size={18} color={hot ? Brand.white : Brand.graphite} />
+                <TileIconView icon={DUE_TYPE_IMAGE[row.type] ?? DUE_ICON[row.icon]} size={18} color={hot ? Brand.white : Brand.graphite} />
               </View>
               <View style={{ flex: 1, minWidth: 0, gap: 6 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
