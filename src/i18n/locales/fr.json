@@ -3472,7 +3472,10 @@
         "repeatHelp": "Laissez vide si ce n'est pas périodique. La suivante se crée toute seule quand vous marquez « fait ».",
         "repeatMonthsLabel": "Ou tous les",
         "repeatNever": "Jamais",
-        "repeatMonths": "{{n}} mois"
+        "repeatMonths": "{{n}} mois",
+        "repeatLabel": "Répétition",
+        "repeatOnce": "Une seule fois",
+        "repeatPeriodic": "Périodique"
       }
     },
     "specs": {
@@ -3660,7 +3663,10 @@
       "notesPlaceholder": "ex. Payé en espèces",
       "photoHint": "Placez le papier dans le cadre",
       "duration": "Durée de la période",
-      "durationMonths": "{{n}} mois"
+      "durationMonths": "{{n}} mois",
+      "repeatLabel": "Renouvellement",
+      "repeatOnce": "Une seule fois",
+      "repeatPeriodic": "Périodique"
     }
   },
   "vehiclePhotos": {

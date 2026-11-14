@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { Button, ChoiceTiles, DangerLink, DateField, FormField } from '@/components/form';
+import { Button, ChoiceTiles, DangerLink, DateField, FormField, Segmented } from '@/components/form';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
@@ -15,7 +15,7 @@ import { useUpdateVehicleDocuments } from '../hooks';
 import type { Vehicle } from '../types';
 import { fromIsoDate, toIsoDate } from '../validation';
 import { ComplianceBlock } from './compliance-block';
-import { ADDABLE_DUE_TYPES, draftOf, dueSuggestion, newDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
+import { ADDABLE_DUE_TYPES, defaultRepeat, draftOf, dueSuggestion, newDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
 
 const NO_ITEMS: never[] = [];
@@ -58,6 +58,7 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
   const { t } = useLanguage();
   const errors = validateDue(draft);
   const suggestion = dueSuggestion(type, vehicle, now);
+  const periodic = draft.repeatKm.trim() !== '' || draft.repeatMonths.trim() !== '';
   const message = (field: 'date' | 'km' | 'repeatKm') => {
     const code = showErrors ? errors[field] : undefined;
     return code ? (code === 'need_one' ? t('vehicleDetail.dues.edit.needOne') : t(`vehicle.form.errors.${code}`)) : undefined;
@@ -74,13 +75,30 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
       </View>
       {REPEATABLE_TYPES.includes(type) ? (
         <View style={{ gap: 12 }}>
-          <FormField label={t('vehicleDetail.dues.edit.repeatKmLabel')} value={draft.repeatKm} onChangeText={(value) => setDraft({ ...draft, repeatKm: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleDetail.dues.edit.repeatKmPlaceholder')} help={t('vehicleDetail.dues.edit.repeatHelp')} error={message('repeatKm')} showError={showErrors} />
-          <ChoiceTiles<string>
-            label={t('vehicleDetail.dues.edit.repeatMonthsLabel')}
-            value={draft.repeatMonths === '' ? 'none' : draft.repeatMonths}
-            onChange={(value) => setDraft({ ...draft, repeatMonths: value === 'none' ? '' : value })}
-            options={['none', '6', '12', '24'].map((value) => ({ value, label: value === 'none' ? t('vehicleDetail.dues.edit.repeatNever') : t('vehicleDetail.dues.edit.repeatMonths', { n: value }), icon: value === 'none' ? ('close-outline' as const) : ('repeat-outline' as const) }))}
+          <Segmented<'once' | 'periodic'>
+            label={t('vehicleDetail.dues.edit.repeatLabel')}
+            value={periodic ? 'periodic' : 'once'}
+            onChange={(value) => {
+              if (value === 'once') return setDraft({ ...draft, repeatKm: '', repeatMonths: '' });
+              const usual = defaultRepeat(type);
+              setDraft({ ...draft, repeatKm: usual.km !== null ? String(usual.km) : '', repeatMonths: usual.months !== null ? String(usual.months) : usual.km === null ? '12' : '' });
+            }}
+            options={[
+              { value: 'once', label: t('vehicleDetail.dues.edit.repeatOnce') },
+              { value: 'periodic', label: t('vehicleDetail.dues.edit.repeatPeriodic') },
+            ]}
           />
+          {periodic ? (
+            <>
+              <FormField label={t('vehicleDetail.dues.edit.repeatKmLabel')} value={draft.repeatKm} onChangeText={(value) => setDraft({ ...draft, repeatKm: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleDetail.dues.edit.repeatKmPlaceholder')} help={t('vehicleDetail.dues.edit.repeatHelp')} error={message('repeatKm')} showError={showErrors} />
+              <ChoiceTiles<string>
+                label={t('vehicleDetail.dues.edit.repeatMonthsLabel')}
+                value={draft.repeatMonths === '' ? 'none' : draft.repeatMonths}
+                onChange={(value) => setDraft({ ...draft, repeatMonths: value === 'none' ? '' : value })}
+                options={['none', '6', '12', '24'].map((value) => ({ value, label: value === 'none' ? t('vehicleDetail.dues.edit.repeatNever') : t('vehicleDetail.dues.edit.repeatMonths', { n: value }), icon: value === 'none' ? ('close-outline' as const) : ('repeat-outline' as const) }))}
+              />
+            </>
+          ) : null}
         </View>
       ) : null}
       <FormField label={t('vehicleDetail.dues.edit.notesLabel')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.dues.edit.notesPlaceholder')} multiline />

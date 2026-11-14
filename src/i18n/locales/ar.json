@@ -3576,7 +3576,10 @@
         "repeatHelp": "اتركه فارغًا إن لم يكن دوريًا. يُنشأ الموعد التالي تلقائيًا عند تعيينه كمنجَز.",
         "repeatMonthsLabel": "أو كل",
         "repeatNever": "أبدًا",
-        "repeatMonths": "{{n}} أشهر"
+        "repeatMonths": "{{n}} أشهر",
+        "repeatLabel": "التكرار",
+        "repeatOnce": "مرة واحدة",
+        "repeatPeriodic": "دوري"
       }
     },
     "specs": {
@@ -3764,7 +3767,10 @@
       "notesPlaceholder": "مثال: أُدّي نقدًا",
       "photoHint": "ضع الوثيقة داخل الإطار",
       "duration": "مدة الفترة",
-      "durationMonths": "{{n}} أشهر"
+      "durationMonths": "{{n}} أشهر",
+      "repeatLabel": "التجديد",
+      "repeatOnce": "مرة واحدة",
+      "repeatPeriodic": "دوري"
     }
   },
   "vehiclePhotos": {

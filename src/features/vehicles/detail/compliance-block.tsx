@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { Button, CameraCapture, checkPhoto, ChoiceTiles, DateField, DocumentSlot, FormField } from '@/components/form';
+import { Button, CameraCapture, checkPhoto, ChoiceTiles, DateField, DocumentSlot, FormField, Segmented } from '@/components/form';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { isAlreadyRecordedError } from '@/features/compliance/api';
@@ -121,6 +121,8 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
   const [draft, setDraft] = useState<RenewalDraft>(() => renewalDraft(suggestRenewal(kind, current, settings, now)));
   // Durée de la période : réglée une fois, reprise automatiquement aux renouvellements suivants.
   const [months, setMonths] = useState<number | null>(() => periodOf(kind, current, settings));
+  // « Une seule fois » : la durée n'est pas mémorisée (le renouvellement suivant repart des valeurs d'usage).
+  const [periodic, setPeriodic] = useState(true);
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,7 +133,7 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
     setError(null);
     if (Object.keys(errors).length > 0 || !agency.data) return;
     renew.mutate(
-      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null, months), localDocumentUri: localUri },
+      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null, periodic ? months : null), localDocumentUri: localUri },
       { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : localUri ? t('vehicleDetail.compliance.uploadError') : t('vehicleDetail.compliance.saveError')) }
     );
   }
@@ -142,6 +144,17 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
         {t(current ? 'vehicleDetail.compliance.renewTitle' : 'vehicleDetail.compliance.firstTitle', { kind: t(`vehicleDetail.compliance.kind.${kind}`) })}
       </HText>
       {months !== null ? (
+        <Segmented<'once' | 'periodic'>
+          label={t('vehicleDetail.compliance.repeatLabel')}
+          value={periodic ? 'periodic' : 'once'}
+          onChange={(value) => setPeriodic(value === 'periodic')}
+          options={[
+            { value: 'once', label: t('vehicleDetail.compliance.repeatOnce') },
+            { value: 'periodic', label: t('vehicleDetail.compliance.repeatPeriodic') },
+          ]}
+        />
+      ) : null}
+      {months !== null && periodic ? (
         <ChoiceTiles<string>
           label={t('vehicleDetail.compliance.duration')}
           value={String(months)}

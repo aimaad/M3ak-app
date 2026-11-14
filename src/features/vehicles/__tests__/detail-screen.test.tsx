@@ -594,6 +594,27 @@ describe('fiche véhicule', () => {
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', repeatKm: null, repeatMonths: null } }]);
     });
 
+    it('« Une seule fois » : les champs de périodicité disparaissent et rien n’est répété', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      expect(screen.getByLabelText('Périodique').props.accessibilityState.checked).toBe(true);
+      await fireEvent.press(screen.getByLabelText('Une seule fois'));
+      expect(screen.queryByDisplayValue('10 000')).toBeNull();
+      expect(screen.queryByLabelText('12 mois')).toBeNull();
+      await fireEvent.press(screen.getByText(/^À \d+.?\d* km$/));
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', repeatKm: null, repeatMonths: null } }]);
+    });
+
+    it('une échéance existante sans périodicité s’ouvre sur « Une seule fois » ; « Périodique » remet les valeurs d’usage', async () => {
+      mockState.maintenance = [vidange()];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      expect(screen.getByLabelText('Une seule fois').props.accessibilityState.checked).toBe(true);
+      await fireEvent.press(screen.getByLabelText('Périodique'));
+      expect(screen.getByDisplayValue('10 000')).toBeTruthy();
+    });
+
     it('périodicité : une échéance existante montre sa périodicité enregistrée', async () => {
       mockState.maintenance = [{ ...vidange(), repeatKm: 15000, repeatMonths: 6 }];
       await render(<VehicleDetailScreen />);
@@ -691,6 +712,17 @@ describe('fiche véhicule', () => {
       expect(screen.getByLabelText('6 mois').props.accessibilityState.checked).toBe(true);
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       expect((mockState.renewCalls[0] as { input: { periodMonths: number } }).input.periodMonths).toBe(6);
+    });
+
+    it('assurance « Une seule fois » : la durée n’est pas mémorisée', async () => {
+      mockState.compliance = [record({ periodMonths: 6 })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      await fireEvent.press(screen.getByLabelText('Renouveler'));
+      await fireEvent.press(screen.getByLabelText('Une seule fois'));
+      expect(screen.queryByLabelText('Durée de la période')).toBeNull();
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect((mockState.renewCalls[0] as { input: { periodMonths: number | null } }).input.periodMonths).toBeNull();
     });
 
     it('vignette : pas de durée (année civile)', async () => {
