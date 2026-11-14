@@ -29,6 +29,7 @@ import { DEFAULT_VEHICLE_FILTERS, filterVehicles } from '@/features/vehicles/fil
 import { useVehicles } from '@/features/vehicles/hooks';
 import type { Vehicle } from '@/features/vehicles/types';
 import { useLanguage } from '@/i18n/use-language';
+import { RentalComplianceWarnings } from '@/features/compliance/rental-warnings';
 import { Palette } from '@/constants/theme';
 
 function toISO(date: string, time: string): string {
@@ -364,6 +365,7 @@ export default function NouvelleLocationScreen() {
                       {t(`locations.form.errors.${errors.vehicleId}`)}
                     </ThemedText>
                   ) : null}
+                  <RentalComplianceWarnings vehicleId={vehicle?.id} start={startISO} end={endISO} />
 
                   {availability.unavailable.length > 0 ? (
                     <View className="gap-2">
@@ -469,6 +471,7 @@ export default function NouvelleLocationScreen() {
                   </ThemedText>
                 </View>
               </View>
+              <RentalComplianceWarnings vehicleId={vehicle?.id} start={startISO} end={endISO} />
               <ThemedText type="small" themeColor="textSecondary">
                 {t('locations.wizard.afterCreate')}
               </ThemedText>

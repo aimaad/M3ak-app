@@ -7,6 +7,7 @@ import { ThemedText } from '@/components/themed-text';
 import { Palette } from '@/constants/theme';
 import type { AgencyRole } from '@/features/agency/types';
 import { documentExpiryStatus } from '@/features/customers/documents';
+import { RentalComplianceWarnings } from '@/features/compliance/rental-warnings';
 import { useLanguage } from '@/i18n/use-language';
 
 import {
@@ -105,10 +106,13 @@ export function DepartureChecklist({
   rentalId,
   customerId,
   role,
+  vehicle,
 }: {
   rentalId: string;
   customerId: string;
   role: AgencyRole | null;
+  /** Véhicule et période de la location : avertissements d'assurance, de visite et de vignette (jamais bloquants). */
+  vehicle?: { id: string; start: string; end: string };
 }) {
   const { t } = useLanguage();
   const checkQuery = useDepartureCheck(rentalId);
@@ -155,6 +159,7 @@ export function DepartureChecklist({
         </ThemedText>
       </View>
 
+      {vehicle ? <RentalComplianceWarnings vehicleId={vehicle.id} start={vehicle.start} end={vehicle.end} /> : null}
       {check.parties.map((party) => (
         <PartyCard key={party.key + party.kind} party={party} customerId={customerId} />
       ))}

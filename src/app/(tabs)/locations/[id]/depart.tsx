@@ -158,7 +158,7 @@ export default function DepartScreen() {
         <ScreenHeader title={t('locations.depart.title')} showBack />
         <ScrollView contentContainerClassName="gap-4 px-6 pb-10" keyboardShouldPersistTaps="handled">
           {rental && id ? (
-            <DepartureChecklist rentalId={id} customerId={rental.customerId} role={agencyQuery.data?.role ?? null} />
+            <DepartureChecklist rentalId={id} customerId={rental.customerId} role={agencyQuery.data?.role ?? null} vehicle={{ id: rental.vehicleId, start: rental.dateDebutPrevue, end: rental.dateFinPrevue }} />
           ) : null}
 
           <TextField

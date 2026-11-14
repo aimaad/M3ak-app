@@ -3610,7 +3610,25 @@
       "alreadyRecorded": "Cette période est déjà enregistrée.",
       "forbidden": "Seuls le propriétaire et le responsable peuvent faire cette modification.",
       "uploadError": "La photo n'a pas pu être envoyée : rien n'a été enregistré. Réessayez.",
-      "rowA11y": "{{kind}} : {{state}}. {{line}}"
+      "rowA11y": "{{kind}} : {{state}}. {{line}}",
+      "warnings": {
+        "title": "À vérifier avant de louer",
+        "footer": "Simple avertissement : la location reste possible.",
+        "open": "Ouvrir la fiche du véhicule",
+        "assurance": {
+          "missing": "Aucune assurance enregistrée : vérifiez qu'elle est valable.",
+          "expired": "Assurance expirée depuis le {{date}}.",
+          "expires_before_end": "L'assurance expire le {{date}}, pendant la location."
+        },
+        "visite_technique": {
+          "missing": "Aucune visite technique enregistrée : vérifiez qu'elle est à jour.",
+          "expired": "Visite technique expirée depuis le {{date}}.",
+          "expires_before_end": "La visite technique expire le {{date}}, pendant la location."
+        },
+        "vignette": {
+          "expired": "Vignette non renouvelée (date limite dépassée : {{date}})."
+        }
+      }
     }
   },
   "vehiclePhotos": {
