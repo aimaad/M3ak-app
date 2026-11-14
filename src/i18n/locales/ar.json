@@ -3569,7 +3569,8 @@
         "rowA11y": "تعديل الموعد: {{label}}",
         "closeRow": "إغلاق",
         "empty": "لا توجد مواعيد مسجلة.",
-        "addDocument": "إضافة صورة الوثيقة"
+        "addDocument": "إضافة صورة الوثيقة",
+        "notesPlaceholder": "مثال: تغيير فلتر الهواء أيضًا"
       }
     },
     "specs": {
@@ -3714,7 +3715,7 @@
       "periodicitySaved": "تم حفظ المدة.",
       "errors": {
         "required": "هذا الحقل إجباري.",
-        "invalid_date": "تاريخ غير صالح: اكتبه بصيغة يوم/شهر/سنة.",
+        "invalid_date": "تاريخ غير صالح: اختره من التقويم.",
         "ends_before_start": "يجب أن تكون النهاية بعد البداية.",
         "ends_before_current": "يجب أن تنتهي الفترة الجديدة بعد الحالية ({{date}}).",
         "invalid_amount": "أدخل مبلغًا موجبًا.",
@@ -3743,7 +3744,19 @@
           "expired": "القسيمة غير مجددة (تجاوز الأجل: {{date}})."
         }
       },
-      "details": "التفاصيل"
+      "details": "التفاصيل",
+      "refPlaceholder": {
+        "assurance": "مثال: 2026/123456",
+        "visite_technique": "مثال: رقم المحضر",
+        "vignette": "مثال: رقم الوصل"
+      },
+      "providerPlaceholder": {
+        "assurance": "مثال: وفا للتأمين",
+        "visite_technique": "مثال: مركز الفحص التقني"
+      },
+      "amountPlaceholder": "مثال: 1 850",
+      "notesPlaceholder": "مثال: أُدّي نقدًا",
+      "photoHint": "ضع الوثيقة داخل الإطار"
     }
   },
   "vehiclePhotos": {

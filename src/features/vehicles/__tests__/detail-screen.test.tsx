@@ -12,6 +12,7 @@ const mockTranslate = (language: string, key: string, options?: Record<string, u
 const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const mockState = {
+  pickDate: null as Date | null,
   language: 'fr',
   role: 'owner' as 'owner' | 'manager' | 'employee',
   vehicle: null as Record<string, unknown> | null,
@@ -42,6 +43,20 @@ const base = { id: 'v1', agencyId: 'a1', branchId: null, marque: 'DACIA', modele
 const rentalRow = (extra: Record<string, unknown>) => ({ id: 'r1', vehicleId: 'v1', customerId: 'c1', statut: 'en_cours', dateDebutPrevue: at(-1), dateFinPrevue: at(5, 18), dateDepartReel: at(-1), dateRetourReel: null, dureeJours: 6, ...extra });
 
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(), setItem: jest.fn() }));
+jest.mock('@react-native-community/datetimepicker', () => ({
+  __esModule: true,
+  default: ({ onChange, value }: { onChange: (event: unknown, date?: Date) => void; value: Date }) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pressable } = require('react-native');
+    return <Pressable accessibilityLabel="PICKER-DAY" onPress={() => onChange({ type: 'set' }, mockState.pickDate ?? value)} />;
+  },
+  DateTimePickerAndroid: { open: jest.fn() },
+}));
+jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(async () => undefined), ImpactFeedbackStyle: { Light: 'light' } }));
+jest.mock('expo-image-manipulator', () => ({}));
+jest.mock('@/features/vehicles/add/scan-parts', () => ({ ScanFrame: () => null }));
+jest.mock('@/components/form/camera-capture', () => ({ CameraCapture: () => null }));
+jest.mock('@/components/form/photo-check', () => ({ checkPhoto: async () => ({ ok: true }) }));
 jest.mock('expo-router', () => ({
   get router() {
     return mockRouter;
@@ -96,6 +111,15 @@ import VehicleDetailScreen from '../../../app/(tabs)/flotte/[id]/index';
 
 const hidden = { includeHiddenElements: true };
 const stripMarks = (text: unknown) => String(text).replace(/[‎‏]/g, '');
+
+/** Choisit une date dans le sélecteur du téléphone (simulé) : ouvre le champ, choisit le jour, valide. */
+async function pickDate(label: RegExp | string, date: Date) {
+  mockState.pickDate = date;
+  await fireEvent.press(screen.getAllByLabelText(label)[0]);
+  await fireEvent.press(await screen.findByLabelText('PICKER-DAY', hiddenEls));
+  await fireEvent.press(screen.getByText('OK', hiddenEls));
+}
+const hiddenEls = { includeHiddenElements: true };
 
 describe('fiche véhicule', () => {
   beforeEach(() => {
@@ -518,7 +542,7 @@ describe('fiche véhicule', () => {
       mockState.maintenance = [vidange()];
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      await fireEvent.changeText(screen.getByPlaceholderText('JJ/MM/AAAA'), '31/01/2027');
+      await pickDate(/^Date d'échéance/, new Date(2027, 0, 31));
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       await waitFor(() => expect(mockState.dueCalls.update).toEqual([{ id: 'm9', patch: { echeanceDate: '2027-01-31', echeanceKm: null, notes: null } }]));
     });
@@ -528,17 +552,15 @@ describe('fiche véhicule', () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
       await fireEvent.press(screen.getByText(/^Dans 12 mois : /));
-      expect(screen.getByPlaceholderText('JJ/MM/AAAA').props.value).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+      expect(screen.getByLabelText(/^Date d'échéance: /)).toBeTruthy(); // la date est maintenant renseignée
     });
 
-    it('date invalide ou vide : message, rien n’est envoyé', async () => {
-      mockState.maintenance = [vidange()];
+    it('ni date ni kilométrage : message, rien n’est envoyé', async () => {
       await render(<VehicleDetailScreen />);
-      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      await fireEvent.changeText(screen.getByPlaceholderText('JJ/MM/AAAA'), '');
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       expect(screen.getByText("Renseignez une date ou un kilométrage d'échéance.")).toBeTruthy();
-      expect(mockState.dueCalls.update).toEqual([]);
+      expect(mockState.dueCalls.create).toEqual([]);
     });
 
     it('« + Ajouter » : formulaire dans la carte, nouvelle échéance créée pour CE véhicule', async () => {
@@ -609,8 +631,8 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(mockRouter.push).not.toHaveBeenCalled();
       expect(screen.getByText('Renouveler : Assurance')).toBeTruthy();
-      await fireEvent.changeText(screen.getByLabelText('N° de police (facultatif)'), 'POL-77');
-      await fireEvent.changeText(screen.getByLabelText('Assureur (facultatif)'), 'Wafa');
+      await fireEvent.changeText(screen.getByLabelText('N° de police'), 'POL-77');
+      await fireEvent.changeText(screen.getByLabelText('Assureur'), 'Wafa');
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       expect(mockState.renewCalls).toHaveLength(1);
       expect(mockState.renewCalls[0]).toMatchObject({ agencyId: 'a1', input: { vehicleId: 'v1', kind: 'assurance', reference: 'POL-77', provider: 'Wafa', documentPath: null } });
@@ -624,9 +646,9 @@ describe('fiche véhicule', () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
-      const old = day(30).split('-').reverse().join('/');
-      await fireEvent.changeText(screen.getByLabelText('Début (facultatif)'), '');
-      await fireEvent.changeText(screen.getByLabelText('Fin de validité'), old);
+      const old = day(30).split('-').map(Number);
+      await pickDate(/^Début/, new Date(old[0], old[1] - 1, old[2] - 5));
+      await pickDate(/^Fin de validité/, new Date(old[0], old[1] - 1, old[2]));
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       expect(screen.getByText(/La nouvelle période doit finir après la période en cours/)).toBeTruthy();
       expect(mockState.renewCalls).toEqual([]);
@@ -646,7 +668,7 @@ describe('fiche véhicule', () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText(/^Assurance : Non renseignée\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
-      expect(screen.getByLabelText('Montant (MAD) (facultatif)')).toBeTruthy();
+      expect(screen.getByLabelText('Montant (MAD)')).toBeTruthy();
     });
 
     it('employé : renouvelle sans champ montant ; ne voit pas « Corriger » ni « Supprimer »', async () => {

@@ -3465,7 +3465,8 @@
         "rowA11y": "Modifier l'échéance : {{label}}",
         "closeRow": "Fermer",
         "empty": "Aucune échéance enregistrée.",
-        "addDocument": "Ajouter la photo du document"
+        "addDocument": "Ajouter la photo du document",
+        "notesPlaceholder": "ex. Changer aussi le filtre à air"
       }
     },
     "specs": {
@@ -3610,7 +3611,7 @@
       "periodicitySaved": "Périodicité enregistrée.",
       "errors": {
         "required": "Ce champ est obligatoire.",
-        "invalid_date": "Date invalide : écrivez-la au format JJ/MM/AAAA.",
+        "invalid_date": "Date invalide : choisissez-la dans le calendrier.",
         "ends_before_start": "La fin doit être après le début.",
         "ends_before_current": "La nouvelle période doit finir après la période en cours ({{date}}).",
         "invalid_amount": "Entrez un montant positif.",
@@ -3639,7 +3640,19 @@
           "expired": "Vignette non renouvelée (date limite dépassée : {{date}})."
         }
       },
-      "details": "Détails"
+      "details": "Détails",
+      "refPlaceholder": {
+        "assurance": "ex. 2026/123456",
+        "visite_technique": "ex. N° du procès-verbal",
+        "vignette": "ex. N° de la quittance"
+      },
+      "providerPlaceholder": {
+        "assurance": "ex. Wafa Assurance",
+        "visite_technique": "ex. Centre de visite technique"
+      },
+      "amountPlaceholder": "ex. 1 850",
+      "notesPlaceholder": "ex. Payé en espèces",
+      "photoHint": "Placez le papier dans le cadre"
     }
   },
   "vehiclePhotos": {

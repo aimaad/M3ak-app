@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
+import { Button, ChoiceTiles, DangerLink, DateField, FormField } from '@/components/form';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
@@ -12,15 +13,32 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { useUpdateVehicleDocuments } from '../hooks';
 import type { Vehicle } from '../types';
-import { fromIsoDate } from '../validation';
+import { fromIsoDate, toIsoDate } from '../validation';
 import { ComplianceBlock } from './compliance-block';
-import { Chips, Field, FieldGroup, FormActions } from './form-ui';
 import { ADDABLE_DUE_TYPES, draftOf, dueSuggestion, emptyDraft, planDueSave, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
 
 const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 16, gap: 4 } as const;
 const DUE_ICON: Record<DueRow['icon'], keyof typeof Ionicons.glyphMap> = { shield: 'shield-checkmark-outline', calendar: 'calendar-outline', wrench: 'construct-outline' };
 const shortDate = (iso: string, language: string) => new Date(iso).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short' });
+
+const DUE_TYPE_ICON: Partial<Record<MaintenanceType, keyof typeof Ionicons.glyphMap>> = { vidange: 'water-outline', freins: 'disc-outline', pneus: 'ellipse-outline', autre: 'construct-outline' };
+
+/** Un seul bouton orange par formulaire (Enregistrer), « Annuler » en secondaire, le message d'échec dessous. */
+function DueActions({ onSave, onCancel, busy, error }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null }) {
+  const { t } = useLanguage();
+  return (
+    <View style={{ gap: 10 }}>
+      {error ? (
+        <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
+          {error}
+        </HText>
+      ) : null}
+      <Button label={t('vehicleDetail.editor.save')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.editor.save')} />
+      <Button variant="secondary" label={t('vehicleDetail.editor.cancel')} onPress={onCancel} disabled={busy} />
+    </View>
+  );
+}
 
 /** Pastille de suggestion (« Dans 12 mois : … », « À 70 000 km ») : un toucher remplit le champ. */
 function Suggestion({ text, onPress }: { text: string; onPress: () => void }) {
@@ -46,14 +64,14 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
   return (
     <View style={{ gap: 16 }}>
       <View style={{ gap: 8 }}>
-        <Field label={t('vehicleDetail.dues.edit.dateLabel')} placeholder={t('vehicleDetail.dues.edit.dateHint')} value={draft.date} onChangeText={(value) => setDraft({ ...draft, date: value })} error={message('date')} />
+        <DateField label={t('vehicleDetail.dues.edit.dateLabel')} value={toIsoDate(draft.date)} onChange={(iso) => setDraft({ ...draft, date: fromIsoDate(iso) })} error={message('date')} showError={showErrors} />
         {suggestion.date ? <Suggestion text={t('vehicleDetail.dues.edit.suggestDate', { date: fromIsoDate(suggestion.date) })} onPress={() => setDraft({ ...draft, date: fromIsoDate(suggestion.date) })} /> : null}
       </View>
       <View style={{ gap: 8 }}>
-        <Field label={t('vehicleDetail.dues.edit.kmLabel')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} keyboardType="number-pad" unit={t('flotte.km')} hint={t('vehicleDetail.dues.edit.kmCurrent', { km: formatAmount(vehicle.kilometrage) })} error={message('km')} />
+        <FormField label={t('vehicleDetail.dues.edit.kmLabel')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} help={t('vehicleDetail.dues.edit.kmCurrent', { km: formatAmount(vehicle.kilometrage) })} error={message('km')} showError={showErrors} />
         {suggestion.km !== null ? <Suggestion text={t('vehicleDetail.dues.edit.suggestKm', { km: formatAmount(suggestion.km) })} onPress={() => setDraft({ ...draft, km: String(suggestion.km) })} /> : null}
       </View>
-      <Field label={t('vehicleDetail.dues.edit.notesLabel')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} multiline />
+      <FormField label={t('vehicleDetail.dues.edit.notesLabel')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.dues.edit.notesPlaceholder')} multiline />
     </View>
   );
 }
@@ -84,11 +102,9 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t('vehicleDetail.dues.edit.addTitle')}
       </HText>
-      <FieldGroup label={t('vehicleDetail.dues.edit.type')}>
-        <Chips options={ADDABLE_DUE_TYPES} selected={type} getLabel={(value) => t(`maintenance.types.${value}`)} onSelect={setType} />
-      </FieldGroup>
+      <ChoiceTiles<MaintenanceType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={setType} options={ADDABLE_DUE_TYPES.map((value) => ({ value, label: t(`maintenance.types.${value}`), icon: DUE_TYPE_ICON[value] ?? 'ellipse-outline' }))} />
       <DueFields type={type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
-      <FormActions onSave={save} onCancel={onClose} busy={create.isPending} error={error} />
+      <DueActions onSave={save} onCancel={onClose} busy={create.isPending} error={error} />
     </View>
   );
 }
@@ -144,7 +160,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
   return (
     <View style={{ gap: 16, padding: 14, marginBottom: 12, borderRadius: 18, backgroundColor: Palette.surface }}>
       <DueFields type={row.type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
-      <FormActions onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
+      <DueActions onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
       {row.maintenanceId ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Pressable onPress={() => router.push({ pathname: '/maintenance/[id]', params: { id: row.maintenanceId as string } })} accessibilityRole="button" style={link}>
@@ -152,13 +168,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
               {t('vehicleDetail.dues.edit.markDone')}
             </HText>
           </Pressable>
-          {canDelete ? (
-            <Pressable onPress={confirmDelete} accessibilityRole="button" style={link}>
-              <HText weight="semibold" size={13} color={Palette.error}>
-                {t('vehicleDetail.dues.edit.delete')}
-              </HText>
-            </Pressable>
-          ) : null}
+          {canDelete ? <DangerLink label={t('vehicleDetail.dues.edit.delete')} onPress={confirmDelete} /> : null}
         </View>
       ) : null}
     </View>

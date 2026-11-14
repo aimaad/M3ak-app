@@ -2,6 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
+import { Button, CameraCapture, checkPhoto, ChoiceTiles, DateField, DocumentSlot, FormField } from '@/components/form';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { isAlreadyRecordedError } from '@/features/compliance/api';
@@ -22,10 +23,9 @@ import { COMPLIANCE_KINDS, type ComplianceKind, type ComplianceRecord } from '@/
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
-import { VEHICLE_DOCUMENTS_BUCKET } from '../api';
 import { canSeePrices } from '../fleet-card';
-import { Chips, Field, FormActions, GroupLabel, PaperPhotoField } from './form-ui';
 import type { Vehicle } from '../types';
+import { fromIsoDate, toIsoDate } from '../validation';
 
 const ICON: Record<ComplianceKind, keyof typeof Ionicons.glyphMap> = { assurance: 'shield-checkmark-outline', visite_technique: 'clipboard-outline', vignette: 'receipt-outline' };
 const STATE_COLOR = { none: Palette.textSecondary, valid: Palette.success, soon: Brand.orangeUrgentText, urgent: Brand.orangeUrgentText, expired: Palette.error } as const;
@@ -57,22 +57,62 @@ function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUr
     const code = errors[field];
     return code ? t(`vehicleDetail.compliance.errors.${code}`, { date: currentEnd ? toDisplayDate(currentEnd) : '' }) : undefined;
   };
+  const [camera, setCamera] = useState(false);
+  const [photoProblem, setPhotoProblem] = useState<'too_small' | 'unreadable' | null>(null);
+  async function onCaptured(uri: string) {
+    setCamera(false);
+    const check = await checkPhoto(uri);
+    if (!check.ok) {
+      setPhotoProblem(check.reason);
+      return;
+    }
+    setPhotoProblem(null);
+    onPick(uri);
+  }
+  const show = Object.keys(errors).length > 0;
   return (
     <View style={{ gap: 16 }}>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}>
-          <Field label={t('vehicleDetail.compliance.validFrom')} placeholder={t('vehicleDetail.compliance.dateHint')} value={draft.validFrom} onChangeText={(value) => setDraft({ ...draft, validFrom: value })} error={message('validFrom')} />
+          <DateField label={t('vehicleDetail.compliance.validFrom')} value={toIsoDate(draft.validFrom)} onChange={(iso) => setDraft({ ...draft, validFrom: fromIsoDate(iso) })} error={message('validFrom')} showError={show} />
         </View>
         <View style={{ flex: 1 }}>
-          <Field label={t('vehicleDetail.compliance.validUntil')} placeholder={t('vehicleDetail.compliance.dateHint')} value={draft.validUntil} onChangeText={(value) => setDraft({ ...draft, validUntil: value })} error={message('validUntil')} />
+          <DateField label={t('vehicleDetail.compliance.validUntil')} value={toIsoDate(draft.validUntil)} onChange={(iso) => setDraft({ ...draft, validUntil: fromIsoDate(iso) })} error={message('validUntil')} showError={show} />
         </View>
       </View>
-      <GroupLabel>{t('vehicleDetail.compliance.details')}</GroupLabel>
-      <Field label={t(`vehicleDetail.compliance.ref.${kind}`)} value={draft.reference} onChangeText={(value) => setDraft({ ...draft, reference: value })} optional error={message('reference')} />
-      {kind !== 'vignette' ? <Field label={t(`vehicleDetail.compliance.provider.${kind}`)} value={draft.provider} onChangeText={(value) => setDraft({ ...draft, provider: value })} optional error={message('provider')} /> : null}
-      {showAmount ? <Field large label={t('vehicleDetail.compliance.amount')} value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" unit="MAD" optional error={message('amount')} /> : null}
-      {withPhoto ? <PaperPhotoField label={t('vehicleDetail.compliance.photo')} bucket={VEHICLE_DOCUMENTS_BUCKET} localUri={localUri} onPick={onPick} /> : null}
-      <Field label={t('vehicleDetail.compliance.notes')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} multiline />
+      <FormField label={t(`vehicleDetail.compliance.ref.${kind}`)} value={draft.reference} onChangeText={(value) => setDraft({ ...draft, reference: value })} placeholder={t(`vehicleDetail.compliance.refPlaceholder.${kind}`)} error={message('reference')} showError={show} ltr />
+      {kind !== 'vignette' ? <FormField label={t(`vehicleDetail.compliance.provider.${kind}`)} value={draft.provider} onChangeText={(value) => setDraft({ ...draft, provider: value })} placeholder={t(`vehicleDetail.compliance.providerPlaceholder.${kind}`)} error={message('provider')} showError={show} autoCapitalize="words" /> : null}
+      {showAmount ? <FormField label={t('vehicleDetail.compliance.amount')} value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" unit="MAD" placeholder={t('vehicleDetail.compliance.amountPlaceholder')} error={message('amount')} showError={show} /> : null}
+      {withPhoto ? (
+        <View style={{ gap: 8 }}>
+          <View style={{ flexDirection: 'row' }}>
+            <DocumentSlot label={t('vehicleDetail.compliance.photo')} uri={localUri} onScan={() => setCamera(true)} onReplace={() => setCamera(true)} />
+          </View>
+          {photoProblem ? (
+            <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
+              {t(photoProblem === 'too_small' ? 'vehicleForm.edit.scan.tooSmall' : 'vehicleForm.edit.scan.unreadable')}
+            </HText>
+          ) : null}
+          <CameraCapture visible={camera} onClose={() => setCamera(false)} onCapture={(uri) => void onCaptured(uri)} hint={t('vehicleDetail.compliance.photoHint')} />
+        </View>
+      ) : null}
+      <FormField label={t('vehicleDetail.compliance.notes')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.compliance.notesPlaceholder')} multiline />
+    </View>
+  );
+}
+
+/** Un seul bouton orange par formulaire (Enregistrer), « Annuler » en secondaire, le message d'échec dessous. */
+function FormButtons({ onSave, onCancel, busy, error }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null }) {
+  const { t } = useLanguage();
+  return (
+    <View style={{ gap: 10 }}>
+      {error ? (
+        <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
+          {error}
+        </HText>
+      ) : null}
+      <Button label={t('vehicleDetail.editor.save')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.editor.save')} />
+      <Button variant="secondary" label={t('vehicleDetail.editor.cancel')} onPress={onCancel} disabled={busy} />
     </View>
   );
 }
@@ -104,7 +144,7 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
         {t(current ? 'vehicleDetail.compliance.renewTitle' : 'vehicleDetail.compliance.firstTitle', { kind: t(`vehicleDetail.compliance.kind.${kind}`) })}
       </HText>
       <Fields kind={kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={current?.validUntil ?? null} localUri={localUri} onPick={setLocalUri} withPhoto />
-      <FormActions onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
+      <FormButtons onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
     </View>
   );
 }
@@ -135,7 +175,7 @@ function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicl
         {t('vehicleDetail.compliance.correctTitle')}
       </HText>
       <Fields kind={record.kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={null} localUri={null} onPick={() => undefined} withPhoto={false} />
-      <FormActions onSave={save} onCancel={onClose} busy={correct.isPending} error={error} />
+      <FormButtons onSave={save} onCancel={onClose} busy={correct.isPending} error={error} />
     </View>
   );
 }
@@ -162,11 +202,11 @@ function PeriodicityEditor({ agencyId, months, canEdit }: { agencyId: string; mo
       </View>
       {open ? (
         <View style={{ gap: 8 }}>
-          <Chips
-            options={['3', '6', '12', '24']}
-            selected={String(months)}
-            getLabel={(value) => t('vehicleDetail.compliance.periodicityMonths', { n: value })}
-            onSelect={(value) => {
+          <ChoiceTiles<string>
+            label={t('vehicleDetail.compliance.periodicityChange')}
+            value={String(months)}
+            options={['3', '6', '12', '24'].map((value) => ({ value, label: t('vehicleDetail.compliance.periodicityMonths', { n: value }), icon: 'calendar-outline' as const }))}
+            onChange={(value) => {
               setError(null);
               save.mutate({ agencyId, settings: { visitIntervalMonths: Number(value) } }, { onSuccess: () => setOpen(false), onError: () => setError(t('vehicleDetail.compliance.saveError')) });
             }}
@@ -317,11 +357,7 @@ export function ComplianceBlock({ vehicle, now }: { vehicle: Vehicle; now: Date 
                   <RenewForm vehicle={vehicle} kind={kind} current={status.record} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
                 ) : (
                   <>
-                    <Pressable onPress={() => setMode('renew')} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.compliance.renew')} style={{ minHeight: 48, borderRadius: 24, backgroundColor: Brand.orange, alignItems: 'center', justifyContent: 'center' }}>
-                      <HText weight="semibold" size={14} color={Brand.white}>
-                        {t('vehicleDetail.compliance.renew')}
-                      </HText>
-                    </Pressable>
+                    <Button label={t('vehicleDetail.compliance.renew')} onPress={() => setMode('renew')} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
                     {kind === 'visite_technique' && agency.data ? <PeriodicityEditor agencyId={agency.data.agencyId} months={settings.visitIntervalMonths} canEdit={canManage} /> : null}
                     <HText weight="semibold" size={12} color={Palette.textSecondary}>
                       {t('vehicleDetail.compliance.history')}
