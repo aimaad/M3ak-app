@@ -17,6 +17,7 @@ const mockState = {
   rentals: [] as unknown[],
   updates: [] as unknown[],
   updateFails: false,
+  updateError: null as unknown,
   archived: [] as string[],
   created: [] as unknown[],
   uploads: [] as unknown[],
@@ -49,7 +50,7 @@ jest.mock('@/features/rentals/hooks', () => ({ useVehicleRentals: () => ({ data:
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => ({ data: [{ id: 'c1', nomComplet: 'FOUAD BENNANI' }] }) }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
 jest.mock('@/features/vehicles/hooks', () => ({
-  useUpdateVehicle: () => ({ mutateAsync: async (args: unknown) => { if (mockState.updateFails) throw new Error('offline'); mockState.updates.push(args); } }),
+  useUpdateVehicle: () => ({ mutateAsync: async (args: unknown) => { if (mockState.updateFails) throw mockState.updateError ?? new Error('offline'); mockState.updates.push(args); } }),
   useArchiveVehicle: () => ({ mutate: (id: string, options?: { onSuccess?: () => void }) => { mockState.archived.push(id); options?.onSuccess?.(); } }),
 }));
 jest.mock('@/features/vehicles/api', () => ({
@@ -95,7 +96,7 @@ const allFields = (patch: Record<string, unknown>) => ({ immatriculation: field(
 describe('« Modifier la fiche technique »', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', branchId: 'b1', maintenance: [], compliance: [], rentals: [], updates: [], updateFails: false, archived: [], created: [], uploads: [], uploadFails: false, photoCheck: { ok: true }, scan: { ok: true, fields: {} }, preventRemove: null, dispatched: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', branchId: 'b1', maintenance: [], compliance: [], rentals: [], updates: [], updateFails: false, updateError: null, archived: [], created: [], uploads: [], uploadFails: false, photoCheck: { ok: true }, scan: { ok: true, fields: {} }, preventRemove: null, dispatched: [] });
   });
 
   it('en-tête : « Fiche technique » et « Dacia Logan · plaque » ; barre d’enregistrement absente tant que rien ne change', async () => {
@@ -246,6 +247,25 @@ describe('« Modifier la fiche technique »', () => {
     await fireEvent.press(screen.getByLabelText('Maintenance'));
     expect(await screen.findByText(/Elle est déjà réservée par Fouad B\. .*Essayez de lui accorder une autre voiture\./)).toBeTruthy();
     expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // rien n'a changé
+  });
+
+  it('panne pendant une location : « Disponible » reste possible, « Indisponible » est refusé', async () => {
+    mockState.rentals = [{ id: 'r1', statut: 'en_cours', customerId: 'c1', dateDebutPrevue: new Date(Date.now() - 86400000).toISOString(), dateFinPrevue: new Date(Date.now() + 3 * 86400000).toISOString() }];
+    await render(<VehicleForm vehicle={{ ...base, statut: 'maintenance' }} />);
+    await fireEvent.press(screen.getByLabelText('Indisponible'));
+    expect(await screen.findByText(/Essayez de lui accorder une autre voiture|Enregistrez d'abord son retour/)).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Disponible'));
+    expect(screen.getByLabelText('Disponible').props.accessibilityState.checked).toBe(true);
+  });
+
+  it('le serveur refuse le statut (autre appareil) : message clair, la page reste ouverte', async () => {
+    mockState.updateFails = true;
+    mockState.updateError = { message: 'vehicle_status_locked' };
+    await render(<VehicleForm vehicle={base} />);
+    await fireEvent.press(screen.getByLabelText('Maintenance'));
+    await fireEvent.press(screen.getByLabelText('Enregistrer'));
+    expect(await screen.findByText(/a une location ouverte : son statut ne peut pas être changé/)).toBeTruthy();
+    expect(mockRouter.back).not.toHaveBeenCalled();
   });
 
   it('statut : voiture libre → le changement est accepté sans message', async () => {

@@ -2,7 +2,7 @@ import type { ComplianceRecord } from '@/features/compliance/types';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 
 import type { ArchiveBlock } from '../archive-guard';
-import { availabilityAlertList, availabilityAlerts, statusBlockText } from '../status-guard';
+import { availabilityAlertList, availabilityAlerts, isStatusLockedError, statusBlockText, statusChangeBlocked } from '../status-guard';
 import type { Vehicle } from '../types';
 
 const NOW = new Date(2026, 10, 15, 12);
@@ -47,5 +47,25 @@ describe('statut impossible à changer', () => {
   });
   it('d’autres réservations sont annoncées', () => {
     expect(statusBlockText(block({ others: 2 }), t, 'fr', NOW)).toContain('vehicleDetail.archive.othersMany{"count":2}');
+  });
+});
+
+describe('même règle que le serveur', () => {
+  const block: ArchiveBlock = { kind: 'reserved', name: 'Omar T.', day: '2026-11-20', rentalId: 'r1', others: 0 };
+  it('location ouverte : maintenance, préparation, indisponible refusés ; disponible accepté (panne pendant une location)', () => {
+    expect(statusChangeBlocked({ statut: 'disponible' }, 'indisponible', block)).toBe(true);
+    expect(statusChangeBlocked({ statut: 'disponible' }, 'maintenance', block)).toBe(true);
+    expect(statusChangeBlocked({ statut: 'maintenance' }, 'disponible', block)).toBe(false);
+  });
+  it('en location : on ne la quitte pas à la main, même vers « disponible »', () => {
+    expect(statusChangeBlocked({ statut: 'en_location' }, 'disponible', block)).toBe(true);
+  });
+  it('aucune location ouverte : rien n’est bloqué', () => {
+    expect(statusChangeBlocked({ statut: 'disponible' }, 'indisponible', null)).toBe(false);
+  });
+  it('erreur du serveur reconnue', () => {
+    expect(isStatusLockedError({ message: 'vehicle_status_locked' })).toBe(true);
+    expect(isStatusLockedError({ message: 'autre' })).toBe(false);
+    expect(isStatusLockedError(null)).toBe(false);
   });
 });

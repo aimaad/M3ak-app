@@ -44,7 +44,7 @@ import { useCreateMaintenanceItem, useVehicleMaintenanceItems } from '@/features
 import { useVehicleRentals } from '@/features/rentals/hooks';
 import { mergeDocuments } from '@/features/storage/documents';
 import { useSignedUrl } from '@/features/storage/hooks';
-import { availabilityAlertList, availabilityAlerts, statusBlockText } from './status-guard';
+import { availabilityAlertList, availabilityAlerts, isStatusLockedError, statusBlockText, statusChangeBlocked } from './status-guard';
 import { useLanguage } from '@/i18n/use-language';
 
 import { prepareVehiclePhoto, uploadVehicleDocument, VEHICLE_DOCUMENTS_BUCKET } from './api';
@@ -253,7 +253,7 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
       setExit('back');
     } catch (error) {
       const duplicate = duplicateVehicleField(error);
-      setSaveError(duplicate === 'vin' ? t('vehicle.form.duplicateVinError') : duplicate === 'immatriculation' ? t('vehicle.form.duplicatePlateError') : t('vehicleForm.edit.saving.failed'));
+      setSaveError(isStatusLockedError(error) ? t('vehicleDetail.statusBlock.server') : duplicate === 'vin' ? t('vehicle.form.duplicateVinError') : duplicate === 'immatriculation' ? t('vehicle.form.duplicatePlateError') : t('vehicleForm.edit.saving.failed'));
     } finally {
       setSaving(false);
     }
@@ -290,7 +290,7 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   function chooseStatus(next: VehicleStatus) {
     if (next === draft.statut) return;
-    if (block) {
+    if (block && statusChangeBlocked(vehicle, next, block)) {
       setStatusMessage(statusBlockText(block, t, language, now));
       return;
     }

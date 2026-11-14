@@ -3677,7 +3677,8 @@
       "reserved": "Elle est déjà réservée par {{name}} le {{day}}. Essayez de lui accorder une autre voiture.",
       "reservedNoName": "Elle est déjà réservée le {{day}}. Essayez d'accorder une autre voiture au client.",
       "status": "Elle est marquée en location. Terminez la location d'abord.",
-      "ok": "Compris"
+      "ok": "Compris",
+      "server": "Cette voiture a une location ouverte : son statut ne peut pas être changé. Actualisez la fiche."
     },
     "availability": {
       "title": "Échéances en alerte",

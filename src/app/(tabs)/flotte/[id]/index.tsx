@@ -34,7 +34,7 @@ import { StateCardView } from '@/features/vehicles/detail/state-card-view';
 import { buildStateCard, statusBadge, type StateAction } from '@/features/vehicles/detail/state-card';
 import { useVehicleDetail } from '@/features/vehicles/detail/use-vehicle-detail';
 import { parseVehicleSection, useSectionScroll } from '@/features/vehicles/use-section-scroll';
-import { availabilityAlertList, availabilityAlerts, statusBlockText } from '@/features/vehicles/status-guard';
+import { availabilityAlertList, availabilityAlerts, isStatusLockedError, statusBlockText, statusChangeBlocked } from '@/features/vehicles/status-guard';
 import { useLanguage } from '@/i18n/use-language';
 
 export default function VehicleDetailScreen() {
@@ -141,7 +141,11 @@ export default function VehicleDetailScreen() {
       { id: vehicle.id, statut, motif },
       {
         onSuccess: () => setReasonOpen(false),
-        onError: () => (statut === 'indisponible' ? setStatusError(t('vehicleDetail.reason.error')) : Alert.alert(t('common.appName'), t('vehicleDetail.reason.error'))),
+        onError: (error) => {
+          const message = isStatusLockedError(error) ? t('vehicleDetail.statusBlock.server') : t('vehicleDetail.reason.error');
+          if (statut === 'indisponible' && !isStatusLockedError(error)) setStatusError(message);
+          else Alert.alert(t('common.appName'), message);
+        },
       }
     );
   }
@@ -168,7 +172,7 @@ export default function VehicleDetailScreen() {
       }
       case 'makeUnavailable':
         // Réservée ou en location : le statut ne se change pas ; on dit chez qui elle est.
-        if (block) {
+        if (block && statusChangeBlocked(vehicle as NonNullable<typeof vehicle>, 'indisponible', block)) {
           Alert.alert(t('vehicleDetail.statusBlock.title'), statusBlockText(block, t, language, now), [{ text: t('vehicleDetail.statusBlock.ok') }]);
           return;
         }

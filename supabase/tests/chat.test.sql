@@ -121,7 +121,7 @@ select pg_temp.as_user('00000000-0000-0000-0000-0000000000a3');
 select pg_temp.ck('l''employé de Casa voit sa location', jsonb_array_length(public.chat_tool_rentals(timestamptz '2030-06-11+01', timestamptz '2030-06-12+01', null, null)) = 1, '');
 
 -- outils en lecture seule
-select pg_temp.try('un outil ne peut rien modifier', $$update vehicles set statut = 'disponible' where id = 'f1000000-0000-0000-0000-000000000001'$$);
+select pg_temp.try('un outil ne peut rien modifier', $$update vehicles set couleur = couleur where id = 'f1000000-0000-0000-0000-000000000001'$$);
 
 -- historique : par utilisateur
 select pg_temp.try('un employé crée sa conversation', $$insert into chat_conversations (id, agency_id, user_id, title) values ('d1000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '00000000-0000-0000-0000-0000000000a3', 'Test')$$);

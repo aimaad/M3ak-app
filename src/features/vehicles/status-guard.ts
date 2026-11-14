@@ -7,6 +7,20 @@ import { buildDues } from './detail/dues';
 import { formatDayLabel } from './fleet-card';
 import type { Vehicle } from './types';
 
+/** Le serveur refuse un changement de statut à la main quand une location est ouverte (migration 0072). */
+export function isStatusLockedError(error: unknown): boolean {
+  const message = typeof error === 'object' && error !== null && 'message' in error ? String((error as { message: unknown }).message) : '';
+  return message.includes('vehicle_status_locked');
+}
+
+/**
+ * Même règle que le serveur : avec une location ouverte, on ne passe pas à « maintenance », « en préparation » ou « indisponible » ;
+ * redevenir « disponible » reste possible (ex. une panne pendant une location), sauf depuis « en location » (c'est la location qui le gère).
+ */
+export function statusChangeBlocked(vehicle: Pick<Vehicle, 'statut'>, next: Vehicle['statut'], block: ArchiveBlock | null): boolean {
+  return block !== null && (vehicle.statut === 'en_location' || next !== 'disponible');
+}
+
 type T = (key: string, params?: Record<string, unknown>) => string;
 
 /**
