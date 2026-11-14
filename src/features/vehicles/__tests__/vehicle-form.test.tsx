@@ -20,6 +20,9 @@ jest.mock('@/features/agency/hooks', () => ({
   useMyProfile: () => ({ data: { branchId: mockState.branchId } }),
 }));
 jest.mock('@/features/branches/hooks', () => ({ useBranches: () => ({ data: [{ id: 'b1', nom: 'Casa' }, { id: 'b2', nom: 'Rabat' }] }) }));
+jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
+jest.mock('expo-image-picker', () => ({}));
+jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 jest.mock('@/i18n/use-language', () => ({ useLanguage: () => ({ language: 'fr', t: (key: string, o?: Record<string, unknown>) => mockTranslate('fr', key, o) }) }));
 jest.mock('react-native-safe-area-context', () => ({ useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }) }));
 

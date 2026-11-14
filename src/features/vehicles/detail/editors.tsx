@@ -1,10 +1,7 @@
 import { useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
-import { ChipGroup } from '@/components/chip-group';
-import { DocumentPhotoField } from '@/components/document-photo-field';
-import { TextField } from '@/components/text-field';
-import { Brand, Palette } from '@/constants/theme';
+import { Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { HText } from '@/features/dashboard/home-ui';
 import { mergeDocuments } from '@/features/storage/documents';
@@ -14,33 +11,7 @@ import { uploadVehicleDocument, VEHICLE_DOCUMENTS_BUCKET } from '../api';
 import { useUpdateVehicleDocuments, useUpdateVehicleSpecs } from '../hooks';
 import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type Vehicle, type VehicleDocument } from '../types';
 import { documentChanges, documentsDraft, EDITABLE_DOCUMENT_TYPES, hasSpecsChanges, specsDraft, specsPatch, validateSpecs, type DocumentsDraft, type EditableDocumentType, type SpecsDraft } from './edit-draft';
-
-const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 16, gap: 14 } as const;
-
-function Buttons({ onSave, onCancel, busy, error }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null }) {
-  const { t } = useLanguage();
-  return (
-    <View style={{ gap: 10 }}>
-      {error ? (
-        <HText size={12} color={Palette.error} accessibilityRole="alert">
-          {error}
-        </HText>
-      ) : null}
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Pressable onPress={onCancel} disabled={busy} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.editor.cancel')} style={{ flex: 1, minHeight: 48, borderRadius: 24, borderWidth: 1, borderColor: Palette.border, alignItems: 'center', justifyContent: 'center' }}>
-          <HText weight="semibold" size={14}>
-            {t('vehicleDetail.editor.cancel')}
-          </HText>
-        </Pressable>
-        <Pressable onPress={onSave} disabled={busy} accessibilityRole="button" accessibilityState={{ disabled: busy, busy }} accessibilityLabel={t('vehicleDetail.editor.save')} style={{ flex: 1.4, minHeight: 48, borderRadius: 24, backgroundColor: Brand.orange, opacity: busy ? 0.6 : 1, alignItems: 'center', justifyContent: 'center' }}>
-          <HText weight="semibold" size={14} color={Brand.white}>
-            {busy ? t('vehicleDetail.editor.saving') : t('vehicleDetail.editor.save')}
-          </HText>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
+import { Chips, Field, FieldGroup, FormActions, FormCard, PaperPhotoField } from './form-ui';
 
 /** Fiche technique modifiable SUR PLACE (à l'endroit de la grille) : mêmes règles que le formulaire complet, enregistre seulement ces champs. */
 export function SpecsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClose: () => void }) {
@@ -52,6 +23,7 @@ export function SpecsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClose: (
   const errors = validateSpecs(draft);
   const set = <K extends keyof SpecsDraft>(key: K, value: SpecsDraft[K]) => setDraft((previous) => ({ ...previous, [key]: value }));
   const message = (field: keyof SpecsDraft) => (touched && errors[field] ? t(`vehicle.form.errors.${errors[field]}`) : undefined);
+  const digits = (value: string) => value.replace(/\D/g, '');
 
   function save() {
     setTouched(true);
@@ -63,35 +35,35 @@ export function SpecsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClose: (
 
   const label = (key: string) => t(`vehicle.fields.${key}`);
   return (
-    <View style={CARD}>
-      <HText font="display" weight="bold" size={17} accessibilityRole="header">
-        {t('vehicleDetail.specs.title')}
-      </HText>
-      <View style={{ gap: 6 }}>
-        <HText size={12} color={Palette.textSecondary}>
-          {label('categorie')}
-        </HText>
-        <ChipGroup options={VEHICLE_CATEGORIES} selected={draft.categorie} getLabel={(value) => t(`vehicle.category.${value}`)} onSelect={(value) => set('categorie', value)} />
+    <FormCard title={t('vehicleDetail.specs.title')}>
+      <FieldGroup label={label('categorie')}>
+        <Chips options={VEHICLE_CATEGORIES} selected={draft.categorie} getLabel={(value) => t(`vehicle.category.${value}`)} onSelect={(value) => set('categorie', value)} />
+      </FieldGroup>
+      <FieldGroup label={label('transmission')}>
+        <Chips options={VEHICLE_TRANSMISSIONS} selected={draft.transmission} getLabel={(value) => t(`vehicle.transmission.${value}`)} onSelect={(value) => set('transmission', value)} />
+      </FieldGroup>
+      <FieldGroup label={label('carburant')}>
+        <Chips options={FUEL_TYPES} selected={draft.carburant} getLabel={(value) => t(`vehicle.fuel.${value}`)} onSelect={(value) => set('carburant', value)} />
+      </FieldGroup>
+      <Field large label={label('kilometrage')} value={draft.kilometrage} onChangeText={(value) => set('kilometrage', digits(value))} keyboardType="number-pad" unit={t('flotte.km')} error={message('kilometrage')} />
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Field label={label('annee')} value={draft.annee} onChangeText={(value) => set('annee', digits(value))} keyboardType="number-pad" maxLength={4} error={message('annee')} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Field label={label('nombrePlaces')} value={draft.nombrePlaces} onChangeText={(value) => set('nombrePlaces', digits(value))} keyboardType="number-pad" maxLength={1} error={message('nombrePlaces')} />
+        </View>
       </View>
-      <View style={{ gap: 6 }}>
-        <HText size={12} color={Palette.textSecondary}>
-          {label('transmission')}
-        </HText>
-        <ChipGroup options={VEHICLE_TRANSMISSIONS} selected={draft.transmission} getLabel={(value) => t(`vehicle.transmission.${value}`)} onSelect={(value) => set('transmission', value)} />
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Field label={label('couleur')} value={draft.couleur} onChangeText={(value) => set('couleur', value)} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Field label={label('puissanceFiscale')} value={draft.puissanceFiscale} onChangeText={(value) => set('puissanceFiscale', digits(value))} keyboardType="number-pad" maxLength={2} error={message('puissanceFiscale')} />
+        </View>
       </View>
-      <View style={{ gap: 6 }}>
-        <HText size={12} color={Palette.textSecondary}>
-          {label('carburant')}
-        </HText>
-        <ChipGroup options={FUEL_TYPES} selected={draft.carburant} getLabel={(value) => t(`vehicle.fuel.${value}`)} onSelect={(value) => set('carburant', value)} />
-      </View>
-      <TextField label={label('kilometrage')} value={draft.kilometrage} onChangeText={(value) => set('kilometrage', value)} keyboardType="number-pad" error={message('kilometrage')} />
-      <TextField label={label('couleur')} value={draft.couleur} onChangeText={(value) => set('couleur', value)} />
-      <TextField label={label('annee')} value={draft.annee} onChangeText={(value) => set('annee', value)} keyboardType="number-pad" error={message('annee')} />
-      <TextField label={label('nombrePlaces')} value={draft.nombrePlaces} onChangeText={(value) => set('nombrePlaces', value)} keyboardType="number-pad" error={message('nombrePlaces')} />
-      <TextField label={label('puissanceFiscale')} value={draft.puissanceFiscale} onChangeText={(value) => set('puissanceFiscale', value.replace(/\D/g, ''))} keyboardType="number-pad" error={message('puissanceFiscale')} />
-      <Buttons onSave={save} onCancel={onClose} busy={update.isPending} error={error} />
-    </View>
+      <FormActions onSave={save} onCancel={onClose} busy={update.isPending} error={error} />
+    </FormCard>
   );
 }
 
@@ -123,12 +95,9 @@ export function DocumentsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClos
   }
 
   return (
-    <View style={CARD}>
-      <HText font="display" weight="bold" size={17} accessibilityRole="header">
-        {t('vehicleDetail.documents.title')}
-      </HText>
+    <FormCard title={t('vehicleDetail.documents.title')}>
       {EDITABLE_DOCUMENT_TYPES.map((type: EditableDocumentType) => (
-        <DocumentPhotoField
+        <PaperPhotoField
           key={type}
           label={t(`vehicle.documents.${type}`)}
           bucket={VEHICLE_DOCUMENTS_BUCKET}
@@ -140,7 +109,7 @@ export function DocumentsEditor({ vehicle, onClose }: { vehicle: Vehicle; onClos
       <HText size={12} color={Palette.textSecondary}>
         {t('vehicleDetail.editor.insuranceElsewhere')}
       </HText>
-      <Buttons onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
-    </View>
+      <FormActions onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
+    </FormCard>
   );
 }

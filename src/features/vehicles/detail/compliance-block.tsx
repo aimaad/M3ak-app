@@ -2,9 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { ChipGroup } from '@/components/chip-group';
-import { DocumentPhotoField } from '@/components/document-photo-field';
-import { TextField } from '@/components/text-field';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { isAlreadyRecordedError } from '@/features/compliance/api';
@@ -27,6 +24,7 @@ import { useLanguage } from '@/i18n/use-language';
 
 import { VEHICLE_DOCUMENTS_BUCKET } from '../api';
 import { canSeePrices } from '../fleet-card';
+import { Chips, Field, FormActions, GroupLabel, PaperPhotoField } from './form-ui';
 import type { Vehicle } from '../types';
 
 const ICON: Record<ComplianceKind, keyof typeof Ionicons.glyphMap> = { assurance: 'shield-checkmark-outline', visite_technique: 'clipboard-outline', vignette: 'receipt-outline' };
@@ -60,39 +58,21 @@ function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUr
     return code ? t(`vehicleDetail.compliance.errors.${code}`, { date: currentEnd ? toDisplayDate(currentEnd) : '' }) : undefined;
   };
   return (
-    <View style={{ gap: 12 }}>
-      <TextField label={t('vehicleDetail.compliance.validFrom')} placeholder={t('vehicleDetail.compliance.dateHint')} value={draft.validFrom} onChangeText={(value) => setDraft({ ...draft, validFrom: value })} error={message('validFrom')} />
-      <TextField label={t('vehicleDetail.compliance.validUntil')} placeholder={t('vehicleDetail.compliance.dateHint')} value={draft.validUntil} onChangeText={(value) => setDraft({ ...draft, validUntil: value })} error={message('validUntil')} />
-      <TextField label={t(`vehicleDetail.compliance.ref.${kind}`)} value={draft.reference} onChangeText={(value) => setDraft({ ...draft, reference: value })} optional error={message('reference')} />
-      {kind !== 'vignette' ? <TextField label={t(`vehicleDetail.compliance.provider.${kind}`)} value={draft.provider} onChangeText={(value) => setDraft({ ...draft, provider: value })} optional error={message('provider')} /> : null}
-      {showAmount ? <TextField label={t('vehicleDetail.compliance.amount')} value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" optional error={message('amount')} /> : null}
-      {withPhoto ? <DocumentPhotoField label={t('vehicleDetail.compliance.photo')} bucket={VEHICLE_DOCUMENTS_BUCKET} localUri={localUri} onPick={onPick} /> : null}
-      <TextField label={t('vehicleDetail.compliance.notes')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} multiline />
-    </View>
-  );
-}
-
-function FormButtons({ onSave, onCancel, busy, error }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null }) {
-  const { t } = useLanguage();
-  return (
-    <View style={{ gap: 10 }}>
-      {error ? (
-        <HText size={12} color={Palette.error} accessibilityRole="alert">
-          {error}
-        </HText>
-      ) : null}
-      <View style={{ flexDirection: 'row', gap: 10 }}>
-        <Pressable onPress={onCancel} disabled={busy} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.editor.cancel')} style={{ flex: 1, minHeight: 48, borderRadius: 24, borderWidth: 1, borderColor: Palette.border, alignItems: 'center', justifyContent: 'center' }}>
-          <HText weight="semibold" size={14}>
-            {t('vehicleDetail.editor.cancel')}
-          </HText>
-        </Pressable>
-        <Pressable onPress={onSave} disabled={busy} accessibilityRole="button" accessibilityState={{ disabled: busy, busy }} accessibilityLabel={t('vehicleDetail.editor.save')} style={{ flex: 1.4, minHeight: 48, borderRadius: 24, backgroundColor: Brand.orange, opacity: busy ? 0.6 : 1, alignItems: 'center', justifyContent: 'center' }}>
-          <HText weight="semibold" size={14} color={Brand.white}>
-            {busy ? t('vehicleDetail.editor.saving') : t('vehicleDetail.editor.save')}
-          </HText>
-        </Pressable>
+    <View style={{ gap: 16 }}>
+      <View style={{ flexDirection: 'row', gap: 12 }}>
+        <View style={{ flex: 1 }}>
+          <Field label={t('vehicleDetail.compliance.validFrom')} placeholder={t('vehicleDetail.compliance.dateHint')} value={draft.validFrom} onChangeText={(value) => setDraft({ ...draft, validFrom: value })} error={message('validFrom')} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Field label={t('vehicleDetail.compliance.validUntil')} placeholder={t('vehicleDetail.compliance.dateHint')} value={draft.validUntil} onChangeText={(value) => setDraft({ ...draft, validUntil: value })} error={message('validUntil')} />
+        </View>
       </View>
+      <GroupLabel>{t('vehicleDetail.compliance.details')}</GroupLabel>
+      <Field label={t(`vehicleDetail.compliance.ref.${kind}`)} value={draft.reference} onChangeText={(value) => setDraft({ ...draft, reference: value })} optional error={message('reference')} />
+      {kind !== 'vignette' ? <Field label={t(`vehicleDetail.compliance.provider.${kind}`)} value={draft.provider} onChangeText={(value) => setDraft({ ...draft, provider: value })} optional error={message('provider')} /> : null}
+      {showAmount ? <Field large label={t('vehicleDetail.compliance.amount')} value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" unit="MAD" optional error={message('amount')} /> : null}
+      {withPhoto ? <PaperPhotoField label={t('vehicleDetail.compliance.photo')} bucket={VEHICLE_DOCUMENTS_BUCKET} localUri={localUri} onPick={onPick} /> : null}
+      <Field label={t('vehicleDetail.compliance.notes')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} multiline />
     </View>
   );
 }
@@ -119,12 +99,12 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
   }
 
   return (
-    <View style={{ gap: 14 }}>
-      <HText weight="bold" size={15} accessibilityRole="header">
+    <View style={{ gap: 16, padding: 14, borderRadius: 18, backgroundColor: Palette.surface }}>
+      <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t(current ? 'vehicleDetail.compliance.renewTitle' : 'vehicleDetail.compliance.firstTitle', { kind: t(`vehicleDetail.compliance.kind.${kind}`) })}
       </HText>
       <Fields kind={kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={current?.validUntil ?? null} localUri={localUri} onPick={setLocalUri} withPhoto />
-      <FormButtons onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
+      <FormActions onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
     </View>
   );
 }
@@ -150,12 +130,12 @@ function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicl
   }
 
   return (
-    <View style={{ gap: 14 }}>
-      <HText weight="bold" size={15} accessibilityRole="header">
+    <View style={{ gap: 16, padding: 14, borderRadius: 18, backgroundColor: Palette.surface }}>
+      <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t('vehicleDetail.compliance.correctTitle')}
       </HText>
       <Fields kind={record.kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={null} localUri={null} onPick={() => undefined} withPhoto={false} />
-      <FormButtons onSave={save} onCancel={onClose} busy={correct.isPending} error={error} />
+      <FormActions onSave={save} onCancel={onClose} busy={correct.isPending} error={error} />
     </View>
   );
 }
@@ -182,7 +162,7 @@ function PeriodicityEditor({ agencyId, months, canEdit }: { agencyId: string; mo
       </View>
       {open ? (
         <View style={{ gap: 8 }}>
-          <ChipGroup
+          <Chips
             options={['3', '6', '12', '24']}
             selected={String(months)}
             getLabel={(value) => t('vehicleDetail.compliance.periodicityMonths', { n: value })}
