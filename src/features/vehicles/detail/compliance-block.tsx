@@ -39,7 +39,8 @@ type T = (key: string, params?: Record<string, unknown>) => string;
 /** Ligne de situation sous le nom : « Du … au … », « Expire aujourd'hui », « Date limite : … ». */
 export function statusLine(status: ComplianceStatus, t: T, language: string): string {
   if (status.kind === 'vignette') {
-    if (!status.record) return status.due ? t('vehicleDetail.compliance.deadline', { date: dayLabel(status.due, language) }) : t('vehicleDetail.compliance.none');
+    // Rien d'enregistré : on n'affiche la date limite que si elle est encore à venir (sinon une date passée ferait croire à un retard).
+    if (!status.record) return status.due && status.days !== null && status.days >= 0 ? t('vehicleDetail.compliance.deadline', { date: dayLabel(status.due, language) }) : t('vehicleDetail.compliance.none');
     if (status.state === 'expired') return t('vehicleDetail.compliance.deadlineOver', { date: dayLabel(status.due as string, language) });
     return t('vehicleDetail.compliance.nextDeadline', { date: dayLabel(status.due as string, language) });
   }

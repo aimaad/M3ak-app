@@ -620,7 +620,7 @@ describe('fiche véhicule', () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getByText('OBLIGATIONS LÉGALES')).toBeTruthy();
       expect(screen.getAllByText('Non renseignée')).toHaveLength(3);
-      expect(screen.getByText('Vignette (taxe annuelle)')).toBeTruthy();
+      expect(screen.getByText('Vignette')).toBeTruthy();
     });
 
     it('états : à jour, urgent (≤ 7 jours), expirée ; « papier non ajouté » quand il n’y a pas de photo', async () => {
@@ -628,7 +628,7 @@ describe('fiche véhicule', () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getByLabelText(/^Assurance : À jour\./)).toBeTruthy();
       expect(screen.getByLabelText(/^Visite technique : Urgent\./)).toBeTruthy();
-      expect(screen.getByLabelText(/^Vignette \(taxe annuelle\) : Expirée\./)).toBeTruthy();
+      expect(screen.getByLabelText(/^Vignette : Expirée\./)).toBeTruthy();
       expect(screen.getAllByText('Papier non ajouté').length).toBeGreaterThan(0);
     });
 

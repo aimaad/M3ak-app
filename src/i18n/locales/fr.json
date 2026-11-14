@@ -3544,7 +3544,7 @@
       "kind": {
         "assurance": "Assurance",
         "visite_technique": "Visite technique",
-        "vignette": "Vignette (taxe annuelle)"
+        "vignette": "Vignette"
       },
       "state": {
         "none": "Non renseignée",
