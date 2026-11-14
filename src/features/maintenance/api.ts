@@ -157,6 +157,22 @@ export async function completeMaintenanceItem(
   return fromRow(data as MaintenanceRow);
 }
 
+/** « Fait » en un geste (migration 0073) : une seule opération côté serveur (kilométrage, clôture, échéance suivante). */
+export async function completeMaintenanceQuick(
+  id: string,
+  input: { km: number | null; date: string | null; garage: string | null; cout: number | null }
+): Promise<MaintenanceItem> {
+  const { data, error } = await getSupabase().rpc('complete_maintenance_quick', {
+    p_id: id,
+    p_km: input.km,
+    p_date: input.date,
+    p_garage: input.garage,
+    p_cout: input.cout,
+  });
+  if (error) throw error;
+  return fromRow(data as MaintenanceRow);
+}
+
 export async function uploadMaintenanceInvoice(
   agencyId: string,
   maintenanceItemId: string,

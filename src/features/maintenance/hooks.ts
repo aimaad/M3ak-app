@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   completeMaintenanceItem,
+  completeMaintenanceQuick,
   createMaintenanceItem,
   deleteMaintenanceItem,
   getMaintenanceItem,
@@ -53,6 +54,15 @@ export function useCreateMaintenanceItem() {
   return useMutation({
     mutationFn: ({ agencyId, input }: { agencyId: string; input: MaintenanceInput }) =>
       createMaintenanceItem(agencyId, input),
+    onSuccess: (item) => invalidate(item),
+  });
+}
+
+export function useQuickCompleteMaintenance() {
+  const invalidate = useInvalidateMaintenance();
+
+  return useMutation({
+    mutationFn: ({ id, input }: { id: string; input: { km: number | null; date: string | null; garage: string | null; cout: number | null } }) => completeMaintenanceQuick(id, input),
     onSuccess: (item) => invalidate(item),
   });
 }

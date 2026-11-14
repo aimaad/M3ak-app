@@ -3622,7 +3622,7 @@
         "required": "Ce champ est obligatoire.",
         "invalid_date": "Date invalide : choisissez-la dans le calendrier.",
         "ends_before_start": "La fin doit être après le début.",
-        "ends_before_current": "La nouvelle période doit finir après la période en cours ({{date}}).",
+        "ends_before_current": "Cette période se termine avant la fin de la période actuelle ({{date}}). Choisissez une date de fin plus tardive, ou utilisez « Corriger » dans l'historique si c'est une erreur.",
         "invalid_amount": "Entrez un montant positif.",
         "too_long": "Texte trop long."
       },
@@ -3666,7 +3666,13 @@
       "durationMonths": "{{n}} mois",
       "repeatLabel": "Renouvellement",
       "repeatOnce": "Une seule fois",
-      "repeatPeriodic": "Périodique"
+      "repeatPeriodic": "Périodique",
+      "quickNext": "Prochaine période",
+      "quickFirst": "Première période",
+      "quickPeriod": "du {{from}} au {{to}}",
+      "quickVignette": "Vignette payée pour l'année",
+      "quickConfirm": "Confirmer",
+      "quickDetails": "Avec détails (papier, montant…)"
     },
     "statusBlock": {
       "title": "Statut impossible à changer",
@@ -3693,6 +3699,25 @@
     "saveErrors": {
       "schemaOutdated": "La base de données n'est pas à jour : appliquez la migration 0071 (périodicité des échéances) dans Supabase, puis réessayez.",
       "detail": "Détail : {{detail}}"
+    },
+    "quick": {
+      "button": "✓ Fait",
+      "a11y": "Marquer comme fait : {{label}}",
+      "title": "{{label}} faite",
+      "km": "Kilométrage de la voiture",
+      "date": "Date",
+      "moreDetails": "Ajouter des détails (garage, coût)",
+      "garagePlaceholder": "ex. Garage Atlas",
+      "costPlaceholder": "ex. 450",
+      "hint": "La prochaine échéance se crée toute seule si celle-ci est périodique.",
+      "confirm": "Confirmer",
+      "failed": "Impossible de marquer comme fait.",
+      "err": {
+        "km_lower": "Le kilométrage ne peut pas être inférieur à celui de la fiche ({{km}} km).",
+        "invalid_number": "Entrez un kilométrage valide.",
+        "future": "La date ne peut pas être dans le futur.",
+        "invalid_cost": "Entrez un montant positif."
+      }
     }
   },
   "vehiclePhotos": {

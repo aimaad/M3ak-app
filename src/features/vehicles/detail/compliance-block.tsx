@@ -174,6 +174,60 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
   );
 }
 
+/**
+ * Renouveler en UN geste : la prochaine période est déjà calculée (durée mémorisée, début = lendemain de la fin en cours), on confirme.
+ * Vignette : on choisit seulement l'année. Numéro de police, montant et photo du papier s'ajoutent plus tard (« Avec détails »).
+ */
+function QuickRenew({ vehicle, kind, current, settings, now, onDetails }: { vehicle: Vehicle; kind: ComplianceKind; current: ComplianceRecord | null; settings: { visitIntervalMonths: number }; now: Date; onDetails: () => void }) {
+  const { t, language } = useLanguage();
+  const agency = useMyAgency();
+  const renew = useRenewCompliance();
+  const suggestion = suggestRenewal(kind, current, settings, now);
+  const defaultYear = Number(suggestion.validFrom.slice(0, 4));
+  const [year, setYear] = useState(defaultYear);
+  const [error, setError] = useState<string | null>(null);
+  const period = kind === 'vignette' ? { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` } : suggestion;
+
+  function confirm() {
+    setError(null);
+    if (!agency.data) return;
+    const draft = renewalDraft(period);
+    renew.mutate(
+      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, draft, null, kind === 'vignette' ? null : periodOf(kind, current, settings)), localDocumentUri: null },
+      { onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
+    );
+  }
+
+  return (
+    <View style={{ gap: 12, padding: 14, borderRadius: 18, backgroundColor: Palette.surface }}>
+      {kind === 'vignette' ? (
+        <Segmented<string>
+          label={t('vehicleDetail.compliance.quickVignette')}
+          value={String(year)}
+          onChange={(value) => setYear(Number(value))}
+          options={[defaultYear, defaultYear + 1].map((value) => ({ value: String(value), label: String(value) }))}
+        />
+      ) : (
+        <View style={{ gap: 2 }}>
+          <HText size={12} color={Palette.textSecondary}>
+            {t(current ? 'vehicleDetail.compliance.quickNext' : 'vehicleDetail.compliance.quickFirst')}
+          </HText>
+          <HText weight="bold" size={16}>
+            {t('vehicleDetail.compliance.quickPeriod', { from: dayLabel(period.validFrom, language), to: dayLabel(period.validUntil, language) })}
+          </HText>
+        </View>
+      )}
+      {error ? (
+        <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
+          {error}
+        </HText>
+      ) : null}
+      <Button label={t('vehicleDetail.compliance.quickConfirm')} loadingLabel={t('vehicleDetail.editor.saving')} loading={renew.isPending} onPress={confirm} accessibilityLabel={t('vehicleDetail.compliance.quickConfirm')} />
+      <Button variant="link" label={t('vehicleDetail.compliance.quickDetails')} onPress={onDetails} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
+    </View>
+  );
+}
+
 /** Correction d'une période de l'historique (propriétaire et responsable). */
 function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicle; record: ComplianceRecord; showAmount: boolean; onClose: () => void }) {
   const { t } = useLanguage();
@@ -382,7 +436,7 @@ export function ComplianceBlock({ vehicle, now }: { vehicle: Vehicle; now: Date 
                   <RenewForm vehicle={vehicle} kind={kind} current={status.record} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
                 ) : (
                   <>
-                    <Button label={t('vehicleDetail.compliance.renew')} onPress={() => setMode('renew')} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
+                    <QuickRenew vehicle={vehicle} kind={kind} current={status.record} settings={settings} now={now} onDetails={() => setMode('renew')} />
                     {kind === 'visite_technique' && agency.data ? <PeriodicityEditor agencyId={agency.data.agencyId} months={settings.visitIntervalMonths} canEdit={canManage} /> : null}
                     <HText weight="semibold" size={12} color={Palette.textSecondary}>
                       {t('vehicleDetail.compliance.history')}
