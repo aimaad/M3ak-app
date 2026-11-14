@@ -380,7 +380,7 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
       expect(mockRouter.push).not.toHaveBeenCalled();
       expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
-      expect(screen.getByText('Marquer comme fait')).toBeTruthy();
+      expect(screen.queryByText('Marquer comme fait')).toBeNull(); // faire un entretien se fait dans la section « Entretien », pas ici
     });
 
     it('historique : aucune ligne → message ; avec une location terminée → ligne et montant (propriétaire)', async () => {
@@ -647,6 +647,39 @@ describe('fiche véhicule', () => {
       expect(await screen.findByText(/appliquez la migration 0071/)).toBeTruthy();
     });
 
+    it('section « Entretien » : à faire (urgent d’abord) puis historique ; le bouton « ✓ Fait » n’existe qu’ici', async () => {
+      mockState.maintenance = [
+        { ...vidange(), id: 'm1', echeanceDate: at(20) },
+        { id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null, cout: null, garage: null, dateIntervention: null },
+        { id: 'm3', vehicleId: 'v1', type: 'pneus', statut: 'effectuee', echeanceDate: null, echeanceKm: null, cout: 800, garage: 'Garage Atlas', dateIntervention: at(-30) },
+      ];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('À FAIRE')).toBeTruthy();
+      expect(screen.getByText('HISTORIQUE')).toBeTruthy();
+      expect(screen.getAllByLabelText(/^Marquer comme fait : /)).toHaveLength(2); // une seule fois par entretien à faire
+      expect(screen.getAllByText('800 MAD').length).toBeGreaterThanOrEqual(2); // le coût de l'historique et le total (propriétaire)
+      expect(screen.getByText('Total dépensé')).toBeTruthy();
+    });
+
+    it('section « Entretien », employé : aucun coût ni total', async () => {
+      mockState.role = 'employee';
+      mockState.maintenance = [{ id: 'm3', vehicleId: 'v1', type: 'pneus', statut: 'effectuee', echeanceDate: null, echeanceKm: null, cout: 800, garage: 'Garage Atlas', dateIntervention: at(-30) }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText('800 MAD')).toBeNull();
+      expect(screen.queryByText('Total dépensé')).toBeNull();
+    });
+
+    it('aucun entretien : message qui renvoie vers « Échéances »', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText(/Créez-en dans « Échéances »/)).toBeTruthy();
+    });
+
+    it('« ✓ Terminer » pour un entretien déjà démarré', async () => {
+      mockState.maintenance = [{ ...vidange(), statut: 'en_cours' }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('✓ Terminer')).toBeTruthy();
+    });
+
     it('« ✓ Fait » : kilométrage et date déjà remplis, un seul geste « Confirmer »', async () => {
       mockState.maintenance = [vidange()];
       await render(<VehicleDetailScreen />);
@@ -695,13 +728,12 @@ describe('fiche véhicule', () => {
       expect(screen.getByLabelText('6 mois').props.accessibilityState.checked).toBe(true);
     });
 
-    it('« Marquer comme fait » ouvre l’écran de l’entretien ; « Supprimer » demande confirmation (propriétaire)', async () => {
+    it('« Supprimer » demande confirmation (propriétaire) ; « Échéances » ne sert qu’à créer et corriger, pas à faire', async () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
       mockState.maintenance = [vidange()];
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      await fireEvent.press(screen.getByText('Marquer comme fait'));
-      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/maintenance/[id]', params: { id: 'm9' } });
+      expect(screen.queryByText('Marquer comme fait')).toBeNull();
       await fireEvent.press(screen.getByText("Supprimer l'échéance"));
       expect(alert).toHaveBeenCalledWith('Supprimer cette échéance ?', expect.any(String), expect.any(Array));
       expect(mockState.dueCalls.remove).toEqual([]); // rien avant confirmation

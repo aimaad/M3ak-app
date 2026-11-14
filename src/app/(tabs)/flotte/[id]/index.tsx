@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Card, PressableCard } from '@/components/card';
+import { Card } from '@/components/card';
 import { InfoRow } from '@/components/info-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -24,6 +24,7 @@ import { useVehicleInspections } from '@/features/inspections/hooks';
 import { buildDues } from '@/features/vehicles/detail/dues';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
 import { DuesSection } from '@/features/vehicles/detail/dues-section';
+import { MaintenanceSection } from '@/features/vehicles/detail/maintenance-section';
 import { DocumentsRow, HistoryCard, SpecsGrid } from '@/features/vehicles/detail/sections-view';
 import { buildSpecs } from '@/features/vehicles/detail/specs';
 import { DetailHeader } from '@/features/vehicles/detail/detail-header';
@@ -85,7 +86,6 @@ export default function VehicleDetailScreen() {
     onSectionLayoutAuto(name)(event);
   };
 
-  const totalMaintenanceCost = maintenanceItems.filter((entry) => entry.statut === 'effectuee' && entry.cout != null).reduce((sum, entry) => sum + (entry.cout ?? 0), 0);
   const name = vehicle ? displayName(vehicle) : '';
 
   const card = vehicle && item && context
@@ -312,54 +312,8 @@ export default function VehicleDetailScreen() {
             <View onLayout={onSectionLayout('documents')}>
               <DocumentsRow vehicle={vehicle} onAdd={goDocuments} />
             </View>
-            <View className="gap-2" onLayout={onSectionLayout('entretien')}>
-              <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
-              {totalMaintenanceCost > 0 ? (
-                <View className="flex-row items-center justify-between rounded-2xl border border-border bg-card px-4 py-3">
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('maintenance.totalCost')}
-                  </ThemedText>
-                  <ThemedText type="smallBold" style={{ fontSize: 18, lineHeight: 24 }}>
-                    {totalMaintenanceCost.toLocaleString('fr-FR')} MAD
-                  </ThemedText>
-                </View>
-              ) : null}
-              {maintenanceItems.length === 0 ? (
-                <View className="gap-1 rounded-3xl border border-dashed border-border bg-card p-4">
-                  <ThemedText type="small" themeColor="textSecondary">
-                    {t('maintenance.empty')}
-                  </ThemedText>
-                </View>
-              ) : (
-                <View className="gap-2">
-                  {maintenanceItems.map((item) => (
-                    <PressableCard
-                      key={item.id}
-                      onPress={() => router.push(`/maintenance/${item.id}`)}
-                      padded={false}
-                      className="flex-row items-center justify-between px-4 py-3"
-                    >
-                      <View className="flex-1 gap-0.5">
-                        <ThemedText type="small">{t(`maintenance.types.${item.type}`)}</ThemedText>
-                        <ThemedText type="small" themeColor="textSecondary">
-                          {(item.dateIntervention ?? item.echeanceDate)
-                            ? new Date((item.dateIntervention ?? item.echeanceDate) as string).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
-                            : '—'}
-                          {' · '}
-                          {item.statut === 'effectuee'
-                            ? t('maintenance.done')
-                            : item.statut === 'en_cours'
-                              ? t('maintenance.status.en_cours')
-                              : t(`maintenance.urgency.${item.statut}`)}
-                        </ThemedText>
-                      </View>
-                      <ThemedText type="smallBold">
-                        {item.cout != null ? `${item.cout.toLocaleString('fr-FR')} MAD` : '—'}
-                      </ThemedText>
-                    </PressableCard>
-                  ))}
-                </View>
-              )}
+            <View onLayout={onSectionLayout('entretien')}>
+              <MaintenanceSection vehicle={vehicle} items={maintenanceItems} now={now} showCost={showPrice} />
             </View>
 
             {isManager && !vehicle.archivedAt ? <ArchiveSection block={block} now={now} onArchive={handleArchive} /> : null}

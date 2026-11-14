@@ -3717,7 +3717,13 @@
         "invalid_number": "Entrez un kilométrage valide.",
         "future": "La date ne peut pas être dans le futur.",
         "invalid_cost": "Entrez un montant positif."
-      }
+      },
+      "finish": "✓ Terminer"
+    },
+    "maintenanceSection": {
+      "empty": "Aucun entretien pour l'instant. Créez-en dans « Échéances » avec « + Ajouter ».",
+      "todo": "À faire",
+      "history": "Historique"
     }
   },
   "vehiclePhotos": {

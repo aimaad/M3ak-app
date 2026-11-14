@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
@@ -8,19 +7,17 @@ import { DUE_TYPE_IMAGE } from '@/constants/due-icons';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
-import { useCreateMaintenanceItem, useDeleteMaintenanceItem, useQuickCompleteMaintenance, useUpdateMaintenanceDue, useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
+import { useCreateMaintenanceItem, useDeleteMaintenanceItem, useUpdateMaintenanceDue, useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
 import type { MaintenanceType } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
 
 import { useUpdateVehicleDocuments } from '../hooks';
-import { canSeePrices } from '../fleet-card';
 import { describeSaveError } from '../save-error';
 import type { Vehicle } from '../types';
 import { fromIsoDate, toIsoDate } from '../validation';
 import { ComplianceBlock } from './compliance-block';
 import { ADDABLE_DUE_TYPES, defaultRepeat, draftOf, dueSuggestion, newDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
-import { quickDoneDraft, quickDoneInput, validateQuickDone, type QuickDoneDraft } from './quick-done';
 
 const NO_ITEMS: never[] = [];
 const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 16, gap: 4 } as const;
@@ -29,7 +26,7 @@ const shortDate = (iso: string, language: string) => new Date(iso).toLocaleDateS
 
 
 /** Un seul bouton orange par formulaire (Enregistrer), « Annuler » en secondaire, le message d'échec dessous. */
-function DueActions({ onSave, onCancel, busy, error, saveLabel }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null; saveLabel?: string }) {
+function DueActions({ onSave, onCancel, busy, error }: { onSave: () => void; onCancel: () => void; busy: boolean; error: string | null }) {
   const { t } = useLanguage();
   return (
     <View style={{ gap: 10 }}>
@@ -38,7 +35,7 @@ function DueActions({ onSave, onCancel, busy, error, saveLabel }: { onSave: () =
           {error}
         </HText>
       ) : null}
-      <Button label={saveLabel ?? t('vehicleDetail.editor.save')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={saveLabel ?? t('vehicleDetail.editor.save')} />
+      <Button label={t('vehicleDetail.editor.save')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.editor.save')} />
       <Button variant="secondary" label={t('vehicleDetail.editor.cancel')} onPress={onCancel} disabled={busy} />
     </View>
   );
@@ -142,54 +139,6 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
   );
 }
 
-/**
- * « ✓ Fait » en un geste : kilométrage de la fiche et date du jour déjà remplis, on confirme. Garage et coût (propriétaire et responsable)
- * sont facultatifs, sous « Ajouter des détails ». La suivante se crée toute seule si l'échéance est périodique.
- */
-function QuickDone({ row, vehicle, now, showCost, onClose }: { row: DueRow; vehicle: Vehicle; now: Date; showCost: boolean; onClose: () => void }) {
-  const { t } = useLanguage();
-  const done = useQuickCompleteMaintenance();
-  const [draft, setDraft] = useState<QuickDoneDraft>(() => quickDoneDraft(vehicle, now));
-  const [details, setDetails] = useState(false);
-  const [showErrors, setShowErrors] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const errors = validateQuickDone(draft, vehicle, now);
-  const message = (field: 'km' | 'date' | 'cout') => (errors[field] ? t(`vehicleDetail.quick.err.${errors[field]}`, { km: formatAmount(vehicle.kilometrage) }) : undefined);
-
-  function confirm() {
-    setShowErrors(true);
-    setError(null);
-    if (Object.keys(errors).length > 0 || !row.maintenanceId) return;
-    done.mutate({ id: row.maintenanceId, input: quickDoneInput(draft, showCost) }, { onSuccess: onClose, onError: (failure) => setError(describeSaveError(failure, t, 'vehicleDetail.quick.failed')) });
-  }
-
-  return (
-    <View style={{ gap: 14, padding: 14, marginBottom: 12, borderRadius: 18, backgroundColor: Palette.surface }}>
-      <HText font="display" weight="bold" size={16} accessibilityRole="header">
-        {t('vehicleDetail.quick.title', { label: t(`maintenance.types.${row.type}`) })}
-      </HText>
-      <FormField label={t('vehicleDetail.quick.km')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} error={message('km')} showError={showErrors} />
-      <DateField label={t('vehicleDetail.quick.date')} value={draft.date} onChange={(iso) => setDraft({ ...draft, date: iso })} maximumDate={now} error={message('date')} showError={showErrors} />
-      {details ? (
-        <View style={{ gap: 14 }}>
-          <FormField label={t('maintenance.fields.garage')} value={draft.garage} onChangeText={(value) => setDraft({ ...draft, garage: value })} placeholder={t('vehicleDetail.quick.garagePlaceholder')} autoCapitalize="words" />
-          {showCost ? <FormField label={t('maintenance.fields.cout')} value={draft.cout} onChangeText={(value) => setDraft({ ...draft, cout: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" unit="MAD" placeholder={t('vehicleDetail.quick.costPlaceholder')} error={message('cout')} showError={showErrors} /> : null}
-        </View>
-      ) : (
-        <Pressable onPress={() => setDetails(true)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
-          <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
-            {t('vehicleDetail.quick.moreDetails')}
-          </HText>
-        </Pressable>
-      )}
-      <HText size={12} color={Palette.textSecondary}>
-        {t('vehicleDetail.quick.hint')}
-      </HText>
-      <DueActions onSave={confirm} onCancel={onClose} busy={done.isPending} error={error} saveLabel={t('vehicleDetail.quick.confirm')} />
-    </View>
-  );
-}
-
 /** Une ligne d'échéance dépliée : correction de la date et du kilométrage, « Marquer comme fait » (écran d'entretien), « Supprimer ». */
 function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehicle: Vehicle; now: Date; canDelete: boolean; onClose: () => void }) {
   const { t } = useLanguage();
@@ -241,18 +190,12 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
     ]);
   }
 
-  const link = { minHeight: 44, justifyContent: 'center' } as const;
   return (
     <View style={{ gap: 16, padding: 14, marginBottom: 12, borderRadius: 18, backgroundColor: Palette.surface }}>
       <DueFields type={row.type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
       <DueActions onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
       {row.maintenanceId ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <Pressable onPress={() => router.push({ pathname: '/maintenance/[id]', params: { id: row.maintenanceId as string } })} accessibilityRole="button" style={link}>
-            <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
-              {t('vehicleDetail.dues.edit.markDone')}
-            </HText>
-          </Pressable>
           {canDelete ? <DangerLink label={t('vehicleDetail.dues.edit.delete')} onPress={confirmDelete} /> : null}
         </View>
       ) : null}
@@ -270,8 +213,6 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
   const { t, language } = useLanguage();
   const agency = useMyAgency();
   const [open, setOpen] = useState<string | 'new' | null>(null);
-  const [quick, setQuick] = useState<string | null>(null);
-  const showCost = canSeePrices(agency.data?.role);
   const canDelete = agency.data?.role === 'owner' || agency.data?.role === 'manager';
   const dueText = (row: DueRow) => {
     switch (row.due.kind) {
@@ -329,7 +270,6 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
           <View key={row.key} style={{ borderTopWidth: 1, borderTopColor: Brand.gaugeTrack }}>
             <Pressable
               onPress={() => {
-                setQuick(null);
                 setOpen(expanded ? null : row.key);
               }}
               accessibilityRole="button"
@@ -356,25 +296,8 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
                   {sub}
                 </HText>
               </View>
-              {row.maintenanceId ? (
-                <Pressable
-                  onPress={() => {
-                    setOpen(null);
-                    setQuick(quick === row.key ? null : row.key);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={t('vehicleDetail.quick.a11y', { label })}
-                  hitSlop={6}
-                  style={{ minHeight: 44, minWidth: 64, paddingHorizontal: 12, borderRadius: 22, backgroundColor: Brand.graphite, alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <HText weight="semibold" size={13} color={Brand.white}>
-                    {t('vehicleDetail.quick.button')}
-                  </HText>
-                </Pressable>
-              ) : null}
               <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.textSecondary} />
             </Pressable>
-            {quick === row.key ? <QuickDone row={row} vehicle={vehicle} now={now} showCost={showCost} onClose={() => setQuick(null)} /> : null}
             {expanded ? <EditDue row={row} vehicle={vehicle} now={now} canDelete={canDelete} onClose={() => setOpen(null)} /> : null}
           </View>
         );
