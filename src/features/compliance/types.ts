@@ -18,6 +18,8 @@ export type ComplianceRecord = {
   amount: number | null;
   documentPath: string | null;
   notes: string | null;
+  /** Durée de la période en mois (assurance, visite) : le renouvellement suivant la reprend. Absent pour la vignette (année civile). */
+  periodMonths: number | null;
   createdBy: string | null;
   createdAt: string;
 };
@@ -32,6 +34,7 @@ export type ComplianceInput = {
   amount: number | null;
   documentPath: string | null;
   notes: string | null;
+  periodMonths?: number | null;
 };
 
 export type ComplianceSettings = { visitIntervalMonths: number };

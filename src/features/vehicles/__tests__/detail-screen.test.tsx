@@ -544,7 +544,7 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
       await pickDate(/^Date d'échéance/, new Date(2027, 0, 31));
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      await waitFor(() => expect(mockState.dueCalls.update).toEqual([{ id: 'm9', patch: { echeanceDate: '2027-01-31', echeanceKm: null, notes: null } }]));
+      await waitFor(() => expect(mockState.dueCalls.update).toEqual([{ id: 'm9', patch: { echeanceDate: '2027-01-31', echeanceKm: null, notes: null, repeatKm: null, repeatMonths: null } }]));
     });
 
     it('la suggestion « Dans 12 mois » remplit la date', async () => {
@@ -571,7 +571,35 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getAllByText('Freins')[0]);
       await fireEvent.press(screen.getByText(/^À 70.?000 km$/)); // 40 000 + 30 000
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'freins', echeanceDate: null, echeanceKm: 70000, notes: null } }]);
+      expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'freins', echeanceDate: null, echeanceKm: 70000, notes: null, repeatKm: 30000, repeatMonths: null } }]);
+    });
+
+    it('périodicité : la vidange propose déjà « tous les 10 000 km » et 12 mois ; elle est enregistrée avec l’échéance', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      expect(screen.getByDisplayValue('10 000')).toBeTruthy(); // rien à retaper
+      expect(screen.getByLabelText('12 mois').props.accessibilityState.checked).toBe(true);
+      await fireEvent.press(screen.getByText(/^À \d+.?\d* km$/));
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', repeatKm: 10000, repeatMonths: 12 } }]);
+    });
+
+    it('périodicité : « Jamais » et un champ vide = échéance ponctuelle', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.changeText(screen.getByDisplayValue('10 000'), '');
+      await fireEvent.press(screen.getByLabelText('Jamais'));
+      await fireEvent.press(screen.getByText(/^À \d+.?\d* km$/));
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', repeatKm: null, repeatMonths: null } }]);
+    });
+
+    it('périodicité : une échéance existante montre sa périodicité enregistrée', async () => {
+      mockState.maintenance = [{ ...vidange(), repeatKm: 15000, repeatMonths: 6 }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
+      expect(screen.getByDisplayValue('15 000')).toBeTruthy();
+      expect(screen.getByLabelText('6 mois').props.accessibilityState.checked).toBe(true);
     });
 
     it('« Marquer comme fait » ouvre l’écran de l’entretien ; « Supprimer » demande confirmation (propriétaire)', async () => {
@@ -639,6 +667,37 @@ describe('fiche véhicule', () => {
       const input = (mockState.renewCalls[0] as { input: { validFrom: string; validUntil: string } }).input;
       expect(input.validFrom).toBe(day(66)); // le lendemain de la fin en cours
       expect(input.validUntil > input.validFrom).toBe(true);
+    });
+
+    it('durée de la période : 12 mois d’office ; changer la durée recalcule la fin et elle est mémorisée', async () => {
+      mockState.compliance = [record({})];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      await fireEvent.press(screen.getByLabelText('Renouveler'));
+      expect(screen.getByLabelText('12 mois').props.accessibilityState.checked).toBe(true);
+      await fireEvent.press(screen.getByLabelText('6 mois'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.renewCalls).toHaveLength(1);
+      const input = (mockState.renewCalls[0] as { input: { validFrom: string; validUntil: string; periodMonths: number } }).input;
+      expect(input.periodMonths).toBe(6);
+      expect(input.validFrom).toBe(day(66));
+    });
+
+    it('durée déjà réglée (6 mois) : le renouvellement suivant la reprend sans rien retaper', async () => {
+      mockState.compliance = [record({ periodMonths: 6 })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      await fireEvent.press(screen.getByLabelText('Renouveler'));
+      expect(screen.getByLabelText('6 mois').props.accessibilityState.checked).toBe(true);
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect((mockState.renewCalls[0] as { input: { periodMonths: number } }).input.periodMonths).toBe(6);
+    });
+
+    it('vignette : pas de durée (année civile)', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vignette : /));
+      await fireEvent.press(screen.getByLabelText('Renouveler'));
+      expect(screen.queryByLabelText('Durée de la période')).toBeNull();
     });
 
     it('une période qui ne finit pas APRÈS la période en cours est refusée', async () => {

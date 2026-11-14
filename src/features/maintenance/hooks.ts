@@ -80,7 +80,7 @@ export function useUpdateMaintenanceDue() {
   const invalidate = useInvalidateMaintenance();
 
   return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null } }) => updateMaintenanceDue(id, patch),
+    mutationFn: ({ id, patch }: { id: string; patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null; repeatKm?: number | null; repeatMonths?: number | null } }) => updateMaintenanceDue(id, patch),
     onSuccess: (item) => invalidate(item),
   });
 }

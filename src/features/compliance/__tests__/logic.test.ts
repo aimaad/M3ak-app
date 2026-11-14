@@ -1,8 +1,8 @@
 import type { ComplianceRecord } from '../types';
-import { addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
+import { periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
 
 const NOW = new Date(2026, 10, 15, 12); // 15 nov. 2026
-const rec = (kind: ComplianceRecord['kind'], validUntil: string, extra: Partial<ComplianceRecord> = {}): ComplianceRecord => ({ id: `${kind}-${validUntil}`, agencyId: 'a', vehicleId: 'v', kind, validFrom: null, validUntil, reference: null, provider: null, amount: null, documentPath: null, notes: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
+const rec = (kind: ComplianceRecord['kind'], validUntil: string, extra: Partial<ComplianceRecord> = {}): ComplianceRecord => ({ id: `${kind}-${validUntil}`, agencyId: 'a', vehicleId: 'v', kind, validFrom: null, validUntil, reference: null, provider: null, amount: null, documentPath: null, notes: null, periodMonths: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
 const vehicle: { dateMiseEnCirculation?: string | null } = { dateMiseEnCirculation: null };
 const settings = { visitIntervalMonths: 6 };
 
@@ -122,8 +122,9 @@ describe('renouvellement : validation', () => {
   });
   it('envoi : dates ISO, montant en nombre, champs vides → null', () => {
     expect(renewalInput('v1', 'assurance', draft({ reference: ' POL-1 ', amount: '4200,5' }), 'p.jpg')).toEqual({
-      vehicleId: 'v1', kind: 'assurance', validFrom: '2026-12-27', validUntil: '2027-12-26', reference: 'POL-1', provider: null, amount: 4200.5, documentPath: 'p.jpg', notes: null,
+      vehicleId: 'v1', kind: 'assurance', validFrom: '2026-12-27', validUntil: '2027-12-26', reference: 'POL-1', provider: null, amount: 4200.5, documentPath: 'p.jpg', notes: null, periodMonths: null,
     });
+    expect(renewalInput('v1', 'assurance', draft({}), null, 6).periodMonths).toBe(6);
   });
 });
 
@@ -153,5 +154,26 @@ describe('avertissements avant une location (jamais bloquants)', () => {
     const late = [ok[0], ok[1], rec('vignette', '2025-12-31')];
     expect(rentalWarnings(late, vehicle, start, end, NOW)).toEqual([{ kind: 'vignette', code: 'expired', due: '2026-01-31' }]);
     expect(rentalWarnings([ok[0], ok[1]], vehicle, start, end, NOW)).toEqual([]);
+  });
+});
+
+describe('périodes mémorisées', () => {
+  it('assurance : la durée de la période en cours est reprise (6 mois → 6 mois), sinon 12', () => {
+    expect(periodOf('assurance', rec('assurance', '2026-12-26', { periodMonths: 6 }), settings)).toBe(6);
+    expect(periodOf('assurance', null, settings)).toBe(12);
+    expect(suggestRenewal('assurance', rec('assurance', '2026-12-26', { periodMonths: 6 }), settings, NOW)).toEqual({ validFrom: '2026-12-27', validUntil: '2027-06-26' });
+  });
+  it('visite technique : durée mémorisée, sinon périodicité de l’agence', () => {
+    expect(periodOf('visite_technique', rec('visite_technique', '2026-12-26', { periodMonths: 12 }), settings)).toBe(12);
+    expect(periodOf('visite_technique', null, settings)).toBe(6);
+    expect(suggestRenewal('visite_technique', rec('visite_technique', '2026-05-01', { periodMonths: 12 }), settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '2027-11-15' });
+  });
+  it('vignette : pas de durée (année civile)', () => {
+    expect(periodOf('vignette', null, settings)).toBeNull();
+  });
+  it('changer la durée recalcule la fin : assurance = veille de l’anniversaire ; visite = date + durée', () => {
+    expect(renewalEnd('assurance', '2026-12-27', 12)).toBe('2027-12-26');
+    expect(renewalEnd('assurance', '2026-12-27', 3)).toBe('2027-03-26');
+    expect(renewalEnd('visite_technique', '2026-11-15', 6)).toBe('2027-05-15');
   });
 });

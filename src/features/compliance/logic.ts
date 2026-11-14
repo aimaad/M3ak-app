@@ -103,15 +103,30 @@ export type RenewalSuggestion = { validFrom: string; validUntil: string };
  *  - visite technique : à partir d'aujourd'hui (date de la visite), pour la périodicité réglée par l'agence (6 mois par défaut) ;
  *  - vignette : l'année civile (la suivante si l'année en cours est déjà couverte).
  */
-export function suggestRenewal(kind: ComplianceKind, current: ComplianceRecord | null, settings: ComplianceSettings, now: Date): RenewalSuggestion {
+export function suggestRenewal(kind: ComplianceKind, current: ComplianceRecord | null, settings: ComplianceSettings, now: Date, months?: number): RenewalSuggestion {
   const today = dayKey(now);
   if (kind === 'vignette') {
     const year = current && current.validUntil >= `${now.getFullYear()}-12-31` ? now.getFullYear() + 1 : now.getFullYear();
     return { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` };
   }
-  if (kind === 'visite_technique') return { validFrom: today, validUntil: addMonths(today, settings.visitIntervalMonths) };
+  const length = months ?? periodOf(kind, current, settings) ?? 12;
+  if (kind === 'visite_technique') return { validFrom: today, validUntil: addMonths(today, length) };
   const start = current && current.validUntil >= today ? addDays(current.validUntil, 1) : today;
-  return { validFrom: start, validUntil: addDays(addMonths(start, 12), -1) };
+  return { validFrom: start, validUntil: addDays(addMonths(start, length), -1) };
+}
+
+/**
+ * Durée de la période en mois, réglée une fois puis reprise à chaque renouvellement : celle de la période en cours si elle est connue,
+ * sinon 12 mois (assurance) ou la périodicité de l'agence (visite technique). `null` pour la vignette (année civile).
+ */
+export function periodOf(kind: ComplianceKind, current: ComplianceRecord | null, settings: ComplianceSettings): number | null {
+  if (kind === 'vignette') return null;
+  return current?.periodMonths ?? (kind === 'visite_technique' ? settings.visitIntervalMonths : 12);
+}
+
+/** Fin de période quand on change la durée : assurance = veille de l'anniversaire, visite = date + durée. `from` : AAAA-MM-JJ. */
+export function renewalEnd(kind: ComplianceKind, from: string, months: number): string {
+  return kind === 'visite_technique' ? addMonths(from, months) : addDays(addMonths(from, months), -1);
 }
 
 export type RenewalDraft = { validFrom: string; validUntil: string; reference: string; provider: string; amount: string; notes: string };
@@ -150,7 +165,7 @@ export function validateRenewal(draft: RenewalDraft, current: ComplianceRecord |
   return errors;
 }
 
-export function renewalInput(vehicleId: string, kind: ComplianceKind, draft: RenewalDraft, documentPath: string | null): ComplianceInput {
+export function renewalInput(vehicleId: string, kind: ComplianceKind, draft: RenewalDraft, documentPath: string | null, periodMonths: number | null = null): ComplianceInput {
   return {
     vehicleId,
     kind,
@@ -161,6 +176,7 @@ export function renewalInput(vehicleId: string, kind: ComplianceKind, draft: Ren
     amount: draft.amount.trim() ? Number(draft.amount.replace(',', '.')) : null,
     documentPath,
     notes: draft.notes.trim() || null,
+    periodMonths,
   };
 }
 

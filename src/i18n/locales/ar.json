@@ -3570,7 +3570,13 @@
         "closeRow": "إغلاق",
         "empty": "لا توجد مواعيد مسجلة.",
         "addDocument": "إضافة صورة الوثيقة",
-        "notesPlaceholder": "مثال: تغيير فلتر الهواء أيضًا"
+        "notesPlaceholder": "مثال: تغيير فلتر الهواء أيضًا",
+        "repeatKmLabel": "تكرار كل",
+        "repeatKmPlaceholder": "مثال: 10 000",
+        "repeatHelp": "اتركه فارغًا إن لم يكن دوريًا. يُنشأ الموعد التالي تلقائيًا عند تعيينه كمنجَز.",
+        "repeatMonthsLabel": "أو كل",
+        "repeatNever": "أبدًا",
+        "repeatMonths": "{{n}} أشهر"
       }
     },
     "specs": {
@@ -3756,7 +3762,9 @@
       },
       "amountPlaceholder": "مثال: 1 850",
       "notesPlaceholder": "مثال: أُدّي نقدًا",
-      "photoHint": "ضع الوثيقة داخل الإطار"
+      "photoHint": "ضع الوثيقة داخل الإطار",
+      "duration": "مدة الفترة",
+      "durationMonths": "{{n}} أشهر"
     }
   },
   "vehiclePhotos": {

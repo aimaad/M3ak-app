@@ -25,6 +25,9 @@ export type MaintenanceItem = {
   piecesRemplacees: string | null;
   facturePath: string | null;
   dateIntervention: string | null;
+  /** Périodicité : « tous les N km » et/ou « tous les N mois » (la suivante se crée quand celle-ci passe à « effectuée »). */
+  repeatKm: number | null;
+  repeatMonths: number | null;
   createdAt: string;
 };
 
@@ -34,6 +37,8 @@ export type MaintenanceInput = {
   echeanceDate: string | null;
   echeanceKm: number | null;
   notes: string | null;
+  repeatKm?: number | null;
+  repeatMonths?: number | null;
 };
 
 export type MaintenanceCompletionInput = {

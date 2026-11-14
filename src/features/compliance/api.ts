@@ -16,6 +16,7 @@ type Row = {
   amount: number | string | null;
   document_path: string | null;
   notes: string | null;
+  period_months?: number | null;
   created_by: string | null;
   created_at: string;
 };
@@ -32,6 +33,7 @@ const fromRow = (row: Row): ComplianceRecord => ({
   amount: row.amount === null ? null : Number(row.amount),
   documentPath: row.document_path,
   notes: row.notes,
+  periodMonths: row.period_months ?? null,
   createdBy: row.created_by,
   createdAt: row.created_at,
 });
@@ -67,6 +69,7 @@ export async function createComplianceRecord(agencyId: string, input: Compliance
       amount: input.amount,
       document_path: input.documentPath,
       notes: input.notes,
+      period_months: input.periodMonths ?? null,
     })
     .select()
     .single();

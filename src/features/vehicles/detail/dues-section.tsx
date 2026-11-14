@@ -7,7 +7,7 @@ import { Button, ChoiceTiles, DangerLink, DateField, FormField } from '@/compone
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
-import { useCreateMaintenanceItem, useDeleteMaintenanceItem, useUpdateMaintenanceDue } from '@/features/maintenance/hooks';
+import { useCreateMaintenanceItem, useDeleteMaintenanceItem, useUpdateMaintenanceDue, useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
 import type { MaintenanceType } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -15,9 +15,10 @@ import { useUpdateVehicleDocuments } from '../hooks';
 import type { Vehicle } from '../types';
 import { fromIsoDate, toIsoDate } from '../validation';
 import { ComplianceBlock } from './compliance-block';
-import { ADDABLE_DUE_TYPES, draftOf, dueSuggestion, emptyDraft, planDueSave, validateDue, type DueDraft } from './dues-edit';
+import { ADDABLE_DUE_TYPES, draftOf, dueSuggestion, newDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
 
+const NO_ITEMS: never[] = [];
 const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 16, gap: 4 } as const;
 const DUE_ICON: Record<DueRow['icon'], keyof typeof Ionicons.glyphMap> = { shield: 'shield-checkmark-outline', calendar: 'calendar-outline', wrench: 'construct-outline' };
 const shortDate = (iso: string, language: string) => new Date(iso).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short' });
@@ -57,7 +58,7 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
   const { t } = useLanguage();
   const errors = validateDue(draft);
   const suggestion = dueSuggestion(type, vehicle, now);
-  const message = (field: 'date' | 'km') => {
+  const message = (field: 'date' | 'km' | 'repeatKm') => {
     const code = showErrors ? errors[field] : undefined;
     return code ? (code === 'need_one' ? t('vehicleDetail.dues.edit.needOne') : t(`vehicle.form.errors.${code}`)) : undefined;
   };
@@ -71,6 +72,17 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
         <FormField label={t('vehicleDetail.dues.edit.kmLabel')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} help={t('vehicleDetail.dues.edit.kmCurrent', { km: formatAmount(vehicle.kilometrage) })} error={message('km')} showError={showErrors} />
         {suggestion.km !== null ? <Suggestion text={t('vehicleDetail.dues.edit.suggestKm', { km: formatAmount(suggestion.km) })} onPress={() => setDraft({ ...draft, km: String(suggestion.km) })} /> : null}
       </View>
+      {REPEATABLE_TYPES.includes(type) ? (
+        <View style={{ gap: 12 }}>
+          <FormField label={t('vehicleDetail.dues.edit.repeatKmLabel')} value={draft.repeatKm} onChangeText={(value) => setDraft({ ...draft, repeatKm: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleDetail.dues.edit.repeatKmPlaceholder')} help={t('vehicleDetail.dues.edit.repeatHelp')} error={message('repeatKm')} showError={showErrors} />
+          <ChoiceTiles<string>
+            label={t('vehicleDetail.dues.edit.repeatMonthsLabel')}
+            value={draft.repeatMonths === '' ? 'none' : draft.repeatMonths}
+            onChange={(value) => setDraft({ ...draft, repeatMonths: value === 'none' ? '' : value })}
+            options={['none', '6', '12', '24'].map((value) => ({ value, label: value === 'none' ? t('vehicleDetail.dues.edit.repeatNever') : t('vehicleDetail.dues.edit.repeatMonths', { n: value }), icon: value === 'none' ? ('close-outline' as const) : ('repeat-outline' as const) }))}
+          />
+        </View>
+      ) : null}
       <FormField label={t('vehicleDetail.dues.edit.notesLabel')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.dues.edit.notesPlaceholder')} multiline />
     </View>
   );
@@ -82,7 +94,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
   const agency = useMyAgency();
   const create = useCreateMaintenanceItem();
   const [type, setType] = useState<MaintenanceType>('vidange');
-  const [draft, setDraft] = useState<DueDraft>(emptyDraft);
+  const [draft, setDraft] = useState<DueDraft>(() => newDraft('vidange'));
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const plan = planDueSave({ type }, { documents: [] }, draft);
@@ -102,7 +114,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t('vehicleDetail.dues.edit.addTitle')}
       </HText>
-      <ChoiceTiles<MaintenanceType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={setType} options={ADDABLE_DUE_TYPES.map((value) => ({ value, label: t(`maintenance.types.${value}`), icon: DUE_TYPE_ICON[value] ?? 'ellipse-outline' }))} />
+      <ChoiceTiles<MaintenanceType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={(next) => { setType(next); setDraft((previous) => ({ ...previous, repeatKm: newDraft(next).repeatKm, repeatMonths: newDraft(next).repeatMonths })); }} options={ADDABLE_DUE_TYPES.map((value) => ({ value, label: t(`maintenance.types.${value}`), icon: DUE_TYPE_ICON[value] ?? 'ellipse-outline' }))} />
       <DueFields type={type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
       <DueActions onSave={save} onCancel={onClose} busy={create.isPending} error={error} />
     </View>
@@ -117,7 +129,11 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
   const update = useUpdateMaintenanceDue();
   const remove = useDeleteMaintenanceItem();
   const updateDocuments = useUpdateVehicleDocuments();
-  const [draft, setDraft] = useState<DueDraft>(() => draftOf(row));
+  const items = useVehicleMaintenanceItems(vehicle.id).data ?? NO_ITEMS;
+  const [draft, setDraft] = useState<DueDraft>(() => {
+    const item = items.find((entry) => entry.id === row.maintenanceId);
+    return { ...draftOf(row), repeatKm: item?.repeatKm != null ? String(item.repeatKm) : '', repeatMonths: item?.repeatMonths != null ? String(item.repeatMonths) : '' };
+  });
   const [showErrors, setShowErrors] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -129,7 +145,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
     const plan = planDueSave(row, vehicle, draft);
     setBusy(true);
     try {
-      if (plan.updateItem) await update.mutateAsync({ id: plan.updateItem.id, patch: { echeanceDate: plan.updateItem.echeanceDate, echeanceKm: plan.updateItem.echeanceKm, notes: plan.updateItem.notes } });
+      if (plan.updateItem) await update.mutateAsync({ id: plan.updateItem.id, patch: { echeanceDate: plan.updateItem.echeanceDate, echeanceKm: plan.updateItem.echeanceKm, notes: plan.updateItem.notes, repeatKm: plan.updateItem.repeatKm, repeatMonths: plan.updateItem.repeatMonths } });
       if (plan.createItem && agency.data) await create.mutateAsync({ agencyId: agency.data.agencyId, input: { vehicleId: vehicle.id, ...plan.createItem } });
       if (plan.syncDocumentExpiry) {
         const { type, expiresAt } = plan.syncDocumentExpiry;

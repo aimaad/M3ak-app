@@ -10,7 +10,9 @@ import { useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRe
 import {
   allStatuses,
   historyOf,
+  periodOf,
   renewalDraft,
+  renewalEnd,
   renewalInput,
   suggestRenewal,
   toDisplayDate,
@@ -117,6 +119,8 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
   const agency = useMyAgency();
   const renew = useRenewCompliance();
   const [draft, setDraft] = useState<RenewalDraft>(() => renewalDraft(suggestRenewal(kind, current, settings, now)));
+  // Durée de la période : réglée une fois, reprise automatiquement aux renouvellements suivants.
+  const [months, setMonths] = useState<number | null>(() => periodOf(kind, current, settings));
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +131,7 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
     setError(null);
     if (Object.keys(errors).length > 0 || !agency.data) return;
     renew.mutate(
-      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null), localDocumentUri: localUri },
+      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null, months), localDocumentUri: localUri },
       { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : localUri ? t('vehicleDetail.compliance.uploadError') : t('vehicleDetail.compliance.saveError')) }
     );
   }
@@ -137,6 +141,19 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t(current ? 'vehicleDetail.compliance.renewTitle' : 'vehicleDetail.compliance.firstTitle', { kind: t(`vehicleDetail.compliance.kind.${kind}`) })}
       </HText>
+      {months !== null ? (
+        <ChoiceTiles<string>
+          label={t('vehicleDetail.compliance.duration')}
+          value={String(months)}
+          onChange={(value) => {
+            const next = Number(value);
+            setMonths(next);
+            const from = toIsoDate(draft.validFrom) ?? new Date().toISOString().slice(0, 10);
+            setDraft({ ...draft, validUntil: toDisplayDate(renewalEnd(kind, from, next)) });
+          }}
+          options={[...new Set([3, 6, 12, 24, months])].sort((a, b) => a - b).map((value) => ({ value: String(value), label: t('vehicleDetail.compliance.durationMonths', { n: value }), icon: 'repeat-outline' as const }))}
+        />
+      ) : null}
       <Fields kind={kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={current?.validUntil ?? null} localUri={localUri} onPick={setLocalUri} withPhoto />
       <FormButtons onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
     </View>

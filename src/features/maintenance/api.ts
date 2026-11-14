@@ -19,6 +19,8 @@ type MaintenanceRow = {
   pieces_remplacees: string | null;
   facture_path: string | null;
   date_intervention: string | null;
+  repeat_km: number | null;
+  repeat_months: number | null;
   created_at: string;
 };
 
@@ -37,6 +39,8 @@ function fromRow(row: MaintenanceRow): MaintenanceItem {
     piecesRemplacees: row.pieces_remplacees,
     facturePath: row.facture_path,
     dateIntervention: row.date_intervention,
+    repeatKm: row.repeat_km ?? null,
+    repeatMonths: row.repeat_months ?? null,
     createdAt: row.created_at,
   };
 }
@@ -82,6 +86,8 @@ export async function createMaintenanceItem(
       echeance_date: input.echeanceDate,
       echeance_km: input.echeanceKm,
       notes: input.notes,
+      repeat_km: input.repeatKm ?? null,
+      repeat_months: input.repeatMonths ?? null,
       // Une panne est un incident signalé maintenant, pas une échéance à venir :
       // elle démarre directement "en_cours" (le véhicule est immobilisé aussitôt).
       statut: input.type === 'panne' ? 'en_cours' : 'a_venir',
@@ -96,11 +102,11 @@ export async function createMaintenanceItem(
 /** Corrige date, kilométrage et notes d'une échéance pas encore commencée (le statut repart à « à venir » : l'urgence se recalcule). */
 export async function updateMaintenanceDue(
   id: string,
-  patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null }
+  patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null; repeatKm?: number | null; repeatMonths?: number | null }
 ): Promise<MaintenanceItem> {
   const { data, error } = await getSupabase()
     .from('maintenance_items')
-    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir' })
+    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir', ...(patch.repeatKm !== undefined ? { repeat_km: patch.repeatKm } : {}), ...(patch.repeatMonths !== undefined ? { repeat_months: patch.repeatMonths } : {}) })
     .eq('id', id)
     .in('statut', ['a_venir', 'due', 'en_retard'])
     .select()

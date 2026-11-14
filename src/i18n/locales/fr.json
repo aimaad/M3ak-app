@@ -3466,7 +3466,13 @@
         "closeRow": "Fermer",
         "empty": "Aucune échéance enregistrée.",
         "addDocument": "Ajouter la photo du document",
-        "notesPlaceholder": "ex. Changer aussi le filtre à air"
+        "notesPlaceholder": "ex. Changer aussi le filtre à air",
+        "repeatKmLabel": "Répéter tous les",
+        "repeatKmPlaceholder": "ex. 10 000",
+        "repeatHelp": "Laissez vide si ce n'est pas périodique. La suivante se crée toute seule quand vous marquez « fait ».",
+        "repeatMonthsLabel": "Ou tous les",
+        "repeatNever": "Jamais",
+        "repeatMonths": "{{n}} mois"
       }
     },
     "specs": {
@@ -3652,7 +3658,9 @@
       },
       "amountPlaceholder": "ex. 1 850",
       "notesPlaceholder": "ex. Payé en espèces",
-      "photoHint": "Placez le papier dans le cadre"
+      "photoHint": "Placez le papier dans le cadre",
+      "duration": "Durée de la période",
+      "durationMonths": "{{n}} mois"
     }
   },
   "vehiclePhotos": {
