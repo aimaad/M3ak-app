@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Champs et boutons</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#202527;text-decoration:none}a:hover{color:#CA531D}
+button,input{font-family:inherit}
+button{cursor:pointer}
+input::placeholder{color:#8A9193}
+</style>
+</helmet>
+<div style="width: 390px; height: 2140px; background: #F6F6F5; font-family: 'Inter', sans-serif; color: #202527; box-sizing: border-box; padding: 40px 20px; display: flex; flex-direction: column; gap: 26px">
+
+<div style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">KIT DE FORMULAIRE</span>
+<span style="font-family: 'Montserrat', sans-serif; font-size: 26px; font-weight: 700">Champs et boutons</span>
+</div>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">CHAMP TEXTE · 5 ÉTATS</span>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f1" style="font-size: 13px; font-weight: 600; color: #5E6466">Couleur</label>
+<input id="f1" placeholder="ex. Blanc" style="height: 56px; border-radius: 16px; border: 1px solid #E2E4E5; background: #FFFFFF; padding: 0 16px; font-size: 16px; font-weight: 600; color: #202527; outline: none">
+<span style="font-size: 12px; color: #5E6466">Vide · le texte d'aide donne un exemple</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f2" style="font-size: 13px; font-weight: 600; color: #CA531D">Marque</label>
+<input id="f2" value="Dac" style="height: 56px; border-radius: 16px; border: 1.5px solid #CA531D; background: #FFFFFF; padding: 0 16px; font-size: 16px; font-weight: 600; color: #202527; outline: none; box-shadow: 0 0 0 4px rgba(202,83,29,0.14)">
+<span style="display: flex; gap: 6px">
+<button style="height: 34px; border-radius: 17px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 13px; font-weight: 600; padding: 0 12px">Dacia</button>
+<button style="height: 34px; border-radius: 17px; border: 1px solid #E2E4E5; background: #FFFFFF; font-size: 13px; font-weight: 600; padding: 0 12px">Daewoo</button>
+</span>
+<span style="font-size: 12px; color: #5E6466">En cours · bordure orange + suggestions sous le champ</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f3" style="font-size: 13px; font-weight: 600; color: #5E6466">Modèle</label>
+<span style="display: flex; align-items: center; height: 56px; border-radius: 16px; border: 1px solid #E2E4E5; background: #FFFFFF; padding: 0 8px 0 16px; box-sizing: border-box">
+<input id="f3" value="Logan" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 16px; font-weight: 600; color: #202527">
+<span style="display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #B5481A; background: #FFF1EA; border-radius: 10px; padding: 5px 9px">
+<svg width="12" height="12" viewBox="0 0 24 24" fill="#B5481A" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"></path></svg>Lu par l'IA</span>
+</span>
+<span style="font-size: 12px; color: #5E6466">Rempli par l'IA · on sait d'où vient la valeur</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f4" style="font-size: 13px; font-weight: 600; color: #C42B4B">N° de série (VIN)</label>
+<input id="f4" value="UU1LSDAAH5432" aria-invalid="true" style="height: 56px; border-radius: 16px; border: 1.5px solid #C42B4B; background: #FFF5F7; padding: 0 16px; font-size: 16px; font-weight: 600; letter-spacing: 0.04em; color: #202527; outline: none">
+<span style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #C42B4B">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C42B4B" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v6M12 17h.01"></path></svg>13 caractères sur 17. Vérifiez la carte grise.</span>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="f5" style="font-size: 13px; font-weight: 600; color: #8A9193">Propriétaire</label>
+<input id="f5" value="AGENCE TEST M3AK SARL" disabled style="height: 56px; border-radius: 16px; border: 1px dashed #D5D8D9; background: #EEF0F0; padding: 0 16px; font-size: 16px; font-weight: 600; color: #5E6466; outline: none">
+<span style="font-size: 12px; color: #5E6466">Verrouillé · vient de la carte grise</span>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">NOMBRES, PRIX ET DATES</span>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<label for="km" style="font-size: 13px; font-weight: 600; color: #5E6466">Kilométrage actuel</label>
+<span style="display: flex; align-items: center; height: 60px; border-radius: 16px; border: 1px solid #E2E4E5; background: #FFFFFF; padding: 0 8px 0 16px; box-sizing: border-box">
+<input id="km" value="45 200" inputmode="numeric" style="flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-family: 'Montserrat', sans-serif; font-size: 22px; font-weight: 700; color: #202527">
+<span style="font-size: 13px; font-weight: 700; color: #5E6466; background: #F6F6F5; border-radius: 10px; padding: 7px 10px">km</span>
+</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 13px; font-weight: 600; color: #5E6466">Prix par jour</span>
+<span style="display: flex; align-items: center; gap: 10px; background: #FFFFFF; border: 1px solid #E2E4E5; border-radius: 16px; padding: 6px">
+<button onClick="{{minus}}" aria-label="Moins 50 dirhams" style="width: 48px; height: 48px; border-radius: 12px; border: none; background: #F6F6F5; font-size: 22px; font-weight: 600; color: #202527">−</button>
+<span style="flex: 1; display: flex; align-items: baseline; justify-content: center; gap: 6px"><span style="font-family: 'Montserrat', sans-serif; font-size: 28px; font-weight: 700">{{price}}</span><span style="font-size: 13px; font-weight: 700; color: #5E6466">MAD / jour</span></span>
+<button onClick="{{plus}}" aria-label="Plus 50 dirhams" style="width: 48px; height: 48px; border-radius: 12px; border: none; background: #F6F6F5; font-size: 22px; font-weight: 600; color: #202527">+</button>
+</span>
+<span style="display: flex; gap: 6px; flex-wrap: wrap">
+<button style="height: 34px; border-radius: 17px; border: 1px solid #F3C9B3; background: #FFF6F1; font-size: 12px; font-weight: 600; color: #B5481A; padding: 0 12px">Semaine : 3 300 (−15 %)</button>
+<button style="height: 34px; border-radius: 17px; border: 1px solid #F3C9B3; background: #FFF6F1; font-size: 12px; font-weight: 600; color: #B5481A; padding: 0 12px">Mois : 12 000 (−27 %)</button>
+</span>
+<span style="font-size: 12px; color: #5E6466">Semaine et mois proposés à partir du prix du jour : un tap les remplit</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 13px; font-weight: 600; color: #5E6466">Prochaine vidange</span>
+<button style="height: 60px; border-radius: 16px; border: 1px solid #E2E4E5; background: #FFFFFF; padding: 0 16px; display: flex; align-items: center; gap: 12px; text-align: left">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#202527" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>
+<span style="flex: 1; display: flex; flex-direction: column"><span style="font-size: 16px; font-weight: 700; color: #202527">14 nov. 2027</span><span style="font-size: 12px; color: #5E6466">dans 12 mois · ou à 55 200 km</span></span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5E6466" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+</button>
+<span style="font-size: 12px; color: #5E6466">Plus de « JJ/MM/AAAA » à taper : le calendrier du téléphone s'ouvre</span>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 14px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">CHOIX</span>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 600; color: #5E6466">Boîte de vitesses · interrupteur à 2 positions</span>
+<div style="display: flex; background: #EEF0F0; border-radius: 16px; padding: 4px">
+<sc-for list="{{gears}}" as="g" hint-placeholder-count="2"><button onClick="{{g.pick}}" aria-pressed="{{g.pressed}}" style="{{g.style}}">{{g.label}}</button></sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 600; color: #5E6466">Catégorie · une seule ligne qui défile, avec icône</span>
+<div style="display: flex; gap: 8px; overflow: hidden; margin-right: -20px">
+<sc-for list="{{cats}}" as="c" hint-placeholder-count="5">
+<button onClick="{{c.pick}}" aria-pressed="{{c.pressed}}" style="{{c.style}}">
+<svg width="28" height="18" viewBox="0 0 26 18" fill="none" stroke="{{c.ink}}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{c.icon}}"></path><circle cx="7" cy="14" r="2"></circle><circle cx="19" cy="14" r="2"></circle></svg>
+<span>{{c.label}}</span>
+</button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="font-size: 13px; font-weight: 600; color: #5E6466">Couleur · pastilles au lieu de texte libre</span>
+<div style="display: flex; gap: 10px; align-items: center">
+<sc-for list="{{colors}}" as="k" hint-placeholder-count="6"><button onClick="{{k.pick}}" aria-label="{{k.label}}" aria-pressed="{{k.pressed}}" style="{{k.style}}"></button></sc-for>
+<span style="font-size: 13px; font-weight: 600">{{colorName}}</span>
+</div>
+</div>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 12px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">BOUTONS</span>
+<button style="height: 54px; border-radius: 27px; border: none; background: #CA531D; color: #FFFFFF; font-size: 15px; font-weight: 600; box-shadow: 0 8px 20px rgba(202,83,29,0.3)">Principal · Enregistrer</button>
+<button style="height: 54px; border-radius: 27px; border: 1.5px solid #202527; background: #FFFFFF; color: #202527; font-size: 15px; font-weight: 600">Secondaire · Annuler</button>
+<span style="display: flex; gap: 10px">
+<button style="flex: 1; height: 48px; border-radius: 24px; border: none; background: transparent; color: #CA531D; font-size: 14px; font-weight: 600">Lien · Modifier</button>
+<button style="flex: 1; height: 48px; border-radius: 24px; border: 1.5px solid #F2B8C4; background: #FFF5F7; color: #C42B4B; font-size: 14px; font-weight: 600">Supprimer</button>
+</span>
+<span style="display: flex; gap: 10px">
+<button aria-busy="true" style="flex: 1; height: 54px; border-radius: 27px; border: none; background: #CA531D; color: #FFFFFF; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9"></path></svg>Enregistrement…</button>
+<button disabled style="flex: 1; height: 54px; border-radius: 27px; border: none; background: #E2E4E5; color: #5E6466; font-size: 15px; font-weight: 600">Désactivé</button>
+</span>
+<span style="font-size: 12px; color: #5E6466">Un seul bouton orange par écran. Le bouton désactivé dit pourquoi en dessous.</span>
+</section>
+
+<section style="display: flex; flex-direction: column; gap: 10px">
+<span style="font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: #5E6466">BARRE D'ENREGISTREMENT · UNE SEULE PAR PAGE</span>
+<div style="background: #202527; border-radius: 24px; padding: 12px; display: flex; align-items: center; gap: 10px; box-shadow: 0 12px 30px rgba(32,37,39,0.25)">
+<span style="flex: 1; display: flex; flex-direction: column; gap: 2px; padding-left: 6px"><span style="font-size: 14px; font-weight: 600; color: #FFFFFF">3 modifications</span><span style="font-size: 12px; color: #B4BABC">Kilométrage, couleur, prix</span></span>
+<button style="height: 46px; border-radius: 23px; border: 1px solid #40484B; background: transparent; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 0 14px">Annuler</button>
+<button style="height: 46px; border-radius: 23px; border: none; background: #CA531D; color: #FFFFFF; font-size: 13px; font-weight: 600; padding: 0 16px">Enregistrer</button>
+</div>
+<span style="font-size: 12px; color: #5E6466">Remplace les boutons Annuler / Enregistrer répétés dans chaque bloc. Elle apparaît dès qu'un champ change.</span>
+</section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2140}}'>
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = { price: 500, gear: 'Manuelle', cat: 'Économique', color: 0 };
+}
+renderVals() {
+const st = this.state;
+const gears = ['Manuelle', 'Automatique'].map((label) => {
+const on = st.gear === label;
+return { label, pressed: on ? 'true' : 'false', pick: () => this.setState({ gear: label }), style: 'flex: 1; height: 46px; border-radius: 13px; border: none; font-size: 14px; font-weight: 600; ' + (on ? 'background: #FFFFFF; color: #202527; box-shadow: 0 2px 8px rgba(32,37,39,0.12);' : 'background: transparent; color: #5E6466;') };
+});
+const icons = { 'Économique': 'M3 13V9l3-3h10l3 4h3v3', 'Compacte': 'M3 13V9l4-4h9l3 5h3v3', 'Berline': 'M2 13V10l3-4h12l4 4h3v3', 'SUV': 'M2 13V7l3-3h14l3 4h2v5', 'Utilitaire': 'M2 13V4h14v4h5l3 3v2', 'Minibus': 'M2 13V5l2-2h18l2 4v6', 'Luxe': 'M2 13v-2l5-4h10l5 3h2v3' };
+const cats = Object.keys(icons).map((label) => {
+const on = st.cat === label;
+return { label, icon: icons[label], ink: on ? '#FFFFFF' : '#202527', pressed: on ? 'true' : 'false', pick: () => this.setState({ cat: label }),
+style: 'flex-shrink: 0; width: 92px; height: 72px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; font-size: 12px; font-weight: 600; ' + (on ? 'background: #202527; color: #FFFFFF; border: 1px solid #202527;' : 'background: #FFFFFF; color: #202527; border: 1px solid #E2E4E5;') };
+});
+const C = [['Blanc', '#FFFFFF'], ['Noir', '#16191A'], ['Gris', '#8A9092'], ['Argent', '#C9CED1'], ['Rouge', '#B3262E'], ['Bleu', '#244C8F']];
+const colors = C.map(([label, hex], i) => {
+const on = st.color === i;
+return { label, pressed: on ? 'true' : 'false', pick: () => this.setState({ color: i }),
+style: 'width: 40px; height: 40px; border-radius: 20px; padding: 0; background: ' + hex + '; border: 1px solid #C9CDCE; ' + (on ? 'box-shadow: 0 0 0 3px #F6F6F5, 0 0 0 5px #CA531D;' : '') };
+});
+return {
+price: String(st.price),
+minus: () => this.setState({ price: Math.max(50, st.price - 50) }),
+plus: () => this.setState({ price: st.price + 50 }),
+gears, cats, colors,
+colorName: C[st.color][0]
+};
+}
+}
+</script>
+</body>
+</html>

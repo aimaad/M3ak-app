@@ -27,6 +27,22 @@ export declare const brand: {
   readonly mainFillOnDark: string;
   readonly dangerFillOnDark: string;
   readonly dangerStrokeOnDark: string;
+  readonly aiBadgeFill: string;
+  readonly errorFieldFill: string;
+  readonly dangerBorder: string;
+  readonly lockedFill: string;
+  readonly lockedBorder: string;
+  readonly suggestFill: string;
+  readonly suggestBorder: string;
+  readonly listSeparator: string;
+  readonly swatchBlanc: string;
+  readonly swatchNoir: string;
+  readonly swatchGris: string;
+  readonly swatchArgent: string;
+  readonly swatchRouge: string;
+  readonly swatchBleu: string;
+  readonly swatchBeige: string;
+  readonly swatchEdge: string;
 };
 
 export type ThemeTokens = {

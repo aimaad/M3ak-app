@@ -56,6 +56,24 @@ const brand = {
   mainFillOnDark: '#3A3220',
   dangerFillOnDark: '#2A1E21',
   dangerStrokeOnDark: '#5A2A33',
+  /** Kit de formulaire (src/components/form) : fonds et contours d'état des champs, puces de suggestion, séparateurs. */
+  aiBadgeFill: '#FFF1EA',
+  errorFieldFill: '#FFF5F7',
+  dangerBorder: '#F2B8C4',
+  lockedFill: '#EEF0F0',
+  lockedBorder: '#D5D8D9',
+  suggestFill: '#FFF6F1',
+  suggestBorder: '#F3C9B3',
+  listSeparator: '#EEEFEF',
+  /** Pastilles de couleur du véhicule (données, pas du style) : Blanc, Noir, Gris, Argent, Rouge, Bleu, Beige, et leur contour. */
+  swatchBlanc: '#FFFFFF',
+  swatchNoir: '#16191A',
+  swatchGris: '#8A9092',
+  swatchArgent: '#C9CED1',
+  swatchRouge: '#B3262E',
+  swatchBleu: '#244C8F',
+  swatchBeige: '#D8C8A8',
+  swatchEdge: '#D3D6D7',
 };
 
 const light = {
