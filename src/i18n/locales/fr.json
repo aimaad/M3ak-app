@@ -3710,7 +3710,183 @@
     "clean": "Aucune modification",
     "errorsOne": "1 champ à corriger : {{fields}}",
     "errorsMany": "{{count}} champs à corriger : {{fields}}",
-    "pricingNote": "Visible du propriétaire seulement."
+    "pricingNote": "Visible du propriétaire seulement.",
+    "edit": {
+      "title": "Fiche technique",
+      "close": "Fermer",
+      "bannerFilled": "{{count}} champs remplis depuis la carte grise.",
+      "bannerFilledOne": "1 champ rempli depuis la carte grise.",
+      "bannerMissing": "Il reste {{list}}.",
+      "bannerReading": "Lecture de la carte grise en cours…",
+      "and": "et",
+      "missing": {
+        "transmission": "la boîte",
+        "kilometrage": "le kilométrage",
+        "puissanceFiscale": "la puissance",
+        "couleur": "la couleur",
+        "nombrePlaces": "les places",
+        "categorie": "la catégorie"
+      },
+      "f": {
+        "transmission": "Boîte de vitesses",
+        "categorie": "Catégorie",
+        "kilometrage": "Kilométrage",
+        "puissanceFiscale": "Puissance",
+        "couleur": "Couleur",
+        "nombrePlaces": "Places",
+        "carburant": "Carburant",
+        "marque": "Marque",
+        "modele": "Modèle",
+        "immatriculation": "Immatriculation",
+        "vin": "N° de série (VIN)",
+        "finition": "Finition / version",
+        "annee": "Année",
+        "dateMiseEnCirculation": "Mise en circulation",
+        "niveauCarburant": "Niveau de carburant",
+        "statut": "Statut",
+        "branchId": "Filiale",
+        "description": "Description",
+        "prixJour": "Prix par jour",
+        "prixSemaine": "Prix par semaine",
+        "prixMois": "Prix par mois",
+        "documents": "Carte grise"
+      },
+      "short": {
+        "transmission": "Boîte"
+      },
+      "ph": {
+        "kilometrage": "ex. 45 200",
+        "puissanceFiscale": "ex. 6",
+        "marque": "ex. Dacia",
+        "modele": "ex. Logan",
+        "immatriculation": "ex. 12345-A-6",
+        "vin": "17 caractères",
+        "finition": "ex. Confort",
+        "annee": "ex. 2021",
+        "niveauCarburant": "ex. 50",
+        "description": "ex. Climatisation, vitres électriques",
+        "prixSemaine": "ex. 3 000",
+        "prixMois": "ex. 10 500",
+        "other": "ex. Vert"
+      },
+      "help": {
+        "puissanceFiscale": "Case P.6 de la carte grise",
+        "vin": "Sur la carte grise, case E",
+        "niveauCarburant": "En pourcentage, de 0 à 100",
+        "prixSemaine": "Facultatif : la suggestion part du prix du jour",
+        "prixMois": "Facultatif"
+      },
+      "units": {
+        "km": "km",
+        "cv": "CV",
+        "mad": "MAD",
+        "percent": "%"
+      },
+      "err": {
+        "marque_required": "Entrez la marque du véhicule.",
+        "modele_required": "Entrez le modèle du véhicule.",
+        "plate_required": "Entrez l'immatriculation du véhicule.",
+        "year_invalid": "L'année doit être comprise entre {{min}} et {{max}}.",
+        "km_required": "Entrez le kilométrage actuel du compteur.",
+        "km_invalid": "Le kilométrage doit être un nombre entier, sans virgule.",
+        "power_invalid": "La puissance fiscale doit être comprise entre 1 et 60 CV (case P.6).",
+        "seats_invalid": "Le nombre de places doit être compris entre 1 et 9.",
+        "level_invalid": "Le niveau de carburant doit être compris entre 0 et 100 %.",
+        "date_invalid": "Choisissez une date passée (la mise en circulation ne peut pas être dans le futur).",
+        "price_required": "Entrez le prix par jour.",
+        "price_invalid": "Le prix par jour doit être supérieur à 0.",
+        "optional_price_invalid": "Entrez un prix supérieur à 0, ou laissez le champ vide."
+      },
+      "category": {
+        "economique": "Économique",
+        "compacte": "Compacte",
+        "berline": "Berline",
+        "suv": "SUV",
+        "utilitaire": "Utilitaire",
+        "minibus": "Minibus",
+        "luxe": "Luxe"
+      },
+      "fuel": {
+        "essence": "Essence",
+        "diesel": "Diesel",
+        "hybride": "Hybride",
+        "electrique": "Électrique"
+      },
+      "gear": {
+        "manuelle": "Manuelle",
+        "automatique": "Automatique"
+      },
+      "status": {
+        "disponible": "Disponible",
+        "maintenance": "Maintenance",
+        "en_preparation": "En préparation",
+        "indisponible": "Indisponible"
+      },
+      "sections": {
+        "documents": "DOCUMENTS",
+        "deadlines": "ÉCHÉANCES",
+        "identity": "IDENTIFICATION",
+        "availability": "DISPONIBILITÉ",
+        "description": "DESCRIPTION",
+        "pricing": "TARIFICATION"
+      },
+      "docs": {
+        "recto": "Recto",
+        "verso": "Verso",
+        "versoHint": "à ajouter",
+        "assurance": "Assurance",
+        "visite_technique": "Visite technique",
+        "expires": "Expire le {{date}}",
+        "none": "Pas encore ajoutée",
+        "view": "Voir",
+        "scan": "Scanner",
+        "cardRead": "Recto et verso · lue par l'IA",
+        "cardBoth": "Recto et verso",
+        "cardOne": "Une seule face ajoutée"
+      },
+      "scan": {
+        "reading": "Lecture en cours…",
+        "failed": "Lecture impossible pour le moment. Saisissez les champs à la main.",
+        "disabled": "La lecture automatique n'est pas activée pour votre entreprise. Saisissez les champs à la main.",
+        "tooSmall": "Photo trop petite · Reprendre",
+        "unreadable": "Photo illisible · Reprendre",
+        "retake": "Reprendre",
+        "hint": "Placez la carte grise dans le cadre"
+      },
+      "due": {
+        "title": "Échéances",
+        "upToDate": "À jour",
+        "soon": "Bientôt",
+        "late": "En retard",
+        "emptyTitle": "Aucun entretien prévu",
+        "emptyText": "BIBIP vous préviendra avant chaque échéance",
+        "addOil": "+ Vidange",
+        "addVisit": "+ Visite technique",
+        "addInsurance": "+ Assurance",
+        "sheetTitle": "Ajouter une vidange",
+        "sheetDate": "Date prévue",
+        "sheetKm": "Kilométrage prévu",
+        "sheetAdd": "Ajouter l'échéance",
+        "sheetNeed": "Renseignez une date ou un kilométrage.",
+        "sheetFailed": "Impossible d'ajouter l'échéance. Vérifiez la connexion puis réessayez.",
+        "sheetDisabled": "Renseignez une date ou un kilométrage pour continuer."
+      },
+      "archive": {
+        "link": "Archiver ce véhicule",
+        "confirmTitle": "Archiver ce véhicule ?",
+        "confirmBody": "Il n'apparaîtra plus dans la flotte, mais ses données restent conservées. Vous pourrez le restaurer à tout moment.",
+        "confirm": "Archiver",
+        "cancel": "Annuler"
+      },
+      "saving": {
+        "uploadFailed": "Une photo n'a pas pu être envoyée. Rien n'a été enregistré : réessayez.",
+        "failed": "Impossible d'enregistrer. Vérifiez la connexion puis réessayez.",
+        "retry": "Réessayer"
+      },
+      "viewerClose": "Fermer le document",
+      "notFound": "Véhicule introuvable.",
+      "loadError": "Impossible de charger ce véhicule."
+    }
   },
   "form": {
     "optional": "facultatif",

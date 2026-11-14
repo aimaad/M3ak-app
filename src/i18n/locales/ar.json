@@ -3814,7 +3814,183 @@
     "clean": "لا يوجد تعديل",
     "errorsOne": "حقل واحد للتصحيح: {{fields}}",
     "errorsMany": "{{count}} حقول للتصحيح: {{fields}}",
-    "pricingNote": "ظاهر للمالك فقط."
+    "pricingNote": "ظاهر للمالك فقط.",
+    "edit": {
+      "title": "البطاقة التقنية",
+      "close": "إغلاق",
+      "bannerFilled": "تمت تعبئة {{count}} حقول من البطاقة الرمادية.",
+      "bannerFilledOne": "تمت تعبئة حقل واحد من البطاقة الرمادية.",
+      "bannerMissing": "يتبقى {{list}}.",
+      "bannerReading": "جارٍ قراءة البطاقة الرمادية…",
+      "and": "و",
+      "missing": {
+        "transmission": "ناقل الحركة",
+        "kilometrage": "المسافة المقطوعة",
+        "puissanceFiscale": "القوة",
+        "couleur": "اللون",
+        "nombrePlaces": "المقاعد",
+        "categorie": "الفئة"
+      },
+      "f": {
+        "transmission": "ناقل الحركة",
+        "categorie": "الفئة",
+        "kilometrage": "المسافة المقطوعة",
+        "puissanceFiscale": "القوة",
+        "couleur": "اللون",
+        "nombrePlaces": "المقاعد",
+        "carburant": "الوقود",
+        "marque": "العلامة",
+        "modele": "الطراز",
+        "immatriculation": "رقم التسجيل",
+        "vin": "رقم الهيكل (VIN)",
+        "finition": "النسخة",
+        "annee": "السنة",
+        "dateMiseEnCirculation": "تاريخ أول سير",
+        "niveauCarburant": "مستوى الوقود",
+        "statut": "الحالة",
+        "branchId": "الفرع",
+        "description": "الوصف",
+        "prixJour": "السعر لليوم",
+        "prixSemaine": "السعر للأسبوع",
+        "prixMois": "السعر للشهر",
+        "documents": "البطاقة الرمادية"
+      },
+      "short": {
+        "transmission": "ناقل الحركة"
+      },
+      "ph": {
+        "kilometrage": "مثال: 45 200",
+        "puissanceFiscale": "مثال: 6",
+        "marque": "مثال: داسيا",
+        "modele": "مثال: لوغان",
+        "immatriculation": "مثال: 12345-A-6",
+        "vin": "17 حرفًا",
+        "finition": "مثال: كونفور",
+        "annee": "مثال: 2021",
+        "niveauCarburant": "مثال: 50",
+        "description": "مثال: مكيف، نوافذ كهربائية",
+        "prixSemaine": "مثال: 3 000",
+        "prixMois": "مثال: 10 500",
+        "other": "مثال: أخضر"
+      },
+      "help": {
+        "puissanceFiscale": "الخانة P.6 في البطاقة الرمادية",
+        "vin": "في البطاقة الرمادية، الخانة E",
+        "niveauCarburant": "بالنسبة المئوية من 0 إلى 100",
+        "prixSemaine": "اختياري: الاقتراح يعتمد على سعر اليوم",
+        "prixMois": "اختياري"
+      },
+      "units": {
+        "km": "كم",
+        "cv": "حصان",
+        "mad": "درهم",
+        "percent": "٪"
+      },
+      "err": {
+        "marque_required": "أدخل علامة السيارة.",
+        "modele_required": "أدخل طراز السيارة.",
+        "plate_required": "أدخل رقم تسجيل السيارة.",
+        "year_invalid": "يجب أن تكون السنة بين {{min}} و{{max}}.",
+        "km_required": "أدخل المسافة الحالية على العداد.",
+        "km_invalid": "يجب أن تكون المسافة عددًا صحيحًا بدون فاصلة.",
+        "power_invalid": "يجب أن تكون القوة الجبائية بين 1 و60 حصانًا (الخانة P.6).",
+        "seats_invalid": "يجب أن يكون عدد المقاعد بين 1 و9.",
+        "level_invalid": "يجب أن يكون مستوى الوقود بين 0 و100٪.",
+        "date_invalid": "اختر تاريخًا سابقًا (لا يمكن أن يكون أول سير في المستقبل).",
+        "price_required": "أدخل السعر لليوم.",
+        "price_invalid": "يجب أن يكون السعر لليوم أكبر من 0.",
+        "optional_price_invalid": "أدخل سعرًا أكبر من 0 أو اترك الحقل فارغًا."
+      },
+      "category": {
+        "economique": "اقتصادية",
+        "compacte": "مدمجة",
+        "berline": "سيدان",
+        "suv": "SUV",
+        "utilitaire": "نفعية",
+        "minibus": "حافلة صغيرة",
+        "luxe": "فاخرة"
+      },
+      "fuel": {
+        "essence": "بنزين",
+        "diesel": "ديزل",
+        "hybride": "هجينة",
+        "electrique": "كهربائية"
+      },
+      "gear": {
+        "manuelle": "يدوي",
+        "automatique": "أوتوماتيكي"
+      },
+      "status": {
+        "disponible": "متاحة",
+        "maintenance": "في الصيانة",
+        "en_preparation": "قيد التحضير",
+        "indisponible": "غير متاحة"
+      },
+      "sections": {
+        "documents": "الوثائق",
+        "deadlines": "المواعيد",
+        "identity": "التعريف",
+        "availability": "التوفر",
+        "description": "الوصف",
+        "pricing": "التسعير"
+      },
+      "docs": {
+        "recto": "الوجه",
+        "verso": "الظهر",
+        "versoHint": "للإضافة",
+        "assurance": "التأمين",
+        "visite_technique": "الفحص التقني",
+        "expires": "ينتهي في {{date}}",
+        "none": "لم تُضف بعد",
+        "view": "عرض",
+        "scan": "مسح",
+        "cardRead": "الوجه والظهر · قرأها الذكاء الاصطناعي",
+        "cardBoth": "الوجه والظهر",
+        "cardOne": "أُضيف وجه واحد فقط"
+      },
+      "scan": {
+        "reading": "جارٍ القراءة…",
+        "failed": "تعذرت القراءة حاليًا. املأ الحقول يدويًا.",
+        "disabled": "القراءة التلقائية غير مفعلة لمقاولتك. املأ الحقول يدويًا.",
+        "tooSmall": "الصورة صغيرة جدًا · أعد الالتقاط",
+        "unreadable": "صورة غير مقروءة · أعد الالتقاط",
+        "retake": "إعادة الالتقاط",
+        "hint": "ضع البطاقة الرمادية داخل الإطار"
+      },
+      "due": {
+        "title": "المواعيد",
+        "upToDate": "ساري",
+        "soon": "قريبًا",
+        "late": "متأخر",
+        "emptyTitle": "لا توجد صيانة مبرمجة",
+        "emptyText": "سينبهك BIBIP قبل كل موعد",
+        "addOil": "+ تغيير الزيت",
+        "addVisit": "+ الفحص التقني",
+        "addInsurance": "+ التأمين",
+        "sheetTitle": "إضافة تغيير الزيت",
+        "sheetDate": "التاريخ المبرمج",
+        "sheetKm": "المسافة المبرمجة",
+        "sheetAdd": "إضافة الموعد",
+        "sheetNeed": "أدخل تاريخًا أو مسافة.",
+        "sheetFailed": "تعذرت إضافة الموعد. تحقق من الاتصال ثم أعد المحاولة.",
+        "sheetDisabled": "أدخل تاريخًا أو مسافة للمتابعة."
+      },
+      "archive": {
+        "link": "أرشفة هذه السيارة",
+        "confirmTitle": "أرشفة هذه السيارة؟",
+        "confirmBody": "لن تظهر في الأسطول لكن بياناتها محفوظة. يمكنك استعادتها في أي وقت.",
+        "confirm": "أرشفة",
+        "cancel": "إلغاء"
+      },
+      "saving": {
+        "uploadFailed": "تعذر إرسال صورة. لم يتم حفظ شيء: أعد المحاولة.",
+        "failed": "تعذر الحفظ. تحقق من الاتصال ثم أعد المحاولة.",
+        "retry": "إعادة المحاولة"
+      },
+      "viewerClose": "إغلاق الوثيقة",
+      "notFound": "السيارة غير موجودة.",
+      "loadError": "تعذر تحميل هذه السيارة."
+    }
   },
   "form": {
     "optional": "اختياري",

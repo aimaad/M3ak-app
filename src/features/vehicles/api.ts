@@ -196,12 +196,14 @@ export async function updateVehicleStatus(id: string, statut: VehicleInput['stat
   return fromRow(data as VehicleRow);
 }
 
-export async function updateVehicle(id: string, input: VehicleInput): Promise<Vehicle> {
+export async function updateVehicle(id: string, input: VehicleInput, extra: { documents?: VehicleDocument[] } = {}): Promise<Vehicle> {
   // Un statut géré par le module locations (en location, à inspecter) n'est jamais écrasé à la main : on le laisse tel quel et on
   // enregistre le reste (avant, toute modification d'un véhicule en location échouait).
   const row = toRow(input);
   const { statut, ...withoutStatus } = row;
-  const payload = SYSTEM_MANAGED_STATUSES.includes(input.statut) ? withoutStatus : { ...withoutStatus, statut };
+  // `documents` (carte grise recto/verso) part dans LA MÊME requête : la fiche technique et ses documents s'enregistrent ensemble ou pas du tout.
+  const base = SYSTEM_MANAGED_STATUSES.includes(input.statut) ? withoutStatus : { ...withoutStatus, statut };
+  const payload = extra.documents ? { ...base, documents: extra.documents } : base;
 
   const { data, error } = await getSupabase()
     .from('vehicles')
