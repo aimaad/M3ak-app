@@ -60,9 +60,9 @@ export function PriceStepper({ label, value, onChange, step = 50, min = 50, sugg
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           accessibilityLabel={label}
-          style={{ minWidth: 90, textAlign: 'center', padding: 0, fontFamily: homeDisplayFont(language, 'bold'), fontSize: 28, color: Brand.graphite }}
+          style={{ minWidth: 70, flexShrink: 1, textAlign: 'center', padding: 0, fontFamily: homeDisplayFont(language, 'bold'), fontSize: 28, color: Brand.graphite }}
         />
-        <HText weight="bold" size={13} color={Palette.textSecondary} style={{ fontFamily: homeTextFont(language, 'semibold') }}>
+        <HText weight="bold" size={13} color={Palette.textSecondary} numberOfLines={1} style={{ flexShrink: 0, fontFamily: homeTextFont(language, 'semibold') }}>
           {t('form.perDay')}
         </HText>
       </View>
