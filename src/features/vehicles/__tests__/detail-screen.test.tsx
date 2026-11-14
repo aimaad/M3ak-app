@@ -308,13 +308,12 @@ describe('fiche véhicule', () => {
   });
 
   describe('échéances, fiche technique, historique, documents', () => {
-    it('fiche technique : boîte et puissance « À compléter » ; appui sur une tuile → modification SUR PLACE (pas de changement de page)', async () => {
+    it('fiche technique : boîte et puissance « À compléter » ; appui sur une tuile → écran « Modifier la fiche technique »', async () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getAllByText('À compléter')).toHaveLength(2);
       await fireEvent.press(screen.getByLabelText('Boîte : à compléter. Appuyez pour le renseigner'));
-      expect(mockRouter.push).not.toHaveBeenCalled();
-      expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
-      expect(screen.getByText('Manuelle')).toBeTruthy();
+      expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
+      expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // plus d'éditeur sur place
     });
 
     it('description : affichée seulement si elle existe', async () => {
@@ -366,30 +365,18 @@ describe('fiche véhicule', () => {
       expect(screen.getByText(/aucun dommage$/)).toBeTruthy();
     });
 
-    it('documents : « Modifier » ouvre l’éditeur de la carte grise ; une photo est envoyée puis enregistrée', async () => {
+    it('documents : « Modifier » ouvre « Modifier la fiche technique », défilé jusqu\'aux documents', async () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('Modifier : Documents'));
-      expect(mockRouter.push).not.toHaveBeenCalled();
-      await fireEvent.press(screen.getAllByText('Caméra')[0]); // carte grise (recto)
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      await waitFor(() => expect(mockState.docCalls).toHaveLength(1));
-      expect(mockState.uploaded[0]).toEqual(['a1', 'v1', 'carte_grise', 'file:///doc.jpg', null]);
-      expect(mockState.docCalls[0]).toMatchObject({ id: 'v1', documents: [{ type: 'carte_grise', path: 'new-path' }] });
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', field: 'carburant' } });
+      expect(screen.queryByLabelText('Enregistrer')).toBeNull();
     });
 
-    it('documents : l’assurance et la visite ne se modifient pas ici (message vers « Échéances »)', async () => {
-      await render(<VehicleDetailScreen />);
-      await fireEvent.press(screen.getByLabelText('Modifier : Documents'));
-      expect(screen.getByText(/se gèrent dans « Échéances »/)).toBeTruthy();
-      expect(screen.getAllByText('Caméra')).toHaveLength(2); // recto et verso seulement
-    });
-
-    it('documents : vignettes « Ajouter la photo » sans fichier et un bouton « Ajouter »', async () => {
+    it('documents : bouton « Ajouter » → même écran', async () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getByText('Documents')).toBeTruthy();
       await fireEvent.press(screen.getByLabelText('Ajouter'));
-      expect(mockRouter.push).not.toHaveBeenCalled();
-      expect(screen.getByLabelText('Enregistrer')).toBeTruthy(); // l'éditeur de documents s'ouvre sur place
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', field: 'carburant' } });
     });
   });
 
@@ -458,44 +445,21 @@ describe('fiche véhicule', () => {
     });
   });
 
-  describe('modification sur place', () => {
-    it('« Modifier » de la fiche technique : champs à la place des tuiles ; enregistrer envoie seulement ce qui a changé', async () => {
+  describe('fiche technique : plus d\'éditeur sur place', () => {
+    it('« Modifier » de la fiche technique ouvre l\'écran « Modifier la fiche technique »', async () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
-      expect(mockRouter.push).not.toHaveBeenCalled();
-      await fireEvent.press(screen.getByText('Manuelle'));
-      await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Gris');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      expect(mockState.specsCalls).toEqual([{ id: 'v1', patch: { transmission: 'manuelle', couleur: 'Gris' } }]);
-      expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // retour à l'affichage normal
-    });
-
-    it('valeur invalide : message, rien n’est enregistré', async () => {
-      await render(<VehicleDetailScreen />);
-      await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
-      await fireEvent.changeText(screen.getByDisplayValue('5'), '12');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      expect(screen.getByText('Entrez un nombre de places entre 1 et 9.')).toBeTruthy();
+      expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
+      expect(screen.queryByLabelText('Enregistrer')).toBeNull();
       expect(mockState.specsCalls).toEqual([]);
     });
 
-    it('« Annuler » : on revient à l’affichage sans rien enregistrer', async () => {
-      await render(<VehicleDetailScreen />);
-      await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
-      await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Gris');
-      await fireEvent.press(screen.getByLabelText('Annuler'));
-      expect(mockState.specsCalls).toEqual([]);
-      expect(screen.getByLabelText('Modifier : Fiche technique')).toBeTruthy();
-    });
-
-    it('véhicule en location : la fiche technique reste modifiable sur place', async () => {
+    it('véhicule en location : même chose', async () => {
       mockState.vehicle = { ...base, statut: 'en_location' };
       mockState.rentals = [rentalRow({})];
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('Modifier : Fiche technique'));
-      await fireEvent.changeText(screen.getByDisplayValue('Blanc'), 'Noir');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      expect(mockState.specsCalls).toEqual([{ id: 'v1', patch: { couleur: 'Noir' } }]);
+      expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
     });
   });
 

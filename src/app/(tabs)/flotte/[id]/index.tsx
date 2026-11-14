@@ -1,7 +1,7 @@
 import { useUndo } from '@/components/undo-toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Pressable, ScrollView, Share, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,7 +23,6 @@ import { useVehicleCompliance } from '@/features/compliance/hooks';
 import { useVehicleInspections } from '@/features/inspections/hooks';
 import { buildDues } from '@/features/vehicles/detail/dues';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
-import { DocumentsEditor, SpecsEditor } from '@/features/vehicles/detail/editors';
 import { DuesSection } from '@/features/vehicles/detail/dues-section';
 import { DocumentsRow, HistoryCard, SpecsGrid } from '@/features/vehicles/detail/sections-view';
 import { buildSpecs } from '@/features/vehicles/detail/specs';
@@ -40,6 +39,10 @@ import { useLanguage } from '@/i18n/use-language';
 export default function VehicleDetailScreen() {
   const { id, section: sectionParam, edit: editParam } = useLocalSearchParams<{ id: string; section?: string; edit?: string }>();
   const { t, language } = useLanguage();
+  // Anciens liens « ?edit=… » : l'édition se fait maintenant dans « Modifier la fiche technique ».
+  useEffect(() => {
+    if (id && (editParam === 'specs' || editParam === 'documents')) router.replace({ pathname: '/flotte/[id]/modifier', params: editParam === 'documents' ? { id, field: 'carburant' } : { id } });
+  }, [id, editParam]);
   const insets = useSafeAreaInsets();
   const { scrollRef, onSectionLayout: onSectionLayoutAuto, onScrollBeginDrag } = useSectionScroll(parseVehicleSection(sectionParam));
   const detail = useVehicleDetail(id);
@@ -72,8 +75,6 @@ export default function VehicleDetailScreen() {
   );
   const block = vehicle ? archiveBlock(vehicle, rentals, customers, now) : null;
   const [menuOpen, setMenuOpen] = useState(false);
-  /** Fiche technique ou documents en cours de modification SUR PLACE (sans quitter la fiche). */
-  const [editing, setEditing] = useState<'specs' | 'documents' | null>(editParam === 'documents' || editParam === 'specs' ? editParam : null);
   const [reasonOpen, setReasonOpen] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
@@ -194,7 +195,10 @@ export default function VehicleDetailScreen() {
     else router.push({ pathname: '/locations/nouveau', params: { vehicleId: vehicle.id, date: tap.day } });
   }
 
+  /** La fiche technique et les documents se modifient dans l'écran « Modifier la fiche technique » (pas d'éditeur sur place). */
   const goEdit = () => vehicle && router.push(`/flotte/${vehicle.id}/modifier`);
+  /** Les documents sont en bas de l'écran de modification : on le fait défiler jusqu'au dernier champ juste au-dessus. */
+  const goDocuments = () => vehicle && router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicle.id, field: 'carburant' } });
   const goPhotos = () => vehicle && router.push({ pathname: '/flotte/[id]/photos', params: { id: vehicle.id } });
 
   return (
@@ -260,11 +264,7 @@ export default function VehicleDetailScreen() {
               </>
             ) : null}
             <DuesSection vehicle={vehicle} rows={figures?.dues ?? []} now={now} />
-            {editing === 'specs' ? (
-              <SpecsEditor vehicle={vehicle} onClose={() => setEditing(null)} />
-            ) : (
-              <SpecsGrid tiles={buildSpecs(vehicle)} description={vehicle.description?.trim() || null} onEdit={() => setEditing('specs')} onTile={() => setEditing('specs')} />
-            )}
+            <SpecsGrid tiles={buildSpecs(vehicle)} description={vehicle.description?.trim() || null} onEdit={goEdit} onTile={goEdit} />
             <HistoryCard events={history.slice(0, 4)} onOpen={openEvent} onSeeAll={() => router.push({ pathname: '/flotte/[id]/historique', params: { id: vehicle.id } })} />
             {showPrice ? (
             <View>
@@ -293,7 +293,7 @@ export default function VehicleDetailScreen() {
             ) : null}
 
             <View onLayout={onSectionLayout('documents')}>
-              {editing === 'documents' ? <DocumentsEditor vehicle={vehicle} onClose={() => setEditing(null)} /> : <DocumentsRow vehicle={vehicle} onAdd={() => setEditing('documents')} />}
+              <DocumentsRow vehicle={vehicle} onAdd={goDocuments} />
             </View>
             <View className="gap-2" onLayout={onSectionLayout('entretien')}>
               <ThemedText type="smallBold">{t('maintenance.title')}</ThemedText>
