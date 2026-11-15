@@ -2165,7 +2165,8 @@
           "title": "Documents à mettre à jour",
           "empty": "Aucun document à mettre à jour.",
           "expired": "Expiré le {{date}}",
-          "soon": "Expire le {{date}}"
+          "soon": "Expire le {{date}}",
+          "uncovered": "Assurance ou visite non couverte aujourd'hui"
         }
       },
       "menu": {

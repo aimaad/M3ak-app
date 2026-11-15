@@ -74,8 +74,8 @@ export default function AccueilScreen() {
   // Documents expirés (clients et véhicules) : un document « à renouveler bientôt » n'est pas une priorité.
   const expiredDocuments = useMemo(
     () =>
-      [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles)].filter((alert) => alert.urgency === 'expire').length,
-    [customers, vehicles]
+      [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles, new Date(), 30, complianceQuery.data ?? [])].filter((alert) => alert.urgency === 'expire').length,
+    [customers, vehicles, complianceQuery.data]
   );
   // Disponibilités sur 7 jours : UN SEUL calcul alimente la pastille de l'en-tête, le Parc et le bloc Disponibilités.
   const availability = useMemo(

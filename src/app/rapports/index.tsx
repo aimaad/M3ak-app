@@ -61,8 +61,8 @@ export default function RapportsScreen() {
   const complianceQuery = useAllCompliance();
   const toRegularize = useMemo(() => regularizationByVehicle(complianceQuery.data ?? [], vehicles, new Date()).size, [complianceQuery.data, vehicles]);
   const expiredDocuments = useMemo(
-    () => [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles)].filter((a) => a.urgency === 'expire').length,
-    [customers, vehicles]
+    () => [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles, new Date(), 30, complianceQuery.data ?? [])].filter((a) => a.urgency === 'expire').length,
+    [customers, vehicles, complianceQuery.data]
   );
   const rentalsQuery = useRentals();
   const conflicts = useMemo(
