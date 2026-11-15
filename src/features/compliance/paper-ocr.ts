@@ -77,3 +77,52 @@ export async function scanCompliancePaper(kind: Exclude<ComplianceKind, 'vignett
   const fields = normalizePaperFields(result.fields);
   return hasAnyPaperField(fields) ? { ok: true, fields } : { ok: false, error: 'nothing_read' };
 }
+
+// ------------------------------------------------------------------ gestion du risque (« Fait » rapide)
+
+export type PaperIssue = 'no_dates' | 'other_vehicle' | 'unfavorable' | 'already_expired' | 'not_newer' | 'odd_duration';
+
+export type PaperAssessment = {
+  /** Les dates lues peuvent être PROPOSÉES à l'employé (jamais appliquées sans son accord). */
+  usable: boolean;
+  /** Raisons pour lesquelles les dates du papier ne sont pas proposées. */
+  blockers: PaperIssue[];
+  /** Avertissements qui n'empêchent pas la proposition mais demandent un contrôle. */
+  cautions: PaperIssue[];
+  period: { validFrom: string | null; validUntil: string } | null;
+  /** N° de police / PV, assureur ou centre, montant : repris seulement si le papier est proposé ET accepté. */
+  details: { reference: string | null; provider: string | null; amount: number | null } | null;
+  months: number | null;
+};
+
+const monthsBetween = (from: string, until: string) => Math.round(((new Date(`${until}T12:00:00Z`).getTime() - new Date(`${from}T12:00:00Z`).getTime()) / 86_400_000 / 30.44) * 10) / 10;
+
+/**
+ * Peut-on proposer les dates lues comme renouvellement ? Une lecture automatique peut se tromper ou le papier peut être le mauvais : on ne
+ * propose les dates que si elles tiennent debout. Dans le doute, les dates proposées par BIBIP restent celles utilisées.
+ *  - papier d'un AUTRE véhicule (plaque différente), contrôle technique DÉFAVORABLE, aucune fin lisible : jamais proposé ;
+ *  - papier déjà PÉRIMÉ, ou qui ne finit pas APRÈS la période actuelle (probablement l'ancien papier) : jamais proposé ;
+ *  - durée inhabituelle (moins d'1 mois, plus de 24) : proposé avec un avertissement.
+ */
+export function assessPaper(fields: PaperFields, context: { kind: Exclude<ComplianceKind, 'vignette'>; currentUntil: string | null; vehiclePlate: string; today: string }): PaperAssessment {
+  const blockers: PaperIssue[] = [];
+  const cautions: PaperIssue[] = [];
+  if (plateMismatch(fields.plate, context.vehiclePlate)) blockers.push('other_vehicle');
+  if (context.kind === 'visite_technique' && fields.favorable === false) blockers.push('unfavorable');
+  if (!fields.validUntil) blockers.push('no_dates');
+  else {
+    if (fields.validUntil < context.today) blockers.push('already_expired');
+    else if (context.currentUntil && fields.validUntil <= context.currentUntil) blockers.push('not_newer');
+  }
+  const months = fields.validFrom && fields.validUntil ? monthsBetween(fields.validFrom, fields.validUntil) : null;
+  if (months !== null && (months < 1 || months > 24)) cautions.push('odd_duration');
+  const usable = blockers.length === 0;
+  return {
+    usable,
+    blockers,
+    cautions,
+    period: usable && fields.validUntil ? { validFrom: fields.validFrom, validUntil: fields.validUntil } : null,
+    details: usable ? { reference: fields.reference, provider: fields.provider, amount: fields.amount } : null,
+    months,
+  };
+}

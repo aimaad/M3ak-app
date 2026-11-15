@@ -10,6 +10,7 @@ import { useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRe
 import {
   allStatuses,
   complianceStatus,
+  dayKey,
   historyOf,
   periodPhase,
   periodOf,
@@ -24,7 +25,7 @@ import {
   type RenewalErrors,
 } from '@/features/compliance/logic';
 import { COMPLIANCE_KINDS, type ComplianceKind, type ComplianceRecord } from '@/features/compliance/types';
-import { applyPaperFields, plateMismatch, scanCompliancePaper } from '@/features/compliance/paper-ocr';
+import { applyPaperFields, assessPaper, plateMismatch, scanCompliancePaper, type PaperAssessment } from '@/features/compliance/paper-ocr';
 import { scanErrorMessageKey } from '@/features/ocr/availability';
 import { useOcrSettings } from '@/features/ocr/hooks';
 import { enabledKinds } from '@/features/due-rules/logic';
@@ -249,12 +250,40 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
   const [error, setError] = useState<string | null>(null);
   const [doneUntil, setDoneUntil] = useState<string | null>(null);
   const [localUri, setLocalUri] = useState<string | null>(null);
-  const period = kind === 'vignette' ? { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` } : suggestion;
+  // Lecture du papier : les dates lues sont PROPOSÉES, jamais appliquées sans l'accord de l'employé (une lecture peut se tromper).
+  const ocr = useOcrSettings();
+  const showAmount = canSeePrices(agency.data?.role);
+  const [reading, setReading] = useState(false);
+  const [readError, setReadError] = useState<string | null>(null);
+  const [assessment, setAssessment] = useState<PaperAssessment | null>(null);
+  const [usePaper, setUsePaper] = useState(false);
+  const paperPeriod = usePaper && assessment?.period ? { validFrom: assessment.period.validFrom ?? suggestion.validFrom, validUntil: assessment.period.validUntil } : null;
+  const period = kind === 'vignette' ? { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` } : paperPeriod ?? suggestion;
+
+  async function onPhoto(uri: string) {
+    setLocalUri(uri);
+    setAssessment(null);
+    setUsePaper(false);
+    setReadError(null);
+    if (kind === 'vignette' || ocr.availability !== 'active') return;
+    setReading(true);
+    const result = await scanCompliancePaper(kind, uri, ocr.agencyId);
+    setReading(false);
+    if (!result.ok) {
+      // Échec de lecture : rien ne change, les dates proposées restent.
+      setReadError(scanErrorMessageKey(result.error));
+      return;
+    }
+    setAssessment(assessPaper(result.fields, { kind, currentUntil: current?.validUntil ?? null, vehiclePlate: vehicle.immatriculation, today: dayKey(now) }));
+  }
 
   function confirm() {
     setError(null);
     if (!agency.data) return;
-    const draft = renewalDraft(period);
+    const base = renewalDraft(period);
+    // Les détails lus (n° de police, assureur, montant) ne sont repris que si l'employé a ACCEPTÉ le papier.
+    const details = usePaper ? assessment?.details : null;
+    const draft = details ? { ...base, reference: details.reference ?? '', provider: details.provider ?? '', amount: showAmount && details.amount !== null ? String(details.amount) : '' } : base;
     renew.mutate(
       { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, draft, null, kind === 'vignette' ? null : periodOf(kind, current, settings)), localDocumentUri: localUri },
       {
@@ -300,13 +329,58 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
       <HText size={13} weight="semibold">
         {t(`vehicleDetail.compliance.askPaper.${kind}`)}
       </HText>
-      <PaperPhoto localUri={localUri} onPick={setLocalUri} />
+      <PaperPhoto localUri={localUri} onPick={(uri) => void onPhoto(uri)} />
+      {reading ? (
+        <HText size={13} weight="semibold" color={Palette.textSecondary} accessibilityLiveRegion="polite">
+          {t('vehicleDetail.compliance.paper.reading')}
+        </HText>
+      ) : null}
+      {readError ? (
+        <HText size={13} weight="semibold" color={Brand.orangeUrgentText} accessibilityRole="alert">
+          {`${t(readError)} ${t('vehicleDetail.compliance.paper.keptProposed')}`}
+        </HText>
+      ) : null}
+      {assessment ? (
+        <View style={{ gap: 8 }} accessibilityRole="alert">
+          {assessment.blockers.map((issue) => (
+            <HText key={issue} size={13} weight="semibold" color={Brand.orangeUrgentText}>
+              {t(`vehicleDetail.compliance.paper.issue.${issue}`, { date: current ? dayLabel(current.validUntil, language) : '' })}
+            </HText>
+          ))}
+          {assessment.cautions.map((issue) => (
+            <HText key={issue} size={13} weight="semibold" color={Brand.orangeUrgentText}>
+              {t(`vehicleDetail.compliance.paper.issue.${issue}`, { n: Math.round(assessment.months ?? 0) })}
+            </HText>
+          ))}
+          {assessment.period ? (
+            <>
+              <HText size={13} weight="semibold">
+                {t('vehicleDetail.compliance.paper.proposal', { from: assessment.period.validFrom ? dayLabel(assessment.period.validFrom, language) : '—', to: dayLabel(assessment.period.validUntil, language) })}
+              </HText>
+              {usePaper ? (
+                <>
+                  <HText size={13} weight="bold" color={Palette.success}>
+                    {t('vehicleDetail.compliance.paper.using')}
+                  </HText>
+                  <Button variant="link" label={t('vehicleDetail.compliance.paper.keep')} onPress={() => setUsePaper(false)} />
+                </>
+              ) : (
+                <Button variant="secondary" label={t('vehicleDetail.compliance.paper.use')} onPress={() => setUsePaper(true)} />
+              )}
+            </>
+          ) : (
+            <HText size={13} color={Palette.textSecondary}>
+              {t('vehicleDetail.compliance.paper.keptProposed')}
+            </HText>
+          )}
+        </View>
+      ) : null}
       {error ? (
         <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
           {error}
         </HText>
       ) : null}
-      <Button label={t('vehicleDetail.compliance.quickConfirm')} loadingLabel={t('vehicleDetail.editor.saving')} loading={renew.isPending} onPress={confirm} accessibilityLabel={t('vehicleDetail.compliance.quickConfirm')} />
+      <Button label={t('vehicleDetail.compliance.quickConfirm')} loadingLabel={t('vehicleDetail.editor.saving')} loading={renew.isPending || reading} onPress={confirm} accessibilityLabel={t('vehicleDetail.compliance.quickConfirm')} />
       <Button variant="link" label={t('vehicleDetail.compliance.quickDetails')} onPress={onDetails} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
     </View>
   );

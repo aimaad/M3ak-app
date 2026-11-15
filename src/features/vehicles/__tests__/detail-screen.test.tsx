@@ -1163,6 +1163,73 @@ describe('fiche véhicule', () => {
       expect((mockState.renewCalls[1] as { localDocumentUri: string | null }).localDocumentUri).toBe('file:///papier.jpg');
     });
 
+    describe('« Fait » rapide avec lecture du papier : proposé, jamais appliqué sans accord', () => {
+      // période actuelle : finit dans 65 jours ; papier : du lendemain pour 12 mois
+      const paper = (extra: Record<string, unknown> = {}) => ({ ok: true, fields: { validFrom: day(66), validUntil: day(400), reference: 'POL-99', provider: 'RMA', amount: 2100, plate: '8921-ب-14', favorable: null, ...extra } });
+      async function quickWithPhoto() {
+        mockState.ocrAvailability = 'active';
+        mockState.compliance = [record({ periodMonths: 12 })];
+        await render(<VehicleDetailScreen />);
+        await fireEvent.press(screen.getByLabelText(/^Assurance : /));
+        await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
+        await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
+      }
+
+      it('papier cohérent : dates PROPOSÉES ; sans accord, les dates de BIBIP sont enregistrées', async () => {
+        mockState.scanResult = paper();
+        await quickWithPhoto();
+        expect(await screen.findByText(/^Papier lu : du/)).toBeTruthy();
+        await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+        const input = (mockState.renewCalls[0] as { input: { validUntil: string; reference: string | null } }).input;
+        expect(input.validUntil).not.toBe(day(400)); // les dates du papier n'ont PAS été appliquées toutes seules
+        expect(input.reference).toBeNull();
+      });
+      it('accord de l’employé : dates, n° de police, assureur et montant du papier', async () => {
+        mockState.scanResult = paper();
+        await quickWithPhoto();
+        await fireEvent.press(await screen.findByLabelText('Utiliser les dates du papier'));
+        expect(screen.getByText(/Dates du papier utilisées/)).toBeTruthy();
+        await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+        expect(mockState.renewCalls[0]).toMatchObject({ input: { kind: 'assurance', validUntil: day(400), reference: 'POL-99', provider: 'RMA', amount: 2100 } });
+      });
+      it('« Garder les dates proposées » annule le choix', async () => {
+        mockState.scanResult = paper();
+        await quickWithPhoto();
+        await fireEvent.press(await screen.findByLabelText('Utiliser les dates du papier'));
+        await fireEvent.press(screen.getByLabelText('Garder les dates proposées'));
+        await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+        expect((mockState.renewCalls[0] as { input: { validUntil: string } }).input.validUntil).not.toBe(day(400));
+      });
+      it('papier d’un autre véhicule : aucune proposition de dates', async () => {
+        mockState.scanResult = paper({ plate: '1234 | A | 5' });
+        await quickWithPhoto();
+        expect(await screen.findByText(/plaque lue sur ce papier semble différente/)).toBeTruthy();
+        expect(screen.queryByLabelText('Utiliser les dates du papier')).toBeNull();
+      });
+      it('ancien papier (ne finit pas après la période actuelle) : aucune proposition', async () => {
+        mockState.scanResult = paper({ validFrom: day(-300), validUntil: day(65) });
+        await quickWithPhoto();
+        expect(await screen.findByText(/ne finit pas après la période actuelle/)).toBeTruthy();
+        expect(screen.queryByLabelText('Utiliser les dates du papier')).toBeNull();
+      });
+      it('lecture en échec : message, dates proposées conservées, enregistrement toujours possible', async () => {
+        mockState.scanResult = { ok: false, error: 'ocr_busy' };
+        await quickWithPhoto();
+        expect(await screen.findByText(/Les dates proposées sont conservées/)).toBeTruthy();
+        await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+        expect(mockState.renewCalls).toHaveLength(1);
+      });
+      it('fonction non active : aucune lecture dans le « Fait » rapide', async () => {
+        mockState.compliance = [record({ periodMonths: 12 })];
+        await render(<VehicleDetailScreen />);
+        await fireEvent.press(screen.getByLabelText(/^Assurance : /));
+        await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
+        await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
+        expect(mockState.scanCalls).toHaveLength(0);
+        expect(screen.queryByText(/^Papier lu : du/)).toBeNull();
+      });
+    });
+
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {
       mockState.compliance = [record({})];
       await render(<VehicleDetailScreen />);

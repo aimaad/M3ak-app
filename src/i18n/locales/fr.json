@@ -3762,7 +3762,20 @@
         "reading": "Lecture du papier en cours…",
         "read": "Papier lu : vérifiez les dates et les informations avant d'enregistrer.",
         "otherVehicle": "Attention : la plaque lue sur le papier semble différente de celle de ce véhicule.",
-        "unfavorable": "Attention : ce contrôle technique semble défavorable (contre-visite)."
+        "unfavorable": "Attention : ce contrôle technique semble défavorable (contre-visite).",
+        "keptProposed": "Les dates proposées sont conservées.",
+        "proposal": "Papier lu : du {{from}} au {{to}}.",
+        "use": "Utiliser les dates du papier",
+        "using": "Dates du papier utilisées (vous pouvez encore les corriger via « Avec détails »).",
+        "keep": "Garder les dates proposées",
+        "issue": {
+          "no_dates": "Les dates n'ont pas pu être lues sur ce papier.",
+          "other_vehicle": "La plaque lue sur ce papier semble différente de celle de ce véhicule : ses dates ne sont pas proposées.",
+          "unfavorable": "Ce contrôle technique semble défavorable : il ne peut pas servir de renouvellement.",
+          "already_expired": "Ce papier est déjà périmé : il ne peut pas servir de renouvellement.",
+          "not_newer": "Ce papier ne finit pas après la période actuelle (fin le {{date}}) : c'est peut-être l'ancien.",
+          "odd_duration": "Durée inhabituelle ({{n}} mois) : vérifiez bien les dates."
+        }
       },
       "askPaper": {
         "assurance": "Prenez en photo la nouvelle attestation d'assurance, ou choisissez-la dans la galerie (facultatif).",
