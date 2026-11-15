@@ -870,6 +870,12 @@ describe('fiche véhicule', () => {
       expect(screen.getByText('✓ Terminer')).toBeTruthy();
     });
 
+    it('historique de la fiche : un entretien « Autre » fait garde son nom', async () => {
+      mockState.maintenance = [{ id: 'm8', vehicleId: 'v1', type: 'autre', titre: 'Courroie de distribution', statut: 'effectuee', echeanceDate: null, echeanceKm: null, cout: null, garage: null, dateIntervention: at(-10) }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getAllByText('Courroie de distribution').length).toBeGreaterThan(0);
+    });
+
     it('« ✓ Fait » : kilométrage et date déjà remplis, un seul geste « Confirmer »', async () => {
       mockState.maintenance = [vidange()];
       await render(<VehicleDetailScreen />);

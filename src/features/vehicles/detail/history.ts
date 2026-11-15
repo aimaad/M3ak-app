@@ -16,7 +16,7 @@ export type HistoryEvent =
   | { kind: 'rental'; key: string; at: string; rentalId: string; name: string | null; from: string; to: string; days: number | null; amount: number | null }
   | { kind: 'inspection'; key: string; at: string; rentalId: string; type: 'depart' | 'retour'; damageCount: number }
   | { kind: 'compliance'; key: string; at: string; complianceKind: ComplianceKind; validUntil: string; amount: number | null }
-  | { kind: 'maintenance'; key: string; at: string; maintenanceId: string; type: MaintenanceType; garage: string | null; amount: number | null };
+  | { kind: 'maintenance'; key: string; at: string; maintenanceId: string; type: MaintenanceType; /** Nom d'un entretien « Autre » (« Courroie de distribution »). */ titre: string | null; garage: string | null; amount: number | null };
 
 export function buildHistory(input: {
   rentals: Rental[];
@@ -54,7 +54,7 @@ export function buildHistory(input: {
   for (const entry of input.maintenance) {
     if (entry.statut !== 'effectuee') continue;
     if (entry.type === 'assurance' || entry.type === 'visite_technique') continue;
-    events.push({ kind: 'maintenance', key: `maintenance:${entry.id}`, at: entry.dateIntervention ?? entry.createdAt, maintenanceId: entry.id, type: entry.type, garage: entry.garage, amount: input.showAmounts ? entry.cout : null });
+    events.push({ kind: 'maintenance', key: `maintenance:${entry.id}`, at: entry.dateIntervention ?? entry.createdAt, maintenanceId: entry.id, type: entry.type, titre: entry.titre ?? null, garage: entry.garage, amount: input.showAmounts ? entry.cout : null });
   }
   events.sort((a, b) => Date.parse(b.at) - Date.parse(a.at));
   return input.limit ? events.slice(0, input.limit) : events;

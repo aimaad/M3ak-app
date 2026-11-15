@@ -1,3 +1,4 @@
+import { maintenanceLabel } from '@/features/maintenance/label';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, View } from 'react-native';
@@ -145,7 +146,7 @@ export function describeEvent(event: HistoryEvent, t: (key: string, params?: Rec
     default: {
       const date = shortDate(event.at, language);
       return {
-        title: t(`maintenance.types.${event.type}`),
+        title: maintenanceLabel({ type: event.type, titre: event.titre }, t),
         sub: event.garage ? t('vehicleDetail.history.maintenanceSubGarage', { date, garage: event.garage }) : t('vehicleDetail.history.maintenanceSub', { date }),
         amount: event.amount != null ? t('vehicleDetail.history.amount', { amount: formatAmount(event.amount) }) : null,
       };

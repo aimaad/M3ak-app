@@ -125,6 +125,12 @@ describe('historique', () => {
     expect(events.map((event) => event.key)).toEqual(['rental:r0', 'rental:r1', 'rental:r2', 'rental:r3']);
   });
 
+  it('entretien « Autre » nommé : l’historique garde son nom (« Courroie de distribution »)', () => {
+    const events = buildHistory({ rentals: [], inspections: [], maintenance: [maint({ id: 'o', type: 'autre', titre: 'Courroie de distribution', statut: 'effectuee', dateIntervention: day(-2) }), maint({ id: 'p', type: 'autre', titre: null, statut: 'effectuee', dateIntervention: day(-5) })], customers, showAmounts: false });
+    expect(events[0]).toMatchObject({ kind: 'maintenance', type: 'autre', titre: 'Courroie de distribution' });
+    expect(events[1]).toMatchObject({ type: 'autre', titre: null });
+  });
+
   it('renouvellements d’obligations : événements avec le montant (propriétaire) ; l’entretien « assurance » fait n’est pas répété', () => {
     const compliance = [{ id: 'c1', kind: 'assurance', validUntil: '2027-12-26', amount: 4200, createdAt: day(-1) }] as never;
     const maintenance = [maint({ id: 'a', type: 'assurance', statut: 'effectuee', dateIntervention: day(-2) }), maint({ id: 'v', type: 'vidange', statut: 'effectuee', dateIntervention: day(-3) })];
