@@ -37,6 +37,10 @@ const TEMPLATES: Record<string, Record<Locale, Template>> = {
     fr: { title: 'Client en retard au départ', body: '{customer} n\'est pas venu chercher {vehicle} ({plate}). Tél : {phone}' },
     ar: { title: 'الزبون متأخر عن الاستلام', body: 'لم يأت {customer} لأخذ {vehicle} ({plate}). الهاتف: {phone}' },
   },
+  noncompliant_handover: {
+    fr: { title: 'Véhicule à régulariser remis', body: '{vehicle} ({plate}) a été remis à {customer}. À régulariser — expiré : {issues}.' },
+    ar: { title: 'تسليم سيارة غير مطابقة', body: 'تم تسليم {vehicle} ({plate}) إلى {customer}: يجب تسوية الوضعية — منتهي الصلاحية: {issues}.' },
+  },
   maintenance_due: {
     fr: { title: 'Entretien à prévoir', body: 'Pour {vehicle} ({plate}) : {maintenance} avant le {date}.' },
     ar: { title: 'صيانة مطلوبة', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} قبل {date}.' },
@@ -173,6 +177,9 @@ export function renderPush(kind: string, rawParams: PushParams, locale: Locale):
     if (rawParams.maintenance === 'autre' && typeof rawParams.label === 'string' && rawParams.label.trim()) {
       params.maintenance = locale === 'ar' ? `صيانة «${rawParams.label.trim()}»` : `l'entretien « ${rawParams.label.trim()} »`;
     }
+  }
+  if (typeof rawParams?.kinds === 'string' && rawParams.kinds) {
+    params.issues = rawParams.kinds.split(',').map((kind) => MAINTENANCE[locale][kind] ?? MAINTENANCE[locale].autre).join(locale === 'ar' ? '، ' : ', ');
   }
   const fill = (text: string) => text.replace(/\{(\w+)\}/g, (_, key: string) => params[key] ?? '—');
   const branch = typeof rawParams?.branch === 'string' && rawParams.branch.trim() ? `\n${BRANCH_LABEL[locale]} : ${rawParams.branch}` : '';

@@ -70,4 +70,31 @@ select pg_temp.ck('la remise est aussi dans le journal normal des locations', (s
 update rentals set notes = 'x' where id = 'a1000000-0000-0000-0000-000000000001';
 select pg_temp.ck('pas de doublon', (select count(*) from agency_audit_log where action = 'rental_started_noncompliant') = 1);
 
+-- ---------------------------------------------------------------- notification prioritaire au responsable (migration 0079)
+select pg_temp.ck('le propriétaire est prévenu de la remise à régulariser', (select count(*) from notifications where kind = 'noncompliant_handover' and recipient_id = '00000000-0000-0000-0000-0000000000a1') = 1);
+select pg_temp.ck('notification URGENTE', (select severity = 'urgent' from notifications where kind = 'noncompliant_handover' limit 1));
+select pg_temp.ck('jamais à l''employé qui remet le véhicule', (select count(*) from notifications where kind = 'noncompliant_handover' and recipient_id = '00000000-0000-0000-0000-0000000000a3') = 0);
+select pg_temp.ck('elle dit le véhicule, le client, ce qui est expiré', (select params ->> 'vehicle' = 'Dacia Logan' and params ->> 'customer' = 'Karim Alami' and params ->> 'kinds' = 'assurance,visite_technique' from notifications where kind = 'noncompliant_handover' limit 1));
+select pg_temp.ck('elle ouvre la fiche du véhicule', (select link_type = 'vehicle' and link_id = 'f1000000-0000-0000-0000-000000000001' from notifications where kind = 'noncompliant_handover' limit 1));
+select pg_temp.ck('une seule notification pour les 4 remises (véhicules en règle ou « à compléter » : rien)', (select count(*) from notifications where kind = 'noncompliant_handover') = 1);
+
+-- Protection contre les doublons : la location repasse plusieurs fois à « en cours » (annulation du départ, nouveau départ…).
+update rentals set statut = 'confirmee' where id = 'a1000000-0000-0000-0000-000000000001';
+update rentals set statut = 'en_cours' where id = 'a1000000-0000-0000-0000-000000000001';
+update rentals set statut = 'confirmee' where id = 'a1000000-0000-0000-0000-000000000001';
+update rentals set statut = 'en_cours' where id = 'a1000000-0000-0000-0000-000000000001';
+select pg_temp.ck('doublons : toujours UNE seule notification pour cette location', (select count(*) from notifications where kind = 'noncompliant_handover') = 1);
+select pg_temp.ck('doublons : toujours UNE seule ligne d''historique « à régulariser »', (select count(*) from agency_audit_log where action = 'rental_started_noncompliant') = 1);
+-- Même si la notification était masquée par son destinataire, elle ne revient pas.
+update notifications set dismissed_at = now() where kind = 'noncompliant_handover';
+update rentals set statut = 'confirmee' where id = 'a1000000-0000-0000-0000-000000000001';
+update rentals set statut = 'en_cours' where id = 'a1000000-0000-0000-0000-000000000001';
+select pg_temp.ck('une notification masquée ne revient pas', (select count(*) from notifications where kind = 'noncompliant_handover') = 1);
+-- Une AUTRE location du même véhicule à régulariser : nouvelle trace, nouvelle notification (c'est une nouvelle remise).
+insert into rentals (id, agency_id, vehicle_id, customer_id, statut, date_debut_prevue, date_fin_prevue) values
+  ('a1000000-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'c1000000-0000-0000-0000-000000000001', 'confirmee', now() + interval '10 days', now() + interval '12 days');
+update rentals set statut = 'en_cours' where id = 'a1000000-0000-0000-0000-000000000005';
+select pg_temp.ck('une autre remise du véhicule à régulariser est tracée et notifiée', (select count(*) from notifications where kind = 'noncompliant_handover') = 2 and (select count(*) from agency_audit_log where action = 'rental_started_noncompliant') = 2);
+select pg_temp.ck('le statut opérationnel du véhicule n''est pas touché par la notification', (select statut::text = 'disponible' from vehicles where id = 'f1000000-0000-0000-0000-000000000001'));
+
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

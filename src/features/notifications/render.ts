@@ -19,7 +19,7 @@ function translateOr(t: Translate, key: string, fallbackKey: string, options?: R
 }
 
 /** Variables des modèles ; une valeur absente s'affiche « — » (i18next la remplacerait sinon par du vide). */
-const VARIABLES = ['customer', 'phone', 'vehicle', 'plate', 'amount', 'date', 'end', 'start', 'count', 'name', 'rental', 'contract', 'maintenance', 'km', 'left', 'time'];
+const VARIABLES = ['customer', 'phone', 'vehicle', 'plate', 'amount', 'date', 'end', 'start', 'count', 'name', 'rental', 'contract', 'maintenance', 'km', 'left', 'time', 'issues'];
 
 const DATE_KEYS = ['date', 'end', 'start'];
 
@@ -42,6 +42,10 @@ export function notificationView(item: Pick<AppNotification, 'kind' | 'params'>,
     if (item.params.maintenance === 'autre' && typeof item.params.label === 'string' && item.params.label.trim()) {
       params.maintenance = t('notifications.maintenance.named', { name: item.params.label.trim() });
     }
+  }
+  // Remise d'un véhicule « À régulariser » : « l'assurance, la visite technique » (obligations expirées).
+  if (typeof item.params?.kinds === 'string' && item.params.kinds) {
+    params.issues = item.params.kinds.split(',').map((kind) => translateOr(t, `notifications.maintenance.${kind}`, 'notifications.maintenance.autre')).join(', ');
   }
   const variables = { ...Object.fromEntries(VARIABLES.map((name) => [name, '—'])), ...params };
   const fill = (key: string) => translateOr(t, `notifications.kinds.${item.kind}.${key}`, `notifications.fallback.${key}`, variables);

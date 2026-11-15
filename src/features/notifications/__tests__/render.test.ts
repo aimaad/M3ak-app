@@ -48,6 +48,14 @@ describe('notificationView', () => {
     const view = notificationView({ kind: 'maintenance_due', params: { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'vidange', date: '2030-06-12' } }, tFr, 'fr');
     expect(view.body).toContain('la vidange');
   });
+  it('remise d’un véhicule à régulariser : dit ce qui est expiré, en français et en arabe', () => {
+    const params = { vehicle: 'Dacia Logan', plate: '1-A-1', customer: 'Karim Alami', kinds: 'assurance,visite_technique' };
+    const view = notificationView({ kind: 'noncompliant_handover', params }, tFr, 'fr');
+    expect(view.body).toContain("l'assurance, la visite technique");
+    expect(view.body).toContain('Karim Alami');
+    expect(view.body).not.toMatch(/[{}]|undefined/);
+    expect(notificationView({ kind: 'noncompliant_handover', params }, tAr, 'ar').body).toContain('الفحص التقني');
+  });
   it('chaque type de notification existe en français et en arabe', () => {
     const kinds = Object.keys((fr as unknown as { notifications: { kinds: Dict } }).notifications.kinds);
     expect(kinds.length).toBeGreaterThan(15);

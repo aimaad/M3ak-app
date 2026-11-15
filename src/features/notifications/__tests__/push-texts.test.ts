@@ -21,6 +21,14 @@ describe('textes des notifications push', () => {
     expect(text.body).not.toMatch(/[{}]/);
     expect(renderPush('return_late', {}, 'fr').body).not.toMatch(/[{}]/);
   });
+  it('remise d’un véhicule à régulariser : texte prioritaire avec ce qui est expiré', () => {
+    const p = { vehicle: 'Dacia Logan', plate: '1-A-1', customer: 'Karim Alami', kinds: 'assurance,visite_technique' };
+    const fr = renderPush('noncompliant_handover', p, 'fr');
+    expect(fr.body).toContain("l'assurance, la visite technique");
+    expect(fr.body).not.toMatch(/[{}]/);
+    expect(renderPush('noncompliant_handover', p, 'ar').body).toContain('الفحص التقني');
+    expect(PUSH_KINDS).toContain('noncompliant_handover');
+  });
   it('type inconnu : message neutre, jamais d’erreur', () => {
     expect(renderPush('inconnu', {}, 'fr').body).toBe('Vous avez une nouvelle notification.');
   });
