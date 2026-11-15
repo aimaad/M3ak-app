@@ -81,7 +81,7 @@ function InlineError({ message }: { message?: string }) {
 }
 
 /** « Modifier la fiche technique » : une page qui défile, une seule barre d'enregistrement, un seul enregistrement (photos puis une requête). */
-export function VehicleForm({ vehicle, scrollToField = null, initialTab = 'fiche', initialKind = null }: { vehicle: Vehicle; scrollToField?: string | null; /** Onglet ouvert d'emblée (« Échéances » depuis la fiche, « Scanner », « Régulariser »). */ initialTab?: 'fiche' | 'echeances'; /** Obligation (assurance, visite, vignette) dont le renouvellement s'ouvre d'emblée. */ initialKind?: ComplianceKind | null }) {
+export function VehicleForm({ vehicle, scrollToField = null, initialTab = 'fiche', initialKind = null, initialRowKey = null }: { vehicle: Vehicle; scrollToField?: string | null; /** Onglet ouvert d'emblée (« Échéances » depuis la fiche, « Scanner », « Régulariser »). */ initialTab?: 'fiche' | 'echeances'; /** Obligation (assurance, visite, vignette) dont le renouvellement s'ouvre d'emblée. */ initialKind?: ComplianceKind | null; /** Échéance d'entretien (clé de ligne, ex. « due:vidange ») dépliée d'emblée. */ initialRowKey?: string | null }) {
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
@@ -466,7 +466,7 @@ export function VehicleForm({ vehicle, scrollToField = null, initialTab = 'fiche
               </View>
             ) : null}
             <View ref={register('echeances')} collapsable={false}>
-              <DuesSection key={openKind ?? 'none'} vehicle={vehicle} rows={buildDues({ vehicle, maintenance, now })} now={now} openKind={openKind} />
+              <DuesSection key={`${openKind ?? 'none'}:${initialRowKey ?? ''}`} vehicle={vehicle} rows={buildDues({ vehicle, maintenance, now })} now={now} openKind={openKind} openKey={initialRowKey} />
             </View>
           </>
         )}

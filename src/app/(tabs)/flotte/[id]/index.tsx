@@ -87,7 +87,7 @@ export default function VehicleDetailScreen() {
   // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
   const [entretienY, setEntretienY] = useState(0);
   // Les échéances se gèrent dans « Modifier la fiche technique » (onglet « Échéances ») : la fiche les montre seulement.
-  const editDues = (kind?: 'assurance' | 'visite_technique' | 'vignette' | null) => router.push({ pathname: '/flotte/[id]/modifier', params: kind ? { id, tab: 'echeances', regulariser: kind } : { id, tab: 'echeances' } });
+  const editDues = (kind?: 'assurance' | 'visite_technique' | 'vignette' | null, key?: string | null) => router.push({ pathname: '/flotte/[id]/modifier', params: kind ? { id, tab: 'echeances', regulariser: kind } : key ? { id, tab: 'echeances', echeance: key } : { id, tab: 'echeances' } });
   const onSectionLayout = (name: 'photos' | 'documents' | 'entretien') => (event: Parameters<ReturnType<typeof onSectionLayoutAuto>>[0]) => {
     if (name === 'entretien') setEntretienY(event.nativeEvent.layout.y);
     onSectionLayoutAuto(name)(event);
@@ -293,7 +293,7 @@ export default function VehicleDetailScreen() {
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>
             ) : null}
-            <DuesSection readOnly vehicle={vehicle} rows={figures?.dues ?? []} now={now} onEdit={(target) => editDues(target?.kind ?? null)} />
+            <DuesSection readOnly vehicle={vehicle} rows={figures?.dues ?? []} now={now} onEdit={(target) => editDues(target?.kind ?? null, target?.key ?? null)} />
             <SpecsGrid tiles={buildSpecs(vehicle)} description={vehicle.description?.trim() || null} onEdit={goEdit} onTile={goEdit} />
             <HistoryCard events={history.slice(0, 4)} onOpen={openEvent} onSeeAll={() => router.push({ pathname: '/flotte/[id]/historique', params: { id: vehicle.id } })} />
             {showPrice ? (

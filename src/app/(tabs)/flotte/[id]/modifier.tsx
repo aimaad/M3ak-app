@@ -14,13 +14,14 @@ import { useLanguage } from '@/i18n/use-language';
  * confirmation de sortie. Anciens liens : les photos et les documents ont leurs écrans.
  */
 export default function ModifierVehiculeScreen() {
-  const { id, section, field, tab, regulariser } = useLocalSearchParams<{ id: string; section?: string; field?: string; tab?: string; regulariser?: string }>();
+  const { id, section, field, tab, regulariser, echeance } = useLocalSearchParams<{ id: string; section?: string; field?: string; tab?: string; regulariser?: string; echeance?: string }>();
   const { t } = useLanguage();
   const { data: vehicle, isLoading, isError } = useVehicle(id);
   const wanted = parseVehicleSection(section);
   // Onglet « Échéances » : depuis la fiche (« Modifier »), « Régulariser » ou « Scanner » ; l'obligation à renouveler s'ouvre d'emblée.
   const kind = regulariser === 'assurance' || regulariser === 'visite_technique' || regulariser === 'vignette' ? regulariser : null;
-  const initialTab = tab === 'echeances' || kind ? 'echeances' : 'fiche';
+  const rowKey = typeof echeance === 'string' && echeance.startsWith('due:') ? echeance : null;
+  const initialTab = tab === 'echeances' || kind || rowKey ? 'echeances' : 'fiche';
 
   if (wanted === 'photos') return <Redirect href={{ pathname: '/flotte/[id]/photos', params: { id } }} />;
   if (wanted === 'documents') return <Redirect href={{ pathname: '/flotte/[id]', params: { id, edit: 'documents' } }} />;
@@ -44,7 +45,7 @@ export default function ModifierVehiculeScreen() {
           </ThemedText>
         </View>
       ) : (
-        <VehicleForm key={vehicle.id} vehicle={vehicle} scrollToField={typeof field === 'string' ? field : null} initialTab={initialTab} initialKind={kind} />
+        <VehicleForm key={vehicle.id} vehicle={vehicle} scrollToField={typeof field === 'string' ? field : null} initialTab={initialTab} initialKind={kind} initialRowKey={rowKey} />
       )}
     </ThemedView>
   );

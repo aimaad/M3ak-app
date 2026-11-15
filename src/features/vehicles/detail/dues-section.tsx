@@ -253,12 +253,12 @@ function EditDue({ row, vehicle, now, canDelete, onClose, onSaved }: { row: DueR
  * Échéances complètes, modifiables SUR PLACE : une ligne par échéance (assurance, visite technique, entretiens) ; un toucher la déplie
  * pour corriger la date et le kilométrage ; « + Ajouter » ouvre le formulaire dans la carte.
  */
-export function DuesSection({ vehicle, rows: allRows, now, openKind = null, readOnly = false, onEdit }: { vehicle: Vehicle; rows: DueRow[]; now: Date; openKind?: ComplianceKind | null; /** Fiche du véhicule : échéances prévues en lecture seule ; « Modifier » ouvre l'onglet « Échéances » de la page de modification. */ readOnly?: boolean; onEdit?: (target?: { kind?: ComplianceKind }) => void }) {
+export function DuesSection({ vehicle, rows: allRows, now, openKind = null, openKey = null, readOnly = false, onEdit }: { vehicle: Vehicle; rows: DueRow[]; now: Date; openKind?: ComplianceKind | null; /** Échéance d'entretien dépliée d'emblée (clé de ligne, ex. « due:vidange »). */ openKey?: string | null; /** Fiche du véhicule : échéances prévues en lecture seule ; « Modifier » ouvre l'onglet « Échéances » de la page de modification. */ readOnly?: boolean; onEdit?: (target?: { kind?: ComplianceKind; key?: string }) => void }) {
   // L'assurance et la visite technique sont dans « Obligations légales » (ComplianceBlock) : ici, seulement les entretiens.
   const rows = allRows.filter((row) => row.type !== 'assurance' && row.type !== 'visite_technique');
   const { t, language } = useLanguage();
   const agency = useMyAgency();
-  const [open, setOpen] = useState<string | 'new' | null>(null);
+  const [open, setOpen] = useState<string | 'new' | null>(openKey);
   const [saved, setSaved] = useState(false);
   const canDelete = agency.data?.role === 'owner' || agency.data?.role === 'manager';
   const dueText = (row: DueRow) => {
@@ -325,7 +325,7 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null, read
           <View key={row.key} style={{ borderTopWidth: 1, borderTopColor: Brand.gaugeTrack }}>
             <Pressable
               onPress={() => {
-                if (readOnly) return onEdit?.();
+                if (readOnly) return onEdit?.({ key: row.key });
                 setOpen(expanded ? null : row.key);
               }}
               accessibilityRole="button"

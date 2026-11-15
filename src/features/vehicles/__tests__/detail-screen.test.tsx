@@ -417,12 +417,12 @@ describe('fiche véhicule', () => {
       expect(screen.getByText('Très propre, climatisation neuve')).toBeTruthy();
     });
 
-    it('échéances : une vidange proche s’affiche en jours en LECTURE SEULE ; un toucher ouvre l’onglet « Échéances » de la page de modification', async () => {
+    it('échéances : une vidange proche s’affiche en jours en LECTURE SEULE ; un toucher ouvre l’onglet « Échéances » de la page de modification, sur cette échéance', async () => {
       mockState.maintenance = [{ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null }];
       await render(<VehicleDetailScreen />);
       expect(screen.queryByLabelText('+ Ajouter')).toBeNull(); // plus d'ajout ni de formulaire sur la fiche
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances' } });
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances', echeance: 'due:vidange' } }); // la vidange s'ouvre d'emblée
       expect(screen.queryByLabelText("Enregistrer l'échéance")).toBeNull();
     });
 
@@ -621,6 +621,12 @@ describe('fiche véhicule', () => {
   describe('échéances modifiables sur place', () => {
     const vidange = () => ({ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null });
 
+
+    it('ouvert sur une échéance précise (openKey) : la ligne est dépliée d’emblée, avec son formulaire', async () => {
+      mockState.maintenance = [{ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null }];
+      await renderDues({ openKey: 'due:vidange' });
+      expect(screen.getByLabelText("Enregistrer l'échéance")).toBeTruthy();
+    });
 
     it('« + Ajouter » : un seul « + » sur le bouton, et un « − » replie le formulaire sans rien enregistrer', async () => {
       await renderDues();

@@ -47,10 +47,10 @@ jest.mock('@/features/maintenance/hooks', () => ({
   useCreateMaintenanceItem: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.created.push(args); options?.onSuccess?.(); } }),
 }));
 jest.mock('@/features/vehicles/detail/dues-section', () => ({
-  DuesSection: ({ openKind }: { openKind: string | null }) => {
+  DuesSection: ({ openKind, openKey }: { openKind: string | null; openKey: string | null }) => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Text } = require('react-native');
-    return <Text>{`ECHEANCES:${openKind ?? 'aucune'}`}</Text>;
+    return <Text>{`ECHEANCES:${openKind ?? 'aucune'}${openKey ? `:${openKey}` : ''}`}</Text>;
   },
 }));
 jest.mock('@/features/compliance/hooks', () => ({ useVehicleCompliance: () => ({ data: mockState.compliance }) }));
@@ -340,6 +340,11 @@ describe('« Modifier la fiche technique »', () => {
       await fireEvent.press(screen.getByLabelText('Échéances'));
       await fireEvent.press(screen.getByLabelText('Enregistrer la fiche'));
       await waitFor(() => expect(mockState.updates).toHaveLength(1));
+    });
+
+    it('ouvert sur une échéance d’entretien précise (touchée sur la fiche) : l’onglet « Échéances » et cette ligne sont ouverts d’emblée', async () => {
+      await render(<VehicleForm vehicle={base} initialTab="echeances" initialRowKey="due:vidange" />);
+      expect(screen.getByText('ECHEANCES:aucune:due:vidange')).toBeTruthy();
     });
 
     it('ouvert avec « Échéances » (depuis la fiche) et une obligation à régulariser : l’onglet et le renouvellement sont ouverts d’emblée', async () => {
