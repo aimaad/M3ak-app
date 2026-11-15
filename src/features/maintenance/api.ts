@@ -173,6 +173,13 @@ export async function completeMaintenanceQuick(
   return fromRow(data as MaintenanceRow);
 }
 
+/** « Pas encore » : on reporte le suivi « est-ce fait ? » de N jours (migration 0074). */
+export async function snoozeMaintenanceFollowup(id: string, days: number): Promise<MaintenanceItem> {
+  const { data, error } = await getSupabase().rpc('snooze_maintenance_followup', { p_id: id, p_days: days });
+  if (error) throw error;
+  return fromRow(data as MaintenanceRow);
+}
+
 export async function uploadMaintenanceInvoice(
   agencyId: string,
   maintenanceItemId: string,

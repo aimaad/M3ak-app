@@ -88,3 +88,33 @@ describe('timeAgo', () => {
     expect(notificationRoute('vehicle', 'v1')).toEqual({ pathname: '/flotte/[id]', params: { id: 'v1' } });
   });
 });
+
+describe('notifications d’entretien : veille, jour même, kilométrage, suivi', () => {
+  const t = (key: string, options?: Record<string, unknown>) => {
+    const fr = require('@/i18n/locales/fr.json') as Record<string, unknown>;
+    const text = key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], fr) as string | undefined;
+    return text === undefined ? key : text.replace(/\{\{(\w+)\}\}/g, (_, name) => String(options?.[name] ?? ''));
+  };
+  const params = { maintenance: 'vidange', vehicle: 'Dacia Logan', plate: '1-A-1', date: '2026-11-16', km: 50000, left: 400 };
+
+  it('chaque type est écrit, sans variable vide', () => {
+    for (const kind of ['maintenance_eve', 'maintenance_today', 'maintenance_km_soon', 'maintenance_km_reached', 'maintenance_followup']) {
+      const view = notificationView({ kind, params }, t, 'fr');
+      expect(view.title).not.toContain('notifications.');
+      expect(view.body).not.toMatch(/[{}—]/);
+    }
+  });
+
+  it('suivi : « Avez-vous fait la vidange … ? »', () => {
+    expect(notificationView({ kind: 'maintenance_followup', params }, t, 'fr').body).toContain('Avez-vous fait la vidange de Dacia Logan');
+  });
+
+  it('kilométrage bientôt : il reste N km', () => {
+    expect(notificationView({ kind: 'maintenance_km_soon', params }, t, 'fr').body).toContain('il reste 400 km');
+  });
+
+  it('toucher une notification d’entretien ouvre l’écran de réponse de CET entretien', () => {
+    expect(notificationRoute('maintenance', 'm1')).toEqual({ pathname: '/maintenance/[id]/suivi', params: { id: 'm1' } });
+    expect(notificationRoute('maintenance', null)).toEqual({ pathname: '/maintenance' });
+  });
+});

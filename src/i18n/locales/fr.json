@@ -2800,6 +2800,26 @@
       "compliance_expired": {
         "title": "Obligation expirée",
         "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} a expiré le {{date}}. Renouvelez-la dans la fiche du véhicule."
+      },
+      "maintenance_eve": {
+        "title": "Entretien demain",
+        "body": "Demain : {{maintenance}} pour {{vehicle}} ({{plate}}). Pensez à le prévoir."
+      },
+      "maintenance_today": {
+        "title": "Entretien aujourd'hui",
+        "body": "Aujourd'hui : {{maintenance}} pour {{vehicle}} ({{plate}})."
+      },
+      "maintenance_km_soon": {
+        "title": "Entretien bientôt (kilométrage)",
+        "body": "{{vehicle}} ({{plate}}) approche de {{km}} km pour {{maintenance}} : il reste {{left}} km."
+      },
+      "maintenance_km_reached": {
+        "title": "Kilométrage d'entretien atteint",
+        "body": "{{vehicle}} ({{plate}}) a atteint {{km}} km : {{maintenance}} est à faire."
+      },
+      "maintenance_followup": {
+        "title": "Est-ce fait ?",
+        "body": "Avez-vous fait {{maintenance}} de {{vehicle}} ({{plate}}) ? Répondez en un geste."
       }
     },
     "maintenance": {
@@ -4049,5 +4069,31 @@
       "hint": "Placez le document dans le cadre"
     },
     "otherLabel": "Nom de la couleur"
+  },
+  "maintenanceFollowup": {
+    "title": "{{maintenance}} : est-ce fait ?",
+    "titleQ": "Avez-vous fait {{maintenance}} ?",
+    "due": "Échéance : {{when}}",
+    "dueDate": "le {{date}}",
+    "dueKm": "à {{km}} km",
+    "or": " ou ",
+    "yes": "Oui, c'est fait",
+    "no": "Pas encore",
+    "remind": "Quand vous le rappeler ?",
+    "tomorrow": "Demain",
+    "in3": "Dans 3 jours",
+    "in7": "Dans une semaine",
+    "snoozed": "Noté. On vous le rappellera {{when}}.",
+    "whenTomorrow": "demain",
+    "when3": "dans 3 jours",
+    "when7": "dans une semaine",
+    "done": "Déjà fait ✓",
+    "doneBody": "Cet entretien est déjà marqué comme fait.",
+    "notFound": "Cet entretien n'existe plus.",
+    "openVehicle": "Ouvrir la voiture",
+    "close": "Fermer",
+    "failed": "Impossible de reporter le rappel.",
+    "hint": "Si vous avez déjà fait cet entretien, touchez « Oui » : tout est prérempli, un seul geste.",
+    "back": "Retour"
   }
 }

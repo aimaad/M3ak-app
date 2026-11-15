@@ -43,3 +43,17 @@ describe('textes des notifications push', () => {
     expect(renderPush('compliance_due', { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'vignette', date: '2030-06-12' }, 'fr').body).toContain('la vignette');
   });
 });
+
+describe('push : notifications d’entretien', () => {
+  it('veille, jour même, kilométrage et suivi : français et arabe, sans variable vide', () => {
+    const params = { maintenance: 'vidange', vehicle: 'Dacia Logan', plate: '1-A-1', date: '2026-11-16', km: 50000, left: 400 };
+    for (const kind of ['maintenance_eve', 'maintenance_today', 'maintenance_km_soon', 'maintenance_km_reached', 'maintenance_followup']) {
+      for (const locale of ['fr', 'ar'] as const) {
+        const text = renderPush(kind, params, locale);
+        expect(text.title).not.toBe('BIBIP');
+        expect(text.body).not.toMatch(/[{}—]/);
+      }
+    }
+    expect(renderPush('maintenance_followup', params, 'fr').body).toContain('Avez-vous fait la vidange');
+  });
+});

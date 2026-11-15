@@ -19,7 +19,7 @@ function translateOr(t: Translate, key: string, fallbackKey: string, options?: R
 }
 
 /** Variables des modèles ; une valeur absente s'affiche « — » (i18next la remplacerait sinon par du vide). */
-const VARIABLES = ['customer', 'phone', 'vehicle', 'plate', 'amount', 'date', 'end', 'start', 'count', 'name', 'rental', 'contract', 'maintenance'];
+const VARIABLES = ['customer', 'phone', 'vehicle', 'plate', 'amount', 'date', 'end', 'start', 'count', 'name', 'rental', 'contract', 'maintenance', 'km', 'left'];
 
 const DATE_KEYS = ['date', 'end', 'start'];
 
@@ -58,7 +58,8 @@ export function notificationRoute(linkType: NotificationLinkType | null, linkId:
     case 'customer':
       return linkId ? { pathname: '/clients/[id]', params: { id: linkId } } : { pathname: '/clients' };
     case 'maintenance':
-      return { pathname: '/maintenance' };
+      // Entretien précis : l'écran de réponse « avez-vous fait … ? » (Oui / Pas encore) ; sans identifiant : la liste.
+      return linkId ? { pathname: '/maintenance/[id]/suivi', params: { id: linkId } } : { pathname: '/maintenance' };
     case 'team':
       return { pathname: '/equipe' };
     default:

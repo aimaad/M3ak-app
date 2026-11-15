@@ -2904,6 +2904,26 @@
       "compliance_expired": {
         "title": "التزام منتهٍ",
         "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} انتهى في {{date}}. جدّده من بطاقة السيارة."
+      },
+      "maintenance_eve": {
+        "title": "صيانة غدًا",
+        "body": "غدًا: {{maintenance}} بالنسبة لـ {{vehicle}} ({{plate}}). فكّر في تدبيرها."
+      },
+      "maintenance_today": {
+        "title": "صيانة اليوم",
+        "body": "اليوم: {{maintenance}} بالنسبة لـ {{vehicle}} ({{plate}})."
+      },
+      "maintenance_km_soon": {
+        "title": "صيانة قريبًا (المسافة)",
+        "body": "{{vehicle}} ({{plate}}) يقترب من {{km}} كم لأجل {{maintenance}}: تبقّى {{left}} كم."
+      },
+      "maintenance_km_reached": {
+        "title": "بلغت مسافة الصيانة",
+        "body": "{{vehicle}} ({{plate}}) بلغت {{km}} كم: {{maintenance}} مطلوبة."
+      },
+      "maintenance_followup": {
+        "title": "هل تمّ؟",
+        "body": "هل أنجزتم {{maintenance}} الخاصة بـ {{vehicle}} ({{plate}})؟ أجيبوا بلمسة واحدة."
       }
     },
     "maintenance": {
@@ -4153,5 +4173,31 @@
       "hint": "ضع الوثيقة داخل الإطار"
     },
     "otherLabel": "اسم اللون"
+  },
+  "maintenanceFollowup": {
+    "title": "{{maintenance}}: هل تمّ؟",
+    "titleQ": "هل أنجزتم {{maintenance}}؟",
+    "due": "الموعد: {{when}}",
+    "dueDate": "في {{date}}",
+    "dueKm": "عند {{km}} كم",
+    "or": " أو ",
+    "yes": "نعم، تمّ",
+    "no": "ليس بعد",
+    "remind": "متى نذكّركم؟",
+    "tomorrow": "غدًا",
+    "in3": "بعد 3 أيام",
+    "in7": "بعد أسبوع",
+    "snoozed": "تم. سنذكّركم {{when}}.",
+    "whenTomorrow": "غدًا",
+    "when3": "بعد 3 أيام",
+    "when7": "بعد أسبوع",
+    "done": "تمّ سابقًا ✓",
+    "doneBody": "هذه الصيانة معلَّمة كمنجَزة.",
+    "notFound": "هذه الصيانة لم تعد موجودة.",
+    "openVehicle": "فتح السيارة",
+    "close": "إغلاق",
+    "failed": "تعذر تأجيل التذكير.",
+    "hint": "إن كنتم قد أنجزتم هذه الصيانة، المسوا «نعم»: كل شيء معبّأ مسبقًا، لمسة واحدة.",
+    "back": "رجوع"
   }
 }

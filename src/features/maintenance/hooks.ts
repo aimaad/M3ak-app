@@ -8,6 +8,7 @@ import {
   getMaintenanceItem,
   listMaintenanceItems,
   listMaintenanceItemsForVehicle,
+  snoozeMaintenanceFollowup,
   startMaintenanceItem,
   updateMaintenanceDue,
 } from './api';
@@ -63,6 +64,15 @@ export function useQuickCompleteMaintenance() {
 
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: { km: number | null; date: string | null; garage: string | null; cout: number | null } }) => completeMaintenanceQuick(id, input),
+    onSuccess: (item) => invalidate(item),
+  });
+}
+
+export function useSnoozeMaintenanceFollowup() {
+  const invalidate = useInvalidateMaintenance();
+
+  return useMutation({
+    mutationFn: ({ id, days }: { id: string; days: number }) => snoozeMaintenanceFollowup(id, days),
     onSuccess: (item) => invalidate(item),
   });
 }

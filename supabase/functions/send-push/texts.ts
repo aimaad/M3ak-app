@@ -41,6 +41,26 @@ const TEMPLATES: Record<string, Record<Locale, Template>> = {
     fr: { title: 'Entretien à prévoir', body: 'Pour {vehicle} ({plate}) : {maintenance} avant le {date}.' },
     ar: { title: 'صيانة مطلوبة', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} قبل {date}.' },
   },
+  maintenance_eve: {
+    fr: { title: 'Entretien demain', body: 'Demain : {maintenance} pour {vehicle} ({plate}). Pensez à le prévoir.' },
+    ar: { title: 'صيانة غدًا', body: 'غدًا: {maintenance} بالنسبة لـ {vehicle} ({plate}). فكّر في تدبيرها.' },
+  },
+  maintenance_today: {
+    fr: { title: "Entretien aujourd'hui", body: "Aujourd'hui : {maintenance} pour {vehicle} ({plate})." },
+    ar: { title: 'صيانة اليوم', body: 'اليوم: {maintenance} بالنسبة لـ {vehicle} ({plate}).' },
+  },
+  maintenance_km_soon: {
+    fr: { title: 'Entretien bientôt (kilométrage)', body: '{vehicle} ({plate}) approche de {km} km pour {maintenance} : il reste {left} km.' },
+    ar: { title: 'صيانة قريبًا (المسافة)', body: '{vehicle} ({plate}) يقترب من {km} كم لأجل {maintenance}: تبقّى {left} كم.' },
+  },
+  maintenance_km_reached: {
+    fr: { title: "Kilométrage d'entretien atteint", body: '{vehicle} ({plate}) a atteint {km} km : {maintenance} est à faire.' },
+    ar: { title: 'بلغت مسافة الصيانة', body: '{vehicle} ({plate}) بلغت {km} كم: {maintenance} مطلوبة.' },
+  },
+  maintenance_followup: {
+    fr: { title: 'Est-ce fait ?', body: 'Avez-vous fait {maintenance} de {vehicle} ({plate}) ? Répondez en un geste.' },
+    ar: { title: 'هل تمّ؟', body: 'هل أنجزتم {maintenance} الخاصة بـ {vehicle} ({plate})؟ أجيبوا بلمسة واحدة.' },
+  },
   maintenance_overdue: {
     fr: { title: 'Entretien en retard', body: 'Pour {vehicle} ({plate}) : {maintenance} devait être fait le {date}.' },
     ar: { title: 'صيانة متأخرة', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} كانت مبرمجة في {date}.' },
