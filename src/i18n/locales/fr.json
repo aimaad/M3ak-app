@@ -3467,15 +3467,20 @@
         "empty": "Aucune échéance enregistrée.",
         "addDocument": "Ajouter la photo du document",
         "notesPlaceholder": "ex. Changer aussi le filtre à air",
-        "repeatKmLabel": "Répéter tous les",
+        "repeatKmLabel": "Se répète tous les",
         "repeatKmPlaceholder": "ex. 10 000",
-        "repeatHelp": "Laissez vide si ce n'est pas périodique. La suivante se crée toute seule quand vous marquez « fait ».",
-        "repeatMonthsLabel": "Ou tous les",
+        "repeatHelp": "Un seul des deux suffit : laissez l'autre vide pour le désactiver. La suivante se crée toute seule quand c'est fait, avec les deux compteurs remis à zéro.",
+        "repeatMonthsLabel": "Tous les",
         "repeatNever": "Jamais",
         "repeatMonths": "{{n}} mois",
         "repeatLabel": "Répétition",
         "repeatOnce": "Une seule fois",
-        "repeatPeriodic": "Périodique"
+        "repeatPeriodic": "Se répète",
+        "nextTitle": "Prochaine échéance",
+        "firstHint": "Remplissez l'une, l'autre, ou les deux : l'alerte se déclenche dès que la première est atteinte.",
+        "needOneRepeat": "Indiquez un kilométrage ou un nombre de mois (ou les deux).",
+        "repeatMonthsPlaceholder": "ex. 12",
+        "monthsUnit": "mois"
       }
     },
     "specs": {
@@ -3662,7 +3667,7 @@
       "amountPlaceholder": "ex. 1 850",
       "notesPlaceholder": "ex. Payé en espèces",
       "photoHint": "Placez le papier dans le cadre",
-      "duration": "Durée de la période",
+      "duration": "Se renouvelle tous les",
       "durationMonths": "{{n}} mois",
       "repeatLabel": "Renouvellement",
       "repeatOnce": "Une seule fois",
@@ -3672,7 +3677,10 @@
       "quickPeriod": "du {{from}} au {{to}}",
       "quickVignette": "Vignette payée pour l'année",
       "quickConfirm": "Confirmer",
-      "quickDetails": "Avec détails (papier, montant…)"
+      "quickDetails": "Avec détails (papier, montant…)",
+      "durationUnit": "mois",
+      "durationPlaceholder": "ex. 12",
+      "durationHelp": "Une fois réglée, la durée est reprise toute seule au prochain renouvellement."
     },
     "statusBlock": {
       "title": "Statut impossible à changer",

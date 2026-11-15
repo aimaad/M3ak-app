@@ -3571,15 +3571,20 @@
         "empty": "لا توجد مواعيد مسجلة.",
         "addDocument": "إضافة صورة الوثيقة",
         "notesPlaceholder": "مثال: تغيير فلتر الهواء أيضًا",
-        "repeatKmLabel": "تكرار كل",
+        "repeatKmLabel": "يتكرر كل",
         "repeatKmPlaceholder": "مثال: 10 000",
-        "repeatHelp": "اتركه فارغًا إن لم يكن دوريًا. يُنشأ الموعد التالي تلقائيًا عند تعيينه كمنجَز.",
-        "repeatMonthsLabel": "أو كل",
+        "repeatHelp": "يكفي واحد فقط: اترك الآخر فارغًا لتعطيله. يُنشأ الموعد التالي تلقائيًا عند الإنجاز مع تصفير العدّادين.",
+        "repeatMonthsLabel": "كل",
         "repeatNever": "أبدًا",
         "repeatMonths": "{{n}} أشهر",
         "repeatLabel": "التكرار",
         "repeatOnce": "مرة واحدة",
-        "repeatPeriodic": "دوري"
+        "repeatPeriodic": "يتكرر",
+        "nextTitle": "الموعد المقبل",
+        "firstHint": "املأ أحدهما أو كليهما: يُطلق التنبيه عند بلوغ الأول.",
+        "needOneRepeat": "حدّد مسافة أو عدد أشهر (أو كليهما).",
+        "repeatMonthsPlaceholder": "مثال: 12",
+        "monthsUnit": "شهر"
       }
     },
     "specs": {
@@ -3766,7 +3771,7 @@
       "amountPlaceholder": "مثال: 1 850",
       "notesPlaceholder": "مثال: أُدّي نقدًا",
       "photoHint": "ضع الوثيقة داخل الإطار",
-      "duration": "مدة الفترة",
+      "duration": "يتجدد كل",
       "durationMonths": "{{n}} أشهر",
       "repeatLabel": "التجديد",
       "repeatOnce": "مرة واحدة",
@@ -3776,7 +3781,10 @@
       "quickPeriod": "من {{from}} إلى {{to}}",
       "quickVignette": "القسيمة مؤدّاة لسنة",
       "quickConfirm": "تأكيد",
-      "quickDetails": "مع التفاصيل (الوثيقة، المبلغ…)"
+      "quickDetails": "مع التفاصيل (الوثيقة، المبلغ…)",
+      "durationUnit": "شهر",
+      "durationPlaceholder": "مثال: 12",
+      "durationHelp": "بعد ضبطها تُعتمد المدة تلقائيًا عند التجديد المقبل."
     },
     "statusBlock": {
       "title": "لا يمكن تغيير الحالة",

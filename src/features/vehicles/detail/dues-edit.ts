@@ -1,5 +1,5 @@
 /**
- * Modification des échéances sur place : suggestions de dates et de kilométrage (valeurs d'usage, toujours modifiables), validation, et
+ * Modification des échéances sur place : validation (aucune valeur prédéfinie : tout part vide), et
  * « plan d'enregistrement » (quoi modifier, créer ou synchroniser). Fonctions pures.
  */
 import { parseFrDate } from '@/features/audit/types';
@@ -13,61 +13,18 @@ import type { DueRow } from './dues';
 export const ADDABLE_DUE_TYPES: MaintenanceType[] = ['vidange', 'freins', 'pneus', 'autre'];
 const DOCUMENT_TYPES: MaintenanceType[] = ['assurance', 'visite_technique'];
 
-const addMonths = (now: Date, months: number) => {
-  const date = new Date(now.getFullYear(), now.getMonth() + months, now.getDate());
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-};
-
-export type DueSuggestion = { date: string | null; km: number | null };
-
-/** Intervalle habituel : 12 mois pour l'assurance et la visite ; vidange 10 000 km ou 12 mois ; freins 30 000 km ; pneus 40 000 km. */
-export function dueSuggestion(type: MaintenanceType, vehicle: Pick<Vehicle, 'kilometrage'>, now: Date): DueSuggestion {
-  switch (type) {
-    case 'assurance':
-    case 'visite_technique':
-      return { date: addMonths(now, 12), km: null };
-    case 'vidange':
-      return { date: addMonths(now, 12), km: vehicle.kilometrage + 10_000 };
-    case 'freins':
-      return { date: null, km: vehicle.kilometrage + 30_000 };
-    case 'pneus':
-      return { date: null, km: vehicle.kilometrage + 40_000 };
-    default:
-      return { date: null, km: null };
-  }
-}
-
-export type DueDraft = { date: string; km: string; notes: string; repeatKm: string; repeatMonths: string };
-
-/** Périodicité d'usage proposée selon le type (modifiable) : vidange 10 000 km ou 12 mois, freins 30 000 km, pneus 40 000 km. */
-export function defaultRepeat(type: MaintenanceType): { km: number | null; months: number | null } {
-  switch (type) {
-    case 'vidange':
-      return { km: 10_000, months: 12 };
-    case 'freins':
-      return { km: 30_000, months: null };
-    case 'pneus':
-      return { km: 40_000, months: null };
-    default:
-      return { km: null, months: null };
-  }
-}
+/** `repeat` : « se répète » ; la périodicité se règle en km et/ou en mois (un seul des deux = l'autre est désactivé). Tout part VIDE : aucune valeur prédéfinie. */
+export type DueDraft = { date: string; km: string; notes: string; repeat: boolean; repeatKm: string; repeatMonths: string };
 
 /** Les types qu'on peut répéter (une panne n'est pas périodique). */
 export const REPEATABLE_TYPES: MaintenanceType[] = ['vidange', 'freins', 'pneus', 'autre'];
 
-/** Brouillon vide d'une nouvelle échéance, avec la périodicité d'usage du type choisi. */
-export function newDraft(type: MaintenanceType): DueDraft {
-  const repeat = defaultRepeat(type);
-  return { date: '', km: '', notes: '', repeatKm: repeat.km !== null ? String(repeat.km) : '', repeatMonths: repeat.months !== null ? String(repeat.months) : '' };
-}
-export type DueErrors = Partial<Record<'date' | 'km' | 'repeatKm', 'invalid_date' | 'invalid_number' | 'need_one'>>;
+export type DueErrors = Partial<Record<'date' | 'km' | 'repeatKm' | 'repeatMonths' | 'repeat', 'invalid_date' | 'invalid_number' | 'need_one' | 'need_one_repeat'>>;
 
-export const emptyDraft = (): DueDraft => ({ date: '', km: '', notes: '', repeatKm: '', repeatMonths: '' });
+export const emptyDraft = (): DueDraft => ({ date: '', km: '', notes: '', repeat: false, repeatKm: '', repeatMonths: '' });
 
 export function draftOf(row: DueRow): DueDraft {
-  return { date: fromIsoDate(row.date), km: row.targetKm != null ? String(row.targetKm) : '', notes: '', repeatKm: '', repeatMonths: '' };
+  return { date: fromIsoDate(row.date), km: row.targetKm != null ? String(row.targetKm) : '', notes: '', repeat: false, repeatKm: '', repeatMonths: '' };
 }
 
 /** Date JJ/MM/AAAA valide si renseignée ; kilométrage ≥ 0 ; au moins un des deux (sauf une panne, jamais ajoutée ici). */
@@ -80,9 +37,18 @@ export function validateDue(draft: DueDraft): DueErrors {
     const km = Number(draft.km);
     if (!Number.isFinite(km) || km < 0) errors.km = 'invalid_number';
   }
-  if (draft.repeatKm.trim()) {
-    const repeat = Number(draft.repeatKm);
-    if (!Number.isInteger(repeat) || repeat < 1 || repeat > 1_000_000) errors.repeatKm = 'invalid_number';
+  if (draft.repeat) {
+    const hasKm = draft.repeatKm.trim() !== '';
+    const hasMonths = draft.repeatMonths.trim() !== '';
+    if (!hasKm && !hasMonths) errors.repeat = 'need_one_repeat';
+    if (hasKm) {
+      const repeat = Number(draft.repeatKm);
+      if (!Number.isInteger(repeat) || repeat < 1 || repeat > 1_000_000) errors.repeatKm = 'invalid_number';
+    }
+    if (hasMonths) {
+      const months = Number(draft.repeatMonths);
+      if (!Number.isInteger(months) || months < 1 || months > 120) errors.repeatMonths = 'invalid_number';
+    }
   }
   if (!hasDate && !hasKm) errors.date = 'need_one';
   return errors;
@@ -108,7 +74,7 @@ export function planDueSave(row: Pick<DueRow, 'type' | 'maintenanceId'>, vehicle
   const echeanceDate = toIsoDate(draft.date);
   const echeanceKm = draft.km.trim() ? Number(draft.km) : null;
   const notes = draft.notes.trim() || null;
-  const repeatable = REPEATABLE_TYPES.includes(row.type);
+  const repeatable = REPEATABLE_TYPES.includes(row.type) && draft.repeat;
   const repeatKm = repeatable && draft.repeatKm.trim() ? Number(draft.repeatKm) : null;
   const repeatMonths = repeatable && draft.repeatMonths.trim() ? Number(draft.repeatMonths) : null;
   const hasDocument = DOCUMENT_TYPES.includes(row.type) && vehicle.documents.some((doc) => doc.type === row.type);

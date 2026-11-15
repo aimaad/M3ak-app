@@ -78,16 +78,15 @@ describe('vignette', () => {
 });
 
 describe('renouvellement : période proposée', () => {
-  it('assurance : 12 mois à partir du lendemain de la fin en cours', () => {
-    expect(suggestRenewal('assurance', rec('assurance', '2026-12-26'), settings, NOW)).toEqual({ validFrom: '2026-12-27', validUntil: '2027-12-26' });
+  it('aucune durée réglée : début proposé, fin à indiquer (aucune durée prédéfinie)', () => {
+    expect(suggestRenewal('assurance', rec('assurance', '2026-12-26'), settings, NOW)).toEqual({ validFrom: '2026-12-27', validUntil: '' });
+    expect(suggestRenewal('assurance', null, settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '' });
+    expect(suggestRenewal('visite_technique', null, settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '' });
   });
-  it('assurance expirée ou absente : à partir d’aujourd’hui', () => {
-    expect(suggestRenewal('assurance', rec('assurance', '2026-10-01'), settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '2027-11-14' });
-    expect(suggestRenewal('assurance', null, settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '2027-11-14' });
-  });
-  it('visite technique : périodicité de l’agence (6 mois par défaut, 12 si réglée)', () => {
-    expect(suggestRenewal('visite_technique', null, settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '2027-05-15' });
-    expect(suggestRenewal('visite_technique', null, { visitIntervalMonths: 12 }, NOW).validUntil).toBe('2027-11-15');
+  it('durée réglée : la fin se calcule (assurance : lendemain de la fin en cours ; expirée : aujourd’hui)', () => {
+    expect(suggestRenewal('assurance', rec('assurance', '2026-12-26', { periodMonths: 12 }), settings, NOW)).toEqual({ validFrom: '2026-12-27', validUntil: '2027-12-26' });
+    expect(suggestRenewal('assurance', rec('assurance', '2026-10-01', { periodMonths: 12 }), settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '2027-11-14' });
+    expect(suggestRenewal('visite_technique', null, settings, NOW, 12).validUntil).toBe('2027-11-15');
   });
   it('vignette : année civile ; l’année suivante si l’année en cours est déjà couverte', () => {
     expect(suggestRenewal('vignette', null, settings, NOW)).toEqual({ validFrom: '2026-01-01', validUntil: '2026-12-31' });
@@ -158,14 +157,15 @@ describe('avertissements avant une location (jamais bloquants)', () => {
 });
 
 describe('périodes mémorisées', () => {
-  it('assurance : la durée de la période en cours est reprise (6 mois → 6 mois), sinon 12', () => {
+  it('assurance : la durée réglée est reprise (6 mois → 6 mois), sinon rien (aucune valeur prédéfinie)', () => {
     expect(periodOf('assurance', rec('assurance', '2026-12-26', { periodMonths: 6 }), settings)).toBe(6);
-    expect(periodOf('assurance', null, settings)).toBe(12);
+    expect(periodOf('assurance', null, settings)).toBeNull();
+    expect(periodOf('assurance', rec('assurance', '2026-12-26'), settings)).toBeNull();
     expect(suggestRenewal('assurance', rec('assurance', '2026-12-26', { periodMonths: 6 }), settings, NOW)).toEqual({ validFrom: '2026-12-27', validUntil: '2027-06-26' });
   });
-  it('visite technique : durée mémorisée, sinon périodicité de l’agence', () => {
+  it('visite technique : durée mémorisée, sinon rien (la périodicité de l’agence n’est plus une valeur prédéfinie)', () => {
     expect(periodOf('visite_technique', rec('visite_technique', '2026-12-26', { periodMonths: 12 }), settings)).toBe(12);
-    expect(periodOf('visite_technique', null, settings)).toBe(6);
+    expect(periodOf('visite_technique', null, settings)).toBeNull();
     expect(suggestRenewal('visite_technique', rec('visite_technique', '2026-05-01', { periodMonths: 12 }), settings, NOW)).toEqual({ validFrom: '2026-11-15', validUntil: '2027-11-15' });
   });
   it('vignette : pas de durée (année civile)', () => {

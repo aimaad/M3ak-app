@@ -2,11 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { Button, CameraCapture, checkPhoto, ChoiceTiles, DateField, DocumentSlot, FormField, Segmented } from '@/components/form';
+import { Button, CameraCapture, checkPhoto, DateField, DocumentSlot, FormField, Segmented } from '@/components/form';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { isAlreadyRecordedError } from '@/features/compliance/api';
-import { useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRenewCompliance, useSaveComplianceSettings, useVehicleCompliance } from '@/features/compliance/hooks';
+import { useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRenewCompliance, useVehicleCompliance } from '@/features/compliance/hooks';
 import {
   allStatuses,
   historyOf,
@@ -119,11 +119,13 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
   const { t } = useLanguage();
   const agency = useMyAgency();
   const renew = useRenewCompliance();
-  const [draft, setDraft] = useState<RenewalDraft>(() => renewalDraft(suggestRenewal(kind, current, settings, now)));
-  // Durée de la période : réglée une fois, reprise automatiquement aux renouvellements suivants.
-  const [months, setMonths] = useState<number | null>(() => periodOf(kind, current, settings));
-  // « Une seule fois » : la durée n'est pas mémorisée (le renouvellement suivant repart des valeurs d'usage).
-  const [periodic, setPeriodic] = useState(true);
+  // Rien de prédéfini : les dates ne sont préremplies que si une durée a été réglée avant (renouvellement qui se répète).
+  const remembered = periodOf(kind, current, settings);
+  const [draft, setDraft] = useState<RenewalDraft>(() => (remembered !== null && kind !== 'vignette' ? renewalDraft(suggestRenewal(kind, current, settings, now)) : renewalDraft({ validFrom: '', validUntil: '' })));
+  // « Se répète » : la durée (en mois) est mémorisée et reprise au renouvellement suivant ; « une seule fois » : rien n'est mémorisé.
+  const [periodic, setPeriodic] = useState(remembered !== null);
+  const [monthsText, setMonthsText] = useState(remembered !== null ? String(remembered) : '');
+  const months = periodic && monthsText.trim() !== '' && Number(monthsText) >= 1 ? Number(monthsText) : null;
   const [localUri, setLocalUri] = useState<string | null>(null);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,7 +136,7 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
     setError(null);
     if (Object.keys(errors).length > 0 || !agency.data) return;
     renew.mutate(
-      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null, periodic ? months : null), localDocumentUri: localUri },
+      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, { ...draft, amount: showAmount ? draft.amount : '' }, null, months), localDocumentUri: localUri },
       { onSuccess: onClose, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : isSchemaOutdatedError(failure) ? describeSaveError(failure, t, 'vehicleDetail.compliance.saveError') : localUri ? t('vehicleDetail.compliance.uploadError') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
     );
   }
@@ -144,29 +146,37 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t(current ? 'vehicleDetail.compliance.renewTitle' : 'vehicleDetail.compliance.firstTitle', { kind: t(`vehicleDetail.compliance.kind.${kind}`) })}
       </HText>
-      {months !== null ? (
-        <Segmented<'once' | 'periodic'>
-          label={t('vehicleDetail.compliance.repeatLabel')}
-          value={periodic ? 'periodic' : 'once'}
-          onChange={(value) => setPeriodic(value === 'periodic')}
-          options={[
-            { value: 'once', label: t('vehicleDetail.compliance.repeatOnce') },
-            { value: 'periodic', label: t('vehicleDetail.compliance.repeatPeriodic') },
-          ]}
-        />
-      ) : null}
-      {months !== null && periodic ? (
-        <ChoiceTiles<string>
-          label={t('vehicleDetail.compliance.duration')}
-          value={String(months)}
-          onChange={(value) => {
-            const next = Number(value);
-            setMonths(next);
-            const from = toIsoDate(draft.validFrom) ?? new Date().toISOString().slice(0, 10);
-            setDraft({ ...draft, validUntil: toDisplayDate(renewalEnd(kind, from, next)) });
-          }}
-          options={[...new Set([3, 6, 12, 24, months])].sort((a, b) => a - b).map((value) => ({ value: String(value), label: t('vehicleDetail.compliance.durationMonths', { n: value }), icon: 'repeat-outline' as const }))}
-        />
+      {kind !== 'vignette' ? (
+        <View style={{ gap: 12 }}>
+          <Segmented<'once' | 'periodic'>
+            label={t('vehicleDetail.compliance.repeatLabel')}
+            value={periodic ? 'periodic' : 'once'}
+            onChange={(value) => setPeriodic(value === 'periodic')}
+            options={[
+              { value: 'once', label: t('vehicleDetail.compliance.repeatOnce') },
+              { value: 'periodic', label: t('vehicleDetail.compliance.repeatPeriodic') },
+            ]}
+          />
+          {periodic ? (
+            <FormField
+              label={t('vehicleDetail.compliance.duration')}
+              value={monthsText}
+              onChangeText={(value) => {
+                const text = value.replace(/\D/g, '').slice(0, 3);
+                setMonthsText(text);
+                // Dès qu'une durée est saisie, la fin se calcule depuis le début (aujourd'hui si le début est vide).
+                if (Number(text) >= 1) {
+                  const from = toIsoDate(draft.validFrom) ?? new Date().toISOString().slice(0, 10);
+                  setDraft({ ...draft, validUntil: toDisplayDate(renewalEnd(kind, from, Number(text))) });
+                }
+              }}
+              keyboardType="number-pad"
+              unit={t('vehicleDetail.compliance.durationUnit')}
+              placeholder={t('vehicleDetail.compliance.durationPlaceholder')}
+              help={t('vehicleDetail.compliance.durationHelp')}
+            />
+          ) : null}
+        </View>
       ) : null}
       <Fields kind={kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={current?.validUntil ?? null} localUri={localUri} onPick={setLocalUri} withPhoto />
       <FormButtons onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
@@ -210,7 +220,7 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails }: { vehi
       ) : (
         <View style={{ gap: 2 }}>
           <HText size={12} color={Palette.textSecondary}>
-            {t(current ? 'vehicleDetail.compliance.quickNext' : 'vehicleDetail.compliance.quickFirst')}
+            {t('vehicleDetail.compliance.quickNext')}
           </HText>
           <HText weight="bold" size={16}>
             {t('vehicleDetail.compliance.quickPeriod', { from: dayLabel(period.validFrom, language), to: dayLabel(period.validUntil, language) })}
@@ -255,51 +265,6 @@ function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicl
       </HText>
       <Fields kind={record.kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={null} localUri={null} onPick={() => undefined} withPhoto={false} />
       <FormButtons onSave={save} onCancel={onClose} busy={correct.isPending} error={error} />
-    </View>
-  );
-}
-
-/** Périodicité de la visite technique (réglage de l'agence). */
-function PeriodicityEditor({ agencyId, months, canEdit }: { agencyId: string; months: number; canEdit: boolean }) {
-  const { t } = useLanguage();
-  const save = useSaveComplianceSettings();
-  const [open, setOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  return (
-    <View style={{ gap: 8, paddingVertical: 6 }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-        <HText size={13} color={Palette.textSecondary} style={{ flex: 1 }}>
-          {t('vehicleDetail.compliance.periodicity', { n: months })}
-        </HText>
-        {canEdit ? (
-          <Pressable onPress={() => setOpen(!open)} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.compliance.periodicityChange')} hitSlop={8} style={{ minHeight: 44, justifyContent: 'center' }}>
-            <HText weight="semibold" size={12} color={Brand.orangeUrgentText}>
-              {t('vehicleDetail.compliance.periodicityChange')}
-            </HText>
-          </Pressable>
-        ) : null}
-      </View>
-      {open ? (
-        <View style={{ gap: 8 }}>
-          <ChoiceTiles<string>
-            label={t('vehicleDetail.compliance.periodicityChange')}
-            value={String(months)}
-            options={['3', '6', '12', '24'].map((value) => ({ value, label: t('vehicleDetail.compliance.periodicityMonths', { n: value }), icon: 'calendar-outline' as const }))}
-            onChange={(value) => {
-              setError(null);
-              save.mutate({ agencyId, settings: { visitIntervalMonths: Number(value) } }, { onSuccess: () => setOpen(false), onError: () => setError(t('vehicleDetail.compliance.saveError')) });
-            }}
-          />
-          <HText size={11} color={Palette.textSecondary}>
-            {t('vehicleDetail.compliance.periodicityHint')}
-          </HText>
-          {error ? (
-            <HText size={12} color={Palette.error} accessibilityRole="alert">
-              {error}
-            </HText>
-          ) : null}
-        </View>
-      ) : null}
     </View>
   );
 }
@@ -436,8 +401,13 @@ export function ComplianceBlock({ vehicle, now }: { vehicle: Vehicle; now: Date 
                   <RenewForm vehicle={vehicle} kind={kind} current={status.record} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
                 ) : (
                   <>
-                    <QuickRenew vehicle={vehicle} kind={kind} current={status.record} settings={settings} now={now} onDetails={() => setMode('renew')} />
-                    {kind === 'visite_technique' && agency.data ? <PeriodicityEditor agencyId={agency.data.agencyId} months={settings.visitIntervalMonths} canEdit={canManage} /> : null}
+                    {kind === 'vignette' || periodOf(kind, status.record, settings) !== null ? (
+                      <QuickRenew vehicle={vehicle} kind={kind} current={status.record} settings={settings} now={now} onDetails={() => setMode('renew')} />
+                    ) : status.record ? (
+                      <Button label={t('vehicleDetail.compliance.renew')} onPress={() => setMode('renew')} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
+                    ) : (
+                      <RenewForm vehicle={vehicle} kind={kind} current={null} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
+                    )}
                     <HText weight="semibold" size={12} color={Palette.textSecondary}>
                       {t('vehicleDetail.compliance.history')}
                     </HText>

@@ -109,19 +109,21 @@ export function suggestRenewal(kind: ComplianceKind, current: ComplianceRecord |
     const year = current && current.validUntil >= `${now.getFullYear()}-12-31` ? now.getFullYear() + 1 : now.getFullYear();
     return { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` };
   }
-  const length = months ?? periodOf(kind, current, settings) ?? 12;
-  if (kind === 'visite_technique') return { validFrom: today, validUntil: addMonths(today, length) };
+  // Aucune durée prédéfinie : sans durée réglée, la fin reste à indiquer (chaîne vide).
+  const length = months ?? periodOf(kind, current, settings);
+  if (kind === 'visite_technique') return { validFrom: today, validUntil: length === null ? '' : addMonths(today, length) };
   const start = current && current.validUntil >= today ? addDays(current.validUntil, 1) : today;
-  return { validFrom: start, validUntil: addDays(addMonths(start, length), -1) };
+  return { validFrom: start, validUntil: length === null ? '' : addDays(addMonths(start, length), -1) };
 }
 
 /**
- * Durée de la période en mois, réglée une fois puis reprise à chaque renouvellement : celle de la période en cours si elle est connue,
- * sinon 12 mois (assurance) ou la périodicité de l'agence (visite technique). `null` pour la vignette (année civile).
+ * Durée de la période en mois, réglée une fois puis reprise à chaque renouvellement : celle de la période en cours si elle a été réglée,
+ * sinon `null` (aucune valeur prédéfinie). Toujours `null` pour la vignette (année civile).
  */
 export function periodOf(kind: ComplianceKind, current: ComplianceRecord | null, settings: ComplianceSettings): number | null {
   if (kind === 'vignette') return null;
-  return current?.periodMonths ?? (kind === 'visite_technique' ? settings.visitIntervalMonths : 12);
+  void settings; // la périodicité de l'agence n'est plus une valeur prédéfinie : seule la durée réglée sur la période compte
+  return current?.periodMonths ?? null;
 }
 
 /** Fin de période quand on change la durée : assurance = veille de l'anniversaire, visite = date + durée. `from` : AAAA-MM-JJ. */
