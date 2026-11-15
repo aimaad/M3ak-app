@@ -30,6 +30,12 @@ export type MaintenanceItem = {
   /** Périodicité : « tous les N km » et/ou « tous les N mois » (la suivante se crée quand celle-ci passe à « effectuée »). */
   repeatKm: number | null;
   repeatMonths: number | null;
+  /** Rendez-vous d'intervention (« Planifiée » = plannedAt renseigné). */
+  plannedAt?: string | null;
+  plannedMinutes?: number | null;
+  plannedGarage?: string | null;
+  /** Le créneau chevauche une location : le responsable a été informé. */
+  plannedConflict?: boolean;
   createdAt: string;
 };
 
@@ -50,3 +56,8 @@ export type MaintenanceCompletionInput = {
   piecesRemplacees: string | null;
   facturePath: string | null;
 };
+
+export type PlanInput = { at: string | null; minutes: number | null; garage: string | null };
+
+/** Location ou réservation qui chevauche un créneau d'intervention. */
+export type MaintenanceConflict = { rentalId: string; customer: string; statut: string; start: string; end: string };

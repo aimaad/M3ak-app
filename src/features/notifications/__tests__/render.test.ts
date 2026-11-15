@@ -134,3 +134,19 @@ describe('entretien « Autre » nommé dans les notifications', () => {
     expect(view.body).toContain('Avez-vous fait l\'entretien de Dacia Logan');
   });
 });
+
+describe('notifications de planification', () => {
+  const t = (key: string, options?: Record<string, unknown>) => {
+    const fr = require('@/i18n/locales/fr.json') as Record<string, unknown>;
+    const text = key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], fr) as string | undefined;
+    return text === undefined ? key : text.replace(/\{\{(\w+)\}\}/g, (_, name) => String(options?.[name] ?? ''));
+  };
+  const params = { maintenance: 'vidange', vehicle: 'Dacia Logan', plate: '1-A-1', customer: 'Karim Alami', date: '2030-12-21', time: '10:00' };
+  it('rappels et conflit : l’heure et le client sont dits', () => {
+    for (const kind of ['maintenance_planned_eve', 'maintenance_planned_today', 'maintenance_conflict']) {
+      expect(notificationView({ kind, params }, t, 'fr').body).not.toMatch(/[{}—]/);
+    }
+    expect(notificationView({ kind: 'maintenance_planned_eve', params }, t, 'fr').body).toContain('à 10:00');
+    expect(notificationView({ kind: 'maintenance_conflict', params }, t, 'fr').body).toContain('Karim Alami');
+  });
+});

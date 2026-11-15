@@ -65,3 +65,18 @@ describe('push : entretien « Autre » nommé', () => {
     expect(renderPush('maintenance_followup', params, 'ar').body).toContain('«Courroie de distribution»');
   });
 });
+
+describe('push : planification et conflits', () => {
+  it('rappels du rendez-vous et conflit : français et arabe, sans variable vide', () => {
+    const params = { maintenance: 'vidange', vehicle: 'Dacia Logan', plate: '1-A-1', customer: 'Karim Alami', date: '2030-12-21', time: '10:00' };
+    for (const kind of ['maintenance_planned_eve', 'maintenance_planned_today', 'maintenance_conflict']) {
+      for (const locale of ['fr', 'ar'] as const) {
+        const text = renderPush(kind, params, locale);
+        expect(text.title).not.toBe('BIBIP');
+        expect(text.body).not.toMatch(/[{}—]/);
+      }
+    }
+    expect(renderPush('maintenance_conflict', params, 'fr').body).toContain('Karim Alami');
+    expect(renderPush('maintenance_planned_eve', params, 'fr').body).toContain('10:00');
+  });
+});

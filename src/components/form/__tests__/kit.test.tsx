@@ -19,7 +19,7 @@ jest.mock('expo-camera', () => ({ CameraView: () => null, useCameraPermissions: 
 jest.mock('expo-image-picker', () => ({}));
 jest.mock('@/features/vehicles/add/scan-parts', () => ({ ScanFrame: () => null }));
 
-import { AngleGrid, Button, ChoiceTiles, ColorSwatches, DangerLink, DateField, DocumentList, DocumentSlot, EmptyState, FormField, InfoBanner, NumberStepper, PhotoTile, PriceStepper, SaveBar, SearchList, Segmented } from '..';
+import { AngleGrid, Button, TimeField, ChoiceTiles, ColorSwatches, DangerLink, DateField, DocumentList, DocumentSlot, EmptyState, FormField, InfoBanner, NumberStepper, PhotoTile, PriceStepper, SaveBar, SearchList, Segmented } from '..';
 
 const hidden = { includeHiddenElements: true };
 
@@ -373,5 +373,28 @@ describe('arabe (RTL)', () => {
     expect(screen.getByLabelText('Freins').props.accessibilityState.checked).toBe(true);
     await fireEvent.press(screen.getByLabelText('Pneus'));
     expect(onChange).toHaveBeenCalledWith('b');
+  });
+
+  it('TimeField : vide = « Choisir une heure » (jamais « — ») ; avec une valeur, l’heure en clair', async () => {
+    const view = await render(<TimeField label="Heure" value={null} onChange={jest.fn()} />);
+    expect(screen.getByText('Choisir une heure')).toBeTruthy();
+    expect(screen.queryByText('—')).toBeNull();
+    await view.rerender(<TimeField label="Heure" value="09:30" onChange={jest.fn()} />);
+    expect(screen.getByText('09:30')).toBeTruthy();
+    expect(screen.getByLabelText('Heure: 09:30')).toBeTruthy();
+  });
+
+  it('TimeField : valider le sélecteur renvoie l’heure choisie ; l’erreur ne s’affiche qu’avec showError', async () => {
+    const onChange = jest.fn();
+    await render(<TimeField label="Heure" value="09:30" onChange={onChange} error="Indiquez l'heure." />);
+    expect(screen.queryByText("Indiquez l'heure.")).toBeNull();
+    await fireEvent.press(screen.getByLabelText('Heure: 09:30'));
+    await fireEvent.press(screen.getByText('OK', hidden));
+    expect(onChange).toHaveBeenCalledWith('09:30');
+  });
+
+  it('TimeField : erreur visible après « showError »', async () => {
+    await render(<TimeField label="Heure" value={null} onChange={jest.fn()} error="Indiquez l'heure." showError />);
+    expect(screen.getByText("Indiquez l'heure.")).toBeTruthy();
   });
 });

@@ -7,12 +7,14 @@ import {
   deleteMaintenanceItem,
   getMaintenanceItem,
   listMaintenanceItems,
+  listMaintenanceConflicts,
   listMaintenanceItemsForVehicle,
+  planMaintenance,
   snoozeMaintenanceFollowup,
   startMaintenanceItem,
   updateMaintenanceDue,
 } from './api';
-import type { MaintenanceCompletionInput, MaintenanceInput } from './types';
+import type { MaintenanceCompletionInput, MaintenanceInput, PlanInput } from './types';
 
 const maintenanceKey = ['maintenance'] as const;
 const maintenanceItemKey = (id: string) => ['maintenance', id] as const;
@@ -73,6 +75,22 @@ export function useSnoozeMaintenanceFollowup() {
 
   return useMutation({
     mutationFn: ({ id, days }: { id: string; days: number }) => snoozeMaintenanceFollowup(id, days),
+    onSuccess: (item) => invalidate(item),
+  });
+}
+
+/** Vérifie les locations qui chevauchent un créneau avant de planifier (ou de démarrer). */
+export function useCheckMaintenanceConflicts() {
+  return useMutation({
+    mutationFn: ({ vehicleId, at, minutes }: { vehicleId: string; at: string; minutes: number | null }) => listMaintenanceConflicts(vehicleId, at, minutes),
+  });
+}
+
+export function usePlanMaintenance() {
+  const invalidate = useInvalidateMaintenance();
+
+  return useMutation({
+    mutationFn: ({ id, input, proceed }: { id: string; input: PlanInput; proceed?: boolean }) => planMaintenance(id, input, proceed ?? false),
     onSuccess: (item) => invalidate(item),
   });
 }

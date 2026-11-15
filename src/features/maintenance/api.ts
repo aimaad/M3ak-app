@@ -1,7 +1,7 @@
 import { uploadFile } from '@/features/storage/api';
 import { getSupabase } from '@/lib/supabase';
 
-import type { MaintenanceCompletionInput, MaintenanceInput, MaintenanceItem } from './types';
+import type { MaintenanceCompletionInput, MaintenanceConflict, MaintenanceInput, MaintenanceItem, PlanInput } from './types';
 
 export const MAINTENANCE_DOCUMENTS_BUCKET = 'maintenance-documents';
 
@@ -22,6 +22,10 @@ type MaintenanceRow = {
   date_intervention: string | null;
   repeat_km: number | null;
   repeat_months: number | null;
+  planned_at?: string | null;
+  planned_minutes?: number | null;
+  planned_garage?: string | null;
+  planned_conflict?: boolean;
   created_at: string;
 };
 
@@ -43,6 +47,10 @@ function fromRow(row: MaintenanceRow): MaintenanceItem {
     dateIntervention: row.date_intervention,
     repeatKm: row.repeat_km ?? null,
     repeatMonths: row.repeat_months ?? null,
+    plannedAt: row.planned_at ?? null,
+    plannedMinutes: row.planned_minutes ?? null,
+    plannedGarage: row.planned_garage ?? null,
+    plannedConflict: row.planned_conflict ?? false,
     createdAt: row.created_at,
   };
 }
@@ -173,6 +181,20 @@ export async function completeMaintenanceQuick(
     p_garage: input.garage,
     p_cout: input.cout,
   });
+  if (error) throw error;
+  return fromRow(data as MaintenanceRow);
+}
+
+/** Locations et réservations ouvertes qui chevauchent un créneau (durée inconnue : 2 h). Migration 0077. */
+export async function listMaintenanceConflicts(vehicleId: string, startIso: string, minutes: number | null): Promise<MaintenanceConflict[]> {
+  const { data, error } = await getSupabase().rpc('maintenance_conflicts', { p_vehicle: vehicleId, p_start: startIso, p_minutes: minutes });
+  if (error) throw error;
+  return ((data ?? []) as { rental_id: string; customer: string; statut: string; date_debut: string; date_fin: string }[]).map((row) => ({ rentalId: row.rental_id, customer: row.customer, statut: row.statut, start: row.date_debut, end: row.date_fin }));
+}
+
+/** Planifier (ou annuler le rendez-vous avec `at: null`). Avec un conflit, le serveur refuse sauf `proceed` (on poursuit en le signalant). */
+export async function planMaintenance(id: string, input: PlanInput, proceed = false): Promise<MaintenanceItem> {
+  const { data, error } = await getSupabase().rpc('plan_maintenance', { p_id: id, p_at: input.at, p_minutes: input.minutes, p_garage: input.garage, p_proceed: proceed });
   if (error) throw error;
   return fromRow(data as MaintenanceRow);
 }

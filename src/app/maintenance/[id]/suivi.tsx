@@ -12,6 +12,7 @@ import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { maintenanceLabel, maintenancePhrase } from '@/features/maintenance/label';
 import { useMaintenanceItem, useSnoozeMaintenanceFollowup } from '@/features/maintenance/hooks';
+import { PlanCard } from '@/features/vehicles/detail/plan-card';
 import { QuickDoneCard } from '@/features/vehicles/detail/quick-done-card';
 import { displayName } from '@/features/vehicles/detail/names';
 import { canSeePrices } from '@/features/vehicles/fleet-card';
@@ -33,7 +34,7 @@ export default function MaintenanceFollowupScreen() {
   const { data: item, isLoading, isError } = useMaintenanceItem(id);
   const { data: vehicle } = useVehicle(item?.vehicleId);
   const snooze = useSnoozeMaintenanceFollowup();
-  const [mode, setMode] = useState<'ask' | 'yes' | 'later' | 'snoozed'>('ask');
+  const [mode, setMode] = useState<'ask' | 'yes' | 'later' | 'plan' | 'snoozed'>('ask');
   const [snoozedWhen, setSnoozedWhen] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [now] = useState(() => new Date());
@@ -111,6 +112,8 @@ export default function MaintenanceFollowupScreen() {
             </View>
           ) : mode === 'yes' && vehicle ? (
             <QuickDoneCard item={item} vehicle={vehicle} now={now} showCost={showCost} onClose={close} />
+          ) : mode === 'plan' ? (
+            <PlanCard item={item} now={now} onClose={close} />
           ) : mode === 'later' ? (
             <View style={{ gap: 12 }}>
               <HText weight="semibold" size={14}>
@@ -124,6 +127,7 @@ export default function MaintenanceFollowupScreen() {
               <Button variant="secondary" label={t('maintenanceFollowup.tomorrow')} loading={snooze.isPending} onPress={() => later(1, 'whenTomorrow')} />
               <Button variant="secondary" label={t('maintenanceFollowup.in3')} loading={snooze.isPending} onPress={() => later(3, 'when3')} />
               <Button variant="secondary" label={t('maintenanceFollowup.in7')} loading={snooze.isPending} onPress={() => later(7, 'when7')} />
+              <Button variant="link" label={t('maintenanceFollowup.plan')} onPress={() => setMode('plan')} />
               <Button variant="link" label={t('maintenanceFollowup.back')} onPress={() => setMode('ask')} />
             </View>
           ) : (

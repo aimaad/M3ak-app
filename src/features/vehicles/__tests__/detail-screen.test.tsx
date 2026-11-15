@@ -12,6 +12,9 @@ const mockTranslate = (language: string, key: string, options?: Record<string, u
 const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const mockState = {
+  planCalls: [] as unknown[],
+  checkCalls: [] as unknown[],
+  conflicts: [] as unknown[],
   ruleRows: [] as unknown[],
   pickDate: null as Date | null,
   language: 'fr',
@@ -81,6 +84,8 @@ jest.mock('@/features/maintenance/hooks', () => ({
   useVehicleMaintenanceItems: () => ({ data: mockState.maintenance, refetch: jest.fn() }),
   useCreateMaintenanceItem: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => { if (mockState.dueCalls.createError) return options?.onError?.(mockState.dueCalls.createError); mockState.dueCalls.create.push(args); options?.onSuccess?.(); }, mutateAsync: async (args: unknown) => { mockState.dueCalls.create.push(args); } }),
   useQuickCompleteMaintenance: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.dueCalls.quick.push(args); options?.onSuccess?.(); } }),
+  usePlanMaintenance: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.planCalls.push(args); options?.onSuccess?.(); } }),
+  useCheckMaintenanceConflicts: () => ({ isPending: false, mutateAsync: async (args: unknown) => { mockState.checkCalls.push(args); return mockState.conflicts; } }),
   useUpdateMaintenanceDue: () => ({ mutateAsync: async (args: unknown) => { mockState.dueCalls.update.push(args); } }),
   useDeleteMaintenanceItem: () => ({ mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.dueCalls.remove.push(args); options?.onSuccess?.(); } }),
 }));
@@ -123,11 +128,20 @@ async function pickDate(label: RegExp | string, date: Date) {
   await fireEvent.press(screen.getByText('OK', hiddenEls));
 }
 const hiddenEls = { includeHiddenElements: true };
+/** Choisit une heure dans le sélecteur du téléphone (simulé). */
+async function pickTime(label: RegExp | string, hours: number, minutes: number) {
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  mockState.pickDate = date;
+  await fireEvent.press(screen.getAllByLabelText(label)[0]);
+  await fireEvent.press(await screen.findByLabelText('PICKER-DAY', hiddenEls));
+  await fireEvent.press(screen.getByText('OK', hiddenEls));
+}
 
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], planCalls: [], checkCalls: [], conflicts: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -743,6 +757,86 @@ describe('fiche véhicule', () => {
       expect(screen.getAllByLabelText(/^Marquer comme fait : /)).toHaveLength(2); // une seule fois par entretien à faire
       expect(screen.getAllByText('800 MAD').length).toBeGreaterThanOrEqual(2); // le coût de l'historique et le total (propriétaire)
       expect(screen.getByText('Total dépensé')).toBeTruthy();
+    });
+
+    it('« Planifier » : proposé pour une échéance proche ou dépassée, pas pour une échéance lointaine', async () => {
+      mockState.maintenance = [
+        { ...vidange(), id: 'm1', echeanceDate: at(60) },
+        { id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null },
+      ];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getAllByText('Planifier')).toHaveLength(1);
+      expect(screen.getByLabelText('Planifier : Freins')).toBeTruthy();
+      expect(screen.queryByLabelText('Planifier : Vidange')).toBeNull();
+    });
+
+    it('« Planifier » : date et heure obligatoires, message précis', async () => {
+      mockState.maintenance = [{ id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Planifier : Freins'));
+      await fireEvent.press(screen.getByLabelText('Planifier', hiddenEls));
+      expect(screen.getAllByText('Ce champ est obligatoire.').length).toBe(2);
+      expect(mockState.planCalls).toEqual([]);
+    });
+
+    it('« Planifier » sans conflit : rendez-vous, durée et garage enregistrés ; la voiture reste disponible', async () => {
+      mockState.maintenance = [{ id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Planifier : Freins'));
+      const day = new Date(); day.setDate(day.getDate() + 3);
+      await pickDate(/^Date du rendez-vous/, day);
+      await pickTime(/^Heure/, 9, 30);
+      await fireEvent.changeText(screen.getByLabelText('Durée estimée (facultatif)'), '1,5');
+      await fireEvent.changeText(screen.getByLabelText('Garage ou intervenant (facultatif)'), 'Garage Atlas');
+      await fireEvent.press(screen.getByLabelText('Planifier', hiddenEls));
+      await waitFor(() => expect(mockState.planCalls).toHaveLength(1));
+      expect(mockState.planCalls[0]).toMatchObject({ id: 'm2', proceed: false, input: { minutes: 90, garage: 'Garage Atlas' } });
+      const input = (mockState.planCalls[0] as { input: { at: string } }).input;
+      expect(new Date(input.at).getHours()).toBe(9);
+      expect(mockState.statusCalls).toEqual([]); // le statut du véhicule n'est pas touché
+    });
+
+    it('conflit avec une location : avertissement avec le client ; « Choisir un autre créneau » revient au formulaire', async () => {
+      mockState.conflicts = [{ rentalId: 'r1', customer: 'Karim Alami', statut: 'confirmee', start: at(2), end: at(5) }];
+      mockState.maintenance = [{ id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Planifier : Freins'));
+      const day = new Date(); day.setDate(day.getDate() + 3);
+      await pickDate(/^Date du rendez-vous/, day);
+      await pickTime(/^Heure/, 9, 30);
+      await fireEvent.press(screen.getByLabelText('Planifier', hiddenEls));
+      expect(await screen.findByText('Une location chevauche ce créneau')).toBeTruthy();
+      expect(screen.getByText(/Karim A\./)).toBeTruthy();
+      expect(mockState.planCalls).toEqual([]); // rien n'est enregistré sans votre choix
+      await fireEvent.press(screen.getByLabelText('Choisir un autre créneau', hiddenEls));
+      expect(screen.getByLabelText(/^Date du rendez-vous/)).toBeTruthy();
+    });
+
+    it('conflit : « Poursuivre et signaler au responsable » planifie quand même (jamais bloquant)', async () => {
+      mockState.conflicts = [{ rentalId: 'r1', customer: 'Karim Alami', statut: 'confirmee', start: at(2), end: at(5) }];
+      mockState.maintenance = [{ id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Planifier : Freins'));
+      const day = new Date(); day.setDate(day.getDate() + 3);
+      await pickDate(/^Date du rendez-vous/, day);
+      await pickTime(/^Heure/, 9, 30);
+      await fireEvent.press(screen.getByLabelText('Planifier', hiddenEls));
+      await fireEvent.press(await screen.findByLabelText('Poursuivre et signaler au responsable', hiddenEls));
+      await waitFor(() => expect(mockState.planCalls).toHaveLength(1));
+      expect(mockState.planCalls[0]).toMatchObject({ id: 'm2', proceed: true });
+    });
+
+    it('une échéance planifiée : le rendez-vous est affiché ; on peut le modifier ou l’annuler', async () => {
+      const when = new Date(); when.setDate(when.getDate() + 3); when.setHours(9, 30, 0, 0);
+      mockState.maintenance = [{ id: 'm2', vehicleId: 'v1', type: 'freins', statut: 'en_retard', echeanceDate: at(-4), echeanceKm: null, plannedAt: when.toISOString(), plannedMinutes: 90, plannedGarage: 'Garage Atlas', plannedConflict: true }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText(/Planifiée : .*09:30.* · Garage Atlas/)).toBeTruthy();
+      expect(screen.getByText('Conflit signalé')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Modifier le rendez-vous : Freins'));
+      expect(screen.getByDisplayValue('Garage Atlas')).toBeTruthy(); // le brouillon reprend le rendez-vous
+      expect(screen.getByDisplayValue('1,5')).toBeTruthy();
+      await fireEvent.press(screen.getByText('Annuler le rendez-vous'));
+      expect(mockState.planCalls).toEqual([{ id: 'm2', input: { at: null, minutes: null, garage: null }, proceed: false }]);
     });
 
     it('section « Entretien », employé : aucun coût ni total', async () => {

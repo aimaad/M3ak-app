@@ -2391,6 +2391,12 @@
         "invalid_number": "دخل رقم صحيح.",
         "need_one": "دخل تاريخ أو كيلومتراج ديال الأجل."
       }
+    },
+    "startConflict": {
+      "title": "هناك كراء جارٍ",
+      "body": "هذه السيارة مؤجَّرة أو محجوزة حاليًا ({{customers}}). يمكنك البدء رغم ذلك: سيُخبَر المسؤول.",
+      "cancel": "إلغاء",
+      "proceed": "البدء رغم ذلك"
     }
   },
   "filiales": {
@@ -2924,6 +2930,18 @@
       "maintenance_followup": {
         "title": "هل تمّ؟",
         "body": "هل أنجزتم {{maintenance}} الخاصة بـ {{vehicle}} ({{plate}})؟ أجيبوا بلمسة واحدة."
+      },
+      "maintenance_planned_eve": {
+        "title": "تدخل غدًا",
+        "body": "غدًا على الساعة {{time}}: {{maintenance}} بالنسبة لـ {{vehicle}} ({{plate}})."
+      },
+      "maintenance_planned_today": {
+        "title": "تدخل اليوم",
+        "body": "اليوم على الساعة {{time}}: {{maintenance}} بالنسبة لـ {{vehicle}} ({{plate}})."
+      },
+      "maintenance_conflict": {
+        "title": "تعارض مع كراء",
+        "body": "{{maintenance}} الخاصة بـ {{vehicle}} ({{plate}}) تتعارض مع كراء {{customer}} (يوم {{date}} على الساعة {{time}}). يلزم التحكيم."
       }
     },
     "maintenance": {
@@ -3873,6 +3891,38 @@
       "empty": "لا توجد صيانة حاليًا. أنشئ واحدة من «المواعيد» بزر «+ إضافة».",
       "todo": "للإنجاز",
       "history": "السجل"
+    },
+    "plan": {
+      "title": "جدولة: {{label}}",
+      "date": "تاريخ الموعد",
+      "time": "الساعة",
+      "duration": "المدة المقدّرة (اختياري)",
+      "hoursUnit": "س",
+      "durationPlaceholder": "مثال: 2",
+      "durationHelp": "بدون مدة نفترض ساعتين لرصد التعارضات.",
+      "garage": "المرآب أو المتدخل (اختياري)",
+      "garagePlaceholder": "مثال: مرآب الأطلس",
+      "hint": "تبقى السيارة متاحة إلى حين بدء التدخل.",
+      "confirm": "جدولة",
+      "update": "تحديث الموعد",
+      "cancelAppointment": "إلغاء الموعد",
+      "conflictTitle": "كراء يتقاطع مع هذا الموعد",
+      "conflictLine": "• {{customer}}: من {{from}} إلى {{to}}",
+      "conflictHint": "يمكنك اختيار موعد آخر أو المتابعة: سيُخبَر المسؤول بالتعارض.",
+      "proceed": "المتابعة وإخبار المسؤول",
+      "another": "اختيار موعد آخر",
+      "failed": "تعذرت الجدولة.",
+      "button": "جدولة",
+      "plannedAt": "مجدولة: {{when}}",
+      "plannedGarage": " · {{garage}}",
+      "edit": "تعديل الموعد",
+      "conflictBadge": "تعارض مُبلَّغ",
+      "err": {
+        "required": "هذا الحقل إجباري.",
+        "past": "هذا الموعد مضى.",
+        "invalid_number": "أدخل مدة بالساعات (مثلًا 2 أو 1,5).",
+        "too_long": "نص طويل جدًا."
+      }
     }
   },
   "vehiclePhotos": {
@@ -4189,7 +4239,8 @@
       "shoot": "التقاط الصورة",
       "hint": "ضع الوثيقة داخل الإطار"
     },
-    "otherLabel": "اسم اللون"
+    "otherLabel": "اسم اللون",
+    "pickTime": "اختر ساعة"
   },
   "maintenanceFollowup": {
     "title": "{{maintenance}}: هل تمّ؟",
@@ -4215,7 +4266,8 @@
     "close": "إغلاق",
     "failed": "تعذر تأجيل التذكير.",
     "hint": "إن كنتم قد أنجزتم هذه الصيانة، المسوا «نعم»: كل شيء معبّأ مسبقًا، لمسة واحدة.",
-    "back": "رجوع"
+    "back": "رجوع",
+    "plan": "جدولة تاريخ وساعة"
   },
   "dueRules": {
     "title": "قواعد المواعيد",

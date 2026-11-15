@@ -3,6 +3,7 @@ export { Button, DangerLink, type FormButtonVariant } from './button';
 export { ColorSwatches, ChoiceTiles, Segmented, TileIconView, type TileIcon } from './choices';
 export { CameraCapture } from './camera-capture';
 export { DateField } from './date-field';
+export { TimeField } from './time-field';
 export { AngleGrid, CARD_RATIO, DocumentList, DocumentSlot, PhotoTile, type AngleSlot, type DocumentRow, type PhotoState } from './documents';
 export { EmptyState, InfoBanner, Panel, SearchList, SectionLabel, SelectField, type ListOption } from './blocks';
 export { FormField, type FormFieldProps } from './form-field';

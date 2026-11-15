@@ -12,6 +12,7 @@ const mockState = {
   snoozed: [] as unknown[],
   snoozeError: null as unknown,
   quick: [] as unknown[],
+  planned: [] as unknown[],
 };
 const mockRouter = { back: jest.fn(), replace: jest.fn(), push: jest.fn(), canGoBack: () => true };
 
@@ -43,6 +44,8 @@ jest.mock('@/features/maintenance/hooks', () => ({
       options?.onSuccess?.();
     },
   }),
+  usePlanMaintenance: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.planned.push(args); options?.onSuccess?.(); } }),
+  useCheckMaintenanceConflicts: () => ({ isPending: false, mutateAsync: async () => [] }),
   useQuickCompleteMaintenance: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.quick.push(args); options?.onSuccess?.(); } }),
 }));
 
@@ -53,7 +56,7 @@ const open = (extra: Record<string, unknown> = {}) => ({ id: 'm1', vehicleId: 'v
 describe('réponse « Avez-vous fait … ? »', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { item: open(), role: 'owner', snoozed: [], snoozeError: null, quick: [] });
+    Object.assign(mockState, { item: open(), role: 'owner', snoozed: [], snoozeError: null, quick: [], planned: [] });
   });
 
   it('la question, la voiture et l’échéance (date OU kilométrage)', async () => {
@@ -119,5 +122,13 @@ describe('réponse « Avez-vous fait … ? »', () => {
     await render(<MaintenanceFollowupScreen />);
     await fireEvent.press(screen.getByText('Ouvrir la voiture'));
     expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]', params: { id: 'v1' } });
+  });
+
+  it('« Pas encore » propose aussi de planifier une date et une heure', async () => {
+    await render(<MaintenanceFollowupScreen />);
+    await fireEvent.press(screen.getByLabelText('Pas encore'));
+    await fireEvent.press(screen.getByText('Planifier une date et une heure'));
+    expect(screen.getByText('Planifier : Vidange')).toBeTruthy();
+    expect(screen.getByLabelText(/^Date du rendez-vous/)).toBeTruthy();
   });
 });

@@ -2287,6 +2287,12 @@
         "invalid_number": "Entrez un nombre valide.",
         "need_one": "Renseignez une date ou un kilométrage d'échéance."
       }
+    },
+    "startConflict": {
+      "title": "Une location est en cours",
+      "body": "Cette voiture est actuellement louée ou réservée ({{customers}}). Vous pouvez démarrer quand même : le responsable sera informé.",
+      "cancel": "Annuler",
+      "proceed": "Démarrer quand même"
     }
   },
   "filiales": {
@@ -2820,6 +2826,18 @@
       "maintenance_followup": {
         "title": "Est-ce fait ?",
         "body": "Avez-vous fait {{maintenance}} de {{vehicle}} ({{plate}}) ? Répondez en un geste."
+      },
+      "maintenance_planned_eve": {
+        "title": "Intervention demain",
+        "body": "Demain à {{time}} : {{maintenance}} pour {{vehicle}} ({{plate}})."
+      },
+      "maintenance_planned_today": {
+        "title": "Intervention aujourd'hui",
+        "body": "Aujourd'hui à {{time}} : {{maintenance}} pour {{vehicle}} ({{plate}})."
+      },
+      "maintenance_conflict": {
+        "title": "Conflit avec une location",
+        "body": "{{maintenance}} de {{vehicle}} ({{plate}}) chevauche la location de {{customer}} (le {{date}} à {{time}}). À arbitrer."
       }
     },
     "maintenance": {
@@ -3769,6 +3787,38 @@
       "empty": "Aucun entretien pour l'instant. Créez-en dans « Échéances » avec « + Ajouter ».",
       "todo": "À faire",
       "history": "Historique"
+    },
+    "plan": {
+      "title": "Planifier : {{label}}",
+      "date": "Date du rendez-vous",
+      "time": "Heure",
+      "duration": "Durée estimée (facultatif)",
+      "hoursUnit": "h",
+      "durationPlaceholder": "ex. 2",
+      "durationHelp": "Sans durée, on suppose 2 heures pour repérer les conflits.",
+      "garage": "Garage ou intervenant (facultatif)",
+      "garagePlaceholder": "ex. Garage Atlas",
+      "hint": "Le véhicule reste disponible jusqu'au début de l'intervention.",
+      "confirm": "Planifier",
+      "update": "Mettre à jour le rendez-vous",
+      "cancelAppointment": "Annuler le rendez-vous",
+      "conflictTitle": "Une location chevauche ce créneau",
+      "conflictLine": "• {{customer}} : du {{from}} au {{to}}",
+      "conflictHint": "Vous pouvez choisir un autre créneau, ou poursuivre : le responsable sera informé du conflit.",
+      "proceed": "Poursuivre et signaler au responsable",
+      "another": "Choisir un autre créneau",
+      "failed": "Impossible de planifier.",
+      "button": "Planifier",
+      "plannedAt": "Planifiée : {{when}}",
+      "plannedGarage": " · {{garage}}",
+      "edit": "Modifier le rendez-vous",
+      "conflictBadge": "Conflit signalé",
+      "err": {
+        "required": "Ce champ est obligatoire.",
+        "past": "Ce rendez-vous est déjà passé.",
+        "invalid_number": "Entrez une durée en heures (par exemple 2 ou 1,5).",
+        "too_long": "Texte trop long."
+      }
     }
   },
   "vehiclePhotos": {
@@ -4085,7 +4135,8 @@
       "shoot": "Prendre la photo",
       "hint": "Placez le document dans le cadre"
     },
-    "otherLabel": "Nom de la couleur"
+    "otherLabel": "Nom de la couleur",
+    "pickTime": "Choisir une heure"
   },
   "maintenanceFollowup": {
     "title": "{{maintenance}} : est-ce fait ?",
@@ -4111,7 +4162,8 @@
     "close": "Fermer",
     "failed": "Impossible de reporter le rappel.",
     "hint": "Si vous avez déjà fait cet entretien, touchez « Oui » : tout est prérempli, un seul geste.",
-    "back": "Retour"
+    "back": "Retour",
+    "plan": "Planifier une date et une heure"
   },
   "dueRules": {
     "title": "Règles d'échéances",

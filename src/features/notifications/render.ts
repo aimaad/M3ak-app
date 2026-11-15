@@ -19,7 +19,7 @@ function translateOr(t: Translate, key: string, fallbackKey: string, options?: R
 }
 
 /** Variables des modèles ; une valeur absente s'affiche « — » (i18next la remplacerait sinon par du vide). */
-const VARIABLES = ['customer', 'phone', 'vehicle', 'plate', 'amount', 'date', 'end', 'start', 'count', 'name', 'rental', 'contract', 'maintenance', 'km', 'left'];
+const VARIABLES = ['customer', 'phone', 'vehicle', 'plate', 'amount', 'date', 'end', 'start', 'count', 'name', 'rental', 'contract', 'maintenance', 'km', 'left', 'time'];
 
 const DATE_KEYS = ['date', 'end', 'start'];
 

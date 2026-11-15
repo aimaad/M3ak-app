@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/button';
@@ -16,12 +16,14 @@ import { Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { MAINTENANCE_DOCUMENTS_BUCKET, uploadMaintenanceInvoice } from '@/features/maintenance/api';
 import {
+  useCheckMaintenanceConflicts,
   useCompleteMaintenanceItem,
   useMaintenanceItem,
   useStartMaintenanceItem,
 } from '@/features/maintenance/hooks';
 import { maintenanceLabel } from '@/features/maintenance/label';
 import { isValidMaintenanceCost } from '@/features/maintenance/validation';
+import { customerShortName } from '@/features/vehicles/fleet-card';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -33,6 +35,7 @@ export default function MaintenanceDetailScreen() {
   const { data: vehicle } = useVehicle(item?.vehicleId);
   const startItem = useStartMaintenanceItem();
   const completeItem = useCompleteMaintenanceItem();
+  const checkConflicts = useCheckMaintenanceConflicts();
 
   const [garage, setGarage] = useState('');
   const [cout, setCout] = useState('');
@@ -41,6 +44,29 @@ export default function MaintenanceDetailScreen() {
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const costError = cout && !isValidMaintenanceCost(cout) ? t('maintenance.form.errors.invalid_number') : undefined;
+
+  /**
+   * Démarrer l'intervention : on vérifie d'abord les locations et réservations en cours. Un conflit est signalé (avec le client) mais ne bloque
+   * jamais : on peut démarrer quand même, et le responsable est informé côté serveur. Le statut « En maintenance » ne passe que si le
+   * véhicule est réellement immobilisé (pas chez un client).
+   */
+  async function handleStart() {
+    if (!item) return;
+    try {
+      const conflicts = await checkConflicts.mutateAsync({ vehicleId: item.vehicleId, at: new Date().toISOString(), minutes: null });
+      if (conflicts.length > 0) {
+        const names = conflicts.map((conflict) => customerShortName(conflict.customer) ?? conflict.customer).join(', ');
+        Alert.alert(t('maintenance.startConflict.title'), t('maintenance.startConflict.body', { customers: names }), [
+          { text: t('maintenance.startConflict.cancel'), style: 'cancel' },
+          { text: t('maintenance.startConflict.proceed'), onPress: () => startItem.mutate(item.id) },
+        ]);
+        return;
+      }
+    } catch {
+      // La vérification est une aide : si elle échoue, on ne bloque pas le démarrage.
+    }
+    startItem.mutate(item.id);
+  }
 
   async function handleComplete() {
     if (!item || !agencyQuery.data || costError) return;
@@ -105,8 +131,8 @@ export default function MaintenanceDetailScreen() {
           {isPending ? (
             <Button
               label={t('maintenance.startAction')}
-              onPress={() => startItem.mutate(item.id)}
-              loading={startItem.isPending}
+              onPress={() => void handleStart()}
+              loading={startItem.isPending || checkConflicts.isPending}
             />
           ) : null}
 

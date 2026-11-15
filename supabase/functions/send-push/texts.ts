@@ -61,6 +61,18 @@ const TEMPLATES: Record<string, Record<Locale, Template>> = {
     fr: { title: 'Est-ce fait ?', body: 'Avez-vous fait {maintenance} de {vehicle} ({plate}) ? Répondez en un geste.' },
     ar: { title: 'هل تمّ؟', body: 'هل أنجزتم {maintenance} الخاصة بـ {vehicle} ({plate})؟ أجيبوا بلمسة واحدة.' },
   },
+  maintenance_planned_eve: {
+    fr: { title: 'Intervention demain', body: 'Demain à {time} : {maintenance} pour {vehicle} ({plate}).' },
+    ar: { title: 'تدخل غدًا', body: 'غدًا على الساعة {time}: {maintenance} بالنسبة لـ {vehicle} ({plate}).' },
+  },
+  maintenance_planned_today: {
+    fr: { title: "Intervention aujourd'hui", body: "Aujourd'hui à {time} : {maintenance} pour {vehicle} ({plate})." },
+    ar: { title: 'تدخل اليوم', body: 'اليوم على الساعة {time}: {maintenance} بالنسبة لـ {vehicle} ({plate}).' },
+  },
+  maintenance_conflict: {
+    fr: { title: 'Conflit avec une location', body: '{maintenance} de {vehicle} ({plate}) chevauche la location de {customer} (le {date} à {time}). À arbitrer.' },
+    ar: { title: 'تعارض مع كراء', body: '{maintenance} الخاصة بـ {vehicle} ({plate}) تتعارض مع كراء {customer} (يوم {date} على الساعة {time}). يلزم التحكيم.' },
+  },
   maintenance_overdue: {
     fr: { title: 'Entretien en retard', body: 'Pour {vehicle} ({plate}) : {maintenance} devait être fait le {date}.' },
     ar: { title: 'صيانة متأخرة', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} كانت مبرمجة في {date}.' },

@@ -11,6 +11,7 @@ import type { MaintenanceItem } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
 
 import type { Vehicle } from '../types';
+import { PlanCard } from './plan-card';
 import { QuickDoneCard } from './quick-done-card';
 
 const CARD = { backgroundColor: Brand.white, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 16, gap: 4 } as const;
@@ -29,6 +30,7 @@ const dayText = (iso: string, language: string) => new Date(`${iso.slice(0, 10)}
 export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle: Vehicle; items: MaintenanceItem[]; now: Date; showCost: boolean }) {
   const { t, language } = useLanguage();
   const [openId, setOpenId] = useState<string | null>(null);
+  const [planId, setPlanId] = useState<string | null>(null);
   const todo = items
     .filter((item) => item.statut !== 'effectuee')
     .map((item) => ({ item, urgency: computeMaintenanceUrgency(item, vehicle.kilometrage, now) }))
@@ -95,7 +97,10 @@ export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle:
                     </View>
                   </Pressable>
                   <Pressable
-                    onPress={() => setOpenId(openId === item.id ? null : item.id)}
+                    onPress={() => {
+                      setPlanId(null);
+                      setOpenId(openId === item.id ? null : item.id);
+                    }}
                     accessibilityRole="button"
                     accessibilityLabel={t('vehicleDetail.quick.a11y', { label })}
                     style={{ minHeight: 44, minWidth: 72, paddingHorizontal: 14, borderRadius: 22, backgroundColor: Brand.graphite, alignItems: 'center', justifyContent: 'center' }}
@@ -105,6 +110,28 @@ export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle:
                     </HText>
                   </Pressable>
                 </View>
+                {!inProgress && (item.plannedAt || (urgency !== 'a_venir' && !incomplete)) ? (
+                  <View style={{ paddingStart: 50, paddingBottom: 6, gap: 2 }}>
+                    {item.plannedAt ? (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                        <HText weight="semibold" size={12} color={Palette.info}>
+                          {`${t('vehicleDetail.plan.plannedAt', { when: new Date(item.plannedAt).toLocaleString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}${item.plannedGarage ? t('vehicleDetail.plan.plannedGarage', { garage: item.plannedGarage }) : ''}`}
+                        </HText>
+                        {item.plannedConflict ? (
+                          <HText weight="semibold" size={11} color={Palette.warning}>
+                            {t('vehicleDetail.plan.conflictBadge')}
+                          </HText>
+                        ) : null}
+                      </View>
+                    ) : null}
+                    <Pressable onPress={() => { setOpenId(null); setPlanId(planId === item.id ? null : item.id); }} accessibilityRole="button" accessibilityLabel={`${t(item.plannedAt ? 'vehicleDetail.plan.edit' : 'vehicleDetail.plan.button')} : ${label}`} style={{ minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' }}>
+                      <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
+                        {t(item.plannedAt ? 'vehicleDetail.plan.edit' : 'vehicleDetail.plan.button')}
+                      </HText>
+                    </Pressable>
+                  </View>
+                ) : null}
+                {planId === item.id ? <PlanCard item={item} now={now} onClose={() => setPlanId(null)} /> : null}
                 {openId === item.id ? <QuickDoneCard item={item} vehicle={vehicle} now={now} showCost={showCost} onClose={() => setOpenId(null)} /> : null}
               </View>
             );
