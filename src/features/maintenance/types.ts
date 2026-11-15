@@ -20,6 +20,8 @@ export type MaintenanceItem = {
   echeanceKm: number | null;
   statut: MaintenanceStatus;
   notes: string | null;
+  /** Nom de l'entretien (type « Autre » : « Courroie de distribution »). */
+  titre?: string | null;
   garage: string | null;
   cout: number | null;
   piecesRemplacees: string | null;
@@ -37,6 +39,7 @@ export type MaintenanceInput = {
   echeanceDate: string | null;
   echeanceKm: number | null;
   notes: string | null;
+  titre?: string | null;
   repeatKm?: number | null;
   repeatMonths?: number | null;
 };

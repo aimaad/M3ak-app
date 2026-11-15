@@ -36,6 +36,24 @@ describe('échéances', () => {
     expect(late[0].type).toBe('vidange'); // le plus urgent d'abord
   });
 
+  it('chaque entretien « Autre » a sa propre ligne et son nom ; les autres types restent groupés', () => {
+    const rows = buildDues({
+      vehicle,
+      maintenance: [
+        maint({ id: 'x1', type: 'autre', titre: 'Courroie de distribution', echeanceKm: 61_000 }),
+        maint({ id: 'x2', type: 'autre', titre: 'Climatisation', echeanceDate: day(20) }),
+        maint({ id: 'v1', type: 'vidange', echeanceKm: 60_500 }),
+        maint({ id: 'v2', type: 'vidange', echeanceKm: 70_000 }),
+      ],
+      now: NOW,
+    });
+    const others = rows.filter((row) => row.type === 'autre');
+    expect(others.map((row) => row.label).sort()).toEqual(['Climatisation', 'Courroie de distribution']);
+    expect(new Set(others.map((row) => row.key)).size).toBe(2); // des clés distinctes
+    expect(others.map((row) => row.maintenanceId).sort()).toEqual(['x1', 'x2']);
+    expect(rows.filter((row) => row.type === 'vidange')).toHaveLength(1); // une ligne par type (la plus urgente)
+  });
+
   it('mêmes seuils que « À surveiller » pour ce qui s’y trouve', () => {
     const items = [maint({ id: 'a', type: 'vidange', echeanceDate: day(5) }), maint({ id: 'b', type: 'freins', echeanceDate: day(20) }), maint({ id: 'c', type: 'pneus', echeanceDate: day(-3) })];
     const watch = buildWatchItems({ vehicles: [vehicle], maintenance: items, now: NOW });

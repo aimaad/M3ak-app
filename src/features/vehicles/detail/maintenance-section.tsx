@@ -5,6 +5,7 @@ import { Image, Pressable, View } from 'react-native';
 import { DUE_TYPE_IMAGE } from '@/constants/due-icons';
 import { Brand, Palette } from '@/constants/theme';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
+import { maintenanceLabel } from '@/features/maintenance/label';
 import { computeMaintenanceUrgency, type MaintenanceUrgency } from '@/features/maintenance/urgency';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
@@ -68,7 +69,7 @@ export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle:
           ) : null}
           {todo.map(({ item, urgency }) => {
             const inProgress = item.statut === 'en_cours';
-            const label = t(`maintenance.types.${item.type}`);
+            const label = maintenanceLabel(item, t);
             const badge = inProgress ? { background: Palette.infoSoft, text: Palette.info, label: t('maintenance.status.en_cours') } : { ...URGENCY_COLOR[urgency], label: t(`maintenance.urgency.${urgency}`) };
             const detail = [item.echeanceDate ? dayText(item.echeanceDate, language) : null, item.echeanceKm != null ? `${formatAmount(item.echeanceKm)} km` : null].filter(Boolean).join(' · ');
             return (
@@ -118,7 +119,7 @@ export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle:
               <View style={{ width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: Palette.successSoft }}>{icon(item)}</View>
               <View style={{ flex: 1, gap: 2 }}>
                 <HText weight="semibold" size={14}>
-                  {t(`maintenance.types.${item.type}`)}
+                  {maintenanceLabel(item, t)}
                 </HText>
                 <HText size={12} color={Palette.textSecondary}>
                   {[item.dateIntervention ? dayText(item.dateIntervention, language) : null, item.garage].filter(Boolean).join(' · ')}

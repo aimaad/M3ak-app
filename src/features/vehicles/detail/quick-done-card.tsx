@@ -5,6 +5,7 @@ import { Button, DateField, FormField } from '@/components/form';
 import { Brand, Palette } from '@/constants/theme';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { useQuickCompleteMaintenance } from '@/features/maintenance/hooks';
+import { maintenanceLabel } from '@/features/maintenance/label';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -16,7 +17,7 @@ import { quickDoneDraft, quickDoneInput, validateQuickDone, type QuickDoneDraft 
  * « ✓ Fait » en un geste : kilométrage de la fiche et date du jour déjà remplis, on confirme. Garage et coût (propriétaire et responsable)
  * sont facultatifs, sous « Ajouter des détails ». La suivante se crée toute seule si l'échéance est périodique.
  */
-export function QuickDoneCard({ item, vehicle, now, showCost, onClose }: { item: Pick<MaintenanceItem, 'id' | 'type'>; vehicle: Vehicle; now: Date; showCost: boolean; onClose: () => void }) {
+export function QuickDoneCard({ item, vehicle, now, showCost, onClose }: { item: Pick<MaintenanceItem, 'id' | 'type' | 'titre'>; vehicle: Vehicle; now: Date; showCost: boolean; onClose: () => void }) {
   const { t } = useLanguage();
   const done = useQuickCompleteMaintenance();
   const [draft, setDraft] = useState<QuickDoneDraft>(() => quickDoneDraft(vehicle, now));
@@ -36,7 +37,7 @@ export function QuickDoneCard({ item, vehicle, now, showCost, onClose }: { item:
   return (
     <View style={{ gap: 14, padding: 14, marginBottom: 12, borderRadius: 18, backgroundColor: Palette.surface }}>
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
-        {t('vehicleDetail.quick.title', { label: t(`maintenance.types.${item.type}`) })}
+        {t('vehicleDetail.quick.title', { label: maintenanceLabel(item, t) })}
       </HText>
       <FormField label={t('vehicleDetail.quick.km')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} error={message('km')} showError={showErrors} />
       <DateField label={t('vehicleDetail.quick.date')} value={draft.date} onChange={(iso) => setDraft({ ...draft, date: iso })} maximumDate={now} error={message('date')} showError={showErrors} />

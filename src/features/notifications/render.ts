@@ -38,6 +38,10 @@ export function notificationView(item: Pick<AppNotification, 'kind' | 'params'>,
   }
   if (typeof item.params?.maintenance === 'string') {
     params.maintenance = translateOr(t, `notifications.maintenance.${item.params.maintenance}`, 'notifications.maintenance.autre');
+    // Un entretien « Autre » nommé : « l'entretien « Courroie de distribution » ».
+    if (item.params.maintenance === 'autre' && typeof item.params.label === 'string' && item.params.label.trim()) {
+      params.maintenance = t('notifications.maintenance.named', { name: item.params.label.trim() });
+    }
   }
   const variables = { ...Object.fromEntries(VARIABLES.map((name) => [name, '—'])), ...params };
   const fill = (key: string) => translateOr(t, `notifications.kinds.${item.kind}.${key}`, `notifications.fallback.${key}`, variables);

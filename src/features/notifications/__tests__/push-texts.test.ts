@@ -57,3 +57,11 @@ describe('push : notifications d’entretien', () => {
     expect(renderPush('maintenance_followup', params, 'fr').body).toContain('Avez-vous fait la vidange');
   });
 });
+
+describe('push : entretien « Autre » nommé', () => {
+  it('le nom est dit, en français et en arabe', () => {
+    const params = { maintenance: 'autre', label: 'Courroie de distribution', vehicle: 'Dacia Logan', plate: '1-A-1' };
+    expect(renderPush('maintenance_followup', params, 'fr').body).toContain('l\'entretien « Courroie de distribution »');
+    expect(renderPush('maintenance_followup', params, 'ar').body).toContain('«Courroie de distribution»');
+  });
+});

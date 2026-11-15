@@ -4,6 +4,7 @@ import { PressableCard } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { useLanguage } from '@/i18n/use-language';
 
+import { maintenanceLabel } from './label';
 import { computeMaintenanceUrgency, type MaintenanceUrgency } from './urgency';
 import type { MaintenanceItem } from './types';
 import { Palette } from '@/constants/theme';
@@ -44,7 +45,7 @@ export function MaintenanceRow({
       className="flex-row items-center justify-between px-4 py-3"
     >
       <View className="flex-1 gap-0.5">
-        <ThemedText type="smallBold">{t(`maintenance.types.${item.type}`)}</ThemedText>
+        <ThemedText type="smallBold">{maintenanceLabel(item, t)}</ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {vehicleLabel ?? '—'}
           {item.echeanceDate ? ` • ${item.echeanceDate}` : ''}

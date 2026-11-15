@@ -2,12 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 
-import { Button, ChoiceTiles, DangerLink, DateField, FormField, Segmented, TileIconView } from '@/components/form';
+import { Button, ChoiceTiles, DangerLink, DateField, FormField, Segmented, TileIconView, type TileIcon } from '@/components/form';
 import { DUE_TYPE_IMAGE } from '@/constants/due-icons';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { useCreateMaintenanceItem, useDeleteMaintenanceItem, useUpdateMaintenanceDue, useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
+import type { ComplianceKind } from '@/features/compliance/types';
 import type { MaintenanceType } from '@/features/maintenance/types';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -15,8 +16,8 @@ import { useUpdateVehicleDocuments } from '../hooks';
 import { describeSaveError } from '../save-error';
 import type { Vehicle } from '../types';
 import { fromIsoDate, toIsoDate } from '../validation';
-import { ComplianceBlock } from './compliance-block';
-import { ADDABLE_DUE_TYPES, draftOf, emptyDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
+import { ComplianceBlock, RenewalEntry } from './compliance-block';
+import { ADDABLE_DUE_TYPES, draftOf, dueAlreadyPassed, effectiveDue, emptyDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
 
 const NO_ITEMS: never[] = [];
@@ -41,35 +42,40 @@ function DueActions({ onSave, onCancel, busy, error }: { onSave: () => void; onC
   );
 }
 
-/** Champs d'une échéance : prochaine échéance (date et/ou kilométrage : le premier atteint déclenche), « se répète » (km et/ou mois), notes. Tout part vide. */
-function DueFields({ type, vehicle, draft, setDraft, showErrors }: { type: MaintenanceType; vehicle: Vehicle; draft: DueDraft; setDraft: (draft: DueDraft) => void; showErrors: boolean }) {
+/**
+ * Champs d'une échéance, dans l'ordre où on y pense : nom (pour « Autre »), « se répète » (km et/ou mois), « dernière fois faite » (pour que la
+ * prochaine se calcule toute seule), « prochaine échéance » (date et/ou kilométrage : la première atteinte déclenche ; calculée si on ne la saisit pas),
+ * note repliée. Tout part vide ; une échéance déjà dépassée est signalée sans rien bloquer.
+ */
+function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: MaintenanceType; vehicle: Vehicle; draft: DueDraft; setDraft: (draft: DueDraft) => void; showErrors: boolean; now: Date }) {
   const { t } = useLanguage();
-  const errors = validateDue(draft);
-  const message = (field: 'date' | 'km' | 'repeatKm' | 'repeatMonths' | 'repeat') => {
+  const [notesOpen, setNotesOpen] = useState(draft.notes.trim() !== '');
+  const errors = validateDue(draft, type);
+  const effective = effectiveDue(draft);
+  const passed = dueAlreadyPassed(effective, vehicle.kilometrage, now);
+  const message = (field: 'date' | 'km' | 'repeatKm' | 'repeatMonths' | 'repeat' | 'lastDate' | 'lastKm' | 'titre') => {
     const code = showErrors ? errors[field] : undefined;
     if (!code) return undefined;
     if (code === 'need_one') return t('vehicleDetail.dues.edit.needOne');
     if (code === 'need_one_repeat') return t('vehicleDetail.dues.edit.needOneRepeat');
+    if (code === 'required') return t('vehicleDetail.dues.edit.titleRequired');
     return t(`vehicle.form.errors.${code}`);
   };
+  const computedDate = effective.dateComputed && effective.date ? t('vehicleDetail.dues.edit.computed', { value: fromIsoDate(effective.date) }) : undefined;
+  const computedKm = effective.kmComputed && effective.km !== null ? t('vehicleDetail.dues.edit.computed', { value: `${formatAmount(effective.km)} km` }) : undefined;
+  const passedText = passed
+    ? [passed.km !== null ? t('vehicleDetail.dues.edit.passedKm', { km: formatAmount(passed.km) }) : null, passed.days !== null ? t(passed.days === 1 ? 'vehicleDetail.dues.edit.passedDaysOne' : 'vehicleDetail.dues.edit.passedDays', { count: passed.days }) : null].filter(Boolean).join(' ')
+    : null;
   return (
     <View style={{ gap: 16 }}>
-      <View style={{ gap: 12 }}>
-        <HText weight="semibold" size={13} color={Palette.textSecondary}>
-          {t('vehicleDetail.dues.edit.nextTitle')}
-        </HText>
-        <DateField label={t('vehicleDetail.dues.edit.dateLabel')} value={toIsoDate(draft.date)} onChange={(iso) => setDraft({ ...draft, date: fromIsoDate(iso) })} error={message('date')} showError={showErrors} />
-        <FormField label={t('vehicleDetail.dues.edit.kmLabel')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} help={t('vehicleDetail.dues.edit.kmCurrent', { km: formatAmount(vehicle.kilometrage) })} error={message('km')} showError={showErrors} />
-        <HText size={12} color={Palette.textSecondary}>
-          {t('vehicleDetail.dues.edit.firstHint')}
-        </HText>
-      </View>
+      {type === 'autre' ? <FormField label={t('vehicleDetail.dues.edit.titleLabel')} value={draft.titre} onChangeText={(value) => setDraft({ ...draft, titre: value.slice(0, 80) })} placeholder={t('vehicleDetail.dues.edit.titlePlaceholder')} error={message('titre')} showError={showErrors} autoCapitalize="sentences" /> : null}
+
       {REPEATABLE_TYPES.includes(type) ? (
         <View style={{ gap: 12 }}>
           <Segmented<'once' | 'periodic'>
             label={t('vehicleDetail.dues.edit.repeatLabel')}
             value={draft.repeat ? 'periodic' : 'once'}
-            onChange={(value) => setDraft(value === 'once' ? { ...draft, repeat: false, repeatKm: '', repeatMonths: '' } : { ...draft, repeat: true })}
+            onChange={(value) => setDraft(value === 'once' ? { ...draft, repeat: false, repeatKm: '', repeatMonths: '', lastDate: '', lastKm: '' } : { ...draft, repeat: true })}
             options={[
               { value: 'once', label: t('vehicleDetail.dues.edit.repeatOnce') },
               { value: 'periodic', label: t('vehicleDetail.dues.edit.repeatPeriodic') },
@@ -82,45 +88,92 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors }: { type: Maint
               <HText size={12} color={message('repeat') ? Palette.error : Palette.textSecondary} weight={message('repeat') ? 'semibold' : 'regular'}>
                 {message('repeat') ?? t('vehicleDetail.dues.edit.repeatHelp')}
               </HText>
+              <HText weight="semibold" size={13} color={Palette.textSecondary}>
+                {t('vehicleDetail.dues.edit.lastTitle')}
+              </HText>
+              <DateField label={t('vehicleDetail.dues.edit.lastDate')} value={toIsoDate(draft.lastDate)} onChange={(iso) => setDraft({ ...draft, lastDate: fromIsoDate(iso) })} maximumDate={now} error={message('lastDate')} showError={showErrors} />
+              <FormField label={t('vehicleDetail.dues.edit.lastKm')} value={draft.lastKm} onChangeText={(value) => setDraft({ ...draft, lastKm: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} help={t('vehicleDetail.dues.edit.lastHint', { km: formatAmount(vehicle.kilometrage) })} error={message('lastKm')} showError={showErrors} />
             </>
           ) : null}
         </View>
       ) : null}
-      <FormField label={t('vehicleDetail.dues.edit.notesLabel')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.dues.edit.notesPlaceholder')} multiline />
+
+      <View style={{ gap: 12 }}>
+        <HText weight="semibold" size={13} color={Palette.textSecondary}>
+          {t('vehicleDetail.dues.edit.nextTitle')}
+        </HText>
+        <DateField label={t('vehicleDetail.dues.edit.dateLabel')} value={toIsoDate(draft.date)} onChange={(iso) => setDraft({ ...draft, date: fromIsoDate(iso) })} help={computedDate} error={message('date')} showError={showErrors} />
+        <FormField label={t('vehicleDetail.dues.edit.kmLabel')} value={draft.km} onChangeText={(value) => setDraft({ ...draft, km: value.replace(/\D/g, '') })} thousands unit={t('flotte.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} help={computedKm ?? t('vehicleDetail.dues.edit.kmCurrent', { km: formatAmount(vehicle.kilometrage) })} error={message('km')} showError={showErrors} />
+        <HText size={12} color={Palette.textSecondary}>
+          {t(draft.repeat ? 'vehicleDetail.dues.edit.autoHint' : 'vehicleDetail.dues.edit.firstHint')}
+        </HText>
+        {passedText ? (
+          <View accessibilityRole="alert" style={{ flexDirection: 'row', gap: 8, borderRadius: 14, borderWidth: 1.5, borderColor: Palette.warning, backgroundColor: Palette.warningSoft, padding: 12 }}>
+            <Ionicons name="alert-circle-outline" size={16} color={Palette.warning} />
+            <HText weight="semibold" size={13} color={Palette.warning} style={{ flex: 1 }}>
+              {`${passedText} ${t('vehicleDetail.dues.edit.passedTail')}`}
+            </HText>
+          </View>
+        ) : null}
+      </View>
+
+      {notesOpen ? (
+        <FormField label={t('vehicleDetail.dues.edit.notesLabel')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.dues.edit.notesPlaceholder')} multiline />
+      ) : (
+        <Pressable onPress={() => setNotesOpen(true)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
+          <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
+            {t('vehicleDetail.dues.edit.addNote')}
+          </HText>
+        </Pressable>
+      )}
     </View>
   );
 }
 
-/** Ajout d'une échéance : type, date, kilométrage, notes — dans la carte, sans changer de page. */
+/** Un seul point d'entrée : les 4 entretiens ET les 3 obligations (assurance, visite technique, vignette). */
+const LEGAL_KINDS: ComplianceKind[] = ['assurance', 'visite_technique', 'vignette'];
+const LEGAL_ICON: Record<ComplianceKind, keyof typeof Ionicons.glyphMap> = { assurance: 'shield-checkmark-outline', visite_technique: 'clipboard-outline', vignette: 'receipt-outline' };
+type AddType = MaintenanceType | ComplianceKind;
+const isLegal = (type: AddType | null): type is ComplianceKind => type !== null && (LEGAL_KINDS as string[]).includes(type);
+
+/** Ajout d'une échéance : on choisit le type (entretien ou obligation), puis les champs apparaissent — dans la carte, sans changer de page. */
 function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClose: () => void }) {
   const { t } = useLanguage();
   const agency = useMyAgency();
   const create = useCreateMaintenanceItem();
-  const [type, setType] = useState<MaintenanceType | null>(null);
+  const [type, setType] = useState<AddType | null>(null);
   const [draft, setDraft] = useState<DueDraft>(emptyDraft);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const plan = planDueSave({ type: type ?? 'autre' }, { documents: [] }, draft);
+  const maintenanceType = type !== null && !isLegal(type) ? type : null;
+  const plan = planDueSave({ type: maintenanceType ?? 'autre' }, { documents: [] }, draft);
 
   function save() {
     setShowErrors(true);
     setError(null);
-    if (!type || Object.keys(validateDue(draft)).length > 0 || !agency.data || !plan.createItem) return;
+    if (!maintenanceType || Object.keys(validateDue(draft, maintenanceType)).length > 0 || !agency.data || !plan.createItem) return;
     create.mutate(
       { agencyId: agency.data.agencyId, input: { vehicleId: vehicle.id, ...plan.createItem } },
       { onSuccess: onClose, onError: (failure) => setError(describeSaveError(failure, t, 'vehicleDetail.dues.edit.saveError')) }
     );
   }
 
+  const options = [
+    ...ADDABLE_DUE_TYPES.map((value) => ({ value: value as AddType, label: t(`maintenance.types.${value}`), icon: (DUE_TYPE_IMAGE[value] ?? 'ellipse-outline') as TileIcon })),
+    ...LEGAL_KINDS.map((value) => ({ value: value as AddType, label: t(`vehicleDetail.compliance.kind.${value}`), icon: LEGAL_ICON[value] as TileIcon })),
+  ];
+
   return (
     <View style={{ gap: 16, padding: 14, marginVertical: 10, borderRadius: 18, backgroundColor: Palette.surface }}>
       <HText font="display" weight="bold" size={16} accessibilityRole="header">
         {t('vehicleDetail.dues.edit.addTitle')}
       </HText>
-      <ChoiceTiles<MaintenanceType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={setType} options={ADDABLE_DUE_TYPES.map((value) => ({ value, label: t(`maintenance.types.${value}`), icon: DUE_TYPE_IMAGE[value] ?? 'ellipse-outline' }))} />
-      {type ? (
+      <ChoiceTiles<AddType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={setType} options={options} />
+      {isLegal(type) ? (
+        <RenewalEntry vehicle={vehicle} kind={type} now={now} onDone={onClose} />
+      ) : maintenanceType ? (
         <>
-          <DueFields type={type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} />
+          <DueFields type={maintenanceType} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
           <DueActions onSave={save} onCancel={onClose} busy={create.isPending} error={error} />
         </>
       ) : null}
@@ -141,7 +194,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
     const item = items.find((entry) => entry.id === row.maintenanceId);
     const repeatKm = item?.repeatKm != null ? String(item.repeatKm) : '';
     const repeatMonths = item?.repeatMonths != null ? String(item.repeatMonths) : '';
-    return { ...draftOf(row), repeat: repeatKm !== '' || repeatMonths !== '', repeatKm, repeatMonths };
+    return { ...draftOf(row), titre: item?.titre ?? '', repeat: repeatKm !== '' || repeatMonths !== '', repeatKm, repeatMonths };
   });
   const [showErrors, setShowErrors] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -150,11 +203,11 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
   async function save() {
     setShowErrors(true);
     setError(null);
-    if (Object.keys(validateDue(draft)).length > 0) return;
+    if (Object.keys(validateDue(draft, row.type)).length > 0) return;
     const plan = planDueSave(row, vehicle, draft);
     setBusy(true);
     try {
-      if (plan.updateItem) await update.mutateAsync({ id: plan.updateItem.id, patch: { echeanceDate: plan.updateItem.echeanceDate, echeanceKm: plan.updateItem.echeanceKm, notes: plan.updateItem.notes, repeatKm: plan.updateItem.repeatKm, repeatMonths: plan.updateItem.repeatMonths } });
+      if (plan.updateItem) await update.mutateAsync({ id: plan.updateItem.id, patch: { echeanceDate: plan.updateItem.echeanceDate, echeanceKm: plan.updateItem.echeanceKm, notes: plan.updateItem.notes, titre: plan.updateItem.titre, repeatKm: plan.updateItem.repeatKm, repeatMonths: plan.updateItem.repeatMonths } });
       if (plan.createItem && agency.data) await create.mutateAsync({ agencyId: agency.data.agencyId, input: { vehicleId: vehicle.id, ...plan.createItem } });
       if (plan.syncDocumentExpiry) {
         const { type, expiresAt } = plan.syncDocumentExpiry;
@@ -183,7 +236,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
 
   return (
     <View style={{ gap: 16, padding: 14, marginBottom: 12, borderRadius: 18, backgroundColor: Palette.surface }}>
-      <DueFields type={row.type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} />
+      <DueFields type={row.type} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
       <DueActions onSave={() => void save()} onCancel={onClose} busy={busy} error={error} />
       {row.maintenanceId ? (
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -253,7 +306,7 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
 
       {rows.map((row) => {
         const hot = row.urgency === 'hot' || row.urgency === 'expired';
-        const label = t(`maintenance.types.${row.type}`);
+        const label = row.label ?? t(`maintenance.types.${row.type}`);
         const due = dueText(row);
         const sub = subText(row);
         const expanded = open === row.key;

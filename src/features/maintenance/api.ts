@@ -14,6 +14,7 @@ type MaintenanceRow = {
   echeance_km: number | null;
   statut: MaintenanceItem['statut'];
   notes: string | null;
+  titre?: string | null;
   garage: string | null;
   cout: number | null;
   pieces_remplacees: string | null;
@@ -34,6 +35,7 @@ function fromRow(row: MaintenanceRow): MaintenanceItem {
     echeanceKm: row.echeance_km,
     statut: row.statut,
     notes: row.notes,
+    titre: row.titre ?? null,
     garage: row.garage,
     cout: row.cout !== null ? Number(row.cout) : null,
     piecesRemplacees: row.pieces_remplacees,
@@ -86,6 +88,8 @@ export async function createMaintenanceItem(
       echeance_date: input.echeanceDate,
       echeance_km: input.echeanceKm,
       notes: input.notes,
+      // Le nom n'est envoyé que s'il existe (type « Autre ») : le reste s'enregistre même si la migration 0075 manque.
+      ...(input.titre ? { titre: input.titre } : {}),
       // La périodicité n'est envoyée que si elle est réglée : une échéance ponctuelle s'enregistre même si la migration 0071 manque.
       ...(input.repeatKm != null ? { repeat_km: input.repeatKm } : {}),
       ...(input.repeatMonths != null ? { repeat_months: input.repeatMonths } : {}),
@@ -103,11 +107,11 @@ export async function createMaintenanceItem(
 /** Corrige date, kilométrage et notes d'une échéance pas encore commencée (le statut repart à « à venir » : l'urgence se recalcule). */
 export async function updateMaintenanceDue(
   id: string,
-  patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null; repeatKm?: number | null; repeatMonths?: number | null }
+  patch: { echeanceDate: string | null; echeanceKm: number | null; notes: string | null; titre?: string | null; repeatKm?: number | null; repeatMonths?: number | null }
 ): Promise<MaintenanceItem> {
   const { data, error } = await getSupabase()
     .from('maintenance_items')
-    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir', ...(patch.repeatKm != null ? { repeat_km: patch.repeatKm } : patch.repeatKm === null ? { repeat_km: null } : {}), ...(patch.repeatMonths != null ? { repeat_months: patch.repeatMonths } : patch.repeatMonths === null ? { repeat_months: null } : {}) })
+    .update({ echeance_date: patch.echeanceDate, echeance_km: patch.echeanceKm, notes: patch.notes, statut: 'a_venir', ...(patch.titre ? { titre: patch.titre } : {}), ...(patch.repeatKm != null ? { repeat_km: patch.repeatKm } : patch.repeatKm === null ? { repeat_km: null } : {}), ...(patch.repeatMonths != null ? { repeat_months: patch.repeatMonths } : patch.repeatMonths === null ? { repeat_months: null } : {}) })
     .eq('id', id)
     .in('statut', ['a_venir', 'due', 'en_retard'])
     .select()

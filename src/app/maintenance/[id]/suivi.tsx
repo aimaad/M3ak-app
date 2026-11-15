@@ -10,6 +10,7 @@ import { Button } from '@/components/form';
 import { Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
+import { maintenanceLabel, maintenancePhrase } from '@/features/maintenance/label';
 import { useMaintenanceItem, useSnoozeMaintenanceFollowup } from '@/features/maintenance/hooks';
 import { QuickDoneCard } from '@/features/vehicles/detail/quick-done-card';
 import { displayName } from '@/features/vehicles/detail/names';
@@ -69,8 +70,8 @@ export default function MaintenanceFollowupScreen() {
     );
   }
 
-  const label = t(`notifications.maintenance.${item.type}`);
-  const typeName = t(`maintenance.types.${item.type}`);
+  const label = maintenancePhrase(item, t);
+  const typeName = maintenanceLabel(item, t);
   const alreadyDone = item.statut === 'effectuee';
   const due = [item.echeanceDate ? t('maintenanceFollowup.dueDate', { date: dayText(item.echeanceDate, language) }) : null, item.echeanceKm != null ? t('maintenanceFollowup.dueKm', { km: formatAmount(item.echeanceKm) }) : null].filter(Boolean).join(t('maintenanceFollowup.or'));
 

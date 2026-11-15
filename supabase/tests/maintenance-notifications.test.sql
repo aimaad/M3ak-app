@@ -108,4 +108,13 @@ select pg_temp.ck('pas de rappel en pleine nuit', (select count(*) from notifica
 select public.generate_scheduled_notifications((timestamp '2026-11-10 10:00' at time zone 'Africa/Casablanca'));
 select pg_temp.ck('l''ancien rappel général n''envoie plus de « entretien à prévoir »', pg_temp.count_kind('maintenance_due') = 0);
 
+-- ---------------------------------------------------------------- entretien « Autre » nommé (migration 0075)
+insert into maintenance_items (id, agency_id, vehicle_id, type, titre, echeance_date, statut) values
+  ('11000000-0000-0000-0000-000000000005', 'aaaaaaaa-0000-0000-0000-000000000001', 'f1000000-0000-0000-0000-000000000001', 'autre', 'Courroie de distribution', date '2026-12-01', 'a_venir');
+select public.generate_maintenance_notifications(timestamp '2026-12-01 08:30' at time zone 'Africa/Casablanca');
+select pg_temp.ck('« Autre » nommé : la notification porte son nom', (select params ->> 'label' from notifications where kind = 'maintenance_today' and link_id = '11000000-0000-0000-0000-000000000005') = 'Courroie de distribution');
+select pg_temp.ck('un type ordinaire n''a pas de nom', (select params -> 'label' from notifications where kind = 'maintenance_today' and link_id = '11000000-0000-0000-0000-000000000001') = 'null'::jsonb);
+select pg_temp.try('nom de plus de 80 caractères refusé', $$update maintenance_items set titre = repeat('x', 81) where id = '11000000-0000-0000-0000-000000000005'$$, 'maintenance_items_titre_check');
+select pg_temp.try('nom vide refusé', $$update maintenance_items set titre = '' where id = '11000000-0000-0000-0000-000000000005'$$, 'maintenance_items_titre_check');
+
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

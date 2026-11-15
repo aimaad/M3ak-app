@@ -2829,7 +2829,8 @@
       "freins": "les freins",
       "pneus": "les pneus",
       "autre": "l'entretien",
-      "vignette": "la vignette"
+      "vignette": "la vignette",
+      "named": "l'entretien « {{name}} »"
     },
     "branch": "Filiale",
     "total": "{{count}} notification(s)",
@@ -3500,7 +3501,21 @@
         "firstHint": "Remplissez l'une, l'autre, ou les deux : l'alerte se déclenche dès que la première est atteinte.",
         "needOneRepeat": "Indiquez un kilométrage ou un nombre de mois (ou les deux).",
         "repeatMonthsPlaceholder": "ex. 12",
-        "monthsUnit": "mois"
+        "monthsUnit": "mois",
+        "titleLabel": "Nom de l'entretien",
+        "titlePlaceholder": "ex. Courroie de distribution",
+        "titleRequired": "Donnez un nom à cet entretien (par exemple « Courroie de distribution »).",
+        "lastTitle": "Dernière fois faite (facultatif)",
+        "lastDate": "Date de la dernière fois",
+        "lastKm": "Kilométrage de la dernière fois",
+        "lastHint": "Pour calculer la prochaine échéance toute seule. Kilométrage actuel : {{km}} km.",
+        "computed": "Calculée automatiquement : {{value}}",
+        "autoHint": "Laissez vide pour que la prochaine se calcule depuis « dernière fois faite ». Remplissez l'une, l'autre, ou les deux : l'alerte se déclenche dès que la première est atteinte.",
+        "passedKm": "Déjà dépassée de {{km}} km.",
+        "passedTail": "L'échéance sera tout de suite « en retard ».",
+        "addNote": "+ Ajouter une note",
+        "passedDaysOne": "Date passée depuis {{count}} jour.",
+        "passedDays": "Date passée depuis {{count}} jours."
       }
     },
     "specs": {

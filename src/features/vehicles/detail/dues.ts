@@ -25,6 +25,8 @@ export type DueRow = {
   targetKm: number | null;
   /** Entretien à ouvrir au tap ; absent pour une échéance qui ne vient que d'un document. */
   maintenanceId?: string;
+  /** Nom d'un entretien « Autre » (« Courroie de distribution »). */
+  label?: string;
   /** Assurance / visite technique sans photo du document : « Ajouter la photo ». */
   missingFile: boolean;
   score: number;
@@ -62,20 +64,27 @@ const DOCUMENT_TYPES: MaintenanceType[] = ['assurance', 'visite_technique'];
 export function buildDues(input: { vehicle: Vehicle; maintenance: MaintenanceItem[]; now: Date }): DueRow[] {
   const { vehicle, maintenance, now } = input;
   const open = maintenance.filter((entry) => entry.vehicleId === vehicle.id && entry.statut !== 'effectuee' && entry.statut !== 'en_cours');
-  const byType = new Map<MaintenanceType, MaintenanceItem[]>();
-  for (const entry of open) byType.set(entry.type, [...(byType.get(entry.type) ?? []), entry]);
+  // Un entretien « Autre » a son propre nom : une ligne PAR entretien (les autres types : une ligne par type, la plus urgente).
+  const groups = new Map<string, { type: MaintenanceType; items: MaintenanceItem[]; label?: string }>();
+  for (const entry of open) {
+    const key = entry.type === 'autre' ? `autre:${entry.id}` : entry.type;
+    const group = groups.get(key) ?? { type: entry.type, items: [], label: entry.type === 'autre' ? entry.titre ?? undefined : undefined };
+    group.items.push(entry);
+    groups.set(key, group);
+  }
+  for (const type of DOCUMENT_TYPES) if (!groups.has(type)) groups.set(type, { type, items: [] });
 
   const rows: DueRow[] = [];
-  const types = new Set<MaintenanceType>([...DOCUMENT_TYPES, ...byType.keys()]);
-  for (const type of types) {
-    const candidates = (byType.get(type) ?? []).flatMap((entry) => candidatesOf(entry, vehicle, now));
+  for (const [groupKey, group] of groups) {
+    const type = group.type;
+    const candidates = group.items.flatMap((entry) => candidatesOf(entry, vehicle, now));
     const document = DOCUMENT_TYPES.includes(type) ? vehicle.documents.find((doc) => doc.type === type) : undefined;
     if (document?.expiresAt) candidates.push(byDays(daysUntil(document.expiresAt, now), document.expiresAt.slice(0, 10)));
     const top = best(candidates);
     const isDocumentType = DOCUMENT_TYPES.includes(type);
     if (!top && !isDocumentType) continue;
     rows.push({
-      key: `due:${type}`,
+      key: `due:${groupKey}`,
       type,
       icon: ICON[type] ?? 'wrench',
       due: top?.due ?? { kind: 'none' },
@@ -84,6 +93,7 @@ export function buildDues(input: { vehicle: Vehicle; maintenance: MaintenanceIte
       date: top?.date ?? null,
       targetKm: top?.targetKm ?? null,
       maintenanceId: top?.maintenanceId,
+      label: group.label,
       missingFile: isDocumentType && !document,
       score: top?.score ?? -1,
     });

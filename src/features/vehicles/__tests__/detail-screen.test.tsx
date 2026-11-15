@@ -573,7 +573,7 @@ describe('fiche véhicule', () => {
       expect(screen.queryByText(/^À \d+.?\d* km$/)).toBeNull(); // ni suggestion
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'freins', echeanceDate: null, echeanceKm: 70000, notes: null, repeatKm: null, repeatMonths: null } }]);
+      expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'freins', echeanceDate: null, echeanceKm: 70000, notes: null, titre: null, repeatKm: null, repeatMonths: null } }]);
     });
 
     it('« Se répète » : kilométrage et/ou mois, tout vide au départ ; enregistré avec l’échéance', async () => {
@@ -589,6 +589,71 @@ describe('fiche véhicule', () => {
       await fireEvent.changeText(screen.getByLabelText('Tous les'), '12');
       await fireEvent.press(screen.getByLabelText('Enregistrer'));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', echeanceKm: 70000, repeatKm: 10000, repeatMonths: 12 } }]);
+    });
+
+    it('« Dernière fois faite » : la prochaine échéance se calcule toute seule et part avec l’échéance', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.press(screen.getAllByText('Vidange')[0]);
+      expect(screen.queryByLabelText('Kilométrage de la dernière fois')).toBeNull(); // seulement avec « Se répète »
+      await fireEvent.press(screen.getByLabelText('Se répète'));
+      await fireEvent.changeText(screen.getByLabelText('Se répète tous les'), '10000');
+      await fireEvent.changeText(screen.getByLabelText('Kilométrage de la dernière fois'), '48200');
+      expect(screen.getByText(/Calculée automatiquement : 58.?200 km/)).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', echeanceKm: 58200, repeatKm: 10000, repeatMonths: null } }]);
+    });
+
+    it('échéance déjà dépassée : avertissement qui n’empêche rien', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.press(screen.getAllByText('Vidange')[0]);
+      await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '30000');
+      expect(screen.getByText(/Déjà dépassée de 10.?000 km\./)).toBeTruthy(); // la voiture est à 40 000 km
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toMatchObject([{ input: { echeanceKm: 30000 } }]); // pas bloqué
+    });
+
+    it('« Autre » : le nom est obligatoire, puis enregistré', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.press(screen.getAllByText('Autre')[0]);
+      await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '90000');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(screen.getByText(/Donnez un nom à cet entretien/)).toBeTruthy();
+      expect(mockState.dueCalls.create).toEqual([]);
+      await fireEvent.changeText(screen.getByLabelText("Nom de l'entretien"), 'Courroie de distribution');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'autre', titre: 'Courroie de distribution', echeanceKm: 90000 } }]);
+    });
+
+    it('les autres types n’ont pas de champ « nom »', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.press(screen.getAllByText('Freins')[0]);
+      expect(screen.queryByLabelText("Nom de l'entretien")).toBeNull();
+    });
+
+    it('un point d’entrée unique : l’assurance, la visite et la vignette se choisissent aussi sous « + Ajouter »', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      expect(screen.getByLabelText('Vignette', hidden)).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Assurance', hidden));
+      expect(screen.getByText('Enregistrer : Assurance')).toBeTruthy(); // même formulaire que dans la ligne de l'obligation
+      const end = new Date(); end.setDate(end.getDate() + 300);
+      await pickDate(/^Fin de validité/, end);
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      expect(mockState.renewCalls).toHaveLength(1);
+      expect(mockState.renewCalls[0]).toMatchObject({ input: { kind: 'assurance', vehicleId: 'v1' } });
+    });
+
+    it('la note est repliée : « + Ajouter une note » la déplie', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      await fireEvent.press(screen.getAllByText('Vidange')[0]);
+      expect(screen.queryByLabelText('Notes (facultatif)')).toBeNull();
+      await fireEvent.press(screen.getByText('+ Ajouter une note'));
+      expect(screen.getByLabelText('Notes (facultatif)')).toBeTruthy();
     });
 
     it('« Se répète » avec un seul compteur : l’autre est désactivé (vide)', async () => {

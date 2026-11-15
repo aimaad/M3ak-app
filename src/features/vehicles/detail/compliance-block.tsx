@@ -9,6 +9,7 @@ import { isAlreadyRecordedError } from '@/features/compliance/api';
 import { useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRenewCompliance, useVehicleCompliance } from '@/features/compliance/hooks';
 import {
   allStatuses,
+  complianceStatus,
   historyOf,
   periodOf,
   renewalDraft,
@@ -30,6 +31,7 @@ import type { Vehicle } from '../types';
 import { describeSaveError, isSchemaOutdatedError } from '../save-error';
 import { fromIsoDate, toIsoDate } from '../validation';
 
+const NO_RECORDS: ComplianceRecord[] = [];
 const ICON: Record<ComplianceKind, keyof typeof Ionicons.glyphMap> = { assurance: 'shield-checkmark-outline', visite_technique: 'clipboard-outline', vignette: 'receipt-outline' };
 const STATE_COLOR = { none: Palette.textSecondary, valid: Palette.success, soon: Brand.orangeUrgentText, urgent: Brand.orangeUrgentText, expired: Palette.error } as const;
 const STATE_BAR = { none: Palette.border, valid: Palette.success, soon: Palette.warning, urgent: Palette.primary, expired: Palette.error } as const;
@@ -188,7 +190,7 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
  * Renouveler en UN geste : la prochaine période est déjà calculée (durée mémorisée, début = lendemain de la fin en cours), on confirme.
  * Vignette : on choisit seulement l'année. Numéro de police, montant et photo du papier s'ajoutent plus tard (« Avec détails »).
  */
-function QuickRenew({ vehicle, kind, current, settings, now, onDetails }: { vehicle: Vehicle; kind: ComplianceKind; current: ComplianceRecord | null; settings: { visitIntervalMonths: number }; now: Date; onDetails: () => void }) {
+function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }: { vehicle: Vehicle; kind: ComplianceKind; current: ComplianceRecord | null; settings: { visitIntervalMonths: number }; now: Date; onDetails: () => void; onDone?: () => void }) {
   const { t, language } = useLanguage();
   const agency = useMyAgency();
   const renew = useRenewCompliance();
@@ -204,7 +206,7 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails }: { vehi
     const draft = renewalDraft(period);
     renew.mutate(
       { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, draft, null, kind === 'vignette' ? null : periodOf(kind, current, settings)), localDocumentUri: null },
-      { onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
+      { onSuccess: onDone, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
     );
   }
 
@@ -236,6 +238,24 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails }: { vehi
       <Button variant="link" label={t('vehicleDetail.compliance.quickDetails')} onPress={onDetails} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
     </View>
   );
+}
+
+/**
+ * Point d'entrée UNIQUE pour enregistrer une obligation depuis « + Ajouter » (assurance, visite technique, vignette) : le même parcours que dans
+ * la ligne de l'obligation (période suivante en un geste si une durée est réglée, vignette = l'année, sinon formulaire vide).
+ */
+export function RenewalEntry({ vehicle, kind, now, onDone }: { vehicle: Vehicle; kind: ComplianceKind; now: Date; onDone: () => void }) {
+  const { t } = useLanguage();
+  const agency = useMyAgency();
+  const records = useVehicleCompliance(vehicle.id).data ?? NO_RECORDS;
+  const { settings } = useComplianceSettings(agency.data?.agencyId);
+  const [mode, setMode] = useState<'view' | 'renew'>('view');
+  const showAmount = canSeePrices(agency.data?.role);
+  const current = complianceStatus(kind, records, vehicle, now).record;
+  const quick = kind === 'vignette' || periodOf(kind, current, settings) !== null;
+  if (mode === 'renew' || (!quick && !current)) return <RenewForm vehicle={vehicle} kind={kind} current={current} settings={settings} showAmount={showAmount} now={now} onClose={onDone} />;
+  if (quick) return <QuickRenew vehicle={vehicle} kind={kind} current={current} settings={settings} now={now} onDetails={() => setMode('renew')} onDone={onDone} />;
+  return <Button label={t('vehicleDetail.compliance.renew')} onPress={() => setMode('renew')} accessibilityLabel={t('vehicleDetail.compliance.renew')} />;
 }
 
 /** Correction d'une période de l'historique (propriétaire et responsable). */

@@ -39,3 +39,16 @@ describe('payload des échéances (la périodicité n’est envoyée que si elle
     expect(mockUpdated[1]).not.toHaveProperty('repeat_km');
   });
 });
+
+describe('nom d’un entretien « Autre »', () => {
+  beforeEach(() => {
+    mockInserted.length = 0;
+    mockUpdated.length = 0;
+  });
+  it('envoyé seulement s’il existe (marche même si la migration 0075 manque)', async () => {
+    await createMaintenanceItem('a', { ...base, titre: 'Courroie de distribution' });
+    expect(mockInserted[0]).toMatchObject({ titre: 'Courroie de distribution' });
+    await createMaintenanceItem('a', base);
+    expect(mockInserted[1]).not.toHaveProperty('titre');
+  });
+});

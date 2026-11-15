@@ -20,6 +20,7 @@ import {
   useMaintenanceItem,
   useStartMaintenanceItem,
 } from '@/features/maintenance/hooks';
+import { maintenanceLabel } from '@/features/maintenance/label';
 import { isValidMaintenanceCost } from '@/features/maintenance/validation';
 import { useVehicle } from '@/features/vehicles/hooks';
 import { useLanguage } from '@/i18n/use-language';
@@ -89,7 +90,7 @@ export default function MaintenanceDetailScreen() {
   return (
     <ThemedView className="flex-1">
       <SafeAreaView className="w-full flex-1" edges={['top', 'left', 'right']}>
-        <ScreenHeader title={t(`maintenance.types.${item.type}`)} showBack />
+        <ScreenHeader title={maintenanceLabel(item, t)} showBack />
 
         <ScrollView contentContainerClassName="gap-6 px-6 pb-10" keyboardShouldPersistTaps="handled">
           <Card padded={false} className="px-4">

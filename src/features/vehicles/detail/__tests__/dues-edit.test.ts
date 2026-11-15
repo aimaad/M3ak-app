@@ -1,5 +1,5 @@
 import type { Vehicle } from '../../types';
-import { draftOf, emptyDraft, planDueSave, validateDue, type DueDraft } from '../dues-edit';
+import { computeNext, draftOf, dueAlreadyPassed, effectiveDue, emptyDraft, planDueSave, validateDue, type DueDraft } from '../dues-edit';
 import type { DueRow } from '../dues';
 
 const vehicle = { kilometrage: 59_000, documents: [] } as unknown as Vehicle;
@@ -8,7 +8,7 @@ const draft = (extra: Partial<DueDraft> = {}): DueDraft => ({ ...emptyDraft(), .
 
 describe('un nouveau brouillon est VIDE : aucune valeur prédéfinie', () => {
   it('ni date, ni kilométrage, ni périodicité', () => {
-    expect(emptyDraft()).toEqual({ date: '', km: '', notes: '', repeat: false, repeatKm: '', repeatMonths: '' });
+    expect(emptyDraft()).toEqual({ date: '', km: '', notes: '', titre: '', repeat: false, repeatKm: '', repeatMonths: '', lastDate: '', lastKm: '' });
   });
 });
 
@@ -23,7 +23,7 @@ describe('validation d’une échéance', () => {
     expect(validateDue(draft({ km: '70000' }))).toEqual({});
   });
   it('le brouillon d’une ligne reprend sa date (JJ/MM/AAAA) et son kilométrage', () => {
-    expect(draftOf({ date: '2026-12-26', targetKm: 70_000 } as DueRow)).toEqual({ date: '26/12/2026', km: '70000', notes: '', repeat: false, repeatKm: '', repeatMonths: '' });
+    expect(draftOf({ date: '2026-12-26', targetKm: 70_000 } as DueRow)).toEqual({ ...emptyDraft(), date: '26/12/2026', km: '70000' });
   });
 });
 
@@ -53,7 +53,7 @@ describe('plan d’enregistrement', () => {
 
   it('ligne venant d’un entretien : mise à jour de l’entretien', () => {
     expect(planDueSave({ type: 'vidange', maintenanceId: 'm1' }, vehicle, draft({ km: '70000' }))).toEqual({
-      updateItem: { id: 'm1', echeanceDate: null, echeanceKm: 70000, notes: null, repeatKm: null, repeatMonths: null }, createItem: null, syncDocumentExpiry: null,
+      updateItem: { id: 'm1', echeanceDate: null, echeanceKm: 70000, notes: null, titre: null, repeatKm: null, repeatMonths: null }, createItem: null, syncDocumentExpiry: null,
     });
   });
 
@@ -83,7 +83,71 @@ describe('plan d’enregistrement', () => {
 
   it('ligne sans entretien ni document : l’échéance est créée', () => {
     expect(planDueSave({ type: 'visite_technique' }, vehicle, d)).toEqual({
-      updateItem: null, createItem: { type: 'visite_technique', echeanceDate: '2027-01-31', echeanceKm: null, notes: 'RAS', repeatKm: null, repeatMonths: null }, syncDocumentExpiry: null,
+      updateItem: null, createItem: { type: 'visite_technique', echeanceDate: '2027-01-31', echeanceKm: null, notes: 'RAS', titre: null, repeatKm: null, repeatMonths: null }, syncDocumentExpiry: null,
     });
+  });
+});
+
+describe('« dernière fois faite » : la prochaine échéance se calcule', () => {
+  const periodic = (extra: Partial<DueDraft>) => draft({ repeat: true, repeatKm: '10000', repeatMonths: '12', ...extra });
+
+  it('dernier km + tous les N km ; dernière date + tous les N mois', () => {
+    expect(computeNext(periodic({ lastKm: '48200', lastDate: '14/11/2026' }))).toEqual({ km: 58200, date: '2027-11-14' });
+  });
+  it('un seul compteur : l’autre reste vide (désactivé)', () => {
+    expect(computeNext(draft({ repeat: true, repeatKm: '10000', lastKm: '48200', lastDate: '14/11/2026' }))).toEqual({ km: 58200, date: null });
+    expect(computeNext(draft({ repeat: true, repeatMonths: '6', lastKm: '48200', lastDate: '14/11/2026' }))).toEqual({ km: null, date: '2027-05-14' });
+  });
+  it('sans « dernière fois » : rien n’est calculé ; sans « se répète » : jamais', () => {
+    expect(computeNext(periodic({}))).toEqual({ km: null, date: null });
+    expect(computeNext(draft({ lastKm: '48200', repeatKm: '10000' }))).toEqual({ km: null, date: null });
+  });
+  it('fin de mois : 31 août + 6 mois = 28 février', () => {
+    expect(computeNext(draft({ repeat: true, repeatMonths: '6', lastDate: '31/08/2026' })).date).toBe('2027-02-28');
+  });
+  it('la saisie manuelle est prioritaire sur le calcul', () => {
+    const effective = effectiveDue(periodic({ lastKm: '48200', km: '60000' }));
+    expect(effective).toMatchObject({ km: 60000, kmComputed: false });
+    expect(effectiveDue(periodic({ lastKm: '48200' }))).toMatchObject({ km: 58200, kmComputed: true });
+  });
+  it('une échéance calculée suffit à valider (pas besoin de la saisir)', () => {
+    expect(validateDue(periodic({ lastKm: '48200' }), 'vidange')).toEqual({});
+    expect(validateDue(periodic({}), 'vidange')).toEqual({ date: 'need_one' });
+  });
+  it('enregistré : la valeur calculée part avec l’échéance', () => {
+    const plan = planDueSave({ type: 'vidange' }, vehicle, periodic({ lastKm: '48200', lastDate: '14/11/2026' }));
+    expect(plan.createItem).toMatchObject({ echeanceKm: 58200, echeanceDate: '2027-11-14', repeatKm: 10000, repeatMonths: 12 });
+  });
+  it('« dernière fois » invalide : refusée', () => {
+    expect(validateDue(periodic({ lastKm: '-3', km: '70000' }))).toEqual({ lastKm: 'invalid_number' });
+    expect(validateDue(periodic({ lastDate: '32/13/2026', km: '70000' }))).toEqual({ lastDate: 'invalid_date' });
+  });
+});
+
+describe('alerte « déjà dépassée » (jamais bloquante)', () => {
+  const NOW = new Date(2026, 10, 14, 12);
+  it('kilométrage déjà atteint : de combien', () => {
+    expect(dueAlreadyPassed({ date: null, km: 40000 }, 48200, NOW)).toEqual({ km: 8200, days: null });
+    expect(dueAlreadyPassed({ date: null, km: 48200 }, 48200, NOW)).toEqual({ km: 0, days: null });
+  });
+  it('date passée : depuis combien de jours ; aujourd’hui n’est pas passé', () => {
+    expect(dueAlreadyPassed({ date: '2026-11-10', km: null }, 48200, NOW)).toEqual({ km: null, days: 4 });
+    expect(dueAlreadyPassed({ date: '2026-11-14', km: null }, 48200, NOW)).toBeNull();
+  });
+  it('rien de dépassé : pas d’alerte ; véhicule sans kilométrage connu : jamais d’alerte km', () => {
+    expect(dueAlreadyPassed({ date: '2027-01-01', km: 70000 }, 48200, NOW)).toBeNull();
+    expect(dueAlreadyPassed({ date: null, km: 100 }, 0, NOW)).toBeNull();
+  });
+});
+
+describe('nom d’un entretien « Autre »', () => {
+  it('obligatoire pour « Autre » seulement', () => {
+    expect(validateDue(draft({ km: '70000' }), 'autre')).toEqual({ titre: 'required' });
+    expect(validateDue(draft({ km: '70000', titre: 'Courroie de distribution' }), 'autre')).toEqual({});
+    expect(validateDue(draft({ km: '70000' }), 'vidange')).toEqual({});
+  });
+  it('enregistré pour « Autre », ignoré pour les autres types', () => {
+    expect(planDueSave({ type: 'autre' }, vehicle, draft({ km: '70000', titre: ' Courroie de distribution ' })).createItem).toMatchObject({ titre: 'Courroie de distribution' });
+    expect(planDueSave({ type: 'vidange' }, vehicle, draft({ km: '70000', titre: 'x' })).createItem).toMatchObject({ titre: null });
   });
 });

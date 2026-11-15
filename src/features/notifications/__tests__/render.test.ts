@@ -118,3 +118,19 @@ describe('notifications d’entretien : veille, jour même, kilométrage, suivi'
     expect(notificationRoute('maintenance', null)).toEqual({ pathname: '/maintenance' });
   });
 });
+
+describe('entretien « Autre » nommé dans les notifications', () => {
+  const t = (key: string, options?: Record<string, unknown>) => {
+    const fr = require('@/i18n/locales/fr.json') as Record<string, unknown>;
+    const text = key.split('.').reduce<unknown>((node, part) => (node as Record<string, unknown> | undefined)?.[part], fr) as string | undefined;
+    return text === undefined ? key : text.replace(/\{\{(\w+)\}\}/g, (_, name) => String(options?.[name] ?? ''));
+  };
+  it('le nom est dit dans la phrase', () => {
+    const view = notificationView({ kind: 'maintenance_followup', params: { maintenance: 'autre', label: 'Courroie de distribution', vehicle: 'Dacia Logan', plate: '1-A-1' } }, t, 'fr');
+    expect(view.body).toContain('l\'entretien « Courroie de distribution »');
+  });
+  it('sans nom : « l’entretien »', () => {
+    const view = notificationView({ kind: 'maintenance_followup', params: { maintenance: 'autre', label: null, vehicle: 'Dacia Logan', plate: '1-A-1' } }, t, 'fr');
+    expect(view.body).toContain('Avez-vous fait l\'entretien de Dacia Logan');
+  });
+});

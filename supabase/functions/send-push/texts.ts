@@ -157,6 +157,10 @@ export function renderPush(kind: string, rawParams: PushParams, locale: Locale):
   }
   if (typeof rawParams?.maintenance === 'string') {
     params.maintenance = MAINTENANCE[locale][rawParams.maintenance] ?? MAINTENANCE[locale].autre;
+    // Un entretien « Autre » nommé : « l'entretien « Courroie de distribution » ».
+    if (rawParams.maintenance === 'autre' && typeof rawParams.label === 'string' && rawParams.label.trim()) {
+      params.maintenance = locale === 'ar' ? `صيانة «${rawParams.label.trim()}»` : `l'entretien « ${rawParams.label.trim()} »`;
+    }
   }
   const fill = (text: string) => text.replace(/\{(\w+)\}/g, (_, key: string) => params[key] ?? '—');
   const branch = typeof rawParams?.branch === 'string' && rawParams.branch.trim() ? `\n${BRANCH_LABEL[locale]} : ${rawParams.branch}` : '';
