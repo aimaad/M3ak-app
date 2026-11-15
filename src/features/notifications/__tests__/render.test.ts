@@ -64,6 +64,14 @@ describe('notificationView', () => {
     expect(view.body).not.toMatch(/[{}]|undefined/);
     expect(notificationView({ kind: 'compliance_uncovered', params }, tAr, 'ar').body).toContain('التأمين');
   });
+  it('renouvellement automatique : texte fr et ar, avec la date et la demande de papier', () => {
+    const params = { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'assurance', date: '2027-11-15' };
+    const view = notificationView({ kind: 'compliance_auto_renewed', params }, tFr, 'fr');
+    expect(view.title).toBe('Renouvellement automatique');
+    expect(view.body).toContain("l'assurance a été renouvelée automatiquement");
+    expect(view.body).toContain('Ajoutez le nouveau papier');
+    expect(notificationView({ kind: 'compliance_auto_renewed', params }, tAr, 'ar').body).toContain('التأمين');
+  });
   it('chaque type de notification existe en français et en arabe', () => {
     const kinds = Object.keys((fr as unknown as { notifications: { kinds: Dict } }).notifications.kinds);
     expect(kinds.length).toBeGreaterThan(15);

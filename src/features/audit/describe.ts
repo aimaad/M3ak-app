@@ -4,7 +4,7 @@ type T = (key: string, params?: Record<string, unknown>) => string;
 
 /** Actions qui ont un texte dédié ; toute autre action affiche un texte générique, jamais un code technique. */
 const KNOWN_ACTIONS = new Set([
-  'rental_created', 'rental_confirmed', 'rental_started', 'rental_started_noncompliant', 'rental_completed', 'rental_cancelled', 'rental_status_changed', 'rental_dates_changed',
+  'rental_created', 'rental_confirmed', 'rental_started', 'rental_started_noncompliant', 'compliance_auto_renewed', 'rental_completed', 'rental_cancelled', 'rental_status_changed', 'rental_dates_changed',
   'payment_recorded', 'payment_status_changed',
   'customer_created', 'customer_updated', 'customer_archived', 'customer_reactivated',
   'customer_document_added', 'customer_document_deleted', 'customer_note_added', 'customer_note_edited', 'customer_note_deleted',
@@ -52,7 +52,9 @@ export function describeAuditEntry(entry: AuditEntry, t: T): string {
     ? details.issues.map((issue) => (issue && typeof issue === 'object' ? str((issue as { kind?: unknown }).kind) : null)).filter((kind): kind is string => !!kind).map((kind) => t(`vehicleDetail.compliance.kind.${kind}`))
     : [];
 
+  const obligation = str(details.kind) ? t(`vehicleDetail.compliance.kind.${str(details.kind)}`) : '—';
   return t(`journal.actions.${action}`, {
+    obligation,
     issues: issues.length ? issues.join(', ') : '—',
     actor,
     target: entry.targetLabel ?? '—',

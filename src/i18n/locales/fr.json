@@ -2509,6 +2509,7 @@
       "unknown": "{{actor}} a effectué une action",
       "contract_template_saved": "{{actor}} a enregistré le modèle de contrat de l'agence",
       "contract_template_removed": "{{actor}} est revenu au modèle de contrat standard",
+      "compliance_auto_renewed": "{{actor}} : {{obligation}} renouvelée automatiquement pour {{vehicle}} ({{target}}). Papier à ajouter.",
       "rental_started_noncompliant": "{{actor}} a remis un véhicule À RÉGULARISER : location {{target}} ({{vehicle}}, {{customer}}). Expiré : {{issues}}"
     }
   },
@@ -2821,6 +2822,10 @@
       "compliance_uncovered": {
         "title": "Assurance non couverte",
         "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} ne couvre pas le véhicule aujourd'hui (prochaine période à partir du {{date}}). Vérifiez les dates ou enregistrez la période en cours."
+      },
+      "compliance_auto_renewed": {
+        "title": "Renouvellement automatique",
+        "body": "Pour {{vehicle}} ({{plate}}) : {{maintenance}} a été renouvelée automatiquement jusqu'au {{date}}. Ajoutez le nouveau papier dans la fiche du véhicule."
       },
       "compliance_expired": {
         "title": "Obligation expirée",
@@ -3781,6 +3786,10 @@
         "assurance": "Prenez en photo la nouvelle attestation d'assurance, ou choisissez-la dans la galerie (facultatif).",
         "visite_technique": "Prenez en photo le nouveau papier de visite technique, ou choisissez-le dans la galerie (facultatif).",
         "vignette": "Prenez en photo la quittance de la vignette, ou choisissez-la dans la galerie (facultatif)."
+      },
+      "auto": {
+        "badge": "Renouvelée automatiquement",
+        "needsPaper": "Ajoutez le papier de cette période : sans papier, elle ne sera pas renouvelée automatiquement une deuxième fois."
       },
       "quickConfirm": "Enregistrer cette période",
       "quickNote": "Elle commence le lendemain de la fin de la période actuelle ({{date}}) et devient la période en cours. L'ancienne reste dans l'historique.",

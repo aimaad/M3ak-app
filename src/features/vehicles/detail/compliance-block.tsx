@@ -6,7 +6,7 @@ import { Button, CameraCapture, checkPhoto, DateField, DocumentSlot, FormField, 
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency } from '@/features/agency/hooks';
 import { isAlreadyRecordedError } from '@/features/compliance/api';
-import { useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRenewCompliance, useVehicleCompliance } from '@/features/compliance/hooks';
+import { useAttachCompliancePaper, useComplianceSettings, useCorrectCompliance, useDeleteCompliance, useRenewCompliance, useVehicleCompliance } from '@/features/compliance/hooks';
 import {
   allStatuses,
   complianceStatus,
@@ -438,6 +438,8 @@ function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicl
 function HistoryRow({ vehicle, record, isCurrent, now, canManage, showAmount }: { vehicle: Vehicle; record: ComplianceRecord; isCurrent: boolean; now: Date; canManage: boolean; showAmount: boolean }) {
   const { t, language } = useLanguage();
   const remove = useDeleteCompliance();
+  const attach = useAttachCompliancePaper();
+  const agency = useMyAgency();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // « En cours » seulement si la période couvre AUJOURD'HUI ; « À venir » si elle n'a pas commencé ; « Terminée » si elle est passée.
@@ -474,6 +476,30 @@ function HistoryRow({ vehicle, record, isCurrent, now, canManage, showAmount }: 
       <HText size={11} color={record.documentPath ? Palette.textSecondary : Brand.orangeUrgentText}>
         {record.documentPath ? t('vehicleDetail.compliance.paperOk') : t('vehicleDetail.compliance.paperMissing')}
       </HText>
+      {record.autoCreated ? (
+        <View style={{ gap: 6 }}>
+          <HText weight="semibold" size={12} color={Palette.info}>
+            {t('vehicleDetail.compliance.auto.badge')}
+          </HText>
+          {!record.documentPath ? (
+            <>
+              <HText size={12} color={Brand.orangeUrgentText}>
+                {t('vehicleDetail.compliance.auto.needsPaper')}
+              </HText>
+              {canManage && agency.data ? (
+                <PaperPhoto
+                  localUri={null}
+                  onPick={(uri) => {
+                    if (!agency.data) return;
+                    setError(null);
+                    attach.mutate({ id: record.id, agencyId: agency.data.agencyId, vehicleId: vehicle.id, kind: record.kind, localUri: uri }, { onError: () => setError(t('vehicleDetail.compliance.uploadError')) });
+                  }}
+                />
+              ) : null}
+            </>
+          ) : null}
+        </View>
+      ) : null}
       {error ? (
         <HText size={12} color={Palette.error} accessibilityRole="alert">
           {error}

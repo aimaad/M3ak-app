@@ -61,6 +61,18 @@ export function useCorrectCompliance() {
   });
 }
 
+/** Ajoute le papier d'une période (photo ou galerie) : réservé aux responsables par la base. Un papier ajouté « confirme » une période automatique. */
+export function useAttachCompliancePaper() {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async ({ id, agencyId, vehicleId, kind, localUri }: { id: string; agencyId: string; vehicleId: string; kind: ComplianceKind; localUri: string }) => {
+      const documentPath = await uploadComplianceDocument(agencyId, vehicleId, kind, localUri);
+      return updateComplianceRecord(id, { documentPath });
+    },
+    onSuccess: (_record, { vehicleId }) => invalidate(vehicleId),
+  });
+}
+
 export function useDeleteCompliance() {
   const invalidate = useInvalidate();
   return useMutation({
