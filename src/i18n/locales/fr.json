@@ -3328,6 +3328,13 @@
       "reminder": "Rappel {{days}} jours avant",
       "deadlineDate": "Date de fin",
       "deadlineInvalid": "Date impossible (JJ/MM/AAAA).",
+      "paper": {
+        "add": "Photographier le papier (facultatif)",
+        "remove": "Retirer le papier",
+        "useDate": "Utiliser la date de fin du papier : {{date}}",
+        "used": "Date du papier utilisée.",
+        "manual": "Saisissez la date vous-même."
+      },
       "assurance": "Assurance",
       "visite_technique": "Visite technique",
       "branch": "Filiale",

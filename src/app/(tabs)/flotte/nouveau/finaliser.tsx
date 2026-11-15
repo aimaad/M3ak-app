@@ -11,11 +11,16 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemedView } from '@/components/themed-view';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
+import { dayKey, toDisplayDate } from '@/features/compliance/logic';
+import { assessPaper, scanCompliancePaper, type PaperAssessment } from '@/features/compliance/paper-ocr';
+import { scanErrorMessageKey } from '@/features/ocr/availability';
+import { useOcrSettings } from '@/features/ocr/hooks';
 import { useBranches } from '@/features/branches/hooks';
 import { HText } from '@/features/dashboard/home-ui';
 import { mergeDocuments } from '@/features/storage/documents';
 import { AddHeader, BackButton } from '@/features/vehicles/add/add-ui';
 import { setCreatedVehicle } from '@/features/vehicles/add/created';
+import { DeadlinePaperButton } from '@/features/vehicles/add/deadline-paper';
 import { deadlineDocuments, DEADLINE_TYPES, digitsOf, essentialProgress, formatDateInput, isValidDeadline, missingAfterCreate, REMINDER_DAYS, statusForRentable, stepPrice, suggestCategory, type DeadlineType } from '@/features/vehicles/add/finalize';
 import { ChoiceChips, EssentialCard, GreenSwitch, KmField, PhotoZone, PriceStepper, ProgressRing } from '@/features/vehicles/add/finalize-parts';
 import { findExistingVehicle } from '@/features/vehicles/add/lookup';
@@ -32,7 +37,7 @@ import { uploadVehicleDocument, uploadVehiclePhoto } from '@/features/vehicles/a
 import { suggestDailyPrice } from '@/features/vehicles/pricing-suggestion';
 import { useCreateVehicle, useUpdateVehicleDocuments, useUpdateVehiclePhotos, useVehicles } from '@/features/vehicles/hooks';
 import { FUEL_TYPES, VEHICLE_CATEGORIES, VEHICLE_TRANSMISSIONS, type FuelType, type PendingVehicleDocument, type VehicleCategory, type VehicleDocument, type VehiclePhoto, type VehicleTransmission } from '@/features/vehicles/types';
-import { duplicateVehicleField, toVehicleInput, type VehicleFormValues } from '@/features/vehicles/validation';
+import { duplicateVehicleField, toIsoDate, toVehicleInput, type VehicleFormValues } from '@/features/vehicles/validation';
 import { useLanguage } from '@/i18n/use-language';
 
 async function pickPhotos(source: 'camera' | 'library', multiple = false): Promise<string[] | 'denied'> {
@@ -84,6 +89,12 @@ export default function FinaliserVehiculeScreen() {
   const [gearbox, setGearbox] = useState<VehicleTransmission | null>(null);
   const [fuel, setFuel] = useState<FuelType | null>(draft?.carburant ?? null);
   const [deadlines, setDeadlines] = useState<Partial<Record<DeadlineType, string>>>({});
+  // Papier photographié (facultatif) de chaque échéance ; lu automatiquement si l'entreprise l'a activé, la date lue n'est JAMAIS appliquée sans l'accord de l'employé.
+  const ocr = useOcrSettings();
+  const [papers, setPapers] = useState<Partial<Record<DeadlineType, string>>>({});
+  const [paperReading, setPaperReading] = useState<Partial<Record<DeadlineType, boolean>>>({});
+  const [paperError, setPaperError] = useState<Partial<Record<DeadlineType, string>>>({});
+  const [paperAssessment, setPaperAssessment] = useState<Partial<Record<DeadlineType, PaperAssessment>>>({});
   const [rentable, setRentable] = useState(true);
   const [branchId, setBranchId] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState(false);
@@ -122,6 +133,27 @@ export default function FinaliserVehiculeScreen() {
     else setFacePhoto(result[0]);
   }
 
+  async function onDeadlinePaper(type: DeadlineType, uri: string) {
+    setPapers((previous) => ({ ...previous, [type]: uri }));
+    setPaperError((previous) => ({ ...previous, [type]: undefined }));
+    setPaperAssessment((previous) => ({ ...previous, [type]: undefined }));
+    if (ocr.availability !== 'active') return;
+    setPaperReading((previous) => ({ ...previous, [type]: true }));
+    const result = await scanCompliancePaper(type, uri, ocr.agencyId);
+    setPaperReading((previous) => ({ ...previous, [type]: false }));
+    if (!result.ok) {
+      setPaperError((previous) => ({ ...previous, [type]: scanErrorMessageKey(result.error) }));
+      return;
+    }
+    setPaperAssessment((previous) => ({ ...previous, [type]: assessPaper(result.fields, { kind: type, currentUntil: null, vehiclePlate: formatPlate(plate), today: dayKey(new Date()) }) }));
+  }
+
+  function removeDeadlinePaper(type: DeadlineType) {
+    setPapers((previous) => ({ ...previous, [type]: undefined }));
+    setPaperError((previous) => ({ ...previous, [type]: undefined }));
+    setPaperAssessment((previous) => ({ ...previous, [type]: undefined }));
+  }
+
   async function handleSubmit() {
     setTouched(true);
     setSubmitError(null);
@@ -145,9 +177,12 @@ export default function FinaliserVehiculeScreen() {
       let documents: VehicleDocument[] = vehicle.documents;
       try {
         const uploaded = await Promise.all(pending.map((doc) => uploadVehicleDocument(agencyId, vehicle.id, doc.type, doc.localUri, doc.expiresAt)));
-        const dated = deadlineDocuments(deadlines);
-        if (uploaded.length + dated.length > 0) {
-          documents = mergeDocuments(vehicle.documents, [...uploaded, ...dated]);
+        // Échéances : avec papier photographié (fichier + date si elle est valable), sinon la date seule (sans fichier).
+        const paperTypes = DEADLINE_TYPES.filter((type) => !!papers[type]);
+        const withPaper = await Promise.all(paperTypes.map((type) => uploadVehicleDocument(agencyId, vehicle.id, type, papers[type] as string, deadlines[type] && isValidDeadline(deadlines[type] as string) ? toIsoDate(deadlines[type] as string) : null)));
+        const dated = deadlineDocuments(deadlines).filter((doc) => !paperTypes.includes(doc.type as DeadlineType));
+        if (uploaded.length + withPaper.length + dated.length > 0) {
+          documents = mergeDocuments(vehicle.documents, [...uploaded, ...withPaper, ...dated]);
           await updateDocuments.mutateAsync({ id: vehicle.id, documents });
         }
       } catch {
@@ -362,6 +397,7 @@ export default function FinaliserVehiculeScreen() {
                           {t('vehicleAdd.finalize.reminder', { days: REMINDER_DAYS })}
                         </HText>
                       </View>
+                      <DeadlinePaperButton label={t(`vehicleAdd.finalize.${type}`)} uri={papers[type] ?? null} onPick={(uri) => void onDeadlinePaper(type, uri)} onRemove={() => removeDeadlinePaper(type)} />
                       <TextInput
                         value={deadlines[type] ?? ''}
                         onChangeText={(text) => setDeadlines((previous) => ({ ...previous, [type]: formatDateInput(text) }))}
@@ -377,6 +413,52 @@ export default function FinaliserVehiculeScreen() {
                       <HText size={12} color={Palette.error} accessibilityLiveRegion="polite">
                         {t('vehicleAdd.finalize.deadlineInvalid')}
                       </HText>
+                    ) : null}
+                    {paperReading[type] ? (
+                      <HText size={12} weight="semibold" color={Palette.textSecondary} accessibilityLiveRegion="polite">
+                        {t('vehicleDetail.compliance.paper.reading')}
+                      </HText>
+                    ) : null}
+                    {paperError[type] ? (
+                      <HText size={12} weight="semibold" color={Brand.orangeUrgentText} accessibilityRole="alert">
+                        {`${t(paperError[type] as string)} ${t('vehicleAdd.finalize.paper.manual')}`}
+                      </HText>
+                    ) : null}
+                    {paperAssessment[type] ? (
+                      <View style={{ gap: 6 }} accessibilityRole="alert">
+                        {paperAssessment[type]?.blockers.map((issue) => (
+                          <HText key={issue} size={12} weight="semibold" color={Brand.orangeUrgentText}>
+                            {t(`vehicleDetail.compliance.paper.issue.${issue}`, { date: '' })}
+                          </HText>
+                        ))}
+                        {paperAssessment[type]?.cautions.map((issue) => (
+                          <HText key={issue} size={12} weight="semibold" color={Brand.orangeUrgentText}>
+                            {t(`vehicleDetail.compliance.paper.issue.${issue}`, { n: Math.round(paperAssessment[type]?.months ?? 0) })}
+                          </HText>
+                        ))}
+                        {paperAssessment[type]?.period ? (
+                          deadlines[type] === toDisplayDate(paperAssessment[type]?.period?.validUntil) ? (
+                            <HText size={12} weight="bold" color={Palette.success}>
+                              {t('vehicleAdd.finalize.paper.used')}
+                            </HText>
+                          ) : (
+                            <Pressable
+                              onPress={() => setDeadlines((previous) => ({ ...previous, [type]: toDisplayDate(paperAssessment[type]?.period?.validUntil) }))}
+                              accessibilityRole="button"
+                              accessibilityLabel={t('vehicleAdd.finalize.paper.useDate', { date: toDisplayDate(paperAssessment[type]?.period?.validUntil) })}
+                              style={{ minHeight: 44, justifyContent: 'center' }}
+                            >
+                              <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
+                                {t('vehicleAdd.finalize.paper.useDate', { date: toDisplayDate(paperAssessment[type]?.period?.validUntil) })}
+                              </HText>
+                            </Pressable>
+                          )
+                        ) : (
+                          <HText size={12} color={Palette.textSecondary}>
+                            {t('vehicleAdd.finalize.paper.manual')}
+                          </HText>
+                        )}
+                      </View>
                     ) : null}
                   </View>
                 );

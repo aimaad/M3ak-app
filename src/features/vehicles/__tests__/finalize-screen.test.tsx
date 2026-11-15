@@ -17,6 +17,9 @@ const mockState = {
   photos: [] as unknown[],
   uploaded: [] as unknown[],
   remote: null as { found: boolean; branchName: string | null } | null,
+  ocrAvailability: 'no_key' as string,
+  scanCalls: [] as unknown[],
+  scanResult: { ok: false, error: 'ocr_failed' } as unknown,
 };
 const mockRouter = { push: jest.fn(), replace: jest.fn(), back: jest.fn() };
 const base = { agencyId: 'a1', branchId: null, kilometrage: 1000, photos: [], documents: [], archivedAt: null, createdAt: '2029-01-01T00:00:00.000Z', updatedAt: '2029-01-01T00:00:00.000Z', vin: null };
@@ -58,6 +61,22 @@ jest.mock('@/features/vehicles/api', () => ({
   VEHICLE_PHOTOS_BUCKET: 'vehicle-photos',
 }));
 jest.mock('@/features/vehicles/add/use-remote-exists', () => ({ useRemoteExists: () => mockState.remote }));
+jest.mock('@/components/form/camera-capture', () => ({
+  CameraCapture: ({ visible, onCapture }: { visible: boolean; onCapture: (uri: string) => void }) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pressable } = require('react-native');
+    return visible ? <Pressable accessibilityLabel="CAPTURE-PAPIER" onPress={() => onCapture('file:///papier.jpg')} /> : null;
+  },
+}));
+jest.mock('@/components/form/photo-check', () => ({ checkPhoto: async () => ({ ok: true }) }));
+jest.mock('@/features/ocr/hooks', () => ({ useOcrSettings: () => ({ availability: mockState.ocrAvailability, agencyId: 'a1' }) }));
+jest.mock('@/features/compliance/paper-ocr', () => ({
+  ...jest.requireActual('@/features/compliance/paper-ocr'),
+  scanCompliancePaper: async (kind: string, uri: string) => {
+    mockState.scanCalls.push({ kind, uri });
+    return mockState.scanResult;
+  },
+}));
 jest.mock('expo-camera', () => ({ CameraView: () => null, useCameraPermissions: () => [{ granted: true }, jest.fn()] }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
 jest.mock('@/features/vehicles/creation-draft', () => ({ takeVehicleCreationDraft: () => mockState.draft }));
@@ -85,7 +104,7 @@ async function fillManualIdentity() {
 describe('écran Finaliser', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { role: 'owner', connected: true, draft: null, vehicles: [], created: [], documents: [], photos: [], uploaded: [], remote: null });
+    Object.assign(mockState, { role: 'owner', connected: true, draft: null, vehicles: [], created: [], documents: [], photos: [], uploaded: [], remote: null, ocrAvailability: 'no_key', scanCalls: [], scanResult: { ok: false, error: 'ocr_failed' } });
   });
 
   it('à la main : 0/3, carburant à choisir en un tap, prix obligatoire ; création avec plaque normalisée et statut Disponible', async () => {
@@ -187,6 +206,82 @@ describe('écran Finaliser', () => {
     await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
     await waitFor(() => expect(mockState.documents).toHaveLength(1));
     expect(mockState.documents[0]).toMatchObject({ type: 'assurance', path: '', expiresAt: '2031-06-15' });
+  });
+
+  describe('papier d’échéance à la création (facultatif)', () => {
+    const paper = (extra: Record<string, unknown> = {}) => ({ ok: true, fields: { validFrom: '2030-06-16', validUntil: '2031-06-15', reference: 'POL-1', provider: 'RMA', amount: 1500, plate: '68013-ب-72', favorable: null, ...extra } });
+    async function takePaper(label = 'Assurance') {
+      mockState.draft = scanDraft;
+      await render(<FinaliserVehiculeScreen />);
+      await fireEvent.changeText(screen.getByLabelText('Prix par jour en dirhams'), '400');
+      await fireEvent.press(screen.getByLabelText(`Photographier le papier (facultatif) : ${label}`));
+      await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
+    }
+
+    it('sans papier : rien ne change (date seule, sans fichier) — le papier est facultatif', async () => {
+      mockState.draft = scanDraft;
+      await render(<FinaliserVehiculeScreen />);
+      await fireEvent.changeText(screen.getByLabelText('Prix par jour en dirhams'), '400');
+      await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+      await waitFor(() => expect(mockState.created).toHaveLength(1));
+      expect(mockState.uploaded.filter((args) => (args as unknown[])[2] === 'assurance')).toHaveLength(0);
+    });
+    it('papier photographié, fonction inactive : enregistré avec le véhicule, aucune lecture', async () => {
+      await takePaper();
+      expect(mockState.scanCalls).toHaveLength(0);
+      await fireEvent.changeText(screen.getByLabelText('Assurance · Date de fin'), '15062031');
+      await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+      await waitFor(() => expect(mockState.documents.length).toBeGreaterThan(0));
+      expect(mockState.uploaded).toContainEqual(['a1', 'new1', 'assurance', 'file:///papier.jpg', '2031-06-15']);
+      expect(mockState.documents).toContainEqual(expect.objectContaining({ type: 'assurance', path: 'p', expiresAt: '2031-06-15' }));
+      expect(mockState.documents.filter((doc) => doc.type === 'assurance')).toHaveLength(1); // pas de doublon avec la date seule
+    });
+    it('papier sans date : le fichier est enregistré, la date reste à saisir plus tard', async () => {
+      await takePaper();
+      await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+      await waitFor(() => expect(mockState.uploaded.length).toBeGreaterThan(0));
+      expect(mockState.uploaded).toContainEqual(['a1', 'new1', 'assurance', 'file:///papier.jpg', null]);
+    });
+    it('fonction active : la date lue est PROPOSÉE, jamais appliquée seule', async () => {
+      mockState.ocrAvailability = 'active';
+      mockState.scanResult = paper();
+      await takePaper();
+      expect(mockState.scanCalls).toEqual([{ kind: 'assurance', uri: 'file:///papier.jpg' }]);
+      expect(await screen.findByLabelText('Utiliser la date de fin du papier : 15/06/2031')).toBeTruthy();
+      expect(screen.getByLabelText('Assurance · Date de fin').props.value).toBe('');
+      await fireEvent.press(screen.getByLabelText('Utiliser la date de fin du papier : 15/06/2031'));
+      expect(screen.getByLabelText('Assurance · Date de fin').props.value).toBe('15/06/2031');
+      expect(screen.getByText('Date du papier utilisée.')).toBeTruthy();
+    });
+    it('papier d’un autre véhicule : date non proposée, saisie manuelle', async () => {
+      mockState.ocrAvailability = 'active';
+      mockState.scanResult = paper({ plate: '1234 | A | 5' });
+      await takePaper();
+      expect(await screen.findByText(/plaque lue sur ce papier semble différente/)).toBeTruthy();
+      expect(screen.queryByLabelText(/^Utiliser la date de fin du papier/)).toBeNull();
+    });
+    it('visite défavorable ou papier déjà périmé : date non proposée', async () => {
+      mockState.ocrAvailability = 'active';
+      mockState.scanResult = paper({ validFrom: '2020-01-01', validUntil: '2020-12-31' });
+      await takePaper('Visite technique');
+      expect(await screen.findByText(/déjà périmé/)).toBeTruthy();
+      expect(screen.queryByLabelText(/^Utiliser la date de fin du papier/)).toBeNull();
+    });
+    it('lecture en échec : message, saisie manuelle, ajout du véhicule toujours possible', async () => {
+      mockState.ocrAvailability = 'active';
+      mockState.scanResult = { ok: false, error: 'ocr_busy' };
+      await takePaper();
+      expect(await screen.findByText(/Saisissez la date vous-même/)).toBeTruthy();
+      await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+      await waitFor(() => expect(mockState.created).toHaveLength(1));
+    });
+    it('papier retiré : plus rien n’est envoyé', async () => {
+      await takePaper();
+      await fireEvent.press(screen.getByLabelText('Retirer le papier : Assurance'));
+      await fireEvent.press(screen.getByText('Ajouter à ma flotte'));
+      await waitFor(() => expect(mockState.created).toHaveLength(1));
+      expect(mockState.uploaded.filter((args) => (args as unknown[])[2] === 'assurance')).toHaveLength(0);
+    });
   });
 
   it('doublon (plaque déjà dans la flotte, archivés compris) : ajout bloqué', async () => {
