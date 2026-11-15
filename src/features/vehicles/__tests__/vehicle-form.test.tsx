@@ -327,6 +327,19 @@ describe('« Modifier la fiche technique »', () => {
     expect(screen.getByText('Pas encore ajoutée')).toBeTruthy();
   });
 
+  it('documents : assurance expirée → « Expirée le … » (pas « Expire le ») ; seules des périodes à venir → « non couverte aujourd’hui »', async () => {
+    mockState.compliance = [{ id: 'c1', vehicleId: 'v1', kind: 'assurance', validFrom: null, validUntil: day(-5), documentPath: null, createdAt: '2026-01-01T00:00:00Z' }];
+    await render(<VehicleForm vehicle={base} />);
+    expect(screen.getByText(/^Expirée le /)).toBeTruthy();
+    expect(screen.queryByText(/^Expire le /)).toBeNull();
+  });
+
+  it('documents : seules des périodes à venir → « Aucune période ne couvre aujourd’hui »', async () => {
+    mockState.compliance = [{ id: 'c1', vehicleId: 'v1', kind: 'assurance', validFrom: day(400), validUntil: day(765), documentPath: null, createdAt: '2026-01-01T00:00:00Z' }];
+    await render(<VehicleForm vehicle={base} />);
+    expect(screen.getByText("Aucune période ne couvre aujourd'hui")).toBeTruthy();
+  });
+
   it('scanner la carte grise : photo trop petite → refusée avec « Reprendre », rien n’est ajouté', async () => {
     mockState.photoCheck = { ok: false, reason: 'too_small' };
     await render(<VehicleForm vehicle={base} />);

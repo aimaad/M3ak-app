@@ -4089,6 +4089,7 @@
         "assurance": "Assurance",
         "visite_technique": "Visite technique",
         "expires": "Expire le {{date}}",
+        "expired": "Expirée le {{date}}",
         "none": "Pas encore ajoutée",
         "view": "Voir",
         "scan": "Scanner",

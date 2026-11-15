@@ -4193,6 +4193,7 @@
         "assurance": "التأمين",
         "visite_technique": "الفحص التقني",
         "expires": "ينتهي في {{date}}",
+        "expired": "انتهت في {{date}}",
         "none": "لم تُضف بعد",
         "view": "عرض",
         "scan": "مسح",

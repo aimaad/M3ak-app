@@ -327,7 +327,12 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
   const docRow = (kind: 'assurance' | 'visite_technique', status: typeof insuranceStatus, thumb: string | null) => ({
     key: kind,
     name: t(`vehicleForm.edit.docs.${kind}`),
-    sub: status.record ? t('vehicleForm.edit.docs.expires', { date: dateText(status.record.validUntil) }) : t('vehicleForm.edit.docs.none'),
+    // « Expire le … » seulement si la période n'est pas finie ; sinon « Expirée le … » ; seules des périodes à venir : « non couverte aujourd'hui ».
+    sub: status.record
+      ? t(status.state === 'expired' ? 'vehicleForm.edit.docs.expired' : 'vehicleForm.edit.docs.expires', { date: dateText(status.record.validUntil) })
+      : status.uncovered
+        ? t('vehicleDetail.compliance.uncoveredToday')
+        : t('vehicleForm.edit.docs.none'),
     thumbUri: thumb,
     action: { label: status.record ? t('vehicleForm.edit.docs.view') : t('vehicleForm.edit.docs.scan'), tone: status.record ? ('neutral' as const) : ('primary' as const), onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id } }) },
   });
