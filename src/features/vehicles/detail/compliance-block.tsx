@@ -67,12 +67,9 @@ export function statusLine(status: ComplianceStatus, t: T, language: string): st
   return status.state === 'valid' ? `${range}${renewed}` : `${range} · ${t(status.days === 1 ? 'vehicleDetail.compliance.daysLeftOne' : 'vehicleDetail.compliance.daysLeft', { n: status.days })}${renewed}`;
 }
 
-function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUri, onPick, withPhoto }: { kind: ComplianceKind; draft: RenewalDraft; setDraft: (draft: RenewalDraft) => void; errors: RenewalErrors; showAmount: boolean; currentEnd: string | null; localUri: string | null; onPick: (uri: string) => void; withPhoto: boolean }) {
+/** Photo du papier (FACULTATIVE) : l'employé la prend s'il le souhaite ; elle remplace l'ancien papier de cette obligation. */
+function PaperPhoto({ localUri, onPick }: { localUri: string | null; onPick: (uri: string) => void }) {
   const { t } = useLanguage();
-  const message = (field: keyof RenewalErrors) => {
-    const code = errors[field];
-    return code ? t(`vehicleDetail.compliance.errors.${code}`, { date: currentEnd ? toDisplayDate(currentEnd) : '' }) : undefined;
-  };
   const [camera, setCamera] = useState(false);
   const [photoProblem, setPhotoProblem] = useState<'too_small' | 'unreadable' | null>(null);
   async function onCaptured(uri: string) {
@@ -85,6 +82,27 @@ function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUr
     setPhotoProblem(null);
     onPick(uri);
   }
+  return (
+    <View style={{ gap: 8 }}>
+      <View style={{ flexDirection: 'row' }}>
+        <DocumentSlot label={t('vehicleDetail.compliance.photo')} uri={localUri} onScan={() => setCamera(true)} onReplace={() => setCamera(true)} />
+      </View>
+      {photoProblem ? (
+        <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
+          {t(photoProblem === 'too_small' ? 'vehicleForm.edit.scan.tooSmall' : 'vehicleForm.edit.scan.unreadable')}
+        </HText>
+      ) : null}
+      <CameraCapture visible={camera} onClose={() => setCamera(false)} onCapture={(uri) => void onCaptured(uri)} hint={t('vehicleDetail.compliance.photoHint')} />
+    </View>
+  );
+}
+
+function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUri, onPick, withPhoto }: { kind: ComplianceKind; draft: RenewalDraft; setDraft: (draft: RenewalDraft) => void; errors: RenewalErrors; showAmount: boolean; currentEnd: string | null; localUri: string | null; onPick: (uri: string) => void; withPhoto: boolean }) {
+  const { t } = useLanguage();
+  const message = (field: keyof RenewalErrors) => {
+    const code = errors[field];
+    return code ? t(`vehicleDetail.compliance.errors.${code}`, { date: currentEnd ? toDisplayDate(currentEnd) : '' }) : undefined;
+  };
   const show = Object.keys(errors).length > 0;
   return (
     <View style={{ gap: 16 }}>
@@ -93,19 +111,7 @@ function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUr
       <FormField label={t(`vehicleDetail.compliance.ref.${kind}`)} value={draft.reference} onChangeText={(value) => setDraft({ ...draft, reference: value })} placeholder={t(`vehicleDetail.compliance.refPlaceholder.${kind}`)} error={message('reference')} showError={show} ltr />
       {kind !== 'vignette' ? <FormField label={t(`vehicleDetail.compliance.provider.${kind}`)} value={draft.provider} onChangeText={(value) => setDraft({ ...draft, provider: value })} placeholder={t(`vehicleDetail.compliance.providerPlaceholder.${kind}`)} error={message('provider')} showError={show} autoCapitalize="words" /> : null}
       {showAmount ? <FormField label={t('vehicleDetail.compliance.amount')} value={draft.amount} onChangeText={(value) => setDraft({ ...draft, amount: value.replace(/[^\d.,]/g, '') })} keyboardType="decimal-pad" unit="MAD" placeholder={t('vehicleDetail.compliance.amountPlaceholder')} error={message('amount')} showError={show} /> : null}
-      {withPhoto ? (
-        <View style={{ gap: 8 }}>
-          <View style={{ flexDirection: 'row' }}>
-            <DocumentSlot label={t('vehicleDetail.compliance.photo')} uri={localUri} onScan={() => setCamera(true)} onReplace={() => setCamera(true)} />
-          </View>
-          {photoProblem ? (
-            <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
-              {t(photoProblem === 'too_small' ? 'vehicleForm.edit.scan.tooSmall' : 'vehicleForm.edit.scan.unreadable')}
-            </HText>
-          ) : null}
-          <CameraCapture visible={camera} onClose={() => setCamera(false)} onCapture={(uri) => void onCaptured(uri)} hint={t('vehicleDetail.compliance.photoHint')} />
-        </View>
-      ) : null}
+      {withPhoto ? <PaperPhoto localUri={localUri} onPick={onPick} /> : null}
       <FormField label={t('vehicleDetail.compliance.notes')} value={draft.notes} onChangeText={(value) => setDraft({ ...draft, notes: value })} placeholder={t('vehicleDetail.compliance.notesPlaceholder')} multiline />
     </View>
   );
@@ -242,6 +248,7 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
   const [year, setYear] = useState(defaultYear);
   const [error, setError] = useState<string | null>(null);
   const [doneUntil, setDoneUntil] = useState<string | null>(null);
+  const [localUri, setLocalUri] = useState<string | null>(null);
   const period = kind === 'vignette' ? { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` } : suggestion;
 
   function confirm() {
@@ -249,7 +256,7 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
     if (!agency.data) return;
     const draft = renewalDraft(period);
     renew.mutate(
-      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, draft, null, kind === 'vignette' ? null : periodOf(kind, current, settings)), localDocumentUri: null },
+      { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, draft, null, kind === 'vignette' ? null : periodOf(kind, current, settings)), localDocumentUri: localUri },
       {
         onSuccess: () => {
           setDoneUntil(period.validUntil);
@@ -289,6 +296,7 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
           {current ? t('vehicleDetail.compliance.quickNote', { date: dayLabel(current.validUntil, language) }) : t('vehicleDetail.compliance.quickNoteNone')}
         </HText>
       ) : null}
+      {kind !== 'vignette' ? <PaperPhoto localUri={localUri} onPick={setLocalUri} /> : null}
       {error ? (
         <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
           {error}

@@ -1142,6 +1142,18 @@ describe('fiche véhicule', () => {
       });
     });
 
+    it('« Fait » rapide : le nouveau papier est facultatif et, s’il est pris, il remplace l’ancien', async () => {
+      mockState.compliance = [record({ periodMonths: 12 })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      await fireEvent.press(screen.getByLabelText('Enregistrer cette période')); // sans photo : accepté
+      expect((mockState.renewCalls[0] as { localDocumentUri: string | null }).localDocumentUri).toBeNull();
+      await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
+      await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+      expect((mockState.renewCalls[1] as { localDocumentUri: string | null }).localDocumentUri).toBe('file:///papier.jpg');
+    });
+
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {
       mockState.compliance = [record({})];
       await render(<VehicleDetailScreen />);

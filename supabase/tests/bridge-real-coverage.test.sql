@@ -25,7 +25,8 @@ insert into agency_members (agency_id, user_id, role, nom_complet) values ('aaaa
 insert into vehicles (id, agency_id, immatriculation, marque, modele, prix_jour, documents) values
   ('f1000000-0000-0000-0000-000000000001', 'aaaaaaaa-0000-0000-0000-000000000001', '1-A-1', 'Dacia', 'Logan', 300, '[{"type":"assurance","path":"","uploadedAt":"2026-01-01T00:00:00Z","expiresAt":"2020-01-01"}]'),
   ('f2000000-0000-0000-0000-000000000002', 'aaaaaaaa-0000-0000-0000-000000000001', '2-A-2', 'Kia', 'Rio', 300, '[{"type":"assurance","path":"","uploadedAt":"2026-01-01T00:00:00Z","expiresAt":"2020-01-01"}]'),
-  ('f3000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '3-A-3', 'Fiat', 'Tipo', 300, '[{"type":"assurance","path":"","uploadedAt":"2026-01-01T00:00:00Z","expiresAt":"2020-01-01"}]');
+  ('f3000000-0000-0000-0000-000000000003', 'aaaaaaaa-0000-0000-0000-000000000001', '3-A-3', 'Fiat', 'Tipo', 300, '[{"type":"assurance","path":"","uploadedAt":"2026-01-01T00:00:00Z","expiresAt":"2020-01-01"}]'),
+  ('f4000000-0000-0000-0000-000000000004', 'aaaaaaaa-0000-0000-0000-000000000001', '4-A-4', 'Seat', 'Ibiza', 300, '[{"type":"assurance","path":"old/paper.jpg","uploadedAt":"2026-01-01T00:00:00Z","expiresAt":"2020-01-01"}]');
 set session_replication_role = origin;
 
 -- 1 : SEULEMENT une période à venir (dans 400 jours) ; 2 : en cours (finit dans 20 j) + suivante enchaînée (dans 385 j) ; 3 : terminée il y a 5 j + à venir dans 100 j.
@@ -45,6 +46,17 @@ select pg_temp.ck('trou de couverture : échéance et document = fin de la derni
   and (select documents -> 0 ->> 'expiresAt' = (current_date - 5)::text from vehicles where id = 'f3000000-0000-0000-0000-000000000003'));
 
 select pg_temp.ck('le chat voit l''assurance du trou de couverture (3-A-3) parmi les documents expirés, pas celle du véhicule couvert (2-A-2)', (select position('3-A-3' in (public.chat_tool_fleet_alerts(30) -> 'expired_documents')::text) > 0 and position('2-A-2' in (public.chat_tool_fleet_alerts(30) -> 'expired_documents')::text) = 0));
+
+-- Un renouvellement REMPLACE le papier (la photo est facultative) : l'ancien papier périmé ne reste jamais rattaché à la nouvelle date.
+insert into vehicle_compliance (agency_id, vehicle_id, kind, valid_from, valid_until, document_path) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'f4000000-0000-0000-0000-000000000004', 'assurance', current_date - 300, current_date - 10, 'old/paper.jpg');
+select pg_temp.ck('papier : la période avec photo range sa photo dans le document', (select documents -> 0 ->> 'path' = 'old/paper.jpg' from vehicles where id = 'f4000000-0000-0000-0000-000000000004'));
+insert into vehicle_compliance (agency_id, vehicle_id, kind, valid_from, valid_until) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'f4000000-0000-0000-0000-000000000004', 'assurance', current_date - 9, current_date + 355);
+select pg_temp.ck('papier : renouvellement SANS photo → l''ancien papier périmé est retiré (chemin vide)', (select documents -> 0 ->> 'path' = '' and documents -> 0 ->> 'expiresAt' = (current_date + 355)::text from vehicles where id = 'f4000000-0000-0000-0000-000000000004'));
+insert into vehicle_compliance (agency_id, vehicle_id, kind, valid_from, valid_until, document_path) values
+  ('aaaaaaaa-0000-0000-0000-000000000001', 'f4000000-0000-0000-0000-000000000004', 'assurance', current_date + 356, current_date + 720, 'new/paper.jpg');
+select pg_temp.ck('papier : renouvellement AVEC photo → le nouveau papier remplace l''ancien', (select documents -> 0 ->> 'path' = 'new/paper.jpg' from vehicles where id = 'f4000000-0000-0000-0000-000000000004'));
 
 -- Le temps passe sans écriture : dans 30 jours, la période du véhicule 1 est encore à venir ; dans 410 jours elle est en cours.
 select public.refresh_compliance_bridge(now() + interval '30 days');
