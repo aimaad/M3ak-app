@@ -16,7 +16,7 @@ import { useUpdateVehicleDocuments } from '../hooks';
 import { describeSaveError } from '../save-error';
 import type { Vehicle } from '../types';
 import { fromIsoDate, toIsoDate } from '../validation';
-import { ComplianceBlock, RenewalEntry } from './compliance-block';
+import { ComplianceBlock } from './compliance-block';
 import { ADDABLE_DUE_TYPES, draftOf, dueAlreadyPassed, effectiveDue, emptyDraft, planDueSave, REPEATABLE_TYPES, validateDue, type DueDraft } from './dues-edit';
 import type { DueRow } from './dues';
 
@@ -131,10 +131,7 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
 }
 
 /** Un seul point d'entrée : les 4 entretiens ET les 3 obligations (assurance, visite technique, vignette). */
-const LEGAL_KINDS: ComplianceKind[] = ['assurance', 'visite_technique', 'vignette'];
-const LEGAL_ICON: Record<ComplianceKind, keyof typeof Ionicons.glyphMap> = { assurance: 'shield-checkmark-outline', visite_technique: 'clipboard-outline', vignette: 'receipt-outline' };
-type AddType = MaintenanceType | ComplianceKind;
-const isLegal = (type: AddType | null): type is ComplianceKind => type !== null && (LEGAL_KINDS as string[]).includes(type);
+type AddType = MaintenanceType;
 
 /** Ajout d'une échéance : on choisit le type (entretien ou obligation), puis les champs apparaissent — dans la carte, sans changer de page. */
 function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClose: () => void }) {
@@ -145,7 +142,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
   const [draft, setDraft] = useState<DueDraft>(emptyDraft);
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const maintenanceType = type !== null && !isLegal(type) ? type : null;
+  const maintenanceType = type;
   const plan = planDueSave({ type: maintenanceType ?? 'autre' }, { documents: [] }, draft);
 
   function save() {
@@ -159,8 +156,8 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
   }
 
   const options = [
+    // Assurance, visite technique et vignette sont déjà listées juste au-dessus (« À compléter » si absentes) : jamais proposées ici.
     ...ADDABLE_DUE_TYPES.map((value) => ({ value: value as AddType, label: t(`maintenance.types.${value}`), icon: (DUE_TYPE_IMAGE[value] ?? 'ellipse-outline') as TileIcon })),
-    ...LEGAL_KINDS.map((value) => ({ value: value as AddType, label: t(`vehicleDetail.compliance.kind.${value}`), icon: LEGAL_ICON[value] as TileIcon })),
   ];
 
   return (
@@ -169,9 +166,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
         {t('vehicleDetail.dues.edit.addTitle')}
       </HText>
       <ChoiceTiles<AddType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={setType} options={options} />
-      {isLegal(type) ? (
-        <RenewalEntry vehicle={vehicle} kind={type} now={now} onDone={onClose} />
-      ) : maintenanceType ? (
+      {maintenanceType ? (
         <>
           <DueFields type={maintenanceType} vehicle={vehicle} draft={draft} setDraft={setDraft} showErrors={showErrors} now={now} />
           <DueActions onSave={save} onCancel={onClose} busy={create.isPending} error={error} />

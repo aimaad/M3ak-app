@@ -668,17 +668,12 @@ describe('fiche véhicule', () => {
       expect(screen.queryByLabelText("Nom de l'entretien")).toBeNull();
     });
 
-    it('un point d’entrée unique : l’assurance, la visite et la vignette se choisissent aussi sous « + Ajouter »', async () => {
+    it('pas de doublon : l’assurance, la visite et la vignette ne sont pas proposées sous « + Ajouter » (elles sont déjà listées)', async () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
-      expect(screen.getByLabelText('Vignette', hidden)).toBeTruthy();
-      await fireEvent.press(screen.getByLabelText('Assurance', hidden));
-      expect(screen.getByText('Enregistrer : Assurance')).toBeTruthy(); // même formulaire que dans la ligne de l'obligation
-      const end = new Date(); end.setDate(end.getDate() + 300);
-      await pickDate(/^Fin de validité/, end);
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
-      expect(mockState.renewCalls).toHaveLength(1);
-      expect(mockState.renewCalls[0]).toMatchObject({ input: { kind: 'assurance', vehicleId: 'v1' } });
+      expect(screen.getAllByText('Vidange').length).toBeGreaterThan(0);
+      expect(screen.queryByLabelText('Vignette', hidden)).toBeNull();
+      expect(screen.queryByLabelText('Visite technique', hidden)).toBeNull();
     });
 
     it('la note est repliée : « + Ajouter une note » la déplie', async () => {
