@@ -934,6 +934,49 @@ describe('fiche véhicule', () => {
     const day = (delta: number) => { const d = new Date(); d.setDate(d.getDate() + delta); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
     const record = (extra: Record<string, unknown>) => ({ id: 'c1', agencyId: 'a1', vehicleId: 'v1', kind: 'assurance', validFrom: day(-300), validUntil: day(65), reference: null, provider: null, amount: null, documentPath: 'p.jpg', notes: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
 
+    it('assurance expirée : alerte rouge « À régulariser » en haut de la fiche, avec le nombre de jours', async () => {
+      mockState.compliance = [record({ validUntil: day(-10) })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText('À régulariser')).toBeTruthy();
+      expect(screen.getByText(/^Assurance expirée depuis 10 jours \(le /)).toBeTruthy();
+      expect(screen.getByText(/BIBIP ne bloque rien, mais cela ne vaut pas autorisation légale/)).toBeTruthy();
+    });
+
+    it('« Régulariser » ouvre le renouvellement de l’obligation expirée ; tout le reste de la fiche reste utilisable', async () => {
+      mockState.compliance = [record({ validUntil: day(-10) })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByLabelText('Renouveler')).toBeNull(); // pas encore ouvert
+      await fireEvent.press(screen.getByLabelText('Régulariser'));
+      expect(screen.getByLabelText('Renouveler')).toBeTruthy();
+      expect(screen.getByLabelText('+ Ajouter')).toBeTruthy(); // rien n'est bloqué
+      expect(screen.getByLabelText('Louer : Dacia Logan')).toBeTruthy();
+    });
+
+    it('visite technique expirée aussi ; les deux : deux lignes', async () => {
+      mockState.compliance = [record({ validUntil: day(-10) }), record({ id: 'c2', kind: 'visite_technique', validUntil: day(-1) })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.getByText(/^Assurance expirée depuis 10 jours/)).toBeTruthy();
+      expect(screen.getByText(/^Visite technique expirée depuis 1 jour /)).toBeTruthy();
+    });
+
+    it('pas à régulariser : « À compléter » (rien d’enregistré), valable, bientôt expirée, vignette en retard', async () => {
+      mockState.compliance = [];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText('À régulariser')).toBeNull(); // « À compléter » n'est pas une preuve d'expiration
+    });
+
+    it('assurance valable ou renouvelée : plus d’alerte', async () => {
+      mockState.compliance = [record({ validUntil: day(-10) }), record({ id: 'c3', validUntil: day(300) })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText('À régulariser')).toBeNull();
+    });
+
+    it('la vignette expirée n’est jamais « à régulariser »', async () => {
+      mockState.compliance = [record({ id: 'c4', kind: 'vignette', validFrom: '2020-01-01', validUntil: '2020-12-31' })];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByText('À régulariser')).toBeNull();
+    });
+
     it('trois obligations, « À compléter » quand rien n’est enregistré', async () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getByText('OBLIGATIONS LÉGALES')).toBeTruthy();

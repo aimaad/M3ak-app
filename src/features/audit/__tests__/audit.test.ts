@@ -22,6 +22,16 @@ const base: AuditEntry = {
 };
 
 describe('describeAuditEntry', () => {
+  it('remise d’un véhicule « à régulariser » : dit l’assurance et/ou la visite expirées', () => {
+    const entry = { ...base, action: 'rental_started_noncompliant', details: { vehicle: 'Dacia Logan', customer: 'Fouad B.', issues: [{ kind: 'assurance', valid_until: '2026-01-01' }, { kind: 'visite_technique', valid_until: '2026-02-01' }] } };
+    const text = describeAuditEntry(entry, t);
+    expect(text).toContain('À RÉGULARISER');
+    expect(text).toContain('Sara');
+    expect(text).toContain('Dacia Logan');
+    expect(text).toContain('Assurance, Visite technique');
+    expect(text).not.toContain('—');
+  });
+
   it('décrit une location en français lisible', () => {
     const text = describeAuditEntry(base, t);
     expect(text).toContain('Sara');

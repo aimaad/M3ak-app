@@ -20,6 +20,7 @@ import { archiveReasonText, ArchiveSection } from '@/features/vehicles/detail/ar
 import { calendarDays, cashedLast30, monthlyRevenue, rentalsSinceAdded, revenueLast30, type CalendarTap } from '@/features/vehicles/detail/figures';
 import { FourteenDays, KeyFigures } from '@/features/vehicles/detail/figures-view';
 import { useVehicleCompliance } from '@/features/compliance/hooks';
+import { regularizationIssues } from '@/features/compliance/logic';
 import { useVehicleInspections } from '@/features/inspections/hooks';
 import { buildDues } from '@/features/vehicles/detail/dues';
 import { buildHistory, type HistoryEvent } from '@/features/vehicles/detail/history';
@@ -31,6 +32,7 @@ import { DetailHeader } from '@/features/vehicles/detail/detail-header';
 import { displayName } from '@/features/vehicles/detail/names';
 import { shareMessage } from '@/features/vehicles/detail/share';
 import { MoreMenu, ReasonSheet } from '@/features/vehicles/detail/sheets';
+import { RegularizeBanner } from '@/features/vehicles/detail/regularize-banner';
 import { StateCardView } from '@/features/vehicles/detail/state-card-view';
 import { buildStateCard, statusBadge, type StateAction } from '@/features/vehicles/detail/state-card';
 import { useVehicleDetail } from '@/features/vehicles/detail/use-vehicle-detail';
@@ -39,7 +41,7 @@ import { availabilityAlertList, availabilityAlerts, isStatusLockedError, statusB
 import { useLanguage } from '@/i18n/use-language';
 
 export default function VehicleDetailScreen() {
-  const { id, section: sectionParam, edit: editParam } = useLocalSearchParams<{ id: string; section?: string; edit?: string }>();
+  const { id, section: sectionParam, edit: editParam, regulariser } = useLocalSearchParams<{ id: string; section?: string; edit?: string; regulariser?: string }>();
   const { t, language } = useLanguage();
   // Anciens liens « ?edit=… » : l'édition se fait maintenant dans « Modifier la fiche technique ».
   useEffect(() => {
@@ -81,6 +83,9 @@ export default function VehicleDetailScreen() {
   const [statusError, setStatusError] = useState<string | null>(null);
   // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
   const [entretienY, setEntretienY] = useState(0);
+  // « Régulariser » : on descend jusqu'aux échéances et on ouvre l'obligation à renouveler (aussi depuis la location : ?regulariser=assurance).
+  const [duesY, setDuesY] = useState(0);
+  const [openKind, setOpenKind] = useState<'assurance' | 'visite_technique' | 'vignette' | null>(regulariser === 'assurance' || regulariser === 'visite_technique' || regulariser === 'vignette' ? regulariser : null);
   const onSectionLayout = (name: 'photos' | 'documents' | 'entretien') => (event: Parameters<ReturnType<typeof onSectionLayoutAuto>>[0]) => {
     if (name === 'entretien') setEntretienY(event.nativeEvent.layout.y);
     onSectionLayoutAuto(name)(event);
@@ -270,6 +275,13 @@ export default function VehicleDetailScreen() {
           </DetailHeader>
 
           <View className="gap-6 px-6 pb-10 pt-6">
+            <RegularizeBanner
+              issues={regularizationIssues(complianceQuery.data ?? [], vehicle, now)}
+              onRegularize={(kind) => {
+                setOpenKind(kind);
+                scrollRef.current?.scrollTo({ y: Math.max(0, duesY - 12), animated: true });
+              }}
+            />
             {figures ? (
               <>
                 <KeyFigures
@@ -280,7 +292,9 @@ export default function VehicleDetailScreen() {
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>
             ) : null}
-            <DuesSection vehicle={vehicle} rows={figures?.dues ?? []} now={now} />
+            <View onLayout={(event) => setDuesY(event.nativeEvent.layout.y)}>
+              <DuesSection key={openKind ?? 'none'} vehicle={vehicle} rows={figures?.dues ?? []} now={now} openKind={openKind} />
+            </View>
             <SpecsGrid tiles={buildSpecs(vehicle)} description={vehicle.description?.trim() || null} onEdit={goEdit} onTile={goEdit} />
             <HistoryCard events={history.slice(0, 4)} onOpen={openEvent} onSeeAll={() => router.push({ pathname: '/flotte/[id]/historique', params: { id: vehicle.id } })} />
             {showPrice ? (

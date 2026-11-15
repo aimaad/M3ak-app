@@ -4,7 +4,7 @@ type T = (key: string, params?: Record<string, unknown>) => string;
 
 /** Actions qui ont un texte dédié ; toute autre action affiche un texte générique, jamais un code technique. */
 const KNOWN_ACTIONS = new Set([
-  'rental_created', 'rental_confirmed', 'rental_started', 'rental_completed', 'rental_cancelled', 'rental_status_changed', 'rental_dates_changed',
+  'rental_created', 'rental_confirmed', 'rental_started', 'rental_started_noncompliant', 'rental_completed', 'rental_cancelled', 'rental_status_changed', 'rental_dates_changed',
   'payment_recorded', 'payment_status_changed',
   'customer_created', 'customer_updated', 'customer_archived', 'customer_reactivated',
   'customer_document_added', 'customer_document_deleted', 'customer_note_added', 'customer_note_edited', 'customer_note_deleted',
@@ -47,7 +47,13 @@ export function describeAuditEntry(entry: AuditEntry, t: T): string {
     ? details.fields.filter((f): f is string => typeof f === 'string' && CUSTOMER_FIELDS.has(f)).map((f) => t(`journal.fields.${f}`))
     : [];
 
+  // Remise d'un véhicule « À régulariser » : les obligations expirées (assurance, visite technique).
+  const issues = Array.isArray(details.issues)
+    ? details.issues.map((issue) => (issue && typeof issue === 'object' ? str((issue as { kind?: unknown }).kind) : null)).filter((kind): kind is string => !!kind).map((kind) => t(`vehicleDetail.compliance.kind.${kind}`))
+    : [];
+
   return t(`journal.actions.${action}`, {
+    issues: issues.length ? issues.join(', ') : '—',
     actor,
     target: entry.targetLabel ?? '—',
     vehicle: str(details.vehicle) ?? '—',

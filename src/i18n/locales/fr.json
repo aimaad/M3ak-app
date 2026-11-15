@@ -2498,7 +2498,8 @@
       "ai_insights_toggled": "{{actor}} a modifié les analyses et recommandations de l'accueil : {{state}}",
       "unknown": "{{actor}} a effectué une action",
       "contract_template_saved": "{{actor}} a enregistré le modèle de contrat de l'agence",
-      "contract_template_removed": "{{actor}} est revenu au modèle de contrat standard"
+      "contract_template_removed": "{{actor}} est revenu au modèle de contrat standard",
+      "rental_started_noncompliant": "{{actor}} a remis un véhicule À RÉGULARISER : location {{target}} ({{vehicle}}, {{customer}}). Expiré : {{issues}}"
     }
   },
   "ocr": {
@@ -3735,7 +3736,18 @@
       "quickDetails": "Avec détails (papier, montant…)",
       "durationUnit": "mois",
       "durationPlaceholder": "ex. 12",
-      "durationHelp": "Une fois réglée, la durée est reprise toute seule au prochain renouvellement."
+      "durationHelp": "Une fois réglée, la durée est reprise toute seule au prochain renouvellement.",
+      "regularize": {
+        "title": "À régulariser",
+        "footer": "BIBIP vous alerte mais ne bloque pas la location. Cela ne vaut pas autorisation légale de remettre un véhicule non conforme : régularisez avant de le remettre.",
+        "button": "Régulariser",
+        "banner": "À régulariser",
+        "bannerLine_assurance": "Assurance expirée depuis {{days}} jours (le {{date}}).",
+        "bannerLineOne_assurance": "Assurance expirée depuis 1 jour (le {{date}}).",
+        "bannerLine_visite_technique": "Visite technique expirée depuis {{days}} jours (le {{date}}).",
+        "bannerLineOne_visite_technique": "Visite technique expirée depuis 1 jour (le {{date}}).",
+        "bannerNote": "L'alerte reste visible jusqu'à la régularisation (un renouvellement enregistré). BIBIP ne bloque rien, mais cela ne vaut pas autorisation légale de remettre ce véhicule."
+      }
     },
     "statusBlock": {
       "title": "Statut impossible à changer",

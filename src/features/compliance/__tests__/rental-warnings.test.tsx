@@ -49,11 +49,37 @@ describe('avertissements avant location', () => {
     expect(screen.queryByText('À vérifier avant de louer')).toBeNull();
   });
 
-  it('assurance expirée : avertissement avec la date, et la location reste possible (simple avertissement)', async () => {
+  it('assurance expirée : alerte ROUGE « À régulariser » avec la date, bouton « Régulariser », la location reste possible', async () => {
     mockState.records = [rec('assurance', ymd(-3)), rec('visite_technique', ymd(400)), rec('vignette', `${year}-12-31`)];
     await render(<RentalComplianceWarnings vehicleId="v1" start={iso(1)} end={iso(5)} />);
-    expect(screen.getByText('À vérifier avant de louer')).toBeTruthy();
+    expect(screen.getByText('À régulariser')).toBeTruthy();
     expect(screen.getByText(/^• Assurance expirée depuis le /)).toBeTruthy();
+    expect(screen.getByText(/BIBIP vous alerte mais ne bloque pas la location\. Cela ne vaut pas autorisation légale/)).toBeTruthy();
+    expect(screen.queryByText('À vérifier avant de louer')).toBeNull(); // rien d'orange en plus
+    await fireEvent.press(screen.getByText('Régulariser'));
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]', params: { id: 'v1', regulariser: 'assurance' } });
+  });
+
+  it('visite technique expirée : aussi à régulariser', async () => {
+    mockState.records = [rec('assurance', ymd(400)), rec('visite_technique', ymd(-10)), rec('vignette', `${year}-12-31`)];
+    await render(<RentalComplianceWarnings vehicleId="v1" start={iso(1)} end={iso(5)} />);
+    expect(screen.getByText('À régulariser')).toBeTruthy();
+    expect(screen.getByText(/^• Visite technique expirée depuis le /)).toBeTruthy();
+  });
+
+  it('expirée + vignette en retard : le rouge pour l’assurance, l’orange seulement pour le reste', async () => {
+    mockState.records = [rec('assurance', ymd(-3)), rec('visite_technique', ymd(400)), rec('vignette', `${year - 2}-12-31`)];
+    await render(<RentalComplianceWarnings vehicleId="v1" start={iso(1)} end={iso(5)} />);
+    expect(screen.getByText('À régulariser')).toBeTruthy();
+    expect(screen.getByText('À vérifier avant de louer')).toBeTruthy();
+    expect(screen.getByText(/^• Vignette non renouvelée/)).toBeTruthy();
+  });
+
+  it('« À compléter » (aucune assurance enregistrée) : avertissement orange seulement, jamais « à régulariser »', async () => {
+    mockState.records = [rec('visite_technique', ymd(400)), rec('vignette', `${year}-12-31`)];
+    await render(<RentalComplianceWarnings vehicleId="v1" start={iso(1)} end={iso(5)} />);
+    expect(screen.queryByText('À régulariser')).toBeNull();
+    expect(screen.getByText('À vérifier avant de louer')).toBeTruthy();
     expect(screen.getByText('Simple avertissement : la location reste possible.')).toBeTruthy();
   });
 

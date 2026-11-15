@@ -351,14 +351,14 @@ function HistoryRow({ vehicle, record, isCurrent, canManage, showAmount }: { veh
 }
 
 /** Les trois obligations d'un véhicule : état du jour, période en cours, renouvellement et historique, tout sur place. */
-export function ComplianceBlock({ vehicle, now }: { vehicle: Vehicle; now: Date }) {
+export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Vehicle; now: Date; openKind?: ComplianceKind | null }) {
   const { t, language } = useLanguage();
   const agency = useMyAgency();
   const recordsQuery = useVehicleCompliance(vehicle.id);
   const { settings } = useComplianceSettings(agency.data?.agencyId);
   // Une obligation désactivée dans les règles de l'agence n'est plus proposée.
   const enabled = enabledKinds(useDueRules().rows);
-  const [open, setOpen] = useState<ComplianceKind | null>(null);
+  const [open, setOpen] = useState<ComplianceKind | null>(openKind);
   const [mode, setMode] = useState<'view' | 'renew'>('view');
   const records = recordsQuery.data ?? [];
   const statuses = allStatuses(records, vehicle, now);

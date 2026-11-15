@@ -251,7 +251,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
  * Échéances complètes, modifiables SUR PLACE : une ligne par échéance (assurance, visite technique, entretiens) ; un toucher la déplie
  * pour corriger la date et le kilométrage ; « + Ajouter » ouvre le formulaire dans la carte.
  */
-export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle; rows: DueRow[]; now: Date }) {
+export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { vehicle: Vehicle; rows: DueRow[]; now: Date; openKind?: ComplianceKind | null }) {
   // L'assurance et la visite technique sont dans « Obligations légales » (ComplianceBlock) : ici, seulement les entretiens.
   const rows = allRows.filter((row) => row.type !== 'assurance' && row.type !== 'visite_technique');
   const { t, language } = useLanguage();
@@ -292,7 +292,7 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
         </Pressable>
       </View>
 
-      <ComplianceBlock vehicle={vehicle} now={now} />
+      <ComplianceBlock vehicle={vehicle} now={now} openKind={openKind} />
 
       <HText weight="semibold" size={11} track={0.14} color={Palette.textSecondary} style={{ marginTop: 12, marginBottom: 2 }}>
         {t('vehicleDetail.compliance.maintenance').toLocaleUpperCase()}

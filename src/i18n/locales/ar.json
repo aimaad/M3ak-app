@@ -2602,7 +2602,8 @@
       "ai_insights_toggled": "{{actor}} بدل التحاليل والتوصيات ديال الصفحة الرئيسية: {{state}}",
       "unknown": "{{actor}} دار عملية",
       "contract_template_saved": "{{actor}} سجل نموذج العقد ديال الوكالة",
-      "contract_template_removed": "{{actor}} رجع لنموذج العقد العادي"
+      "contract_template_removed": "{{actor}} رجع لنموذج العقد العادي",
+      "rental_started_noncompliant": "{{actor}} سلّم سيارة «للتسوية»: الكراء {{target}} ({{vehicle}}، {{customer}}). منتهٍ: {{issues}}"
     }
   },
   "ocr": {
@@ -3839,7 +3840,18 @@
       "quickDetails": "مع التفاصيل (الوثيقة، المبلغ…)",
       "durationUnit": "شهر",
       "durationPlaceholder": "مثال: 12",
-      "durationHelp": "بعد ضبطها تُعتمد المدة تلقائيًا عند التجديد المقبل."
+      "durationHelp": "بعد ضبطها تُعتمد المدة تلقائيًا عند التجديد المقبل.",
+      "regularize": {
+        "title": "للتسوية",
+        "footer": "BIBIP ينبّهكم لكنه لا يمنع الكراء. وهذا لا يُعدّ ترخيصًا قانونيًا لتسليم سيارة غير مطابقة: سوّوا الوضعية قبل التسليم.",
+        "button": "تسوية",
+        "banner": "للتسوية",
+        "bannerLine_assurance": "التأمين منتهٍ منذ {{days}} أيام (في {{date}}).",
+        "bannerLineOne_assurance": "التأمين منتهٍ منذ يوم واحد (في {{date}}).",
+        "bannerLine_visite_technique": "الفحص التقني منتهٍ منذ {{days}} أيام (في {{date}}).",
+        "bannerLineOne_visite_technique": "الفحص التقني منتهٍ منذ يوم واحد (في {{date}}).",
+        "bannerNote": "يبقى التنبيه ظاهرًا إلى حين التسوية (تجديد مسجَّل). BIBIP لا يمنع شيئًا، لكن هذا لا يُعدّ ترخيصًا قانونيًا لتسليم هذه السيارة."
+      }
     },
     "statusBlock": {
       "title": "لا يمكن تغيير الحالة",

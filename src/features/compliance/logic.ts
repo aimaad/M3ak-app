@@ -211,3 +211,22 @@ export function rentalWarnings(records: ComplianceRecord[], vehicle: { dateMiseE
   if (vignette.state === 'expired') warnings.push({ kind: 'vignette', code: 'expired', due: vignette.due });
   return warnings;
 }
+
+// ------------------------------------------------------------------ « À régulariser »
+
+export type RegularizationIssue = { kind: 'assurance' | 'visite_technique'; due: string; daysOver: number };
+
+/**
+ * Obligations CRITIQUES : assurance ou visite technique dont la période ENREGISTRÉE est expirée (la fin est dépassée). Le véhicule porte alors
+ * l'indicateur « À régulariser » jusqu'à la régularisation effective (un renouvellement enregistré). Une obligation « À compléter » (aucune
+ * période enregistrée) n'est pas une preuve d'expiration : avertissement seulement. La vignette n'est pas critique.
+ * BIBIP informe, il ne bloque rien ; l'absence de blocage n'est pas une autorisation légale de remettre un véhicule non conforme.
+ */
+export function regularizationIssues(records: ComplianceRecord[], vehicle: { dateMiseEnCirculation?: string | null }, now: Date): RegularizationIssue[] {
+  const issues: RegularizationIssue[] = [];
+  for (const kind of ['assurance', 'visite_technique'] as const) {
+    const status = complianceStatus(kind, records, vehicle, now);
+    if (status.state === 'expired' && status.due && status.days !== null) issues.push({ kind, due: status.due, daysOver: -status.days });
+  }
+  return issues;
+}

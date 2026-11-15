@@ -1,5 +1,5 @@
 import type { ComplianceRecord } from '../types';
-import { periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
+import { regularizationIssues, periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
 
 const NOW = new Date(2026, 10, 15, 12); // 15 nov. 2026
 const rec = (kind: ComplianceRecord['kind'], validUntil: string, extra: Partial<ComplianceRecord> = {}): ComplianceRecord => ({ id: `${kind}-${validUntil}`, agencyId: 'a', vehicleId: 'v', kind, validFrom: null, validUntil, reference: null, provider: null, amount: null, documentPath: null, notes: null, periodMonths: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
@@ -175,5 +175,25 @@ describe('périodes mémorisées', () => {
     expect(renewalEnd('assurance', '2026-12-27', 12)).toBe('2027-12-26');
     expect(renewalEnd('assurance', '2026-12-27', 3)).toBe('2027-03-26');
     expect(renewalEnd('visite_technique', '2026-11-15', 6)).toBe('2027-05-15');
+  });
+});
+
+describe('« À régulariser » : assurance ou visite technique expirée', () => {
+  it('une période enregistrée dont la fin est dépassée : à régulariser, avec le nombre de jours', () => {
+    const issues = regularizationIssues([rec('assurance', '2026-11-05'), rec('visite_technique', '2027-03-01')], vehicle, NOW);
+    expect(issues).toEqual([{ kind: 'assurance', due: '2026-11-05', daysOver: 10 }]);
+  });
+  it('les deux expirées : les deux', () => {
+    expect(regularizationIssues([rec('assurance', '2026-11-05'), rec('visite_technique', '2026-10-01')], vehicle, NOW).map((issue) => issue.kind)).toEqual(['assurance', 'visite_technique']);
+  });
+  it('expire aujourd’hui : encore valable, pas à régulariser', () => {
+    expect(regularizationIssues([rec('assurance', '2026-11-15')], vehicle, NOW)).toEqual([]);
+  });
+  it('« À compléter » (aucune période) : jamais à régulariser — avertissement seulement', () => {
+    expect(regularizationIssues([], vehicle, NOW)).toEqual([]);
+  });
+  it('renouvelée : plus à régulariser ; la vignette n’est jamais critique', () => {
+    expect(regularizationIssues([rec('assurance', '2026-11-05'), rec('assurance', '2027-11-04')], vehicle, NOW)).toEqual([]);
+    expect(regularizationIssues([rec('vignette', '2025-12-31')], vehicle, NOW)).toEqual([]);
   });
 });
