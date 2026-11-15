@@ -2165,8 +2165,7 @@
           "title": "Documents à mettre à jour",
           "empty": "Aucun document à mettre à jour.",
           "expired": "Expiré le {{date}}",
-          "soon": "Expire le {{date}}",
-          "uncovered": "Assurance ou visite non couverte aujourd'hui"
+          "soon": "Expire le {{date}}"
         }
       },
       "menu": {
@@ -3764,6 +3763,11 @@
         "read": "Papier lu : vérifiez les dates et les informations avant d'enregistrer.",
         "otherVehicle": "Attention : la plaque lue sur le papier semble différente de celle de ce véhicule.",
         "unfavorable": "Attention : ce contrôle technique semble défavorable (contre-visite)."
+      },
+      "askPaper": {
+        "assurance": "Prenez en photo la nouvelle attestation d'assurance, ou choisissez-la dans la galerie (facultatif).",
+        "visite_technique": "Prenez en photo le nouveau papier de visite technique, ou choisissez-le dans la galerie (facultatif).",
+        "vignette": "Prenez en photo la quittance de la vignette, ou choisissez-la dans la galerie (facultatif)."
       },
       "quickConfirm": "Enregistrer cette période",
       "quickNote": "Elle commence le lendemain de la fin de la période actuelle ({{date}}) et devient la période en cours. L'ancienne reste dans l'historique.",

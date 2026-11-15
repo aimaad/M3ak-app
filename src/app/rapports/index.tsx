@@ -23,7 +23,7 @@ import { useAllCompliance } from '@/features/compliance/hooks';
 import { regularizationByVehicle } from '@/features/compliance/logic';
 import { MaintenanceRow } from '@/features/maintenance/maintenance-row';
 import { useOcrSettings } from '@/features/ocr/hooks';
-import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
+import { documentListAlerts, vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
 import { useLanguage } from '@/i18n/use-language';
 
 type TabKey = 'finances' | 'activity' | 'fleet' | 'ai';
@@ -61,8 +61,8 @@ export default function RapportsScreen() {
   const complianceQuery = useAllCompliance();
   const toRegularize = useMemo(() => regularizationByVehicle(complianceQuery.data ?? [], vehicles, new Date()).size, [complianceQuery.data, vehicles]);
   const expiredDocuments = useMemo(
-    () => [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles, new Date(), 30, complianceQuery.data ?? [])].filter((a) => a.urgency === 'expire').length,
-    [customers, vehicles, complianceQuery.data]
+    () => [...customerDocumentAlerts(customers), ...documentListAlerts(vehicleDocumentAlerts(vehicles))].filter((a) => a.urgency === 'expire').length,
+    [customers, vehicles]
   );
   const rentalsQuery = useRentals();
   const conflicts = useMemo(

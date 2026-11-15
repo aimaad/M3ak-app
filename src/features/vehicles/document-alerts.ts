@@ -1,5 +1,3 @@
-import { complianceStatus, dayKey } from '@/features/compliance/logic';
-import type { ComplianceRecord } from '@/features/compliance/types';
 import { computeExpiryUrgency, type ExpiryUrgency } from '@/lib/expiry';
 
 import type { Vehicle, VehicleDocumentType } from './types';
@@ -10,20 +8,13 @@ export type VehicleDocumentAlert = {
   type: VehicleDocumentType;
   expiresAt: string;
   urgency: Exclude<ExpiryUrgency, 'ok'>;
-  /** Aucune période d'assurance / visite ne couvre aujourd'hui (seules des périodes à venir existent) : « non couverte » plutôt que « expiré le … ». */
-  uncovered?: boolean;
 };
 
-/**
- * Documents véhicule expirés ou proches de l'expiration, triés par échéance la plus proche.
- * Avec les périodes (`compliance`), on y ajoute aussi l'assurance ou la visite que RIEN ne couvre aujourd'hui alors que des périodes à venir
- * existent : la date du document est alors une fin lointaine, qui ferait croire que tout va bien.
- */
+/** Documents véhicule expirés ou proches de l'expiration, triés par échéance la plus proche. */
 export function vehicleDocumentAlerts(
   vehicles: Vehicle[],
   today: Date = new Date(),
-  dueSoonDays = 30,
-  compliance?: ComplianceRecord[]
+  dueSoonDays = 30
 ): VehicleDocumentAlert[] {
   const alerts: VehicleDocumentAlert[] = [];
 
@@ -42,19 +33,14 @@ export function vehicleDocumentAlerts(
     }
   }
 
-  if (compliance) {
-    const byVehicle = new Map<string, ComplianceRecord[]>();
-    for (const record of compliance) byVehicle.set(record.vehicleId, [...(byVehicle.get(record.vehicleId) ?? []), record]);
-    for (const vehicle of vehicles) {
-      if (vehicle.archivedAt) continue;
-      for (const kind of ['assurance', 'visite_technique'] as const) {
-        const status = complianceStatus(kind, byVehicle.get(vehicle.id) ?? [], vehicle, today);
-        if (!status.uncovered || status.record) continue;
-        if (alerts.some((alert) => alert.vehicleId === vehicle.id && alert.type === kind)) continue;
-        alerts.push({ vehicleId: vehicle.id, vehicleLabel: `${vehicle.marque} ${vehicle.modele} · ${vehicle.immatriculation}`, type: kind, expiresAt: dayKey(today), urgency: 'expire', uncovered: true });
-      }
-    }
-  }
-
   return alerts.sort((a, b) => a.expiresAt.localeCompare(b.expiresAt));
 }
+
+/**
+ * Papiers qui sont des ÉCHÉANCES (assurance, visite technique) : leur expiration est suivie par les périodes (« À régulariser », « À surveiller »,
+ * fiche du véhicule), pas par la liste « Documents à mettre à jour ». L'ancienne période reste dans l'historique de l'échéance.
+ */
+export const DUE_DOCUMENT_TYPES: VehicleDocumentType[] = ['assurance', 'visite_technique'];
+
+/** Alertes de la liste « Documents » : sans les papiers suivis comme échéances. */
+export const documentListAlerts = (alerts: VehicleDocumentAlert[]): VehicleDocumentAlert[] => alerts.filter((alert) => !DUE_DOCUMENT_TYPES.includes(alert.type));

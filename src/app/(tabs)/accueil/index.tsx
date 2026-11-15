@@ -35,7 +35,7 @@ import { useOcrSettings } from '@/features/ocr/hooks';
 import { useAllCompliance } from '@/features/compliance/hooks';
 import { regularizationByVehicle } from '@/features/compliance/logic';
 import { useRentals } from '@/features/rentals/hooks';
-import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
+import { documentListAlerts, vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { getInitials } from '@/lib/initials';
 import { useLanguage } from '@/i18n/use-language';
@@ -74,8 +74,8 @@ export default function AccueilScreen() {
   // Documents expirés (clients et véhicules) : un document « à renouveler bientôt » n'est pas une priorité.
   const expiredDocuments = useMemo(
     () =>
-      [...customerDocumentAlerts(customers), ...vehicleDocumentAlerts(vehicles, new Date(), 30, complianceQuery.data ?? [])].filter((alert) => alert.urgency === 'expire').length,
-    [customers, vehicles, complianceQuery.data]
+      [...customerDocumentAlerts(customers), ...documentListAlerts(vehicleDocumentAlerts(vehicles))].filter((alert) => alert.urgency === 'expire').length,
+    [customers, vehicles]
   );
   // Disponibilités sur 7 jours : UN SEUL calcul alimente la pastille de l'en-tête, le Parc et le bloc Disponibilités.
   const availability = useMemo(

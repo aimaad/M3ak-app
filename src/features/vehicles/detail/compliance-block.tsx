@@ -296,7 +296,11 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
           {current ? t('vehicleDetail.compliance.quickNote', { date: dayLabel(current.validUntil, language) }) : t('vehicleDetail.compliance.quickNoteNone')}
         </HText>
       ) : null}
-      {kind !== 'vignette' ? <PaperPhoto localUri={localUri} onPick={setLocalUri} /> : null}
+      {/* On demande le nouveau papier (photo ou galerie) : facultatif, il remplace l'ancien. */}
+      <HText size={13} weight="semibold">
+        {t(`vehicleDetail.compliance.askPaper.${kind}`)}
+      </HText>
+      <PaperPhoto localUri={localUri} onPick={setLocalUri} />
       {error ? (
         <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
           {error}

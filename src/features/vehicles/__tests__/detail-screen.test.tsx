@@ -1142,6 +1142,15 @@ describe('fiche véhicule', () => {
       });
     });
 
+    it('« Fait » : on demande de prendre en photo (ou choisir en galerie) le nouveau papier — assurance, visite, vignette', async () => {
+      mockState.compliance = [record({ periodMonths: 12 }), record({ id: 'c2', kind: 'visite_technique', validUntil: day(300), periodMonths: 6 })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      expect(screen.getByText(/Prenez en photo la nouvelle attestation d'assurance, ou choisissez-la dans la galerie/)).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText(/^Visite technique : À jour\./));
+      expect(screen.getByText(/Prenez en photo le nouveau papier de visite technique/)).toBeTruthy();
+    });
+
     it('« Fait » rapide : le nouveau papier est facultatif et, s’il est pris, il remplace l’ancien', async () => {
       mockState.compliance = [record({ periodMonths: 12 })];
       await render(<VehicleDetailScreen />);
