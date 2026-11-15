@@ -22,14 +22,6 @@ const base: AuditEntry = {
 };
 
 describe('describeAuditEntry', () => {
-  it('renouvellement automatique : dit l’obligation, le véhicule et le papier à ajouter', () => {
-    const entry = { ...base, action: 'compliance_auto_renewed', targetLabel: '1-A-1', details: { vehicle: 'Dacia Logan', kind: 'assurance', valid_until: '2027-11-15' } };
-    const text = describeAuditEntry(entry, t);
-    expect(text).toContain('Assurance renouvelée automatiquement');
-    expect(text).toContain('Dacia Logan');
-    expect(text).toContain('Papier à ajouter');
-    expect(text).not.toContain('—');
-  });
   it('remise d’un véhicule « à régulariser » : dit l’assurance et/ou la visite expirées', () => {
     const entry = { ...base, action: 'rental_started_noncompliant', details: { vehicle: 'Dacia Logan', customer: 'Fouad B.', issues: [{ kind: 'assurance', valid_until: '2026-01-01' }, { kind: 'visite_technique', valid_until: '2026-02-01' }] } };
     const text = describeAuditEntry(entry, t);

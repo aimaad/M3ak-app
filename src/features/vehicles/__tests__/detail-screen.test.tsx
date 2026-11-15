@@ -12,7 +12,6 @@ const mockTranslate = (language: string, key: string, options?: Record<string, u
 const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const mockState = {
-  attachCalls: [] as unknown[],
   ocrAvailability: 'no_key' as string,
   scanCalls: [] as unknown[],
   scanResult: { ok: false, error: 'ocr_failed' } as unknown,
@@ -96,7 +95,6 @@ jest.mock('@/features/compliance/hooks', () => ({
   useRenewCompliance: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void; onError?: (error: unknown) => void }) => { mockState.renewCalls.push(args); if (mockState.renewError) options?.onError?.(mockState.renewError); else options?.onSuccess?.(); } }),
   useCorrectCompliance: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.correctCalls.push(args); options?.onSuccess?.(); } }),
   useDeleteCompliance: () => ({ mutate: (args: unknown) => { mockState.deleteCalls.push(args); } }),
-  useAttachCompliancePaper: () => ({ isPending: false, mutate: (args: unknown) => { mockState.attachCalls.push(args); } }),
   useSaveComplianceSettings: () => ({ mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.settingsCalls.push(args); options?.onSuccess?.(); } }),
 }));
 jest.mock('@/features/maintenance/hooks', () => ({
@@ -160,7 +158,7 @@ async function pickTime(label: RegExp | string, hours: number, minutes: number) 
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], planCalls: [], checkCalls: [], conflicts: [], attachCalls: [], ocrAvailability: 'no_key', scanCalls: [], scanResult: { ok: false, error: 'ocr_failed' }, visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], planCalls: [], checkCalls: [], conflicts: [], ocrAvailability: 'no_key', scanCalls: [], scanResult: { ok: false, error: 'ocr_failed' }, visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -1235,35 +1233,6 @@ describe('fiche véhicule', () => {
         await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
         expect(mockState.scanCalls).toHaveLength(0);
         expect(screen.queryByText(/^Papier lu : du/)).toBeNull();
-      });
-    });
-
-    describe('renouvellement automatique (obligation périodique)', () => {
-      it('période créée automatiquement : signalée, avec le papier à ajouter (responsable)', async () => {
-        mockState.compliance = [record({ periodMonths: 12, autoCreated: true, documentPath: null })];
-        await render(<VehicleDetailScreen />);
-        await fireEvent.press(screen.getByLabelText(/^Assurance : /));
-        expect(screen.getByText('Renouvelée automatiquement')).toBeTruthy();
-        expect(screen.getByText(/sans papier, elle ne sera pas renouvelée automatiquement une deuxième fois/)).toBeTruthy();
-        const slots = screen.getAllByLabelText(/^Scanner : Photo du papier/);
-        await fireEvent.press(slots[slots.length - 1]); // celui de l'historique
-        await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
-        expect(mockState.attachCalls).toEqual([{ id: 'c1', agencyId: 'a1', vehicleId: 'v1', kind: 'assurance', localUri: 'file:///papier.jpg' }]);
-      });
-      it('employé : voit le signalement mais ne peut pas ajouter le papier de l’historique', async () => {
-        mockState.role = 'employee';
-        mockState.compliance = [record({ periodMonths: 12, autoCreated: true, documentPath: null })];
-        await render(<VehicleDetailScreen />);
-        await fireEvent.press(screen.getByLabelText(/^Assurance : /));
-        expect(screen.getByText('Renouvelée automatiquement')).toBeTruthy();
-        expect(screen.getAllByLabelText(/^Scanner : Photo du papier/)).toHaveLength(1); // seulement celui du « Fait » rapide
-      });
-      it('papier ajouté : plus de demande', async () => {
-        mockState.compliance = [record({ periodMonths: 12, autoCreated: true, documentPath: 'p.jpg' })];
-        await render(<VehicleDetailScreen />);
-        await fireEvent.press(screen.getByLabelText(/^Assurance : /));
-        expect(screen.getByText('Renouvelée automatiquement')).toBeTruthy();
-        expect(screen.queryByText(/sans papier, elle ne sera pas renouvelée/)).toBeNull();
       });
     });
 

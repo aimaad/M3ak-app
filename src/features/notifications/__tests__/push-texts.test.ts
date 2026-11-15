@@ -36,12 +36,6 @@ describe('textes des notifications push', () => {
     expect(fr.body).not.toMatch(/[{}]|—/);
     expect(renderPush('compliance_uncovered', p, 'ar').body).toContain('التأمين');
   });
-  it('renouvellement automatique : texte push fr et ar', () => {
-    const p = { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'assurance', date: '2027-11-15' };
-    expect(renderPush('compliance_auto_renewed', p, 'fr').body).toContain("l'assurance a été renouvelée automatiquement");
-    expect(renderPush('compliance_auto_renewed', p, 'ar').body).toContain('التأمين');
-    expect(PUSH_KINDS).toContain('compliance_auto_renewed');
-  });
   it('type inconnu : message neutre, jamais d’erreur', () => {
     expect(renderPush('inconnu', {}, 'fr').body).toBe('Vous avez une nouvelle notification.');
   });

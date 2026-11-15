@@ -17,7 +17,6 @@ type Row = {
   document_path: string | null;
   notes: string | null;
   period_months?: number | null;
-  auto_created?: boolean | null;
   created_by: string | null;
   created_at: string;
 };
@@ -35,7 +34,6 @@ const fromRow = (row: Row): ComplianceRecord => ({
   documentPath: row.document_path,
   notes: row.notes,
   periodMonths: row.period_months ?? null,
-  autoCreated: row.auto_created === true,
   createdBy: row.created_by,
   createdAt: row.created_at,
 });
