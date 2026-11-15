@@ -534,7 +534,7 @@ describe('fiche véhicule', () => {
       expect(mockState.specsCalls).toEqual([]);
     });
 
-    it('un vrai bouton « Modifier la fiche technique » est visible sous la fiche (pas seulement un petit lien)', async () => {
+    it('un vrai bouton « Modifier la fiche technique » est visible en haut de la fiche (pas seulement un petit lien)', async () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('Modifier la fiche technique'));
       expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
@@ -1257,6 +1257,18 @@ describe('fiche véhicule', () => {
         expect(mockState.scanCalls).toHaveLength(0);
         expect(screen.queryByText(/^Papier lu : du/)).toBeNull();
       });
+    });
+
+    it('« Annuler » dans un renouvellement replie la ligne (comme le « − »), sans rien enregistrer', async () => {
+      mockState.compliance = [record({})];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      await fireEvent.press(screen.getByLabelText('Renouveler'));
+      expect(screen.getByText('Renouveler : Assurance')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Annuler'));
+      expect(screen.queryByText('Renouveler : Assurance')).toBeNull();
+      expect(screen.queryByLabelText('Renouveler')).toBeNull(); // la ligne est repliée
+      expect(mockState.renewCalls).toHaveLength(0);
     });
 
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {

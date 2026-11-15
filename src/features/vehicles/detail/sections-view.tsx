@@ -3,7 +3,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { Image, Pressable, ScrollView, View } from 'react-native';
 
-import { Button } from '@/components/form';
 import { ImageViewer } from '@/components/image-viewer';
 import { Brand, Palette } from '@/constants/theme';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
@@ -107,8 +106,6 @@ export function SpecsGrid({ tiles, description, onEdit, onTile }: { tiles: SpecT
           {description}
         </HText>
       ) : null}
-      {/* Bouton bien visible (le petit lien « Modifier » de l'en-tête restait peu remarqué). */}
-      <Button variant="secondary" icon="create-outline" label={t('vehicleDetail.specs.editButton')} onPress={onEdit} accessibilityLabel={t('vehicleDetail.specs.editButton')} />
     </View>
   );
 }

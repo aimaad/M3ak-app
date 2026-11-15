@@ -574,7 +574,7 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
                   </HText>
                 ) : null}
                 {mode === 'renew' ? (
-                  <RenewForm vehicle={vehicle} kind={kind} current={status.record} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
+                  <RenewForm vehicle={vehicle} kind={kind} current={status.record} settings={settings} showAmount={showAmount} now={now} onClose={() => { setMode('view'); setOpen(null); }} />
                 ) : (
                   <>
                     {kind === 'vignette' || periodOf(kind, status.record, settings) !== null ? (
@@ -582,7 +582,7 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
                     ) : status.record ? (
                       <Button label={t('vehicleDetail.compliance.renew')} onPress={() => setMode('renew')} accessibilityLabel={t('vehicleDetail.compliance.renew')} />
                     ) : (
-                      <RenewForm vehicle={vehicle} kind={kind} current={null} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
+                      <RenewForm vehicle={vehicle} kind={kind} current={null} settings={settings} showAmount={showAmount} now={now} onClose={() => { setMode('view'); setOpen(null); }} />
                     )}
                     <HText weight="semibold" size={12} color={Palette.textSecondary}>
                       {t('vehicleDetail.compliance.history')}

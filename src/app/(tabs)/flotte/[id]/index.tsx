@@ -1,3 +1,4 @@
+import { Button } from '@/components/form';
 import { useUndo } from '@/components/undo-toast';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -275,6 +276,8 @@ export default function VehicleDetailScreen() {
           </DetailHeader>
 
           <View className="gap-6 px-6 pb-10 pt-6">
+            {/* Bien visible, en haut de la fiche : on modifie tout (fiche technique, documents, échéances) depuis cet écran. */}
+            <Button variant="secondary" icon="create-outline" label={t('vehicleDetail.specs.editButton')} onPress={goEdit} accessibilityLabel={t('vehicleDetail.specs.editButton')} />
             <RegularizeBanner
               issues={regularizationIssues(complianceQuery.data ?? [], vehicle, now)}
               onRegularize={(kind) => {
