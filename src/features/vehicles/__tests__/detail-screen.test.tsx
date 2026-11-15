@@ -12,6 +12,7 @@ const mockTranslate = (language: string, key: string, options?: Record<string, u
 const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const mockState = {
+  searchParams: {} as Record<string, string>,
   ocrAvailability: 'no_key' as string,
   scanCalls: [] as unknown[],
   scanResult: { ok: false, error: 'ocr_failed' } as unknown,
@@ -83,7 +84,7 @@ jest.mock('expo-router', () => ({
   get router() {
     return mockRouter;
   },
-  useLocalSearchParams: () => ({ id: 'v1' }),
+  useLocalSearchParams: () => ({ id: 'v1', ...mockState.searchParams }),
 }));
 jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => ({ data: { agencyId: 'a1', role: mockState.role } }) }));
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => ({ data: [{ id: 'c1', nomComplet: 'FOUAD BENNANI', telephone: '+212 6 11 22 33 44' }] }) }));
@@ -132,6 +133,8 @@ jest.mock('react-native-safe-area-context', () => ({ SafeAreaView: ({ children }
 jest.mock('expo-status-bar', () => ({ StatusBar: () => null }));
 jest.mock('@expo/vector-icons', () => ({ Ionicons: () => null }));
 
+import { buildDues } from '../detail/dues';
+import { DuesSection } from '../detail/dues-section';
 import VehicleDetailScreen from '../../../app/(tabs)/flotte/[id]/index';
 
 const hidden = { includeHiddenElements: true };
@@ -153,6 +156,13 @@ async function pickTime(label: RegExp | string, hours: number, minutes: number) 
   await fireEvent.press(screen.getAllByLabelText(label)[0]);
   await fireEvent.press(await screen.findByLabelText('PICKER-DAY', hiddenEls));
   await fireEvent.press(screen.getByText('OK', hiddenEls));
+}
+
+// Les échéances se gèrent dans l'onglet « Échéances » de la page de modification : on teste ici le composant qui y est affiché.
+async function renderDues(props: Record<string, unknown> = {}) {
+  const now = new Date();
+  const vehicle = mockState.vehicle as never;
+  await render(<DuesSection vehicle={vehicle} rows={buildDues({ vehicle, maintenance: mockState.maintenance as never, now })} now={now} {...props} />);
 }
 
 describe('fiche véhicule', () => {
@@ -407,13 +417,19 @@ describe('fiche véhicule', () => {
       expect(screen.getByText('Très propre, climatisation neuve')).toBeTruthy();
     });
 
-    it('échéances : une vidange proche s’affiche en jours ; un toucher la déplie sur place (pas de changement de page)', async () => {
+    it('échéances : une vidange proche s’affiche en jours en LECTURE SEULE ; un toucher ouvre l’onglet « Échéances » de la page de modification', async () => {
       mockState.maintenance = [{ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null }];
       await render(<VehicleDetailScreen />);
+      expect(screen.queryByLabelText('+ Ajouter')).toBeNull(); // plus d'ajout ni de formulaire sur la fiche
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      expect(mockRouter.push).not.toHaveBeenCalled();
-      expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
-      expect(screen.queryByText('Marquer comme fait')).toBeNull(); // faire un entretien se fait dans la section « Entretien », pas ici
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances' } });
+      expect(screen.queryByLabelText("Enregistrer l'échéance")).toBeNull();
+    });
+
+    it('échéances : « Modifier » ouvre l’onglet « Échéances » de la page de modification', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier les échéances'));
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances' } });
     });
 
     it('historique : aucune ligne → message ; avec une location terminée → ligne et montant (propriétaire)', async () => {
@@ -607,7 +623,7 @@ describe('fiche véhicule', () => {
 
 
     it('« + Ajouter » : un seul « + » sur le bouton, et un « − » replie le formulaire sans rien enregistrer', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.getAllByText(/^\+ Ajouter$/).length).toBe(1);
       expect(screen.queryByText(/^\+ \+/)).toBeNull();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
@@ -619,21 +635,21 @@ describe('fiche véhicule', () => {
     });
 
     it('« + Ajouter » : on choisit d’abord le type, tout part vide, l’échéance est créée pour CE véhicule', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       expect(mockRouter.push).not.toHaveBeenCalled();
       expect(screen.getByText('Nouvelle échéance')).toBeTruthy();
-      expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // rien à remplir tant que le type n'est pas choisi
+      expect(screen.queryByLabelText("Enregistrer l'échéance")).toBeNull(); // rien à remplir tant que le type n'est pas choisi
       await fireEvent.press(screen.getAllByText('Freins')[0]);
       expect(screen.queryByDisplayValue('10 000')).toBeNull(); // aucune valeur prédéfinie
       expect(screen.queryByText(/^À \d+.?\d* km$/)).toBeNull(); // ni suggestion
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'freins', echeanceDate: null, echeanceKm: 70000, notes: null, titre: null, repeatKm: null, repeatMonths: null } }]);
     });
 
     it('« Se répète » : kilométrage et/ou mois, tout vide au départ ; enregistré avec l’échéance', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       expect(screen.getByLabelText('Une seule fois').props.accessibilityState.checked).toBe(true);
@@ -643,30 +659,30 @@ describe('fiche véhicule', () => {
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
       await fireEvent.changeText(screen.getByLabelText('Se répète tous les'), '10000');
       await fireEvent.changeText(screen.getByLabelText('Tous les'), '12');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', echeanceKm: 70000, repeatKm: 10000, repeatMonths: 12 } }]);
     });
 
     it('échéance automatique « À compléter » : visible, puis complétée avec « dernière fois faite »', async () => {
       mockState.maintenance = [{ id: 'auto', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: null, echeanceKm: null, repeatKm: 10000, repeatMonths: null }];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Vidange : À compléter/));
       expect(screen.getByLabelText('Se répète').props.accessibilityState.checked).toBe(true); // la périodicité des règles est reprise
       expect(screen.getByDisplayValue('10 000')).toBeTruthy();
       await fireEvent.changeText(screen.getByLabelText('Kilométrage de la dernière fois'), '38000');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       await waitFor(() => expect(mockState.dueCalls.update).toMatchObject([{ id: 'auto', patch: { echeanceKm: 48000, repeatKm: 10000 } }]));
     });
 
     it('obligation désactivée dans les règles de l’agence : plus proposée sur la fiche', async () => {
       mockState.ruleRows = [{ kind: 'vignette', enabled: false, repeatKm: null, repeatMonths: null }];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.queryByLabelText(/^Vignette : /)).toBeNull();
       expect(screen.getByLabelText(/^Assurance : /)).toBeTruthy();
     });
 
     it('« Dernière fois faite » : la prochaine échéance se calcule toute seule et part avec l’échéance', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       expect(screen.queryByLabelText('Kilométrage de la dernière fois')).toBeNull(); // seulement avec « Se répète »
@@ -674,42 +690,42 @@ describe('fiche véhicule', () => {
       await fireEvent.changeText(screen.getByLabelText('Se répète tous les'), '10000');
       await fireEvent.changeText(screen.getByLabelText('Kilométrage de la dernière fois'), '48200');
       expect(screen.getByText(/Calculée automatiquement : 58.?200 km/)).toBeTruthy();
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', echeanceKm: 58200, repeatKm: 10000, repeatMonths: null } }]);
     });
 
     it('échéance déjà dépassée : avertissement qui n’empêche rien', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '30000');
       expect(screen.getByText(/Déjà dépassée de 10.?000 km\./)).toBeTruthy(); // la voiture est à 40 000 km
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { echeanceKm: 30000 } }]); // pas bloqué
     });
 
     it('« Autre » : le nom est obligatoire, puis enregistré', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Autre')[0]);
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '90000');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(screen.getByText(/Donnez un nom à cet entretien/)).toBeTruthy();
       expect(mockState.dueCalls.create).toEqual([]);
       await fireEvent.changeText(screen.getByLabelText("Nom de l'entretien"), 'Courroie de distribution');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'autre', titre: 'Courroie de distribution', echeanceKm: 90000 } }]);
     });
 
     it('les autres types n’ont pas de champ « nom »', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Freins')[0]);
       expect(screen.queryByLabelText("Nom de l'entretien")).toBeNull();
     });
 
     it('pas de doublon : l’assurance, la visite et la vignette ne sont pas proposées sous « + Ajouter » (elles sont déjà listées)', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       expect(screen.getAllByText('Vidange').length).toBeGreaterThan(0);
       expect(screen.queryByLabelText('Vignette', hidden)).toBeNull();
@@ -717,7 +733,7 @@ describe('fiche véhicule', () => {
     });
 
     it('la note est repliée : « + Ajouter une note » la déplie', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       expect(screen.queryByLabelText('Notes (facultatif)')).toBeNull();
@@ -726,29 +742,29 @@ describe('fiche véhicule', () => {
     });
 
     it('« Se répète » avec un seul compteur : l’autre est désactivé (vide)', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
       await fireEvent.press(screen.getByLabelText('Se répète'));
       await fireEvent.changeText(screen.getByLabelText('Tous les'), '6');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', repeatKm: null, repeatMonths: 6 } }]);
     });
 
     it('« Se répète » sans rien indiquer : message qui dit quoi faire, rien n’est envoyé', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
       await fireEvent.press(screen.getByLabelText('Se répète'));
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(screen.getByText('Indiquez un kilométrage ou un nombre de mois (ou les deux).')).toBeTruthy();
       expect(mockState.dueCalls.create).toEqual([]);
     });
 
     it('« Une seule fois » : les champs de périodicité disparaissent et rien n’est répété', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       await fireEvent.press(screen.getByLabelText('Se répète'));
@@ -756,13 +772,13 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getByLabelText('Une seule fois'));
       expect(screen.queryByLabelText('Se répète tous les')).toBeNull();
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', repeatKm: null, repeatMonths: null } }]);
     });
 
     it('une échéance existante sans périodicité s’ouvre sur « Une seule fois »', async () => {
       mockState.maintenance = [vidange()];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
       expect(screen.getByLabelText('Une seule fois').props.accessibilityState.checked).toBe(true);
       await fireEvent.press(screen.getByLabelText('Se répète'));
@@ -771,11 +787,11 @@ describe('fiche véhicule', () => {
 
     it('échec de l’enregistrement : la raison est dite (base pas à jour → migration 0071), jamais un message vide', async () => {
       mockState.dueCalls.createError = { code: 'PGRST204', message: "Could not find the 'repeat_km' column of 'maintenance_items' in the schema cache" };
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
       await fireEvent.press(screen.getAllByText('Vidange')[0]);
       await fireEvent.changeText(screen.getByLabelText("Kilométrage d'échéance"), '70000');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText("Enregistrer l'échéance"));
       expect(await screen.findByText(/appliquez la migration 0071/)).toBeTruthy();
     });
 
@@ -941,7 +957,7 @@ describe('fiche véhicule', () => {
 
     it('périodicité : une échéance existante montre sa périodicité enregistrée', async () => {
       mockState.maintenance = [{ ...vidange(), repeatKm: 15000, repeatMonths: 6 }];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
       expect(screen.getByLabelText('Se répète').props.accessibilityState.checked).toBe(true);
       expect(screen.getByDisplayValue('15 000')).toBeTruthy();
@@ -951,7 +967,7 @@ describe('fiche véhicule', () => {
     it('« Supprimer » demande confirmation (propriétaire) ; « Échéances » ne sert qu’à créer et corriger, pas à faire', async () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
       mockState.maintenance = [vidange()];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
       expect(screen.queryByText('Marquer comme fait')).toBeNull();
       await fireEvent.press(screen.getByText("Supprimer l'échéance"));
@@ -964,9 +980,9 @@ describe('fiche véhicule', () => {
     it('employé : peut corriger une échéance, mais pas la supprimer', async () => {
       mockState.role = 'employee';
       mockState.maintenance = [vidange()];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Vidange : J-5\./));
-      expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
+      expect(screen.getByLabelText("Enregistrer l'échéance")).toBeTruthy();
       expect(screen.queryByText("Supprimer l'échéance")).toBeNull();
     });
   });
@@ -983,14 +999,18 @@ describe('fiche véhicule', () => {
       expect(screen.getByText(/BIBIP ne bloque rien, mais cela ne vaut pas autorisation légale/)).toBeTruthy();
     });
 
-    it('« Régulariser » ouvre le renouvellement de l’obligation expirée ; tout le reste de la fiche reste utilisable', async () => {
+    it('ancien lien « ?regulariser=assurance » : redirige vers l’onglet « Échéances » de la page de modification', async () => {
+      mockState.searchParams = { regulariser: 'assurance' };
+      await render(<VehicleDetailScreen />);
+      expect(mockRouter.replace).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances', regulariser: 'assurance' } });
+    });
+
+    it('« Régulariser » ouvre le renouvellement de l’obligation expirée dans la page de modification ; la fiche reste utilisable', async () => {
       mockState.compliance = [record({ validUntil: day(-10) })];
       await render(<VehicleDetailScreen />);
-      expect(screen.queryByLabelText('Renouveler')).toBeNull(); // pas encore ouvert
       await fireEvent.press(screen.getByLabelText('Régulariser'));
-      expect(screen.getByLabelText('Renouveler')).toBeTruthy();
-      expect(screen.getByLabelText('+ Ajouter')).toBeTruthy(); // rien n'est bloqué
-      expect(screen.getByLabelText('Louer : Dacia Logan')).toBeTruthy();
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances', regulariser: 'assurance' } });
+      expect(screen.getByLabelText('Louer : Dacia Logan')).toBeTruthy(); // rien n'est bloqué
     });
 
     it('visite technique expirée aussi ; les deux : deux lignes', async () => {
@@ -1002,24 +1022,24 @@ describe('fiche véhicule', () => {
 
     it('pas à régulariser : « À compléter » (rien d’enregistré), valable, bientôt expirée, vignette en retard', async () => {
       mockState.compliance = [];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.queryByText('À régulariser')).toBeNull(); // « À compléter » n'est pas une preuve d'expiration
     });
 
     it('assurance valable ou renouvelée : plus d’alerte', async () => {
       mockState.compliance = [record({ validUntil: day(-10) }), record({ id: 'c3', validUntil: day(300) })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.queryByText('À régulariser')).toBeNull();
     });
 
     it('la vignette expirée n’est jamais « à régulariser »', async () => {
       mockState.compliance = [record({ id: 'c4', kind: 'vignette', validFrom: '2020-01-01', validUntil: '2020-12-31' })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.queryByText('À régulariser')).toBeNull();
     });
 
     it('trois obligations, « À compléter » quand rien n’est enregistré', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.getByText('OBLIGATIONS LÉGALES')).toBeTruthy();
       expect(screen.getByLabelText(/^Assurance : À compléter/)).toBeTruthy();
       expect(screen.getByLabelText(/^Visite technique : À compléter/)).toBeTruthy();
@@ -1029,7 +1049,7 @@ describe('fiche véhicule', () => {
 
     it('états : à jour, urgent (≤ 7 jours), expirée ; « papier non ajouté » quand il n’y a pas de photo', async () => {
       mockState.compliance = [record({}), record({ id: 'c2', kind: 'visite_technique', validUntil: day(3), documentPath: null }), record({ id: 'c3', kind: 'vignette', validFrom: '2025-01-01', validUntil: '2025-12-31' })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       expect(screen.getByLabelText(/^Assurance : À jour\./)).toBeTruthy();
       expect(screen.getByLabelText(/^Visite technique : Urgent\./)).toBeTruthy();
       expect(screen.getByLabelText(/^Vignette : Expirée\./)).toBeTruthy();
@@ -1038,7 +1058,7 @@ describe('fiche véhicule', () => {
 
     it('« Renouveler » : rien de prédéfini, on indique la fin ; enregistrement avec l’agence et le véhicule', async () => {
       mockState.compliance = [record({})];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(mockRouter.push).not.toHaveBeenCalled();
@@ -1048,21 +1068,21 @@ describe('fiche véhicule', () => {
       await pickDate(/^Fin de validité/, new Date(end[0], end[1] - 1, end[2]));
       await fireEvent.changeText(screen.getByLabelText('N° de police'), 'POL-77');
       await fireEvent.changeText(screen.getByLabelText('Assureur'), 'Wafa');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la période'));
       expect(mockState.renewCalls).toHaveLength(1);
       expect(mockState.renewCalls[0]).toMatchObject({ agencyId: 'a1', input: { vehicleId: 'v1', kind: 'assurance', reference: 'POL-77', provider: 'Wafa', documentPath: null, validUntil: day(430), periodMonths: null } });
     });
 
     it('« Périodique » : on saisit la durée en mois, la fin se calcule et la durée est mémorisée', async () => {
       mockState.compliance = [record({})];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(screen.queryByLabelText('Se renouvelle tous les')).toBeNull(); // « Une seule fois » par défaut, rien de prédéfini
       await fireEvent.press(screen.getByLabelText('Périodique'));
       expect(screen.getByLabelText('Se renouvelle tous les').props.value).toBe('');
       await fireEvent.changeText(screen.getByLabelText('Se renouvelle tous les'), '6');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la période'));
       expect(mockState.renewCalls).toHaveLength(1);
       const input = (mockState.renewCalls[0] as { input: { validUntil: string; periodMonths: number } }).input;
       expect(input.periodMonths).toBe(6);
@@ -1071,29 +1091,29 @@ describe('fiche véhicule', () => {
 
     it('durée déjà réglée (6 mois) : reprise telle quelle dans le formulaire détaillé', async () => {
       mockState.compliance = [record({ periodMonths: 6 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(screen.getByLabelText('Périodique').props.accessibilityState.checked).toBe(true);
       expect(screen.getByLabelText('Se renouvelle tous les').props.value).toBe('6');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la période'));
       expect((mockState.renewCalls[0] as { input: { periodMonths: number } }).input.periodMonths).toBe(6);
     });
 
     it('assurance « Une seule fois » : la durée n’est pas mémorisée', async () => {
       mockState.compliance = [record({ periodMonths: 6 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       await fireEvent.press(screen.getByLabelText('Une seule fois'));
       expect(screen.queryByLabelText('Se renouvelle tous les')).toBeNull();
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la période'));
       expect((mockState.renewCalls[0] as { input: { periodMonths: number | null } }).input.periodMonths).toBeNull();
     });
 
 
     it('vignette : pas de durée (année civile)', async () => {
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Vignette : /));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(screen.queryByLabelText('Durée de la période')).toBeNull();
@@ -1102,7 +1122,7 @@ describe('fiche véhicule', () => {
 
     it('assurance : une phrase explique la situation et le bouton dit ce qu’il enregistre', async () => {
       mockState.compliance = [record({ periodMonths: 12 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       expect(screen.getByText(/^Couverte jusqu’au|^Couverte jusqu'au/)).toBeTruthy();
       expect(screen.getByText(/Elle commence le lendemain de la fin de la période actuelle/)).toBeTruthy();
@@ -1113,27 +1133,25 @@ describe('fiche véhicule', () => {
 
     it('assurance expirée : la phrase dit qu’il faut régulariser', async () => {
       mockState.compliance = [record({ validUntil: day(-5), periodMonths: 12 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : Expirée\./));
       expect(screen.getByText(/le véhicule est à régulariser/)).toBeTruthy();
     });
 
-    it('« ✓ Fait » sur l’assurance : ouvre son renouvellement dans « Échéances » (une seule source de vérité), pas un entretien à part', async () => {
+    it('« ✓ Fait » sur l’assurance : ouvre son renouvellement dans l’onglet « Échéances » (une seule source de vérité), pas un entretien à part', async () => {
       mockState.compliance = [record({ validUntil: day(0), periodMonths: 12 })];
       mockState.maintenance = [{ id: 'ma', vehicleId: 'v1', type: 'assurance', statut: 'a_venir', echeanceDate: day(0), echeanceKm: null }];
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('Marquer comme fait : Assurance'));
-      expect(screen.getByLabelText('Enregistrer cette période')).toBeTruthy();
-      expect(screen.queryByLabelText('Confirmer')).toBeNull();
-      await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
-      expect(mockState.renewCalls).toHaveLength(1);
+      expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances', regulariser: 'assurance' } });
       expect(mockState.dueCalls.quick).toEqual([]);
+      expect(mockState.renewCalls).toHaveLength(0); // rien n'est enregistré avant la confirmation dans la page de modification
     });
 
     describe('lecture automatique du papier (OCR)', () => {
       const read = { ok: true, fields: { validFrom: '2026-11-16', validUntil: '2027-11-15', reference: 'POL-77', provider: 'Wafa Assurance', amount: 1850, plate: '8921-ب-14', favorable: null } };
       async function takePhoto() {
-        await render(<VehicleDetailScreen />);
+        await renderDues();
         await fireEvent.press(screen.getByLabelText(/^Assurance : À compléter\./));
         await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
         await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
@@ -1161,7 +1179,7 @@ describe('fiche véhicule', () => {
         mockState.scanResult = { ok: false, error: 'ocr_busy' };
         await takePhoto();
         expect(await screen.findByRole('alert')).toBeTruthy();
-        expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
+        expect(screen.getByLabelText('Enregistrer la période')).toBeTruthy();
       });
       it('papier d’un autre véhicule : avertissement', async () => {
         mockState.ocrAvailability = 'active';
@@ -1173,7 +1191,7 @@ describe('fiche véhicule', () => {
 
     it('« Fait » : on demande de prendre en photo (ou choisir en galerie) le nouveau papier — assurance, visite, vignette', async () => {
       mockState.compliance = [record({ periodMonths: 12 }), record({ id: 'c2', kind: 'visite_technique', validUntil: day(300), periodMonths: 6 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       expect(screen.getByText(/Prenez en photo la nouvelle attestation d'assurance, ou choisissez-la dans la galerie/)).toBeTruthy();
       await fireEvent.press(screen.getByLabelText(/^Visite technique : À jour\./));
@@ -1182,7 +1200,7 @@ describe('fiche véhicule', () => {
 
     it('« Fait » rapide : le nouveau papier est facultatif et, s’il est pris, il remplace l’ancien', async () => {
       mockState.compliance = [record({ periodMonths: 12 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Enregistrer cette période')); // sans photo : accepté
       expect((mockState.renewCalls[0] as { localDocumentUri: string | null }).localDocumentUri).toBeNull();
@@ -1198,7 +1216,7 @@ describe('fiche véhicule', () => {
       async function quickWithPhoto() {
         mockState.ocrAvailability = 'active';
         mockState.compliance = [record({ periodMonths: 12 })];
-        await render(<VehicleDetailScreen />);
+        await renderDues();
         await fireEvent.press(screen.getByLabelText(/^Assurance : /));
         await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
         await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
@@ -1250,7 +1268,7 @@ describe('fiche véhicule', () => {
       });
       it('fonction non active : aucune lecture dans le « Fait » rapide', async () => {
         mockState.compliance = [record({ periodMonths: 12 })];
-        await render(<VehicleDetailScreen />);
+        await renderDues();
         await fireEvent.press(screen.getByLabelText(/^Assurance : /));
         await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
         await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
@@ -1261,7 +1279,7 @@ describe('fiche véhicule', () => {
 
     it('« Annuler » dans un renouvellement replie la ligne (comme le « − »), sans rien enregistrer', async () => {
       mockState.compliance = [record({})];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(screen.getByText('Renouveler : Assurance')).toBeTruthy();
@@ -1273,7 +1291,7 @@ describe('fiche véhicule', () => {
 
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {
       mockState.compliance = [record({})];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       await fireEvent.press(screen.getByLabelText('Renouveler'));
       expect(screen.getByText('Renouveler : Assurance')).toBeTruthy();
@@ -1281,12 +1299,12 @@ describe('fiche véhicule', () => {
 
     it('même période déjà enregistrée (double appui) : message clair', async () => {
       mockState.renewError = { code: '23505' };
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À compléter\./));
       expect(screen.getByText('Enregistrer : Assurance')).toBeTruthy(); // premier enregistrement
       const end = day(430).split('-').map(Number);
       await pickDate(/^Fin de validité/, new Date(end[0], end[1] - 1, end[2]));
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la période'));
       expect(await screen.findByText('Cette période est déjà enregistrée.')).toBeTruthy();
     });
 
@@ -1294,7 +1312,7 @@ describe('fiche véhicule', () => {
     it('employé : renouvelle sans champ montant ; ne voit pas « Corriger » ni « Supprimer »', async () => {
       mockState.role = 'employee';
       mockState.compliance = [record({ amount: 4200, reference: 'POL-1' })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       expect(screen.getByText('POL-1')).toBeTruthy();
       expect(screen.queryByText(/4.?200 MAD/)).toBeNull(); // le montant de l’historique est caché
@@ -1307,12 +1325,12 @@ describe('fiche véhicule', () => {
     it('historique : propriétaire corrige et supprime (avec confirmation)', async () => {
       const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
       mockState.compliance = [record({ reference: 'POL-1', amount: 4200 })];
-      await render(<VehicleDetailScreen />);
+      await renderDues();
       await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
       expect(screen.getByText(/POL-1 · 4.?200 MAD/)).toBeTruthy();
       await fireEvent.press(screen.getByText('Corriger'));
       await fireEvent.changeText(screen.getByDisplayValue('POL-1'), 'POL-2');
-      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la période'));
       expect(mockState.correctCalls).toMatchObject([{ id: 'c1', vehicleId: 'v1', patch: { reference: 'POL-2' } }]);
       await fireEvent.press(screen.getByText('Supprimer'));
       expect(alert).toHaveBeenCalledWith('Supprimer cette période ?', expect.any(String), expect.any(Array));

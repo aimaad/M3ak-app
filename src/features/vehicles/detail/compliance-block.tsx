@@ -128,7 +128,7 @@ function FormButtons({ onSave, onCancel, busy, error }: { onSave: () => void; on
           {error}
         </HText>
       ) : null}
-      <Button label={t('vehicleDetail.editor.save')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.editor.save')} />
+      <Button label={t('vehicleDetail.compliance.saveButton')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.compliance.saveButton')} />
       <Button variant="secondary" label={t('vehicleDetail.editor.cancel')} onPress={onCancel} disabled={busy} />
     </View>
   );
@@ -498,7 +498,7 @@ function HistoryRow({ vehicle, record, isCurrent, now, canManage, showAmount }: 
 }
 
 /** Les trois obligations d'un véhicule : état du jour, période en cours, renouvellement et historique, tout sur place. */
-export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Vehicle; now: Date; openKind?: ComplianceKind | null }) {
+export function ComplianceBlock({ vehicle, now, openKind = null, readOnly = false, onOpenKind }: { vehicle: Vehicle; now: Date; openKind?: ComplianceKind | null; /** Fiche du véhicule : on voit l'état de chaque obligation, la gestion se fait dans « Modifier la fiche technique ». */ readOnly?: boolean; onOpenKind?: (kind: ComplianceKind) => void }) {
   const { t, language } = useLanguage();
   const agency = useMyAgency();
   const recordsQuery = useVehicleCompliance(vehicle.id);
@@ -531,6 +531,7 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
           <View key={kind} style={{ borderTopWidth: 1, borderTopColor: Brand.gaugeTrack }}>
             <Pressable
               onPress={() => {
+                if (readOnly) return onOpenKind?.(kind);
                 setOpen(expanded ? null : kind);
                 setMode('view');
               }}
@@ -563,10 +564,10 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
                   </HText>
                 ) : null}
               </View>
-              <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.textSecondary} />
+              <Ionicons name={readOnly ? 'chevron-forward' : expanded ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.textSecondary} />
             </Pressable>
 
-            {expanded ? (
+            {expanded && !readOnly ? (
               <View style={{ gap: 12, paddingBottom: 12 }}>
                 {kind !== 'vignette' && mode === 'view' ? (
                   <HText size={13} color={Palette.textPrimary}>

@@ -46,6 +46,13 @@ jest.mock('@/features/maintenance/hooks', () => ({
   useVehicleMaintenanceItems: () => ({ data: mockState.maintenance }),
   useCreateMaintenanceItem: () => ({ isPending: false, mutate: (args: unknown, options?: { onSuccess?: () => void }) => { mockState.created.push(args); options?.onSuccess?.(); } }),
 }));
+jest.mock('@/features/vehicles/detail/dues-section', () => ({
+  DuesSection: ({ openKind }: { openKind: string | null }) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Text } = require('react-native');
+    return <Text>{`ECHEANCES:${openKind ?? 'aucune'}`}</Text>;
+  },
+}));
 jest.mock('@/features/compliance/hooks', () => ({ useVehicleCompliance: () => ({ data: mockState.compliance }) }));
 jest.mock('@/features/rentals/hooks', () => ({ useVehicleRentals: () => ({ data: mockState.rentals }) }));
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => ({ data: [{ id: 'c1', nomComplet: 'FOUAD BENNANI' }] }) }));
@@ -102,7 +109,7 @@ describe('« Modifier la fiche technique »', () => {
 
   it('en-tête : « Fiche technique » et « Dacia Logan · plaque » ; barre d’enregistrement absente tant que rien ne change', async () => {
     await render(<VehicleForm vehicle={base} />);
-    expect(screen.getByText('Fiche technique')).toBeTruthy();
+    expect(screen.getAllByText('Fiche technique').length).toBeGreaterThan(0); // titre + onglet
     expect(screen.getByText('Dacia Logan · 12345-A-6')).toBeTruthy();
     expect(screen.queryByLabelText('Enregistrer')).toBeNull();
   });
@@ -299,32 +306,56 @@ describe('« Modifier la fiche technique »', () => {
     expect(screen.getByLabelText('Disponible').props.accessibilityState.checked).toBe(true);
   });
 
-  it('échéances : aucune → état vide avec des puces ; « + Vidange » ouvre la feuille et crée l’échéance (requête séparée)', async () => {
-    await render(<VehicleForm vehicle={base} />);
-    expect(screen.getByText('Aucun entretien prévu')).toBeTruthy();
-    await fireEvent.press(screen.getAllByText('+ Vidange')[0]);
-    expect(await screen.findByText('Ajouter une vidange', hidden)).toBeTruthy();
-    expect(screen.getByLabelText('Ajouter l\'échéance', hidden).props.accessibilityState.disabled).toBe(true); // rien de renseigné : dit pourquoi
-    await fireEvent.changeText(screen.getByLabelText('Kilométrage prévu', hidden), '60000');
-    await fireEvent.press(screen.getByLabelText('Ajouter l\'échéance', hidden));
-    expect(mockState.created).toEqual([{ agencyId: 'a1', input: { vehicleId: 'v1', type: 'vidange', echeanceDate: null, echeanceKm: 60000, notes: null } }]);
-    expect(mockState.updates).toEqual([]); // la barre d'enregistrement n'est pas concernée
+  describe('onglets « Fiche technique » / « Échéances »', () => {
+    it('par défaut : onglet « Fiche technique » ; les échéances n’y sont pas (plus de doublon avec la fiche)', async () => {
+      await render(<VehicleForm vehicle={base} />);
+      expect(screen.getByLabelText('Échéances').props.accessibilityState.selected).toBe(false);
+      expect(screen.queryByText(/^ECHEANCES:/)).toBeNull();
+      expect(screen.queryByText('Aucun entretien prévu')).toBeNull();
+    });
+
+    it('l’onglet « Échéances » affiche la gestion complète des échéances, sans barre d’enregistrement', async () => {
+      await render(<VehicleForm vehicle={base} />);
+      await fireEvent.changeText(screen.getByLabelText('Marque'), 'Renault');
+      expect(screen.getByLabelText('Enregistrer')).toBeTruthy(); // barre de la fiche technique
+      await fireEvent.press(screen.getByLabelText('Échéances'));
+      expect(screen.getByText('ECHEANCES:aucune')).toBeTruthy();
+      expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // pas de barre en bas : chaque échéance a son propre bouton
+    });
+
+    it('modifications de la fiche non enregistrées : point sur l’onglet et bande sur « Échéances » avec « Enregistrer la fiche » ; rien ne se perd en changeant d’onglet', async () => {
+      await render(<VehicleForm vehicle={base} />);
+      expect(screen.queryByLabelText('Modifications non enregistrées')).toBeNull();
+      await fireEvent.changeText(screen.getByLabelText('Marque'), 'Renault');
+      expect(screen.getByLabelText('Modifications non enregistrées')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Échéances'));
+      expect(screen.getByText('Fiche technique modifiée, non enregistrée.')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Fiche technique'));
+      expect(screen.getByDisplayValue('Renault')).toBeTruthy(); // la saisie est toujours là
+    });
+
+    it('« Enregistrer la fiche » depuis l’onglet « Échéances » enregistre la fiche technique', async () => {
+      await render(<VehicleForm vehicle={base} />);
+      await fireEvent.changeText(screen.getByLabelText('Marque'), 'Renault');
+      await fireEvent.press(screen.getByLabelText('Échéances'));
+      await fireEvent.press(screen.getByLabelText('Enregistrer la fiche'));
+      await waitFor(() => expect(mockState.updates).toHaveLength(1));
+    });
+
+    it('ouvert avec « Échéances » (depuis la fiche) et une obligation à régulariser : l’onglet et le renouvellement sont ouverts d’emblée', async () => {
+      await render(<VehicleForm vehicle={base} initialTab="echeances" initialKind="assurance" />);
+      expect(screen.getByText('ECHEANCES:assurance')).toBeTruthy();
+      expect(screen.getByLabelText('Échéances').props.accessibilityState.selected).toBe(true);
+    });
   });
 
-  it('échéances : la plus proche est résumée avec son badge', async () => {
+  it('documents : « Scanner » devant la visite technique bascule sur l’onglet « Échéances », sur son renouvellement (sans quitter la page)', async () => {
     mockState.compliance = [{ id: 'c1', vehicleId: 'v1', kind: 'assurance', validFrom: null, validUntil: day(300), documentPath: null, createdAt: '2026-01-01T00:00:00Z' }];
     await render(<VehicleForm vehicle={base} />);
-    expect(screen.getAllByText('Assurance').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('À jour').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Aucun entretien prévu')).toBeNull();
-  });
-
-  it('documents : assurance et visite en lignes de lecture qui ouvrent la fiche', async () => {
-    mockState.compliance = [{ id: 'c1', vehicleId: 'v1', kind: 'assurance', validFrom: null, validUntil: day(300), documentPath: null, createdAt: '2026-01-01T00:00:00Z' }];
-    await render(<VehicleForm vehicle={base} />);
-    await fireEvent.press(screen.getByLabelText('Scanner : Visite technique'));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]', params: { id: 'v1', regulariser: 'visite_technique' } });
     expect(screen.getByText('Pas encore ajoutée')).toBeTruthy();
+    await fireEvent.press(screen.getByLabelText('Scanner : Visite technique'));
+    expect(mockRouter.push).not.toHaveBeenCalled();
+    expect(screen.getByText('ECHEANCES:visite_technique')).toBeTruthy();
   });
 
   it('documents : assurance expirée → « Expirée le … » (pas « Expire le ») ; seules des périodes à venir → « non couverte aujourd’hui »', async () => {
@@ -396,7 +427,8 @@ describe('« Modifier la fiche technique »', () => {
   it('arabe : en-tête, libellés et barre d’enregistrement en arabe', async () => {
     mockState.language = 'ar';
     await render(<VehicleForm vehicle={base} />);
-    expect(screen.getByText('البطاقة التقنية')).toBeTruthy();
+    expect(screen.getAllByText('البطاقة التقنية').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText('المواعيد')).toBeTruthy(); // onglet
     await fireEvent.press(screen.getByLabelText('يدوي'));
     expect(screen.getByText('تعديل واحد')).toBeTruthy();
     expect(screen.getByLabelText('حفظ')).toBeTruthy();

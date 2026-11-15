@@ -47,7 +47,9 @@ export default function VehicleDetailScreen() {
   // Anciens liens « ?edit=… » : l'édition se fait maintenant dans « Modifier la fiche technique ».
   useEffect(() => {
     if (id && (editParam === 'specs' || editParam === 'documents')) router.replace({ pathname: '/flotte/[id]/modifier', params: editParam === 'documents' ? { id, field: 'carburant' } : { id } });
-  }, [id, editParam]);
+    // Ancien lien « ?regulariser=assurance » : le renouvellement se fait maintenant dans l'onglet « Échéances » de la page de modification.
+    else if (id && (regulariser === 'assurance' || regulariser === 'visite_technique' || regulariser === 'vignette')) router.replace({ pathname: '/flotte/[id]/modifier', params: { id, tab: 'echeances', regulariser } });
+  }, [id, editParam, regulariser]);
   const insets = useSafeAreaInsets();
   const { scrollRef, onSectionLayout: onSectionLayoutAuto, onScrollBeginDrag } = useSectionScroll(parseVehicleSection(sectionParam));
   const detail = useVehicleDetail(id);
@@ -84,9 +86,8 @@ export default function VehicleDetailScreen() {
   const [statusError, setStatusError] = useState<string | null>(null);
   // Positions des sections (pour « Voir l'entretien ») : relevées à la mise en page
   const [entretienY, setEntretienY] = useState(0);
-  // « Régulariser » : on descend jusqu'aux échéances et on ouvre l'obligation à renouveler (aussi depuis la location : ?regulariser=assurance).
-  const [duesY, setDuesY] = useState(0);
-  const [openKind, setOpenKind] = useState<'assurance' | 'visite_technique' | 'vignette' | null>(regulariser === 'assurance' || regulariser === 'visite_technique' || regulariser === 'vignette' ? regulariser : null);
+  // Les échéances se gèrent dans « Modifier la fiche technique » (onglet « Échéances ») : la fiche les montre seulement.
+  const editDues = (kind?: 'assurance' | 'visite_technique' | 'vignette' | null) => router.push({ pathname: '/flotte/[id]/modifier', params: kind ? { id, tab: 'echeances', regulariser: kind } : { id, tab: 'echeances' } });
   const onSectionLayout = (name: 'photos' | 'documents' | 'entretien') => (event: Parameters<ReturnType<typeof onSectionLayoutAuto>>[0]) => {
     if (name === 'entretien') setEntretienY(event.nativeEvent.layout.y);
     onSectionLayoutAuto(name)(event);
@@ -280,10 +281,7 @@ export default function VehicleDetailScreen() {
             <Button variant="secondary" icon="create-outline" label={t('vehicleDetail.specs.editButton')} onPress={goEdit} accessibilityLabel={t('vehicleDetail.specs.editButton')} />
             <RegularizeBanner
               issues={regularizationIssues(complianceQuery.data ?? [], vehicle, now)}
-              onRegularize={(kind) => {
-                setOpenKind(kind);
-                scrollRef.current?.scrollTo({ y: Math.max(0, duesY - 12), animated: true });
-              }}
+              onRegularize={(kind) => editDues(kind)}
             />
             {figures ? (
               <>
@@ -295,9 +293,7 @@ export default function VehicleDetailScreen() {
                 <FourteenDays days={figures.days} now={now} onTap={openCalendarTap} />
               </>
             ) : null}
-            <View onLayout={(event) => setDuesY(event.nativeEvent.layout.y)}>
-              <DuesSection key={openKind ?? 'none'} vehicle={vehicle} rows={figures?.dues ?? []} now={now} openKind={openKind} />
-            </View>
+            <DuesSection readOnly vehicle={vehicle} rows={figures?.dues ?? []} now={now} onEdit={(target) => editDues(target?.kind ?? null)} />
             <SpecsGrid tiles={buildSpecs(vehicle)} description={vehicle.description?.trim() || null} onEdit={goEdit} onTile={goEdit} />
             <HistoryCard events={history.slice(0, 4)} onOpen={openEvent} onSeeAll={() => router.push({ pathname: '/flotte/[id]/historique', params: { id: vehicle.id } })} />
             {showPrice ? (
@@ -335,10 +331,7 @@ export default function VehicleDetailScreen() {
                 items={maintenanceItems}
                 now={now}
                 showCost={showPrice}
-                onRenewLegal={(kind) => {
-                  setOpenKind(kind);
-                  scrollRef.current?.scrollTo({ y: Math.max(0, duesY - 12), animated: true });
-                }}
+                onRenewLegal={(kind) => editDues(kind)}
               />
             </View>
 

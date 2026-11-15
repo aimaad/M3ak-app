@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation, usePreventRemove } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -14,7 +14,6 @@ import {
   DateField,
   DocumentList,
   DocumentSlot,
-  EmptyState,
   FormField,
   InfoBanner,
   NumberStepper,
@@ -26,26 +25,24 @@ import {
   Segmented,
   suggestWeekMonth,
   useKeyboardHeight,
-  Panel,
   type ListOption,
 } from '@/components/form';
 import { ImageViewer } from '@/components/image-viewer';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
-import type { ComplianceRecord } from '@/features/compliance/types';
+import type { ComplianceKind, ComplianceRecord } from '@/features/compliance/types';
 import type { Customer } from '@/features/customers/types';
 import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 import { useBranches } from '@/features/branches/hooks';
-import { complianceStatus, toDisplayDate } from '@/features/compliance/logic';
+import { complianceStatus } from '@/features/compliance/logic';
 import { useVehicleCompliance } from '@/features/compliance/hooks';
 import { useCustomers } from '@/features/customers/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
-import { useCreateMaintenanceItem, useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
+import { useVehicleMaintenanceItems } from '@/features/maintenance/hooks';
 import { useVehicleRentals } from '@/features/rentals/hooks';
 import { mergeDocuments } from '@/features/storage/documents';
 import { useSignedUrl } from '@/features/storage/hooks';
-import { describeSaveError } from './save-error';
 import { availabilityAlertList, availabilityAlerts, isStatusLockedError, statusBlockText, statusChangeBlocked } from './status-guard';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -53,6 +50,7 @@ import { prepareVehiclePhoto, uploadVehicleDocument, VEHICLE_DOCUMENTS_BUCKET } 
 import { archiveBlock } from './archive-guard';
 import { archiveReasonText } from './detail/archive-section';
 import { buildDues } from './detail/dues';
+import { DuesSection } from './detail/dues-section';
 import { displayName } from './detail/names';
 import { canSeePrices, formatDayLabel } from './fleet-card';
 import { applyScan, buildInput, changedFields, draftFromVehicle, firstErrorField, missingAfterScan, validateDraft, type FieldKey, type FormDraft } from './form/model';
@@ -82,50 +80,8 @@ function InlineError({ message }: { message?: string }) {
   );
 }
 
-/** Feuille « Ajouter une vidange » : une échéance créée tout de suite (requête séparée de la barre d'enregistrement). */
-function AddOilSheet({ vehicleId, visible, onClose }: { vehicleId: string; visible: boolean; onClose: () => void }) {
-  const { t } = useLanguage();
-  const agency = useMyAgency();
-  const create = useCreateMaintenanceItem();
-  const [date, setDate] = useState<string | null>(null);
-  const [km, setKm] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const ready = !!date || km.trim() !== '';
-
-  function add() {
-    if (!agency.data || !ready) return;
-    setError(null);
-    create.mutate(
-      { agencyId: agency.data.agencyId, input: { vehicleId, type: 'vidange', echeanceDate: date, echeanceKm: km.trim() ? Number(km) : null, notes: null } },
-      {
-        onSuccess: () => {
-          setDate(null);
-          setKm('');
-          onClose();
-        },
-        onError: (failure) => setError(describeSaveError(failure, t, 'vehicleForm.edit.due.sheetFailed')),
-      }
-    );
-  }
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: Palette.overlay }} onPress={onClose} accessibilityLabel={t('form.close')} />
-      <View style={{ backgroundColor: Palette.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 20, paddingBottom: 32, gap: 16 }}>
-        <HText font="display" weight="bold" size={18} accessibilityRole="header">
-          {t('vehicleForm.edit.due.sheetTitle')}
-        </HText>
-        <DateField label={t('vehicleForm.edit.due.sheetDate')} value={date} onChange={setDate} minimumDate={new Date()} />
-        <FormField label={t('vehicleForm.edit.due.sheetKm')} value={km} onChangeText={setKm} thousands unit={t('vehicleForm.edit.units.km')} placeholder={t('vehicleForm.edit.ph.kilometrage')} />
-        {error ? <InlineError message={error} /> : null}
-        <Button label={t('vehicleForm.edit.due.sheetAdd')} onPress={add} loading={create.isPending} loadingLabel={t('form.saving')} disabled={!ready} disabledReason={t('vehicleForm.edit.due.sheetDisabled')} />
-      </View>
-    </Modal>
-  );
-}
-
 /** « Modifier la fiche technique » : une page qui défile, une seule barre d'enregistrement, un seul enregistrement (photos puis une requête). */
-export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicle; scrollToField?: string | null }) {
+export function VehicleForm({ vehicle, scrollToField = null, initialTab = 'fiche', initialKind = null }: { vehicle: Vehicle; scrollToField?: string | null; /** Onglet ouvert d'emblée (« Échéances » depuis la fiche, « Scanner », « Régulariser »). */ initialTab?: 'fiche' | 'echeances'; /** Obligation (assurance, visite, vignette) dont le renouvellement s'ouvre d'emblée. */ initialKind?: ComplianceKind | null }) {
   const { t, language } = useLanguage();
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardHeight();
@@ -162,7 +118,8 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
   const [scanError, setScanError] = useState<string | null>(null);
   const [aiFilled, setAiFilled] = useState<FieldKey[]>([]);
   const [expiry, setExpiry] = useState<string | null>(null);
-  const [oilSheet, setOilSheet] = useState(false);
+  const [tab, setTab] = useState<'fiche' | 'echeances'>(initialTab);
+  const [openKind, setOpenKind] = useState<ComplianceKind | null>(initialKind);
   const [viewer, setViewer] = useState<{ uri: string; label: string } | null>(null);
   const [now] = useState(() => new Date());
 
@@ -276,19 +233,6 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
     setSaveError(null);
   }
 
-  // Échéances : la plus proche parmi les obligations et les entretiens.
-  const nextDue = useMemo(() => {
-    const items: { name: string; date: string; state: 'valid' | 'soon' | 'urgent' | 'expired' }[] = [];
-    for (const kind of ['assurance', 'visite_technique'] as const) {
-      const status = complianceStatus(kind, compliance, vehicle, now);
-      if (status.record && status.due && status.state !== 'none') items.push({ name: t(`vehicleForm.edit.docs.${kind}`), date: status.due, state: status.state });
-    }
-    for (const row of buildDues({ vehicle, maintenance, now })) {
-      if (row.type === 'assurance' || row.type === 'visite_technique' || !row.date) continue;
-      items.push({ name: t(`maintenance.types.${row.type}`), date: row.date, state: row.urgency === 'expired' ? 'expired' : row.urgency === 'hot' ? 'urgent' : row.urgency === 'normal' ? 'soon' : 'valid' });
-    }
-    return items.sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
-  }, [compliance, maintenance, vehicle, now, t]);
 
   const block = archiveBlock(vehicle, rentals, new Map(customerList.map((customer) => [customer.id, customer])), now);
 
@@ -335,8 +279,8 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
         ? t('vehicleDetail.compliance.uncoveredToday')
         : t('vehicleForm.edit.docs.none'),
     thumbUri: thumb,
-    action: { label: status.record ? t('vehicleForm.edit.docs.view') : t('vehicleForm.edit.docs.scan'), tone: status.record ? ('neutral' as const) : ('primary' as const), // Ouvre la fiche directement sur le renouvellement de cette obligation (échéances), où l'on photographie le papier : plus de retour en haut de page.
-    onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id, regulariser: kind } }) },
+    // « Scanner » / « Voir » : on passe à l'onglet « Échéances », sur le renouvellement de cette obligation (photo ou galerie), sans quitter la page.
+    action: { label: status.record ? t('vehicleForm.edit.docs.view') : t('vehicleForm.edit.docs.scan'), tone: status.record ? ('neutral' as const) : ('primary' as const), onPress: () => { setOpenKind(kind); setTab('echeances'); } },
   });
   const slotCount = aiFilled.length > 0 ? aiFilled.length : undefined;
 
@@ -365,6 +309,22 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
           </View>
         </View>
 
+        <View accessibilityRole="tablist" style={{ flexDirection: 'row', gap: 4, height: 48, borderRadius: 14, backgroundColor: Palette.border, padding: 4 }}>
+          {(['fiche', 'echeances'] as const).map((value) => {
+            const on = tab === value;
+            return (
+              <Pressable key={value} onPress={() => setTab(value)} accessibilityRole="tab" accessibilityState={{ selected: on }} accessibilityLabel={t(`vehicleForm.edit.tabs.${value}`)} style={{ flex: 1, flexDirection: 'row', gap: 6, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? Brand.white : 'transparent' }}>
+                <HText weight={on ? 'semibold' : 'medium'} size={14} color={on ? Palette.textPrimary : Palette.textSecondary}>
+                  {t(`vehicleForm.edit.tabs.${value}`)}
+                </HText>
+                {value === 'fiche' && dirty ? <View accessibilityLabel={t('vehicleForm.edit.tabs.unsavedDot')} style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: Brand.orange }} /> : null}
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {tab === 'fiche' ? (
+          <>
         {reading ? <InfoBanner strong={t('vehicleForm.edit.bannerReading')} /> : aiFilled.length > 0 ? <InfoBanner strong={bannerStrong} muted={missing.length > 0 ? t('vehicleForm.edit.bannerMissing', { list: joined }) : undefined} /> : null}
         {scanError ? <InlineError message={scanError} /> : null}
 
@@ -419,42 +379,6 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
             </View>
           ) : null}
           <DocumentList rows={[docRow('assurance', insuranceStatus, insuranceThumb), docRow('visite_technique', visitStatus, visitThumb)]} />
-        </View>
-
-        <View style={{ gap: 10 }}>
-          <SectionLabel>{t('vehicleForm.edit.sections.deadlines')}</SectionLabel>
-          {nextDue ? (
-            <Panel gap={12}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <HText weight="semibold" size={14}>
-                    {nextDue.name}
-                  </HText>
-                  <HText size={12} color={Palette.textSecondary}>
-                    {`${dateText(nextDue.date)} · ${toDisplayDate(nextDue.date)}`}
-                  </HText>
-                </View>
-                <View style={{ borderRadius: 7, paddingHorizontal: 8, paddingVertical: 4, backgroundColor: nextDue.state === 'valid' ? Palette.successSoft : nextDue.state === 'expired' ? Palette.errorSoft : Brand.aiBadgeFill }}>
-                  <HText weight="bold" size={11} color={nextDue.state === 'valid' ? Palette.success : nextDue.state === 'expired' ? Palette.error : Brand.orangeUrgentText}>
-                    {t(nextDue.state === 'valid' ? 'vehicleForm.edit.due.upToDate' : nextDue.state === 'expired' ? 'vehicleForm.edit.due.late' : 'vehicleForm.edit.due.soon')}
-                  </HText>
-                </View>
-              </View>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                {[{ label: t('vehicleForm.edit.due.addOil'), onPress: () => setOilSheet(true) }, { label: t('vehicleForm.edit.due.addVisit'), onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id } }) }].map((chip) => (
-                  <Pressable key={chip.label} onPress={chip.onPress} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
-                    <View style={{ height: 36, borderRadius: 18, borderWidth: 1, borderColor: Palette.border, backgroundColor: Palette.surface, paddingHorizontal: 12, justifyContent: 'center' }}>
-                      <HText weight="semibold" size={12}>
-                        {chip.label}
-                      </HText>
-                    </View>
-                  </Pressable>
-                ))}
-              </View>
-            </Panel>
-          ) : (
-            <EmptyState icon="construct-outline" title={t('vehicleForm.edit.due.emptyTitle')} text={t('vehicleForm.edit.due.emptyText')} chips={[{ label: t('vehicleForm.edit.due.addOil'), onPress: () => setOilSheet(true) }, { label: t('vehicleForm.edit.due.addVisit'), onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id } }) }, { label: t('vehicleForm.edit.due.addInsurance'), onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id } }) }]} />
-          )}
         </View>
 
         <View style={{ gap: 12 }}>
@@ -530,6 +454,22 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
         ) : null}
 
         {isManager ? <DangerLink label={t('vehicleForm.edit.archive.link')} onPress={confirmArchive} disabled={!!block} reason={block ? archiveReasonText(block, t, language, now) : undefined} /> : null}
+          </>
+        ) : (
+          <>
+            {dirty ? (
+              <View accessibilityRole="alert" style={{ gap: 10, borderRadius: 16, borderWidth: 1.5, borderColor: Palette.warning, backgroundColor: Palette.warningSoft, padding: 14 }}>
+                <HText weight="semibold" size={13}>
+                  {t('vehicleForm.edit.tabs.dirtyBanner')}
+                </HText>
+                <Button label={t('vehicleForm.edit.tabs.saveSpecs')} onPress={() => void save()} loading={saving} loadingLabel={t('form.saving')} />
+              </View>
+            ) : null}
+            <View ref={register('echeances')} collapsable={false}>
+              <DuesSection key={openKind ?? 'none'} vehicle={vehicle} rows={buildDues({ vehicle, maintenance, now })} now={now} openKind={openKind} />
+            </View>
+          </>
+        )}
       </ScrollView>
 
       {saveError ? (
@@ -543,10 +483,9 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
         </View>
       ) : null}
 
-      <SaveBar changes={dirty ? changeLabels : []} onSave={() => void save()} onCancel={cancel} busy={saving} />
+      {tab === 'fiche' ? <SaveBar changes={dirty ? changeLabels : []} onSave={() => void save()} onCancel={cancel} busy={saving} /> : null}
 
       <CameraCapture visible={camera !== null} onClose={() => setCamera(null)} onCapture={(uri) => camera && void onCaptured(camera, uri)} hint={t('vehicleForm.edit.scan.hint')} />
-      <AddOilSheet vehicleId={vehicle.id} visible={oilSheet} onClose={() => setOilSheet(false)} />
       <ImageViewer uri={viewer?.uri ?? null} label={viewer?.label ?? ''} onClose={() => setViewer(null)} />
     </View>
   );

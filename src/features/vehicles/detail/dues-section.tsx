@@ -36,7 +36,7 @@ function DueActions({ onSave, onCancel, busy, error }: { onSave: () => void; onC
           {error}
         </HText>
       ) : null}
-      <Button label={t('vehicleDetail.editor.save')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.editor.save')} />
+      <Button label={t('vehicleDetail.dues.edit.saveButton')} loadingLabel={t('vehicleDetail.editor.saving')} loading={busy} onPress={onSave} accessibilityLabel={t('vehicleDetail.dues.edit.saveButton')} />
       <Button variant="secondary" label={t('vehicleDetail.editor.cancel')} onPress={onCancel} disabled={busy} />
     </View>
   );
@@ -134,7 +134,7 @@ function DueFields({ type, vehicle, draft, setDraft, showErrors, now }: { type: 
 type AddType = MaintenanceType;
 
 /** Ajout d'une échéance : on choisit le type (entretien ou obligation), puis les champs apparaissent — dans la carte, sans changer de page. */
-function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClose: () => void }) {
+function AddDue({ vehicle, now, onClose, onSaved }: { vehicle: Vehicle; now: Date; onClose: () => void; onSaved: () => void }) {
   const { t } = useLanguage();
   const agency = useMyAgency();
   const create = useCreateMaintenanceItem();
@@ -151,7 +151,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
     if (!maintenanceType || Object.keys(validateDue(draft, maintenanceType)).length > 0 || !agency.data || !plan.createItem) return;
     create.mutate(
       { agencyId: agency.data.agencyId, input: { vehicleId: vehicle.id, ...plan.createItem } },
-      { onSuccess: onClose, onError: (failure) => setError(describeSaveError(failure, t, 'vehicleDetail.dues.edit.saveError')) }
+      { onSuccess: () => { onSaved(); onClose(); }, onError: (failure) => setError(describeSaveError(failure, t, 'vehicleDetail.dues.edit.saveError')) }
     );
   }
 
@@ -183,7 +183,7 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
 }
 
 /** Une ligne d'échéance dépliée : correction de la date et du kilométrage, « Marquer comme fait » (écran d'entretien), « Supprimer ». */
-function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehicle: Vehicle; now: Date; canDelete: boolean; onClose: () => void }) {
+function EditDue({ row, vehicle, now, canDelete, onClose, onSaved }: { row: DueRow; vehicle: Vehicle; now: Date; canDelete: boolean; onClose: () => void; onSaved: () => void }) {
   const { t } = useLanguage();
   const agency = useMyAgency();
   const create = useCreateMaintenanceItem();
@@ -214,6 +214,7 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
         const { type, expiresAt } = plan.syncDocumentExpiry;
         await updateDocuments.mutateAsync({ id: vehicle.id, documents: vehicle.documents.map((doc) => (doc.type === type ? { ...doc, expiresAt } : doc)) });
       }
+      onSaved();
       onClose();
     } catch (failure) {
       setError(describeSaveError(failure, t, 'vehicleDetail.dues.edit.saveError'));
@@ -252,12 +253,13 @@ function EditDue({ row, vehicle, now, canDelete, onClose }: { row: DueRow; vehic
  * Échéances complètes, modifiables SUR PLACE : une ligne par échéance (assurance, visite technique, entretiens) ; un toucher la déplie
  * pour corriger la date et le kilométrage ; « + Ajouter » ouvre le formulaire dans la carte.
  */
-export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { vehicle: Vehicle; rows: DueRow[]; now: Date; openKind?: ComplianceKind | null }) {
+export function DuesSection({ vehicle, rows: allRows, now, openKind = null, readOnly = false, onEdit }: { vehicle: Vehicle; rows: DueRow[]; now: Date; openKind?: ComplianceKind | null; /** Fiche du véhicule : échéances prévues en lecture seule ; « Modifier » ouvre l'onglet « Échéances » de la page de modification. */ readOnly?: boolean; onEdit?: (target?: { kind?: ComplianceKind }) => void }) {
   // L'assurance et la visite technique sont dans « Obligations légales » (ComplianceBlock) : ici, seulement les entretiens.
   const rows = allRows.filter((row) => row.type !== 'assurance' && row.type !== 'visite_technique');
   const { t, language } = useLanguage();
   const agency = useMyAgency();
   const [open, setOpen] = useState<string | 'new' | null>(null);
+  const [saved, setSaved] = useState(false);
   const canDelete = agency.data?.role === 'owner' || agency.data?.role === 'manager';
   const dueText = (row: DueRow) => {
     if (row.incomplete) return t('vehicleDetail.dues.incomplete');
@@ -286,9 +288,22 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
         <HText font="display" weight="bold" size={17} accessibilityRole="header">
           {t('vehicleDetail.dues.title')}
         </HText>
+        {readOnly ? (
+          <Pressable onPress={() => onEdit?.()} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.dues.editA11y')} hitSlop={10} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <HText weight="semibold" size={13} color={Brand.orangeUrgentText}>
+              {t('vehicleDetail.dues.editLink')}
+            </HText>
+          </Pressable>
+        ) : null}
       </View>
 
-      <ComplianceBlock vehicle={vehicle} now={now} openKind={openKind} />
+      {saved ? (
+        <HText size={13} weight="bold" color={Palette.success} accessibilityRole="alert">
+          {t('vehicleDetail.dues.edit.savedNote')}
+        </HText>
+      ) : null}
+
+      <ComplianceBlock vehicle={vehicle} now={now} openKind={openKind} readOnly={readOnly} onOpenKind={(kind) => onEdit?.({ kind })} />
 
       <HText weight="semibold" size={11} track={0.14} color={Palette.textSecondary} style={{ marginTop: 12, marginBottom: 2 }}>
         {t('vehicleDetail.compliance.maintenance').toLocaleUpperCase()}
@@ -310,6 +325,7 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
           <View key={row.key} style={{ borderTopWidth: 1, borderTopColor: Brand.gaugeTrack }}>
             <Pressable
               onPress={() => {
+                if (readOnly) return onEdit?.();
                 setOpen(expanded ? null : row.key);
               }}
               accessibilityRole="button"
@@ -336,16 +352,16 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
                   {sub}
                 </HText>
               </View>
-              <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.textSecondary} />
+              <Ionicons name={readOnly ? 'chevron-forward' : expanded ? 'chevron-up' : 'chevron-down'} size={16} color={Palette.textSecondary} />
             </Pressable>
-            {expanded ? <EditDue row={row} vehicle={vehicle} now={now} canDelete={canDelete} onClose={() => setOpen(null)} /> : null}
+            {expanded && !readOnly ? <EditDue row={row} vehicle={vehicle} now={now} canDelete={canDelete} onClose={() => setOpen(null)} onSaved={() => setSaved(true)} /> : null}
           </View>
         );
       })}
 
       {/* Bouton en bas de la liste ; au clic, le formulaire s'affiche à cette même place. */}
-      {open === 'new' ? (
-        <AddDue vehicle={vehicle} now={now} onClose={() => setOpen(null)} />
+      {readOnly ? null : open === 'new' ? (
+        <AddDue vehicle={vehicle} now={now} onClose={() => setOpen(null)} onSaved={() => setSaved(true)} />
       ) : (
         <Button variant="secondary" label={t('vehicleDetail.dues.add')} onPress={() => setOpen('new')} style={{ marginTop: 12 }} />
       )}

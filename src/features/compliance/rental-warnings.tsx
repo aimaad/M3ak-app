@@ -26,7 +26,7 @@ export function RentalComplianceWarnings({ vehicleId, start, end }: { vehicleId:
   const critical = all.filter((warning) => warning.code === 'expired' && (warning.kind === 'assurance' || warning.kind === 'visite_technique'));
   const warnings = all.filter((warning) => !critical.includes(warning));
   const day = (iso: string | null) => (iso ? new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString(language === 'ar' ? 'ar-MA' : 'fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
-  const open = (kind?: string) => router.push({ pathname: '/flotte/[id]', params: kind ? { id: vehicleId, regulariser: kind } : { id: vehicleId } });
+  const open = (kind?: string) => (kind ? router.push({ pathname: '/flotte/[id]/modifier', params: { id: vehicleId, tab: 'echeances', regulariser: kind } }) : router.push({ pathname: '/flotte/[id]', params: { id: vehicleId } }));
 
   return (
     <View className="gap-3">

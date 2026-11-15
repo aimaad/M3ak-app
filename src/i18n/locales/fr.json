@@ -3501,6 +3501,8 @@
     "dues": {
       "title": "Échéances",
       "add": "+ Ajouter",
+      "editLink": "Modifier",
+      "editA11y": "Modifier les échéances",
       "collapse": "Réduire",
       "today": "Aujourd'hui",
       "daysLeft": "J-{{n}}",
@@ -3516,6 +3518,8 @@
       "a11y": "{{label}} : {{due}}. {{sub}}",
       "edit": {
         "addTitle": "Nouvelle échéance",
+        "saveButton": "Enregistrer l'échéance",
+        "savedNote": "✓ Échéance enregistrée",
         "type": "Type",
         "dateLabel": "Date d'échéance",
         "dateHint": "JJ/MM/AAAA",
@@ -3796,6 +3800,7 @@
         "visite_technique": "Prenez en photo le nouveau papier de visite technique, ou choisissez-le dans la galerie (facultatif).",
         "vignette": "Prenez en photo la quittance de la vignette, ou choisissez-la dans la galerie (facultatif)."
       },
+      "saveButton": "Enregistrer la période",
       "quickConfirm": "Enregistrer cette période",
       "quickNote": "Elle commence le lendemain de la fin de la période actuelle ({{date}}) et devient la période en cours. L'ancienne reste dans l'historique.",
       "quickNoteNone": "Elle devient la période en cours. Vous serez prévenu avant sa fin.",
@@ -4095,6 +4100,13 @@
         "availability": "DISPONIBILITÉ",
         "description": "DESCRIPTION",
         "pricing": "TARIFICATION"
+      },
+      "tabs": {
+        "fiche": "Fiche technique",
+        "echeances": "Échéances",
+        "unsavedDot": "Modifications non enregistrées",
+        "dirtyBanner": "Fiche technique modifiée, non enregistrée.",
+        "saveSpecs": "Enregistrer la fiche"
       },
       "docs": {
         "recto": "Carte grise (recto)",

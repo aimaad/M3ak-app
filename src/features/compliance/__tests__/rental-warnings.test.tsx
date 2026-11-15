@@ -57,7 +57,7 @@ describe('avertissements avant location', () => {
     expect(screen.getByText(/BIBIP vous alerte mais ne bloque pas la location\. Cela ne vaut pas autorisation légale/)).toBeTruthy();
     expect(screen.queryByText('À vérifier avant de louer')).toBeNull(); // rien d'orange en plus
     await fireEvent.press(screen.getByText('Régulariser'));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]', params: { id: 'v1', regulariser: 'assurance' } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]/modifier', params: { id: 'v1', tab: 'echeances', regulariser: 'assurance' } });
   });
 
   it('visite technique expirée : aussi à régulariser', async () => {
