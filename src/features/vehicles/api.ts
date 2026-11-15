@@ -288,11 +288,11 @@ export async function uploadVehicleDocument(
   localUri: string,
   expiresAt: string | null
 ): Promise<VehicleDocument> {
-  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
-  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
-  const path = `${agencyId}/${vehicleId}/${type}-${Date.now()}.${extension}`;
+  // Photo réduite avant l'envoi (1600 px, JPEG) : le document s'affiche bien plus vite ensuite, même sur une connexion moyenne.
+  const prepared = await prepareVehiclePhoto(localUri);
+  const path = `${agencyId}/${vehicleId}/${type}-${Date.now()}.jpg`;
 
-  await uploadFile(VEHICLE_DOCUMENTS_BUCKET, path, localUri, contentType);
+  await uploadFile(VEHICLE_DOCUMENTS_BUCKET, path, prepared, 'image/jpeg');
 
   return { type, path, uploadedAt: new Date().toISOString(), expiresAt };
 }

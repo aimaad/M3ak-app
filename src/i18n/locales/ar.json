@@ -2,6 +2,8 @@
   "common": {
     "close": "سد",
     "zoomHint": "ضغط باش تكبر",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
     "appName": "معاك",
     "tagline": "التطبيق الذكي لوكالة كراء السيارات ديالك",
     "language": "اللغة",
@@ -3489,6 +3491,7 @@
     }
   },
   "vehicleDetail": {
+    "header": { "mileageA11y": "المسافة المقطوعة: {{km}} كم" },
     "back": "رجوع للأسطول",
     "share": "شارك الملف",
     "more": "إجراءات أخرى: تعديل، أرشفة",
@@ -3602,6 +3605,7 @@
     "dues": {
       "title": "المواعيد المقبلة",
       "add": "+ إضافة",
+      "collapse": "تصغير",
       "today": "اليوم",
       "daysLeft": "بعد {{n}} يومًا",
       "kmLeft": "{{km}} كم",
@@ -3671,6 +3675,7 @@
     "specs": {
       "title": "البطاقة التقنية",
       "edit": "تعديل",
+      "editButton": "تعديل البطاقة التقنية",
       "toComplete": "للإكمال",
       "categorie": "الفئة",
       "transmission": "ناقل الحركة",
@@ -3702,6 +3707,8 @@
       "maintenanceSubGarage": "{{date}} · {{garage}}",
       "amount": "{{amount}} درهم",
       "screenTitle": "سجل السيارة",
+      "shown": "{{shown}} من أصل {{total}} حدثاً",
+      "more": "عرض {{count}} أخرى",
       "a11y": "{{title}}. {{sub}}",
       "renewed": "تجديد: {{kind}}",
       "renewedSub": "{{date}} · إلى غاية {{until}}"
@@ -4194,8 +4201,8 @@
         "pricing": "التسعير"
       },
       "docs": {
-        "recto": "الوجه",
-        "verso": "الظهر",
+        "recto": "البطاقة الرمادية (الوجه)",
+        "verso": "البطاقة الرمادية (الظهر)",
         "versoHint": "للإضافة",
         "assurance": "التأمين",
         "visite_technique": "الفحص التقني",

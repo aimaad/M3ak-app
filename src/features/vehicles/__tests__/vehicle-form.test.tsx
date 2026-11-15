@@ -323,7 +323,7 @@ describe('« Modifier la fiche technique »', () => {
     mockState.compliance = [{ id: 'c1', vehicleId: 'v1', kind: 'assurance', validFrom: null, validUntil: day(300), documentPath: null, createdAt: '2026-01-01T00:00:00Z' }];
     await render(<VehicleForm vehicle={base} />);
     await fireEvent.press(screen.getByLabelText('Scanner : Visite technique'));
-    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]', params: { id: 'v1' } });
+    expect(mockRouter.push).toHaveBeenCalledWith({ pathname: '/flotte/[id]', params: { id: 'v1', regulariser: 'visite_technique' } });
     expect(screen.getByText('Pas encore ajoutée')).toBeTruthy();
   });
 
@@ -343,7 +343,7 @@ describe('« Modifier la fiche technique »', () => {
   it('scanner la carte grise : photo trop petite → refusée avec « Reprendre », rien n’est ajouté', async () => {
     mockState.photoCheck = { ok: false, reason: 'too_small' };
     await render(<VehicleForm vehicle={base} />);
-    await fireEvent.press(screen.getByLabelText('Scanner : Recto'));
+    await fireEvent.press(screen.getByLabelText('Scanner : Carte grise (recto)'));
     await fireEvent.press(screen.getByLabelText('CAMERA-SHOOT'));
     expect(await screen.findByText('Photo trop petite · Reprendre')).toBeTruthy();
     expect(screen.queryByLabelText('Enregistrer')).toBeNull();
@@ -352,7 +352,7 @@ describe('« Modifier la fiche technique »', () => {
   it('scanner la carte grise : champs remplis avec badge « Lu par l’IA » et bandeau, puis un seul enregistrement avec la photo', async () => {
     mockState.scan = { ok: true, fields: allFields({ puissanceFiscale: field(6), marque: field('Dacia'), dateFinValidite: field('2031-05-01') }) };
     await render(<VehicleForm vehicle={base} />);
-    await fireEvent.press(screen.getByLabelText('Scanner : Recto'));
+    await fireEvent.press(screen.getByLabelText('Scanner : Carte grise (recto)'));
     await fireEvent.press(screen.getByLabelText('CAMERA-SHOOT'));
     expect(await screen.findByLabelText('1 champ rempli depuis la carte grise. Il reste la boîte et le kilométrage.')).toBeTruthy();
     expect(screen.getByDisplayValue('6')).toBeTruthy();
@@ -366,7 +366,7 @@ describe('« Modifier la fiche technique »', () => {
   it('lecture impossible (non activée) : message clair, saisie à la main possible', async () => {
     mockState.scan = { ok: false, error: 'ocr_disabled' };
     await render(<VehicleForm vehicle={base} />);
-    await fireEvent.press(screen.getByLabelText('Scanner : Recto'));
+    await fireEvent.press(screen.getByLabelText('Scanner : Carte grise (recto)'));
     await fireEvent.press(screen.getByLabelText('CAMERA-SHOOT'));
     expect(await screen.findByText("La lecture automatique n'est pas activée pour votre entreprise. Saisissez les champs à la main.")).toBeTruthy();
   });
@@ -375,7 +375,7 @@ describe('« Modifier la fiche technique »', () => {
     mockState.uploadFails = true;
     mockState.scan = { ok: true, fields: allFields({}) };
     await render(<VehicleForm vehicle={base} />);
-    await fireEvent.press(screen.getByLabelText('Scanner : Recto'));
+    await fireEvent.press(screen.getByLabelText('Scanner : Carte grise (recto)'));
     await fireEvent.press(screen.getByLabelText('CAMERA-SHOOT'));
     await screen.findByLabelText('Enregistrer');
     await fireEvent.press(screen.getByLabelText('Enregistrer'));

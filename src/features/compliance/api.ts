@@ -1,5 +1,5 @@
 import { uploadFile } from '@/features/storage/api';
-import { VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
+import { prepareVehiclePhoto, VEHICLE_DOCUMENTS_BUCKET } from '@/features/vehicles/api';
 import { getSupabase } from '@/lib/supabase';
 
 import { DEFAULT_COMPLIANCE_SETTINGS, type ComplianceInput, type ComplianceKind, type ComplianceRecord, type ComplianceSettings } from './types';
@@ -102,10 +102,10 @@ export async function deleteComplianceRecord(id: string): Promise<void> {
 
 /** Photo du papier (attestation, procès-verbal, quittance) dans le stockage des documents du véhicule ; renvoie son chemin. */
 export async function uploadComplianceDocument(agencyId: string, vehicleId: string, kind: ComplianceKind, localUri: string): Promise<string> {
-  const extension = localUri.split('.').pop()?.split('?')[0]?.toLowerCase() || 'jpg';
-  const contentType = extension === 'png' ? 'image/png' : 'image/jpeg';
-  const path = `${agencyId}/${vehicleId}/${kind}-${Date.now()}.${extension}`;
-  await uploadFile(VEHICLE_DOCUMENTS_BUCKET, path, localUri, contentType);
+  // Photo réduite avant l'envoi (1600 px, JPEG) : le papier s'affiche plus vite ensuite.
+  const prepared = await prepareVehiclePhoto(localUri);
+  const path = `${agencyId}/${vehicleId}/${kind}-${Date.now()}.jpg`;
+  await uploadFile(VEHICLE_DOCUMENTS_BUCKET, path, prepared, 'image/jpeg');
   return path;
 }
 

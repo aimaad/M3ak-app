@@ -4,7 +4,7 @@ import { Pressable, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Brand, Palette } from '@/constants/theme';
-import { HText } from '@/features/dashboard/home-ui';
+import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { isRTL } from '@/i18n';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -116,6 +116,13 @@ export function DetailHeader({
             </View>
             <HText size={13} color={Brand.mutedOnDark}>
               {meta}
+            </HText>
+          </View>
+          {/* Kilométrage : toujours visible en tête de fiche (« 59 000 km »). */}
+          <View accessible accessibilityLabel={t('vehicleDetail.header.mileageA11y', { km: formatAmount(vehicle.kilometrage) })} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="speedometer-outline" size={16} color={Brand.mutedOnDark} />
+            <HText weight="semibold" size={14} color={Brand.white}>
+              {`${formatAmount(vehicle.kilometrage)} ${t('flotte.km')}`}
             </HText>
           </View>
         </View>

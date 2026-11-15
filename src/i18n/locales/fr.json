@@ -2,6 +2,8 @@
   "common": {
     "close": "Fermer",
     "zoomHint": "Touchez pour agrandir",
+    "zoomIn": "Agrandir",
+    "zoomOut": "Réduire",
     "appName": "BIBIP",
     "tagline": "L'application intelligente pour votre agence de location",
     "language": "Langue",
@@ -3385,6 +3387,7 @@
     }
   },
   "vehicleDetail": {
+    "header": { "mileageA11y": "Kilométrage : {{km}} km" },
     "back": "Retour à Ma flotte",
     "share": "Partager la fiche",
     "more": "Plus d'actions : modifier, archiver",
@@ -3498,6 +3501,7 @@
     "dues": {
       "title": "Échéances",
       "add": "+ Ajouter",
+      "collapse": "Réduire",
       "today": "Aujourd'hui",
       "daysLeft": "J-{{n}}",
       "kmLeft": "{{km}} km",
@@ -3567,6 +3571,7 @@
     "specs": {
       "title": "Fiche technique",
       "edit": "Modifier",
+      "editButton": "Modifier la fiche technique",
       "toComplete": "À compléter",
       "categorie": "Catégorie",
       "transmission": "Boîte",
@@ -3598,6 +3603,8 @@
       "maintenanceSubGarage": "{{date}} · {{garage}}",
       "amount": "{{amount}} MAD",
       "screenTitle": "Historique du véhicule",
+      "shown": "{{shown}} sur {{total}} événements",
+      "more": "Afficher {{count}} de plus",
       "a11y": "{{title}}. {{sub}}",
       "renewed": "{{kind}} renouvelée",
       "renewedSub": "{{date}} · jusqu'au {{until}}"
@@ -4090,8 +4097,8 @@
         "pricing": "TARIFICATION"
       },
       "docs": {
-        "recto": "Recto",
-        "verso": "Verso",
+        "recto": "Carte grise (recto)",
+        "verso": "Carte grise (verso)",
         "versoHint": "à ajouter",
         "assurance": "Assurance",
         "visite_technique": "Visite technique",

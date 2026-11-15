@@ -534,6 +534,17 @@ describe('fiche véhicule', () => {
       expect(mockState.specsCalls).toEqual([]);
     });
 
+    it('un vrai bouton « Modifier la fiche technique » est visible sous la fiche (pas seulement un petit lien)', async () => {
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Modifier la fiche technique'));
+      expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
+    });
+
+    it('le kilométrage est visible en tête de fiche', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getAllByLabelText(/^Kilométrage : /)).toHaveLength(2); // en-tête + tuile de la fiche technique
+    });
+
     it('véhicule en location : même chose', async () => {
       mockState.vehicle = { ...base, statut: 'en_location' };
       mockState.rentals = [rentalRow({})];
@@ -594,6 +605,18 @@ describe('fiche véhicule', () => {
   describe('échéances modifiables sur place', () => {
     const vidange = () => ({ id: 'm9', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: at(5), echeanceKm: null });
 
+
+    it('« + Ajouter » : un seul « + » sur le bouton, et un « − » replie le formulaire sans rien enregistrer', async () => {
+      await render(<VehicleDetailScreen />);
+      expect(screen.getAllByText(/^\+ Ajouter$/).length).toBe(1);
+      expect(screen.queryByText(/^\+ \+/)).toBeNull();
+      await fireEvent.press(screen.getByLabelText('+ Ajouter'));
+      expect(screen.getByText('Nouvelle échéance')).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Réduire'));
+      expect(screen.queryByText('Nouvelle échéance')).toBeNull();
+      expect(screen.getByLabelText('+ Ajouter')).toBeTruthy(); // le bouton est revenu
+      expect(mockState.dueCalls.create).toEqual([]);
+    });
 
     it('« + Ajouter » : on choisit d’abord le type, tout part vide, l’échéance est créée pour CE véhicule', async () => {
       await render(<VehicleDetailScreen />);

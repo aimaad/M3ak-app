@@ -162,9 +162,15 @@ function AddDue({ vehicle, now, onClose }: { vehicle: Vehicle; now: Date; onClos
 
   return (
     <View style={{ gap: 16, padding: 14, marginVertical: 10, borderRadius: 18, backgroundColor: Palette.surface }}>
-      <HText font="display" weight="bold" size={16} accessibilityRole="header">
-        {t('vehicleDetail.dues.edit.addTitle')}
-      </HText>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+        <HText font="display" weight="bold" size={16} accessibilityRole="header" style={{ flexShrink: 1 }}>
+          {t('vehicleDetail.dues.edit.addTitle')}
+        </HText>
+        {/* « − » : replie le formulaire sans rien enregistrer. */}
+        <Pressable onPress={onClose} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.dues.collapse')} hitSlop={8} style={{ width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: Palette.surfaceAlt }}>
+          <Ionicons name="remove" size={22} color={Brand.graphite} />
+        </Pressable>
+      </View>
       <ChoiceTiles<AddType> label={t('vehicleDetail.dues.edit.type')} value={type} onChange={setType} options={options} />
       {maintenanceType ? (
         <>
@@ -341,7 +347,7 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
       {open === 'new' ? (
         <AddDue vehicle={vehicle} now={now} onClose={() => setOpen(null)} />
       ) : (
-        <Button variant="secondary" icon="add" label={t('vehicleDetail.dues.add')} onPress={() => setOpen('new')} style={{ marginTop: 12 }} />
+        <Button variant="secondary" label={t('vehicleDetail.dues.add')} onPress={() => setOpen('new')} style={{ marginTop: 12 }} />
       )}
     </View>
   );

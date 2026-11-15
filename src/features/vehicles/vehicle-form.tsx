@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation, usePreventRemove } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Modal, Pressable, ScrollView, View } from 'react-native';
+import { Alert, Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
@@ -29,6 +29,7 @@ import {
   Panel,
   type ListOption,
 } from '@/components/form';
+import { ImageViewer } from '@/components/image-viewer';
 import { Brand, Palette } from '@/constants/theme';
 import { useMyAgency, useMyProfile } from '@/features/agency/hooks';
 import type { ComplianceRecord } from '@/features/compliance/types';
@@ -334,7 +335,8 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
         ? t('vehicleDetail.compliance.uncoveredToday')
         : t('vehicleForm.edit.docs.none'),
     thumbUri: thumb,
-    action: { label: status.record ? t('vehicleForm.edit.docs.view') : t('vehicleForm.edit.docs.scan'), tone: status.record ? ('neutral' as const) : ('primary' as const), onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id } }) },
+    action: { label: status.record ? t('vehicleForm.edit.docs.view') : t('vehicleForm.edit.docs.scan'), tone: status.record ? ('neutral' as const) : ('primary' as const), // Ouvre la fiche directement sur le renouvellement de cette obligation (échéances), où l'on photographie le papier : plus de retour en haut de page.
+    onPress: () => router.push({ pathname: '/flotte/[id]', params: { id: vehicle.id, regulariser: kind } }) },
   });
   const slotCount = aiFilled.length > 0 ? aiFilled.length : undefined;
 
@@ -545,14 +547,7 @@ export function VehicleForm({ vehicle, scrollToField = null }: { vehicle: Vehicl
 
       <CameraCapture visible={camera !== null} onClose={() => setCamera(null)} onCapture={(uri) => camera && void onCaptured(camera, uri)} hint={t('vehicleForm.edit.scan.hint')} />
       <AddOilSheet vehicleId={vehicle.id} visible={oilSheet} onClose={() => setOilSheet(false)} />
-      <Modal visible={viewer !== null} transparent animationType="fade" onRequestClose={() => setViewer(null)}>
-        <View style={{ flex: 1, backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          {viewer ? <Image source={{ uri: viewer.uri }} accessibilityLabel={viewer.label} style={{ width: '100%', height: '75%' }} resizeMode="contain" /> : null}
-          <Pressable onPress={() => setViewer(null)} accessibilityRole="button" accessibilityLabel={t('vehicleForm.edit.viewerClose')} style={{ marginTop: 16, minHeight: 48, paddingHorizontal: 24, borderRadius: 24, backgroundColor: Brand.white, justifyContent: 'center' }}>
-            <HText weight="semibold">{t('form.close')}</HText>
-          </Pressable>
-        </View>
-      </Modal>
+      <ImageViewer uri={viewer?.uri ?? null} label={viewer?.label ?? ''} onClose={() => setViewer(null)} />
     </View>
   );
 }

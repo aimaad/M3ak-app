@@ -1,8 +1,10 @@
 import { maintenanceLabel } from '@/features/maintenance/label';
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, View } from 'react-native';
 
+import { Button } from '@/components/form';
+import { ImageViewer } from '@/components/image-viewer';
 import { Brand, Palette } from '@/constants/theme';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { useSignedUrl } from '@/features/storage/hooks';
@@ -105,6 +107,8 @@ export function SpecsGrid({ tiles, description, onEdit, onTile }: { tiles: SpecT
           {description}
         </HText>
       ) : null}
+      {/* Bouton bien visible (le petit lien « Modifier » de l'en-tête restait peu remarqué). */}
+      <Button variant="secondary" icon="create-outline" label={t('vehicleDetail.specs.editButton')} onPress={onEdit} accessibilityLabel={t('vehicleDetail.specs.editButton')} />
     </View>
   );
 }
@@ -262,14 +266,7 @@ export function DocumentsRow({ vehicle, onAdd }: { vehicle: Vehicle; onAdd: () =
           </HText>
         </Pressable>
       </ScrollView>
-      <Modal visible={viewing !== null} transparent animationType="fade" onRequestClose={() => setViewing(null)}>
-        <View style={{ flex: 1, backgroundColor: Palette.overlay, alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-          {viewing ? <Image source={{ uri: viewing.url }} accessibilityLabel={viewing.label} style={{ width: '100%', height: '80%' }} resizeMode="contain" /> : null}
-          <Pressable onPress={() => setViewing(null)} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.documents.viewerClose')} style={{ marginTop: 16, minHeight: 48, paddingHorizontal: 24, borderRadius: 24, backgroundColor: Brand.white, justifyContent: 'center' }}>
-            <HText weight="semibold">{t('vehicleDetail.close')}</HText>
-          </Pressable>
-        </View>
-      </Modal>
+      <ImageViewer uri={viewing?.url ?? null} label={viewing?.label ?? ''} onClose={() => setViewing(null)} />
     </View>
   );
 }

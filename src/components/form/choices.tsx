@@ -16,7 +16,7 @@ export type TileIcon = keyof typeof Ionicons.glyphMap | ImageSourcePropType;
 
 export function TileIconView({ icon, color, size = 22 }: { icon: TileIcon; color: string; size?: number }) {
   if (typeof icon === 'string') return <Ionicons name={icon} size={size} color={color} />;
-  return <Image source={icon} accessible={false} style={{ width: size + 10, height: size + 10, tintColor: color }} resizeMode="contain" />;
+  return <Image source={icon} accessible={false} fadeDuration={0} style={{ width: size + 10, height: size + 10, tintColor: color }} resizeMode="contain" />;
 }
 
 /** Libellé d'un choix, avec « À choisir » en orange quand rien n'est encore sélectionné. */

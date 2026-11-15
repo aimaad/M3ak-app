@@ -43,7 +43,7 @@ export function MaintenanceSection({ vehicle, items, now, showCost, onRenewLegal
   const total = showCost ? history.reduce((sum, item) => sum + (item.cout ?? 0), 0) : 0;
   const icon = (item: MaintenanceItem) => {
     const source = DUE_TYPE_IMAGE[item.type];
-    return source ? <Image source={source} accessible={false} style={{ width: 24, height: 24, tintColor: Brand.graphite }} resizeMode="contain" /> : null;
+    return source ? <Image source={source} accessible={false} fadeDuration={0} style={{ width: 24, height: 24, tintColor: Brand.graphite }} resizeMode="contain" /> : null;
   };
 
   return (
