@@ -297,6 +297,7 @@ function EntrepriseForm({
   details: AgencyDetails;
 }) {
   const { t } = useLanguage();
+  const role = useMyAgency().data?.role;
   const updateDetails = useUpdateAgencyDetails();
 
   const [values, setValues] = useState<AgencyDetailsFormValues>(() => valuesFromDetails(details));
@@ -424,6 +425,15 @@ function EntrepriseForm({
           variant="secondary"
           icon="document-text-outline"
           onPress={() => router.push('/entreprise/editeur-contrat')}
+        />
+      ) : null}
+
+      {isOwner || role === 'manager' ? (
+        <Button
+          label={t('dueRules.open')}
+          variant="secondary"
+          icon="options-outline"
+          onPress={() => router.push('/entreprise/echeances')}
         />
       ) : null}
 

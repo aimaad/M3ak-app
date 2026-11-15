@@ -23,6 +23,8 @@ import {
   type RenewalErrors,
 } from '@/features/compliance/logic';
 import { COMPLIANCE_KINDS, type ComplianceKind, type ComplianceRecord } from '@/features/compliance/types';
+import { enabledKinds } from '@/features/due-rules/logic';
+import { useDueRules } from '@/features/due-rules/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
 import { useLanguage } from '@/i18n/use-language';
 
@@ -354,6 +356,8 @@ export function ComplianceBlock({ vehicle, now }: { vehicle: Vehicle; now: Date 
   const agency = useMyAgency();
   const recordsQuery = useVehicleCompliance(vehicle.id);
   const { settings } = useComplianceSettings(agency.data?.agencyId);
+  // Une obligation désactivée dans les règles de l'agence n'est plus proposée.
+  const enabled = enabledKinds(useDueRules().rows);
   const [open, setOpen] = useState<ComplianceKind | null>(null);
   const [mode, setMode] = useState<'view' | 'renew'>('view');
   const records = recordsQuery.data ?? [];
@@ -367,7 +371,7 @@ export function ComplianceBlock({ vehicle, now }: { vehicle: Vehicle; now: Date 
       <HText weight="semibold" size={11} track={0.14} color={Palette.textSecondary} style={{ marginTop: 4, marginBottom: 2 }}>
         {t('vehicleDetail.compliance.title').toLocaleUpperCase()}
       </HText>
-      {COMPLIANCE_KINDS.map((kind) => {
+      {COMPLIANCE_KINDS.filter((kind) => enabled.has(kind)).map((kind) => {
         const status = statuses.find((entry) => entry.kind === kind) as ComplianceStatus;
         const expanded = open === kind;
         const kindLabel = t(`vehicleDetail.compliance.kind.${kind}`);

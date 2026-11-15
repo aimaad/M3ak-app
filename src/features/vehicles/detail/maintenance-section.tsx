@@ -70,7 +70,8 @@ export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle:
           {todo.map(({ item, urgency }) => {
             const inProgress = item.statut === 'en_cours';
             const label = maintenanceLabel(item, t);
-            const badge = inProgress ? { background: Palette.infoSoft, text: Palette.info, label: t('maintenance.status.en_cours') } : { ...URGENCY_COLOR[urgency], label: t(`maintenance.urgency.${urgency}`) };
+            const incomplete = !inProgress && !item.echeanceDate && item.echeanceKm == null;
+            const badge = inProgress ? { background: Palette.infoSoft, text: Palette.info, label: t('maintenance.status.en_cours') } : incomplete ? { background: Palette.warningSoft, text: Palette.warning, label: t('vehicleDetail.dues.incomplete') } : { ...URGENCY_COLOR[urgency], label: t(`maintenance.urgency.${urgency}`) };
             const detail = [item.echeanceDate ? dayText(item.echeanceDate, language) : null, item.echeanceKm != null ? `${formatAmount(item.echeanceKm)} km` : null].filter(Boolean).join(' · ');
             return (
               <View key={item.id} style={{ borderTopWidth: 1, borderTopColor: Brand.gaugeTrack }}>

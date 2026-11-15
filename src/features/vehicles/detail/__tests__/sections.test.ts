@@ -54,6 +54,17 @@ describe('échéances', () => {
     expect(rows.filter((row) => row.type === 'vidange')).toHaveLength(1); // une ligne par type (la plus urgente)
   });
 
+  it('échéance créée automatiquement SANS date ni km : ligne « À compléter » (jamais de date inventée)', () => {
+    const rows = buildDues({ vehicle, maintenance: [maint({ id: 'auto', type: 'vidange', repeatKm: 10_000 })], now: NOW });
+    const row = rows.find((entry) => entry.type === 'vidange');
+    expect(row).toMatchObject({ incomplete: true, maintenanceId: 'auto', due: { kind: 'none' }, date: null, targetKm: null });
+  });
+
+  it('dès qu’une date ou un km est renseigné, la ligne n’est plus « À compléter »', () => {
+    const rows = buildDues({ vehicle, maintenance: [maint({ id: 'auto', type: 'vidange', echeanceKm: 70_000, repeatKm: 10_000 })], now: NOW });
+    expect(rows.find((entry) => entry.type === 'vidange')?.incomplete).toBeUndefined();
+  });
+
   it('mêmes seuils que « À surveiller » pour ce qui s’y trouve', () => {
     const items = [maint({ id: 'a', type: 'vidange', echeanceDate: day(5) }), maint({ id: 'b', type: 'freins', echeanceDate: day(20) }), maint({ id: 'c', type: 'pneus', echeanceDate: day(-3) })];
     const watch = buildWatchItems({ vehicles: [vehicle], maintenance: items, now: NOW });

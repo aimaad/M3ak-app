@@ -25,6 +25,8 @@ export type DueRow = {
   targetKm: number | null;
   /** Entretien à ouvrir au tap ; absent pour une échéance qui ne vient que d'un document. */
   maintenanceId?: string;
+  /** Échéance créée automatiquement mais sans date ni kilométrage : « À compléter ». */
+  incomplete?: boolean;
   /** Nom d'un entretien « Autre » (« Courroie de distribution »). */
   label?: string;
   /** Assurance / visite technique sans photo du document : « Ajouter la photo ». */
@@ -82,7 +84,8 @@ export function buildDues(input: { vehicle: Vehicle; maintenance: MaintenanceIte
     if (document?.expiresAt) candidates.push(byDays(daysUntil(document.expiresAt, now), document.expiresAt.slice(0, 10)));
     const top = best(candidates);
     const isDocumentType = DOCUMENT_TYPES.includes(type);
-    if (!top && !isDocumentType) continue;
+    const incomplete = top ? undefined : group.items.find((entry) => !entry.echeanceDate && entry.echeanceKm == null);
+    if (!top && !isDocumentType && !incomplete) continue;
     rows.push({
       key: `due:${groupKey}`,
       type,
@@ -92,7 +95,8 @@ export function buildDues(input: { vehicle: Vehicle; maintenance: MaintenanceIte
       fill: top?.fill ?? 0,
       date: top?.date ?? null,
       targetKm: top?.targetKm ?? null,
-      maintenanceId: top?.maintenanceId,
+      maintenanceId: top?.maintenanceId ?? incomplete?.id,
+      incomplete: incomplete ? true : undefined,
       label: group.label,
       missingFile: isDocumentType && !document,
       score: top?.score ?? -1,

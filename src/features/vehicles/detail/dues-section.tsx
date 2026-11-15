@@ -259,6 +259,7 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
   const [open, setOpen] = useState<string | 'new' | null>(null);
   const canDelete = agency.data?.role === 'owner' || agency.data?.role === 'manager';
   const dueText = (row: DueRow) => {
+    if (row.incomplete) return t('vehicleDetail.dues.incomplete');
     switch (row.due.kind) {
       case 'days':
         return row.due.days === 0 ? t('vehicleDetail.dues.today') : t('vehicleDetail.dues.daysLeft', { n: row.due.days });
@@ -271,6 +272,7 @@ export function DuesSection({ vehicle, rows: allRows, now }: { vehicle: Vehicle;
     }
   };
   const subText = (row: DueRow) => {
+    if (row.incomplete) return t('vehicleDetail.dues.incompleteSub');
     if (row.missingFile) return t('vehicleDetail.dues.addPhoto');
     if (row.date) return t(row.urgency === 'expired' ? 'vehicleDetail.dues.subDateOverdue' : 'vehicleDetail.dues.subDate', { date: shortDate(row.date, language) });
     if (row.targetKm !== null) return t(row.urgency === 'expired' ? 'vehicleDetail.dues.subKmOverdue' : 'vehicleDetail.dues.subKm', { km: formatAmount(row.targetKm) });

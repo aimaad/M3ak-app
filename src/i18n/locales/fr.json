@@ -3516,7 +3516,9 @@
         "addNote": "+ Ajouter une note",
         "passedDaysOne": "Date passée depuis {{count}} jour.",
         "passedDays": "Date passée depuis {{count}} jours."
-      }
+      },
+      "incomplete": "À compléter",
+      "incompleteSub": "Indiquez la dernière fois faite ou la prochaine échéance."
     },
     "specs": {
       "title": "Fiche technique",
@@ -3607,7 +3609,7 @@
         "vignette": "Vignette"
       },
       "state": {
-        "none": "Non renseignée",
+        "none": "À compléter",
         "valid": "À jour",
         "soon": "Bientôt",
         "urgent": "Urgent",
@@ -4110,5 +4112,24 @@
     "failed": "Impossible de reporter le rappel.",
     "hint": "Si vous avez déjà fait cet entretien, touchez « Oui » : tout est prérempli, un seul geste.",
     "back": "Retour"
+  },
+  "dueRules": {
+    "title": "Règles d'échéances",
+    "bannerStrong": "Valeurs indicatives.",
+    "bannerMuted": "Les préconisations du constructeur et l'état réel du véhicule priment. Aucune date n'est inventée : à l'ajout d'un véhicule, les échéances restent « À compléter ».",
+    "readOnly": "Seuls le propriétaire et les responsables peuvent modifier ces règles.",
+    "maintenance": "Entretiens créés à l'ajout d'un véhicule",
+    "legal": "Obligations suivies",
+    "legalHint": "Assurance, visite technique et vignette restent « À compléter » tant qu'aucune période n'est enregistrée. Désactivez celles dont vous n'avez pas besoin.",
+    "everyKm": "Tous les",
+    "everyMonths": "Ou tous les",
+    "months": "mois",
+    "none": "Aucune",
+    "off": "Désactivé : rien n'est créé pour ce type.",
+    "switch": "Activer : {{name}}",
+    "errKm": "Entrez un nombre de kilomètres entre 1 et 1 000 000.",
+    "errMonths": "Entrez un nombre de mois entre 1 et 120.",
+    "saveError": "Impossible d'enregistrer les règles. Réessayez.",
+    "open": "Règles d'échéances"
   }
 }

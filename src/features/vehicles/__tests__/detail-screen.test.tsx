@@ -12,6 +12,7 @@ const mockTranslate = (language: string, key: string, options?: Record<string, u
 const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const mockState = {
+  ruleRows: [] as unknown[],
   pickDate: null as Date | null,
   language: 'fr',
   role: 'owner' as 'owner' | 'manager' | 'employee',
@@ -57,6 +58,7 @@ jest.mock('expo-image-manipulator', () => ({}));
 jest.mock('@/features/vehicles/add/scan-parts', () => ({ ScanFrame: () => null }));
 jest.mock('@/components/form/camera-capture', () => ({ CameraCapture: () => null }));
 jest.mock('@/components/form/photo-check', () => ({ checkPhoto: async () => ({ ok: true }) }));
+jest.mock('@/features/due-rules/hooks', () => ({ useDueRules: () => ({ rows: mockState.ruleRows, rules: [], isLoading: false }) }));
 jest.mock('expo-router', () => ({
   get router() {
     return mockRouter;
@@ -125,7 +127,7 @@ const hiddenEls = { includeHiddenElements: true };
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -357,7 +359,7 @@ describe('fiche véhicule', () => {
   describe('échéances, fiche technique, historique, documents', () => {
     it('fiche technique : boîte et puissance « À compléter » ; appui sur une tuile → écran « Modifier la fiche technique »', async () => {
       await render(<VehicleDetailScreen />);
-      expect(screen.getAllByText('À compléter')).toHaveLength(2);
+      expect(screen.getAllByText('À compléter')).toHaveLength(5); // boîte et puissance + les 3 obligations sans période
       await fireEvent.press(screen.getByLabelText('Boîte : à compléter. Appuyez pour le renseigner'));
       expect(mockRouter.push).toHaveBeenCalledWith('/flotte/v1/modifier');
       expect(screen.queryByLabelText('Enregistrer')).toBeNull(); // plus d'éditeur sur place
@@ -591,6 +593,24 @@ describe('fiche véhicule', () => {
       expect(mockState.dueCalls.create).toMatchObject([{ input: { type: 'vidange', echeanceKm: 70000, repeatKm: 10000, repeatMonths: 12 } }]);
     });
 
+    it('échéance automatique « À compléter » : visible, puis complétée avec « dernière fois faite »', async () => {
+      mockState.maintenance = [{ id: 'auto', vehicleId: 'v1', type: 'vidange', statut: 'a_venir', echeanceDate: null, echeanceKm: null, repeatKm: 10000, repeatMonths: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Vidange : À compléter/));
+      expect(screen.getByLabelText('Se répète').props.accessibilityState.checked).toBe(true); // la périodicité des règles est reprise
+      expect(screen.getByDisplayValue('10 000')).toBeTruthy();
+      await fireEvent.changeText(screen.getByLabelText('Kilométrage de la dernière fois'), '38000');
+      await fireEvent.press(screen.getByLabelText('Enregistrer'));
+      await waitFor(() => expect(mockState.dueCalls.update).toMatchObject([{ id: 'auto', patch: { echeanceKm: 48000, repeatKm: 10000 } }]));
+    });
+
+    it('obligation désactivée dans les règles de l’agence : plus proposée sur la fiche', async () => {
+      mockState.ruleRows = [{ kind: 'vignette', enabled: false, repeatKm: null, repeatMonths: null }];
+      await render(<VehicleDetailScreen />);
+      expect(screen.queryByLabelText(/^Vignette : /)).toBeNull();
+      expect(screen.getByLabelText(/^Assurance : /)).toBeTruthy();
+    });
+
     it('« Dernière fois faite » : la prochaine échéance se calcule toute seule et part avec l’échéance', async () => {
       await render(<VehicleDetailScreen />);
       await fireEvent.press(screen.getByLabelText('+ Ajouter'));
@@ -820,10 +840,12 @@ describe('fiche véhicule', () => {
     const day = (delta: number) => { const d = new Date(); d.setDate(d.getDate() + delta); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
     const record = (extra: Record<string, unknown>) => ({ id: 'c1', agencyId: 'a1', vehicleId: 'v1', kind: 'assurance', validFrom: day(-300), validUntil: day(65), reference: null, provider: null, amount: null, documentPath: 'p.jpg', notes: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
 
-    it('trois obligations, « Non renseignée » quand rien n’est enregistré', async () => {
+    it('trois obligations, « À compléter » quand rien n’est enregistré', async () => {
       await render(<VehicleDetailScreen />);
       expect(screen.getByText('OBLIGATIONS LÉGALES')).toBeTruthy();
-      expect(screen.getAllByText('Non renseignée')).toHaveLength(3);
+      expect(screen.getByLabelText(/^Assurance : À compléter/)).toBeTruthy();
+      expect(screen.getByLabelText(/^Visite technique : À compléter/)).toBeTruthy();
+      expect(screen.getByLabelText(/^Vignette : À compléter/)).toBeTruthy();
       expect(screen.getByText('Vignette')).toBeTruthy();
     });
 
@@ -911,7 +933,7 @@ describe('fiche véhicule', () => {
     it('même période déjà enregistrée (double appui) : message clair', async () => {
       mockState.renewError = { code: '23505' };
       await render(<VehicleDetailScreen />);
-      await fireEvent.press(screen.getByLabelText(/^Assurance : Non renseignée\./));
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À compléter\./));
       expect(screen.getByText('Enregistrer : Assurance')).toBeTruthy(); // premier enregistrement
       const end = day(430).split('-').map(Number);
       await pickDate(/^Fin de validité/, new Date(end[0], end[1] - 1, end[2]));
