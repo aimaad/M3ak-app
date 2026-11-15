@@ -3746,7 +3746,17 @@
       "quickFirst": "Première période",
       "quickPeriod": "du {{from}} au {{to}}",
       "quickVignette": "Vignette payée pour l'année",
-      "quickConfirm": "Confirmer",
+      "quickConfirm": "Enregistrer cette période",
+      "quickNote": "Elle commence le lendemain de la fin de la période actuelle ({{date}}) et devient la période en cours. L'ancienne reste dans l'historique.",
+      "quickNoteNone": "Elle devient la période en cours. Vous serez prévenu avant sa fin.",
+      "quickDone": "✓ {{kind}} à jour jusqu'au {{date}}",
+      "explain": {
+        "none": "Aucune période enregistrée. Indiquez la date de fin pour être prévenu avant l'expiration.",
+        "valid": "Couverte jusqu'au {{date}}. Quand vous payez la période suivante, enregistrez-la ici : elle prendra la suite.",
+        "soon": "Se termine le {{date}}. Pensez à la renouveler, puis enregistrez la nouvelle période ici.",
+        "urgent": "Se termine le {{date}}, très bientôt. Renouvelez-la puis enregistrez la nouvelle période ici.",
+        "expired": "Terminée le {{date}} : le véhicule est à régulariser. Enregistrez la nouvelle période dès qu'elle est payée."
+      },
       "quickDetails": "Avec détails (papier, montant…)",
       "durationUnit": "mois",
       "durationPlaceholder": "ex. 12",

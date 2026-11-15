@@ -200,6 +200,7 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
   const defaultYear = Number(suggestion.validFrom.slice(0, 4));
   const [year, setYear] = useState(defaultYear);
   const [error, setError] = useState<string | null>(null);
+  const [doneUntil, setDoneUntil] = useState<string | null>(null);
   const period = kind === 'vignette' ? { validFrom: `${year}-01-01`, validUntil: `${year}-12-31` } : suggestion;
 
   function confirm() {
@@ -208,12 +209,23 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
     const draft = renewalDraft(period);
     renew.mutate(
       { agencyId: agency.data.agencyId, input: renewalInput(vehicle.id, kind, draft, null, kind === 'vignette' ? null : periodOf(kind, current, settings)), localDocumentUri: null },
-      { onSuccess: onDone, onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')) }
+      {
+        onSuccess: () => {
+          setDoneUntil(period.validUntil);
+          onDone?.();
+        },
+        onError: (failure) => setError(isAlreadyRecordedError(failure) ? t('vehicleDetail.compliance.alreadyRecorded') : describeSaveError(failure, t, 'vehicleDetail.compliance.saveError')),
+      }
     );
   }
 
   return (
     <View style={{ gap: 12, padding: 14, borderRadius: 18, backgroundColor: Palette.surface }}>
+      {doneUntil ? (
+        <HText size={13} weight="bold" color={Palette.success} accessibilityRole="alert">
+          {t('vehicleDetail.compliance.quickDone', { kind: t(`vehicleDetail.compliance.kind.${kind}`), date: dayLabel(doneUntil, language) })}
+        </HText>
+      ) : null}
       {kind === 'vignette' ? (
         <Segmented<string>
           label={t('vehicleDetail.compliance.quickVignette')}
@@ -231,6 +243,11 @@ function QuickRenew({ vehicle, kind, current, settings, now, onDetails, onDone }
           </HText>
         </View>
       )}
+      {kind !== 'vignette' ? (
+        <HText size={12} color={Palette.textSecondary}>
+          {current ? t('vehicleDetail.compliance.quickNote', { date: dayLabel(current.validUntil, language) }) : t('vehicleDetail.compliance.quickNoteNone')}
+        </HText>
+      ) : null}
       {error ? (
         <HText size={13} weight="semibold" color={Palette.error} accessibilityRole="alert">
           {error}
@@ -421,6 +438,11 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
 
             {expanded ? (
               <View style={{ gap: 12, paddingBottom: 12 }}>
+                {kind !== 'vignette' && mode === 'view' ? (
+                  <HText size={13} color={Palette.textPrimary}>
+                    {t(`vehicleDetail.compliance.explain.${status.state}`, { date: status.record ? dayLabel(status.record.validUntil, language) : '' })}
+                  </HText>
+                ) : null}
                 {mode === 'renew' ? (
                   <RenewForm vehicle={vehicle} kind={kind} current={status.record} settings={settings} showAmount={showAmount} now={now} onClose={() => setMode('view')} />
                 ) : (

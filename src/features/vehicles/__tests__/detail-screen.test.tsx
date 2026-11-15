@@ -1054,6 +1054,24 @@ describe('fiche véhicule', () => {
     });
 
 
+    it('assurance : une phrase explique la situation et le bouton dit ce qu’il enregistre', async () => {
+      mockState.compliance = [record({ periodMonths: 12 })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : À jour\./));
+      expect(screen.getByText(/^Couverte jusqu’au|^Couverte jusqu'au/)).toBeTruthy();
+      expect(screen.getByText(/Elle commence le lendemain de la fin de la période actuelle/)).toBeTruthy();
+      await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+      expect(mockState.renewCalls).toHaveLength(1);
+      expect(await screen.findByText(/^✓ Assurance à jour jusqu'au/)).toBeTruthy();
+    });
+
+    it('assurance expirée : la phrase dit qu’il faut régulariser', async () => {
+      mockState.compliance = [record({ validUntil: day(-5), periodMonths: 12 })];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText(/^Assurance : Expirée\./));
+      expect(screen.getByText(/le véhicule est à régulariser/)).toBeTruthy();
+    });
+
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {
       mockState.compliance = [record({})];
       await render(<VehicleDetailScreen />);
