@@ -29,6 +29,13 @@ describe('textes des notifications push', () => {
     expect(renderPush('noncompliant_handover', p, 'ar').body).toContain('الفحص التقني');
     expect(PUSH_KINDS).toContain('noncompliant_handover');
   });
+  it('assurance non couverte aujourd’hui : dit le véhicule et le début de la prochaine période', () => {
+    const p = { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'assurance', date: '2028-11-16' };
+    const fr = renderPush('compliance_uncovered', p, 'fr');
+    expect(fr.body).toContain("l'assurance ne couvre pas");
+    expect(fr.body).not.toMatch(/[{}]|—/);
+    expect(renderPush('compliance_uncovered', p, 'ar').body).toContain('التأمين');
+  });
   it('type inconnu : message neutre, jamais d’erreur', () => {
     expect(renderPush('inconnu', {}, 'fr').body).toBe('Vous avez une nouvelle notification.');
   });

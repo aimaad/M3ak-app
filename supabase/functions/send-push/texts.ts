@@ -85,6 +85,10 @@ const TEMPLATES: Record<string, Record<Locale, Template>> = {
     fr: { title: 'Obligation à renouveler', body: 'Pour {vehicle} ({plate}) : {maintenance} arrive à échéance le {date}.' },
     ar: { title: 'التزام يجب تجديده', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} ينتهي في {date}.' },
   },
+  compliance_uncovered: {
+    fr: { title: 'Assurance non couverte', body: "Pour {vehicle} ({plate}) : {maintenance} ne couvre pas le véhicule aujourd'hui (prochaine période à partir du {date}). Vérifiez les dates ou enregistrez la période en cours." },
+    ar: { title: 'غير مغطاة اليوم', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} لا تغطي السيارة اليوم (الفترة الموالية ابتداءً من {date}). تحقق من التواريخ أو سجّل الفترة الجارية.' },
+  },
   compliance_expired: {
     fr: { title: 'Obligation expirée', body: 'Pour {vehicle} ({plate}) : {maintenance} a expiré le {date}. Renouvelez-la dans la fiche du véhicule.' },
     ar: { title: 'التزام منتهٍ', body: 'بالنسبة لـ {vehicle} ({plate}): {maintenance} انتهى في {date}. جدّده من بطاقة السيارة.' },

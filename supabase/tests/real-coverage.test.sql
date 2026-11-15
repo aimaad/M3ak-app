@@ -57,6 +57,12 @@ select pg_temp.ck('et le 16/12/2026 aussi : la suivante a pris le relais', (sele
 select public.generate_compliance_notifications('2026-11-15 10:00:00+01');
 select pg_temp.ck('rappel : aucune alerte pour le véhicule renouvelé à l''avance', (select count(*) = 0 from notifications where link_id = 'f2000000-0000-0000-0000-000000000002'));
 select pg_temp.ck('rappel : le véhicule au trou de couverture est signalé expiré', (select count(*) >= 1 from notifications where link_id = 'f3000000-0000-0000-0000-000000000003' and kind = 'compliance_expired'));
-select pg_temp.ck('rappel : une période à venir seule ne déclenche pas de rappel quotidien (limite connue)', (select count(*) = 0 from notifications where link_id = 'f1000000-0000-0000-0000-000000000001'));
+select pg_temp.ck('rappel : une période à venir seule déclenche « non couvert aujourd''hui » (urgent, au responsable)', (select count(*) = 1 and bool_and(severity = 'urgent') and bool_and(recipient_id = '00000000-0000-0000-0000-0000000000a1') from notifications where link_id = 'f1000000-0000-0000-0000-000000000001' and kind = 'compliance_uncovered'));
+select pg_temp.ck('rappel « non couvert » : il dit la date du début de la prochaine période', (select params ->> 'date' = '2028-11-16' and params ->> 'maintenance' = 'assurance' from notifications where kind = 'compliance_uncovered' limit 1));
+select public.generate_compliance_notifications('2026-11-15 16:00:00+01');
+select pg_temp.ck('au plus UNE fois par semaine : pas de doublon dans la même semaine', (select count(*) = 1 from notifications where kind = 'compliance_uncovered' and link_id = 'f1000000-0000-0000-0000-000000000001'));
+select public.generate_compliance_notifications('2026-11-19 10:00:00+01'); -- la semaine suivante (lundi 16 → dimanche 22)
+select pg_temp.ck('la semaine suivante, le rappel revient (tant que rien ne couvre le véhicule)', (select count(*) = 2 from notifications where kind = 'compliance_uncovered' and link_id = 'f1000000-0000-0000-0000-000000000001'));
+select pg_temp.ck('jamais pour un véhicule couvert ou au trou (rappel habituel)', (select count(*) = 0 from notifications where kind = 'compliance_uncovered' and link_id in ('f2000000-0000-0000-0000-000000000002', 'f3000000-0000-0000-0000-000000000003')));
 
 select case when ok then 'OK  ' else 'FAIL' end as r, name, case when ok then '' else detail end as detail from res order by n;

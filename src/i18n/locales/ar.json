@@ -2922,6 +2922,10 @@
         "title": "التزام يجب تجديده",
         "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} ينتهي في {{date}}."
       },
+      "compliance_uncovered": {
+        "title": "غير مغطاة اليوم",
+        "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} لا تغطي السيارة اليوم (الفترة الموالية ابتداءً من {{date}}). تحقق من التواريخ أو سجّل الفترة الجارية."
+      },
       "compliance_expired": {
         "title": "التزام منتهٍ",
         "body": "بالنسبة لـ {{vehicle}} ({{plate}}): {{maintenance}} انتهى في {{date}}. جدّده من بطاقة السيارة."

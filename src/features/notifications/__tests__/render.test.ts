@@ -56,6 +56,14 @@ describe('notificationView', () => {
     expect(view.body).not.toMatch(/[{}]|undefined/);
     expect(notificationView({ kind: 'noncompliant_handover', params }, tAr, 'ar').body).toContain('الفحص التقني');
   });
+  it('assurance non couverte aujourd’hui : texte complet fr et ar', () => {
+    const params = { vehicle: 'Dacia Logan', plate: '1-A-1', maintenance: 'assurance', date: '2028-11-16' };
+    const view = notificationView({ kind: 'compliance_uncovered', params }, tFr, 'fr');
+    expect(view.title).toBe('Assurance non couverte');
+    expect(view.body).toContain("l'assurance ne couvre pas");
+    expect(view.body).not.toMatch(/[{}]|undefined/);
+    expect(notificationView({ kind: 'compliance_uncovered', params }, tAr, 'ar').body).toContain('التأمين');
+  });
   it('chaque type de notification existe en français et en arabe', () => {
     const kinds = Object.keys((fr as unknown as { notifications: { kinds: Dict } }).notifications.kinds);
     expect(kinds.length).toBeGreaterThan(15);
