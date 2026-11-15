@@ -3759,6 +3759,12 @@
         "upcoming": "À venir",
         "ended": "Terminée"
       },
+      "paper": {
+        "reading": "Lecture du papier en cours…",
+        "read": "Papier lu : vérifiez les dates et les informations avant d'enregistrer.",
+        "otherVehicle": "Attention : la plaque lue sur le papier semble différente de celle de ce véhicule.",
+        "unfavorable": "Attention : ce contrôle technique semble défavorable (contre-visite)."
+      },
       "quickConfirm": "Enregistrer cette période",
       "quickNote": "Elle commence le lendemain de la fin de la période actuelle ({{date}}) et devient la période en cours. L'ancienne reste dans l'historique.",
       "quickNoteNone": "Elle devient la période en cours. Vous serez prévenu avant sa fin.",

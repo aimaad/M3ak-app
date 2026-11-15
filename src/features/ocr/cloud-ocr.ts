@@ -8,7 +8,7 @@ import { getSupabase } from '@/lib/supabase';
  * propre à l'entreprise (jamais dans l'app). C'est le SEUL moteur de lecture : si l'entreprise n'a pas de clé
  * ou si son propriétaire n'a pas donné son accord, le serveur répond « non active » sans rien envoyer à Gemini.
  */
-export type CloudDocumentType = 'permis' | 'carte_grise';
+export type CloudDocumentType = 'permis' | 'carte_grise' | 'assurance' | 'visite_technique';
 
 export type CloudErrorCode = 'ocr_disabled' | 'ocr_not_configured' | 'ocr_failed' | 'ocr_timeout' | 'ocr_busy' | 'unavailable';
 

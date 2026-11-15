@@ -24,6 +24,9 @@ import {
   type RenewalErrors,
 } from '@/features/compliance/logic';
 import { COMPLIANCE_KINDS, type ComplianceKind, type ComplianceRecord } from '@/features/compliance/types';
+import { applyPaperFields, plateMismatch, scanCompliancePaper } from '@/features/compliance/paper-ocr';
+import { scanErrorMessageKey } from '@/features/ocr/availability';
+import { useOcrSettings } from '@/features/ocr/hooks';
 import { enabledKinds } from '@/features/due-rules/logic';
 import { useDueRules } from '@/features/due-rules/hooks';
 import { formatAmount, HText } from '@/features/dashboard/home-ui';
@@ -140,6 +143,28 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
   const [showErrors, setShowErrors] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const errors = validateRenewal(draft, current);
+  // Lecture automatique du papier (si l'entreprise l'a activée) : elle PRÉ-REMPLIT les champs vides, l'employé vérifie puis enregistre.
+  const ocr = useOcrSettings();
+  const [reading, setReading] = useState(false);
+  const [paperNotes, setPaperNotes] = useState<{ key: string; tone: 'info' | 'warning' }[]>([]);
+
+  async function onPhoto(uri: string) {
+    setLocalUri(uri);
+    setPaperNotes([]);
+    if (kind === 'vignette' || ocr.availability !== 'active') return;
+    setReading(true);
+    const result = await scanCompliancePaper(kind, uri, ocr.agencyId);
+    setReading(false);
+    if (!result.ok) {
+      setPaperNotes([{ key: scanErrorMessageKey(result.error), tone: 'warning' }]);
+      return;
+    }
+    setDraft((previous) => applyPaperFields(previous, result.fields, showAmount));
+    const notes: { key: string; tone: 'info' | 'warning' }[] = [{ key: 'vehicleDetail.compliance.paper.read', tone: 'info' }];
+    if (plateMismatch(result.fields.plate, vehicle.immatriculation)) notes.push({ key: 'vehicleDetail.compliance.paper.otherVehicle', tone: 'warning' });
+    if (result.fields.favorable === false) notes.push({ key: 'vehicleDetail.compliance.paper.unfavorable', tone: 'warning' });
+    setPaperNotes(notes);
+  }
 
   function save() {
     setShowErrors(true);
@@ -188,8 +213,18 @@ function RenewForm({ vehicle, kind, current, settings, showAmount, onClose, now 
           ) : null}
         </View>
       ) : null}
-      <Fields kind={kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={current?.validUntil ?? null} localUri={localUri} onPick={setLocalUri} withPhoto />
-      <FormButtons onSave={save} onCancel={onClose} busy={renew.isPending} error={error} />
+      <Fields kind={kind} draft={draft} setDraft={setDraft} errors={showErrors ? errors : {}} showAmount={showAmount} currentEnd={current?.validUntil ?? null} localUri={localUri} onPick={(uri) => void onPhoto(uri)} withPhoto />
+      {reading ? (
+        <HText size={13} weight="semibold" color={Palette.textSecondary} accessibilityLiveRegion="polite">
+          {t('vehicleDetail.compliance.paper.reading')}
+        </HText>
+      ) : null}
+      {paperNotes.map((note) => (
+        <HText key={note.key} size={13} weight="semibold" color={note.tone === 'warning' ? Brand.orangeUrgentText : Palette.textSecondary} accessibilityRole="alert">
+          {t(note.key)}
+        </HText>
+      ))}
+      <FormButtons onSave={save} onCancel={onClose} busy={renew.isPending || reading} error={error} />
     </View>
   );
 }

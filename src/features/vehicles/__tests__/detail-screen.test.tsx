@@ -12,6 +12,9 @@ const mockTranslate = (language: string, key: string, options?: Record<string, u
 const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const mockState = {
+  ocrAvailability: 'no_key' as string,
+  scanCalls: [] as unknown[],
+  scanResult: { ok: false, error: 'ocr_failed' } as unknown,
   planCalls: [] as unknown[],
   checkCalls: [] as unknown[],
   conflicts: [] as unknown[],
@@ -59,7 +62,21 @@ jest.mock('@react-native-community/datetimepicker', () => ({
 jest.mock('expo-haptics', () => ({ impactAsync: jest.fn(async () => undefined), ImpactFeedbackStyle: { Light: 'light' } }));
 jest.mock('expo-image-manipulator', () => ({}));
 jest.mock('@/features/vehicles/add/scan-parts', () => ({ ScanFrame: () => null }));
-jest.mock('@/components/form/camera-capture', () => ({ CameraCapture: () => null }));
+jest.mock('@/components/form/camera-capture', () => ({
+  CameraCapture: ({ visible, onCapture }: { visible: boolean; onCapture: (uri: string) => void }) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Pressable } = require('react-native');
+    return visible ? <Pressable accessibilityLabel="CAPTURE-PAPIER" onPress={() => onCapture('file:///papier.jpg')} /> : null;
+  },
+}));
+jest.mock('@/features/ocr/hooks', () => ({ useOcrSettings: () => ({ availability: mockState.ocrAvailability, agencyId: 'a1' }) }));
+jest.mock('@/features/compliance/paper-ocr', () => ({
+  ...jest.requireActual('@/features/compliance/paper-ocr'),
+  scanCompliancePaper: async (kind: string, uri: string) => {
+    mockState.scanCalls.push({ kind, uri });
+    return mockState.scanResult;
+  },
+}));
 jest.mock('@/components/form/photo-check', () => ({ checkPhoto: async () => ({ ok: true }) }));
 jest.mock('@/features/due-rules/hooks', () => ({ useDueRules: () => ({ rows: mockState.ruleRows, rules: [], isLoading: false }) }));
 jest.mock('expo-router', () => ({
@@ -141,7 +158,7 @@ async function pickTime(label: RegExp | string, hours: number, minutes: number) 
 describe('fiche véhicule', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], planCalls: [], checkCalls: [], conflicts: [], visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
+    Object.assign(mockState, { language: 'fr', role: 'owner', vehicle: { ...base, statut: 'disponible' }, rentals: [], maintenance: [], statusCalls: [], archived: [], reactivated: [], payments: [], inspections: [], archiveError: null, specsCalls: [], priceCalls: [], compliance: [], ruleRows: [], planCalls: [], checkCalls: [], conflicts: [], ocrAvailability: 'no_key', scanCalls: [], scanResult: { ok: false, error: 'ocr_failed' }, visitMonths: 6, renewCalls: [], renewError: null, correctCalls: [], deleteCalls: [], settingsCalls: [], dueCalls: { update: [], create: [], remove: [], createError: null, quick: [] }, priceFails: false, docCalls: [], uploaded: [] });
   });
 
   it('défauts corrigés : nom normalisé (« Dacia Logan »), plaque dans l’ordre numéro | lettre | région, image par défaut', async () => {
@@ -1082,6 +1099,47 @@ describe('fiche véhicule', () => {
       await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
       expect(mockState.renewCalls).toHaveLength(1);
       expect(mockState.dueCalls.quick).toEqual([]);
+    });
+
+    describe('lecture automatique du papier (OCR)', () => {
+      const read = { ok: true, fields: { validFrom: '2026-11-16', validUntil: '2027-11-15', reference: 'POL-77', provider: 'Wafa Assurance', amount: 1850, plate: '8921-ب-14', favorable: null } };
+      async function takePhoto() {
+        await render(<VehicleDetailScreen />);
+        await fireEvent.press(screen.getByLabelText(/^Assurance : À compléter\./));
+        await fireEvent.press(screen.getByLabelText(/^Scanner : Photo du papier/));
+        await fireEvent.press(screen.getByLabelText('CAPTURE-PAPIER'));
+      }
+
+      it('fonction active : le papier lu pré-remplit les champs, à vérifier avant d’enregistrer', async () => {
+        mockState.ocrAvailability = 'active';
+        mockState.scanResult = read;
+        await takePhoto();
+        expect(await screen.findByText(/Papier lu : vérifiez/)).toBeTruthy();
+        expect(mockState.scanCalls).toEqual([{ kind: 'assurance', uri: 'file:///papier.jpg' }]);
+        expect(screen.getByDisplayValue('POL-77')).toBeTruthy();
+        expect(screen.getByDisplayValue('Wafa Assurance')).toBeTruthy();
+        expect(screen.getByDisplayValue('1850')).toBeTruthy();
+        expect(mockState.renewCalls).toHaveLength(0); // rien n'est enregistré tout seul
+      });
+      it('fonction non active : aucune lecture, saisie manuelle', async () => {
+        mockState.ocrAvailability = 'no_key';
+        await takePhoto();
+        expect(mockState.scanCalls).toHaveLength(0);
+        expect(screen.queryByText(/Papier lu/)).toBeNull();
+      });
+      it('lecture impossible : message clair, le formulaire reste utilisable', async () => {
+        mockState.ocrAvailability = 'active';
+        mockState.scanResult = { ok: false, error: 'ocr_busy' };
+        await takePhoto();
+        expect(await screen.findByRole('alert')).toBeTruthy();
+        expect(screen.getByLabelText('Enregistrer')).toBeTruthy();
+      });
+      it('papier d’un autre véhicule : avertissement', async () => {
+        mockState.ocrAvailability = 'active';
+        mockState.scanResult = { ...read, fields: { ...read.fields, plate: '1234 | A | 5' } };
+        await takePhoto();
+        expect(await screen.findByText(/plaque lue sur le papier semble différente/)).toBeTruthy();
+      });
     });
 
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {

@@ -1,4 +1,4 @@
-// M3ak — lecture d'un document (permis de conduire ou carte grise) par Google Gemini,
+// M3ak — lecture d'un document (permis de conduire, carte grise, attestation d'assurance ou papier de visite technique) par Google Gemini,
 // avec la clé d'API PROPRE À L'ENTREPRISE de l'appelant.
 //
 // Ce chemin est OPTIONNEL : par défaut l'app lit les documents sur le téléphone, sans rien envoyer.
@@ -121,6 +121,72 @@ Règles strictes :
 - "confidence": "high" seulement si le texte est net et sans ambiguïté. "medium" si lisible mais avec un doute raisonnable. "low" sinon.
 - Si les deux faces donnent des valeurs différentes pour un même champ, garde la plus lisible et mets "confidence": "medium" ou "low".
 - Le document est bilingue français / arabe : lis la version française (ou latine) quand elle existe.`;
+
+const INSURANCE_PROMPT = `Tu lis la photo d'UNE attestation d'assurance automobile (Maroc : Wafa Assurance, RMA, AXA, Saham/Sanlam, Atlanta, Allianz, MAMDA/MCMA…) pour pré-remplir l'échéance d'assurance d'un véhicule dans une agence de location de voitures.
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information absente ou illisible, mets "value": null :
+
+{
+  "dateDebut": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
+  "dateFin": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
+  "numero": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "assureur": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "montant": { "value": nombre en dirhams ou null, "confidence": "high" | "medium" | "low" },
+  "immatriculation": { "value": string ou null, "confidence": "high" | "medium" | "low" }
+}
+
+Règles strictes :
+- "dateDebut" = début de la période garantie (« date d'effet », « du »). "dateFin" = fin de la période garantie (« échéance », « au », « valable jusqu'au ») : le DERNIER jour couvert. Dates JJ/MM/AAAA converties en AAAA-MM-JJ.
+- "numero" = numéro de police (ou d'attestation si aucun numéro de police), tel qu'imprimé.
+- "assureur" = nom de la compagnie, sans forme juridique.
+- "montant" = la prime totale TTC payée en dirhams (nombre seul, par ex. 1850 ou 1850.5), sinon null.
+- "immatriculation" = le numéro d'immatriculation du véhicule assuré, tel qu'imprimé.
+- Ne devine JAMAIS : si un champ n'est pas net, mets "value": null et "confidence": "low".
+- "confidence": "high" seulement si le texte est net et sans ambiguïté, "medium" si lisible avec un doute raisonnable, "low" sinon.`;
+
+const INSPECTION_PROMPT = `Tu lis la photo d'UN papier de visite technique automobile (procès-verbal ou vignette de contrôle technique, Maroc : centres agréés de contrôle technique) pour pré-remplir l'échéance de visite technique d'un véhicule dans une agence de location de voitures.
+Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour, sans balises markdown, respectant exactement ce schéma. Pour une information absente ou illisible, mets "value": null :
+
+{
+  "dateDebut": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
+  "dateFin": { "value": "AAAA-MM-JJ" ou null, "confidence": "high" | "medium" | "low" },
+  "numero": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "centre": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "montant": { "value": nombre en dirhams ou null, "confidence": "high" | "medium" | "low" },
+  "immatriculation": { "value": string ou null, "confidence": "high" | "medium" | "low" },
+  "resultat": { "value": "favorable" | "defavorable" ou null, "confidence": "high" | "medium" | "low" }
+}
+
+Règles strictes :
+- "dateDebut" = date de la visite (du contrôle). "dateFin" = date de fin de validité de la visite (« valable jusqu'au », « prochaine visite avant le ») : le DERNIER jour de validité. Dates JJ/MM/AAAA converties en AAAA-MM-JJ.
+- "numero" = numéro du procès-verbal ou de la vignette, tel qu'imprimé. "centre" = nom du centre de contrôle.
+- "montant" = le prix payé en dirhams (nombre seul), sinon null.
+- "immatriculation" = le numéro d'immatriculation du véhicule contrôlé, tel qu'imprimé.
+- "resultat" : « favorable » si le contrôle est satisfaisant, « defavorable » s'il est refusé ou assorti d'une contre-visite, sinon null.
+- Ne devine JAMAIS : si un champ n'est pas net, mets "value": null et "confidence": "low".
+- "confidence": "high" seulement si le texte est net et sans ambiguïté, "medium" si lisible avec un doute raisonnable, "low" sinon.`;
+
+function moneyField(raw: unknown): Field<number> {
+  if (typeof raw !== 'object' || raw === null) return { value: null, confidence: 'low' };
+  const { value, confidence } = raw as { value?: unknown; confidence?: unknown };
+  const n = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.replace(',', '.')) : NaN;
+  return Number.isFinite(n) && n >= 0 && n <= 1_000_000 ? { value: Math.round(n * 100) / 100, confidence: confidenceOf(confidence) } : { value: null, confidence: 'low' };
+}
+
+function sanitizePaper(raw: unknown, kind: 'assurance' | 'visite_technique') {
+  const s = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<string, unknown>;
+  const dateFin = dateField(s.dateFin);
+  const dateDebut = dateField(s.dateDebut);
+  return {
+    // Une fin avant le début n'a aucun sens : on ne garde ni l'une ni l'autre plutôt que d'inventer.
+    dateDebut: dateDebut.value && dateFin.value && dateDebut.value > dateFin.value ? { value: null, confidence: 'low' as Confidence } : dateDebut,
+    dateFin: dateDebut.value && dateFin.value && dateDebut.value > dateFin.value ? { value: null, confidence: 'low' as Confidence } : dateFin,
+    numero: textField(s.numero, 80),
+    ...(kind === 'assurance' ? { assureur: textField(s.assureur, 120) } : { centre: textField(s.centre, 120) }),
+    montant: moneyField(s.montant),
+    immatriculation: textField(s.immatriculation, 40),
+    ...(kind === 'visite_technique' ? { resultat: enumField(s.resultat, ['favorable', 'defavorable']) } : {}),
+  };
+}
 
 function confidenceOf(raw: unknown): Confidence {
   return raw === 'high' || raw === 'medium' || raw === 'low' ? raw : 'low';
@@ -305,7 +371,7 @@ Deno.serve(async (request: Request) => {
   }
 
   const documentType = body.documentType;
-  if (documentType !== 'permis' && documentType !== 'carte_grise') return json({ ok: false, error: 'invalid_request' }, 400);
+  if (documentType !== 'permis' && documentType !== 'carte_grise' && documentType !== 'assurance' && documentType !== 'visite_technique') return json({ ok: false, error: 'invalid_request' }, 400);
   // Une ou deux photos (recto, verso) lues ENSEMBLE en une seule analyse : un seul résultat. L'ancien format (une seule image) reste accepté.
   const rawImages: unknown[] = Array.isArray(body.images) ? body.images : [{ imageBase64: body.imageBase64, mimeType: body.mimeType }];
   const maxImages = documentType === 'carte_grise' ? MAX_IMAGES : 1;
@@ -321,12 +387,15 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const result = await callGeminiJson(apiKey, documentType === 'permis' ? LICENCE_PROMPT : REGISTRATION_PROMPT, [
+    const prompt = documentType === 'permis' ? LICENCE_PROMPT : documentType === 'assurance' ? INSURANCE_PROMPT : documentType === 'visite_technique' ? INSPECTION_PROMPT : REGISTRATION_PROMPT;
+    const result = await callGeminiJson(apiKey, prompt, [
       ...images.map((image) => ({ inlineData: { mimeType: image.mimeType, data: image.data } })),
       { text: images.length > 1 ? 'Extrais les champs de ce document à partir de ces deux photos (recto puis verso), en UN SEUL résultat JSON au format demandé.' : 'Extrais les champs de ce document, au format JSON demandé.' },
     ], { qualityFirst: true });
     await recordUsage(admin, { agencyId, documentType, ok: true, model: result.model, usage: result.usage });
-    return json({ ok: true, fields: documentType === 'permis' ? sanitizeLicence(result.json) : sanitizeRegistration(result.json) });
+    const fields =
+      documentType === 'permis' ? sanitizeLicence(result.json) : documentType === 'carte_grise' ? sanitizeRegistration(result.json) : sanitizePaper(result.json, documentType);
+    return json({ ok: true, fields });
   } catch (error) {
     if (error instanceof StageTimeoutError) {
       await recordUsage(admin, { agencyId, documentType, ok: false, errorCode: 'ocr_timeout' });
