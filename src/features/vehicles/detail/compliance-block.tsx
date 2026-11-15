@@ -11,6 +11,7 @@ import {
   allStatuses,
   complianceStatus,
   historyOf,
+  periodPhase,
   periodOf,
   renewalDraft,
   renewalEnd,
@@ -50,12 +51,17 @@ export function statusLine(status: ComplianceStatus, t: T, language: string): st
     return t('vehicleDetail.compliance.nextDeadline', { date: dayLabel(status.due as string, language) });
   }
   const record = status.record;
+  const nextStart = status.upcomingFrom ? ` · ${t('vehicleDetail.compliance.nextStarts', { date: dayLabel(status.upcomingFrom, language) })}` : '';
+  // Seules des périodes à venir existent : rien ne couvre aujourd'hui.
+  if (status.uncovered && !record) return `${t('vehicleDetail.compliance.uncoveredToday')}${nextStart}`;
   if (!record) return t('vehicleDetail.compliance.none');
   if (status.days === null) return '';
+  if (status.uncovered && status.days < 0) return `${t(status.days === -1 ? 'vehicleDetail.compliance.expiredAgoOne' : 'vehicleDetail.compliance.expiredAgo', { n: -status.days })}${nextStart}`;
   if (status.days < 0) return t(status.days === -1 ? 'vehicleDetail.compliance.expiredAgoOne' : 'vehicleDetail.compliance.expiredAgo', { n: -status.days });
   if (status.days === 0) return t('vehicleDetail.compliance.today');
   const range = record.validFrom ? t('vehicleDetail.compliance.period', { from: dayLabel(record.validFrom, language), to: dayLabel(record.validUntil, language) }) : t('vehicleDetail.compliance.periodUntil', { to: dayLabel(record.validUntil, language) });
-  return status.state === 'valid' ? range : `${range} · ${t(status.days === 1 ? 'vehicleDetail.compliance.daysLeftOne' : 'vehicleDetail.compliance.daysLeft', { n: status.days })}`;
+  const renewed = status.renewedUntil ? ` · ${t('vehicleDetail.compliance.renewedUntil', { date: dayLabel(status.renewedUntil, language) })}` : '';
+  return status.state === 'valid' ? `${range}${renewed}` : `${range} · ${t(status.days === 1 ? 'vehicleDetail.compliance.daysLeftOne' : 'vehicleDetail.compliance.daysLeft', { n: status.days })}${renewed}`;
 }
 
 function Fields({ kind, draft, setDraft, errors, showAmount, currentEnd, localUri, onPick, withPhoto }: { kind: ComplianceKind; draft: RenewalDraft; setDraft: (draft: RenewalDraft) => void; errors: RenewalErrors; showAmount: boolean; currentEnd: string | null; localUri: string | null; onPick: (uri: string) => void; withPhoto: boolean }) {
@@ -308,11 +314,14 @@ function CorrectForm({ vehicle, record, showAmount, onClose }: { vehicle: Vehicl
   );
 }
 
-function HistoryRow({ vehicle, record, isCurrent, canManage, showAmount }: { vehicle: Vehicle; record: ComplianceRecord; isCurrent: boolean; canManage: boolean; showAmount: boolean }) {
+function HistoryRow({ vehicle, record, isCurrent, now, canManage, showAmount }: { vehicle: Vehicle; record: ComplianceRecord; isCurrent: boolean; now: Date; canManage: boolean; showAmount: boolean }) {
   const { t, language } = useLanguage();
   const remove = useDeleteCompliance();
   const [editing, setEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // « En cours » seulement si la période couvre AUJOURD'HUI ; « À venir » si elle n'a pas commencé ; « Terminée » si elle est passée.
+  const real = periodPhase(record, now);
+  const phase = real === 'upcoming' ? 'upcoming' : real === 'ended' ? 'ended' : isCurrent ? 'current' : null;
   if (editing) return <CorrectForm vehicle={vehicle} record={record} showAmount={showAmount} onClose={() => setEditing(false)} />;
   const period = record.validFrom ? t('vehicleDetail.compliance.period', { from: dayLabel(record.validFrom, language), to: dayLabel(record.validUntil, language) }) : t('vehicleDetail.compliance.periodUntil', { to: dayLabel(record.validUntil, language) });
   const details = [record.reference, record.provider, showAmount && record.amount !== null ? `${formatAmount(record.amount)} MAD` : null].filter(Boolean).join(' · ');
@@ -330,9 +339,9 @@ function HistoryRow({ vehicle, record, isCurrent, canManage, showAmount }: { veh
         <HText weight="semibold" size={13} style={{ flex: 1 }}>
           {period}
         </HText>
-        {isCurrent ? (
-          <HText weight="bold" size={11} color={Palette.success}>
-            {t('vehicleDetail.compliance.current')}
+        {phase ? (
+          <HText weight="bold" size={11} color={phase === 'current' ? Palette.success : phase === 'upcoming' ? Palette.info : Palette.textSecondary}>
+            {t(`vehicleDetail.compliance.phase.${phase}`)}
           </HText>
         ) : null}
       </View>
@@ -440,7 +449,7 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
               <View style={{ gap: 12, paddingBottom: 12 }}>
                 {kind !== 'vignette' && mode === 'view' ? (
                   <HText size={13} color={Palette.textPrimary}>
-                    {t(`vehicleDetail.compliance.explain.${status.state}`, { date: status.record ? dayLabel(status.record.validUntil, language) : '' })}
+                    {t(`vehicleDetail.compliance.explain.${status.uncovered && !status.record ? 'uncovered' : status.state}`, { date: status.record ? dayLabel(status.record.validUntil, language) : '' })}
                   </HText>
                 ) : null}
                 {mode === 'renew' ? (
@@ -462,7 +471,7 @@ export function ComplianceBlock({ vehicle, now, openKind = null }: { vehicle: Ve
                         {t('vehicleDetail.compliance.historyEmpty')}
                       </HText>
                     ) : (
-                      history.map((record) => <HistoryRow key={record.id} vehicle={vehicle} record={record} isCurrent={record.id === status.record?.id} canManage={canManage} showAmount={showAmount} />)
+                      history.map((record) => <HistoryRow key={record.id} vehicle={vehicle} record={record} isCurrent={record.id === status.record?.id} now={now} canManage={canManage} showAmount={showAmount} />)
                     )}
                   </>
                 )}

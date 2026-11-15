@@ -48,6 +48,37 @@ export const historyOf = (records: ComplianceRecord[], kind: ComplianceKind) =>
 
 // ------------------------------------------------------------------ état du jour
 
+/** Une période a COMMENCÉ au jour donné (début inconnu = commencée : anciennes données). */
+const startedBy = (record: ComplianceRecord, day: string) => !record.validFrom || record.validFrom <= day;
+
+/**
+ * Ce qui couvre RÉELLEMENT un jour donné (jamais « la période qui finit le plus tard », qui peut ne pas avoir commencé) :
+ *  - `covering` : la période qui couvre ce jour (commencée, pas finie) ;
+ *  - `chainEnd` : la fin de la couverture continue, si des périodes suivantes s'enchaînent sans trou (renouvellement fait à l'avance) ;
+ *  - `past` : la dernière période déjà terminée ; `upcoming` : la première période pas encore commencée.
+ */
+export function coverageAt(records: ComplianceRecord[], kind: ComplianceKind, day: string): { covering: ComplianceRecord | null; chainEnd: string | null; past: ComplianceRecord | null; upcoming: ComplianceRecord | null } {
+  const own = records.filter((record) => record.kind === kind);
+  const covering = own.filter((record) => startedBy(record, day) && record.validUntil >= day).reduce<ComplianceRecord | null>((best, record) => (!best || record.validUntil > best.validUntil ? record : best), null);
+  let chainEnd: string | null = covering ? covering.validUntil : null;
+  while (chainEnd) {
+    const end: string = chainEnd;
+    const next = own.filter((record) => record.validUntil > end && (!record.validFrom || record.validFrom <= addDays(end, 1))).reduce<ComplianceRecord | null>((best, record) => (!best || record.validUntil > best.validUntil ? record : best), null);
+    if (!next) break;
+    chainEnd = next.validUntil;
+  }
+  const past = own.filter((record) => record.validUntil < day).reduce<ComplianceRecord | null>((best, record) => (!best || record.validUntil > best.validUntil ? record : best), null);
+  const upcoming = own.filter((record) => record.validFrom && record.validFrom > day).reduce<ComplianceRecord | null>((best, record) => (!best || (record.validFrom as string) < (best.validFrom as string) ? record : best), null);
+  return { covering, chainEnd, past, upcoming };
+}
+
+/** Position d'une période par rapport à aujourd'hui. */
+export function periodPhase(record: ComplianceRecord, now: Date): 'current' | 'upcoming' | 'ended' {
+  const today = dayKey(now);
+  if (record.validUntil < today) return 'ended';
+  return startedBy(record, today) ? 'current' : 'upcoming';
+}
+
 export type ComplianceState = 'none' | 'valid' | 'soon' | 'urgent' | 'expired';
 export type ComplianceStatus = {
   kind: ComplianceKind;
@@ -59,6 +90,12 @@ export type ComplianceStatus = {
   due: string | null;
   /** Vignette : date limite de paiement (31 janvier) plutôt qu'une fin de validité. */
   isDeadline: boolean;
+  /** Des périodes suivantes s'enchaînent : la couverture continue jusqu'à cette date (renouvellement fait à l'avance). */
+  renewedUntil?: string | null;
+  /** Début de la prochaine période pas encore commencée (utile quand il y a un trou de couverture). */
+  upcomingFrom?: string | null;
+  /** Aucune période ne couvre aujourd'hui alors que des périodes existent (toutes passées ou toutes à venir). */
+  uncovered?: boolean;
 };
 
 const stateOf = (days: number): ComplianceState => (days < 0 ? 'expired' : days <= URGENT_DAYS ? 'urgent' : days <= SOON_DAYS ? 'soon' : 'valid');
@@ -85,10 +122,16 @@ function vignetteStatus(records: ComplianceRecord[], vehicle: { dateMiseEnCircul
 
 export function complianceStatus(kind: ComplianceKind, records: ComplianceRecord[], vehicle: { dateMiseEnCirculation?: string | null }, now: Date): ComplianceStatus {
   if (kind === 'vignette') return vignetteStatus(records, vehicle, now);
-  const record = currentRecord(records, kind);
-  if (!record) return { kind, state: 'none', record: null, days: null, due: null, isDeadline: false };
-  const days = daysUntil(record.validUntil, now);
-  return { kind, state: stateOf(days), record, days, due: record.validUntil, isDeadline: false };
+  if (!records.some((record) => record.kind === kind)) return { kind, state: 'none', record: null, days: null, due: null, isDeadline: false };
+  const today = dayKey(now);
+  const { covering, chainEnd, past, upcoming } = coverageAt(records, kind, today);
+  if (covering && chainEnd) {
+    const days = daysUntil(chainEnd, now);
+    return { kind, state: stateOf(days), record: covering, days, due: chainEnd, isDeadline: false, renewedUntil: chainEnd !== covering.validUntil ? chainEnd : null };
+  }
+  // Rien ne couvre aujourd'hui : expirée (dernière période terminée), ou « pas encore couverte » (seules des périodes à venir existent).
+  if (past) return { kind, state: 'expired', record: past, days: daysUntil(past.validUntil, now), due: past.validUntil, isDeadline: false, upcomingFrom: upcoming?.validFrom ?? null, uncovered: true };
+  return { kind, state: 'expired', record: null, days: 0, due: today, isDeadline: false, upcomingFrom: upcoming?.validFrom ?? null, uncovered: true };
 }
 
 export const allStatuses = (records: ComplianceRecord[], vehicle: { dateMiseEnCirculation?: string | null }, now: Date) => COMPLIANCE_KINDS.map((kind) => complianceStatus(kind, records, vehicle, now));
@@ -202,10 +245,14 @@ export function rentalWarnings(records: ComplianceRecord[], vehicle: { dateMiseE
   const endKey = dayKey(end);
   const warnings: ComplianceWarning[] = [];
   for (const kind of ['assurance', 'visite_technique'] as const) {
-    const record = currentRecord(records, kind);
-    if (!record) warnings.push({ kind, code: 'missing', due: null });
-    else if (record.validUntil < startKey) warnings.push({ kind, code: 'expired', due: record.validUntil });
-    else if (record.validUntil < endKey) warnings.push({ kind, code: 'expires_before_end', due: record.validUntil });
+    if (!records.some((record) => record.kind === kind)) {
+      warnings.push({ kind, code: 'missing', due: null });
+      continue;
+    }
+    // Ce qui couvre le JOUR DU DÉPART (pas la période qui finit le plus tard : elle peut ne pas avoir commencé).
+    const { covering, chainEnd, past } = coverageAt(records, kind, startKey);
+    if (!covering || !chainEnd) warnings.push({ kind, code: 'expired', due: past?.validUntil ?? startKey });
+    else if (chainEnd < endKey) warnings.push({ kind, code: 'expires_before_end', due: chainEnd });
   }
   const vignette = complianceStatus('vignette', records, vehicle, now);
   if (vignette.state === 'expired') warnings.push({ kind: 'vignette', code: 'expired', due: vignette.due });

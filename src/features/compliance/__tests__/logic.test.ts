@@ -1,5 +1,5 @@
 import type { ComplianceRecord } from '../types';
-import { regularizationByVehicle, regularizationIssues, periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
+import { coverageAt, periodPhase, regularizationByVehicle, regularizationIssues, periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
 
 const NOW = new Date(2026, 10, 15, 12); // 15 nov. 2026
 const rec = (kind: ComplianceRecord['kind'], validUntil: string, extra: Partial<ComplianceRecord> = {}): ComplianceRecord => ({ id: `${kind}-${validUntil}`, agencyId: 'a', vehicleId: 'v', kind, validFrom: null, validUntil, reference: null, provider: null, amount: null, documentPath: null, notes: null, periodMonths: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
@@ -214,5 +214,54 @@ describe('véhicules « À régulariser » d’une flotte', () => {
   it('un véhicule archivé ou sans période enregistrée n’est jamais « à régulariser »', () => {
     const map = regularizationByVehicle([forVehicle('a', 'assurance', '2026-11-05')], [car('a', { archivedAt: '2026-01-01' }), car('z')], NOW);
     expect(map.size).toBe(0);
+  });
+});
+
+describe('couverture réelle d’aujourd’hui (une période à venir ne couvre rien)', () => {
+  it('seule une période 2028-2029 : aujourd’hui n’est PAS couvert → expirée, à régulariser', () => {
+    const records = [rec('assurance', '2029-11-15', { validFrom: '2028-11-16' })];
+    const status = complianceStatus('assurance', records, vehicle, NOW);
+    expect(status.state).toBe('expired');
+    expect(status.uncovered).toBe(true);
+    expect(status.record).toBeNull();
+    expect(status.upcomingFrom).toBe('2028-11-16');
+    expect(regularizationIssues(records, vehicle, NOW)).toHaveLength(1);
+  });
+  it('période en cours + suivante enchaînée : à jour, « renouvelée jusqu’au »', () => {
+    const records = [rec('assurance', '2026-12-15', { validFrom: '2025-12-16' }), rec('assurance', '2027-12-15', { validFrom: '2026-12-16' })];
+    const status = complianceStatus('assurance', records, vehicle, NOW);
+    expect(status.state).toBe('valid');
+    expect(status.record?.validUntil).toBe('2026-12-15');
+    expect(status.renewedUntil).toBe('2027-12-15');
+    expect(regularizationIssues(records, vehicle, NOW)).toHaveLength(0);
+  });
+  it('trou de couverture : la période en cours finit avant le début de la suivante → on voit le trou', () => {
+    const records = [rec('assurance', '2026-11-20', { validFrom: '2025-11-21' }), rec('assurance', '2027-12-15', { validFrom: '2027-01-01' })];
+    const status = complianceStatus('assurance', records, vehicle, NOW);
+    expect(status.renewedUntil).toBeNull();
+    expect(status.days).toBe(5);
+    expect(coverageAt(records, 'assurance', '2026-12-01')).toMatchObject({ covering: null, upcoming: { validUntil: '2027-12-15' } });
+  });
+  it('période passée + période à venir : expirée, avec le début de la prochaine', () => {
+    const records = [rec('assurance', '2026-06-30', { validFrom: '2025-07-01' }), rec('assurance', '2028-06-30', { validFrom: '2027-07-01' })];
+    const status = complianceStatus('assurance', records, vehicle, NOW);
+    expect(status.state).toBe('expired');
+    expect(status.record?.validUntil).toBe('2026-06-30');
+    expect(status.upcomingFrom).toBe('2027-07-01');
+  });
+  it('anciennes données sans date de début : comportement inchangé', () => {
+    expect(complianceStatus('assurance', [rec('assurance', '2027-06-30')], vehicle, NOW).state).toBe('valid');
+    expect(complianceStatus('assurance', [rec('assurance', '2026-06-30')], vehicle, NOW).state).toBe('expired');
+    expect(complianceStatus('assurance', [], vehicle, NOW).state).toBe('none');
+  });
+  it('position de chaque période : en cours, à venir, terminée', () => {
+    expect(periodPhase(rec('assurance', '2027-06-30', { validFrom: '2026-07-01' }), NOW)).toBe('current');
+    expect(periodPhase(rec('assurance', '2029-11-15', { validFrom: '2028-11-16' }), NOW)).toBe('upcoming');
+    expect(periodPhase(rec('assurance', '2026-06-30'), NOW)).toBe('ended');
+  });
+  it('location : une période à venir ne couvre pas le départ', () => {
+    const records = [rec('assurance', '2029-11-15', { validFrom: '2028-11-16' }), rec('visite_technique', '2027-12-31')];
+    const warnings = rentalWarnings(records, vehicle, new Date(2026, 10, 20), new Date(2026, 10, 25), NOW);
+    expect(warnings).toEqual([{ kind: 'assurance', code: 'expired', due: '2026-11-20' }]);
   });
 });
