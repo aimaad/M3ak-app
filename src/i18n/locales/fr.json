@@ -605,6 +605,11 @@
     },
     "listTitle": {
       "filterA11y": "Filtres et tri : {{sort}}"
+    },
+    "regularize": {
+      "badge": "À RÉGULARISER",
+      "filter": "{{count}} véhicule(s) à régulariser (assurance ou visite technique expirée)",
+      "showAll": "Tout voir"
     }
   },
   "vehicle": {
@@ -2102,6 +2107,11 @@
           "desc_one": "réservation menacée",
           "desc_other": "réservations menacées",
           "action": "Réaffecter un véhicule"
+        },
+        "regularize": {
+          "label": "À RÉGULARISER",
+          "desc": "véhicule(s) dont l'assurance ou la visite technique est expirée",
+          "action": "Régulariser"
         }
       },
       "parc": {
@@ -2731,6 +2741,10 @@
       "departure_late": {
         "title": "Client en retard au départ",
         "body": "{{customer}} n'est pas venu chercher {{vehicle}} ({{plate}}). Tél : {{phone}}"
+      },
+      "noncompliant_handover": {
+        "title": "Véhicule à régulariser remis",
+        "body": "{{vehicle}} ({{plate}}) a été remis à {{customer}}. À régulariser — expiré : {{issues}}."
       },
       "maintenance_due": {
         "title": "Entretien à prévoir",

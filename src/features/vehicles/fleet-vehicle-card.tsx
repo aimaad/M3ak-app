@@ -36,6 +36,7 @@ export function FleetVehicleCard({
   action,
   showPrice,
   canAddPhoto,
+  toRegularize = false,
   onOpen,
   onAction,
   onAddPhoto,
@@ -46,6 +47,8 @@ export function FleetVehicleCard({
   action: FleetAction | null;
   showPrice: boolean;
   canAddPhoto: boolean;
+  /** Assurance ou visite technique expirée : indicateur rouge « À régulariser » (le statut opérationnel n'est pas modifié). */
+  toRegularize?: boolean;
   onOpen: () => void;
   onAction: (action: FleetAction) => void;
   onAddPhoto: () => void;
@@ -66,7 +69,7 @@ export function FleetVehicleCard({
 
   return (
     <View style={{ backgroundColor: Palette.card, borderWidth: 1, borderColor: Palette.border, borderRadius: 24, padding: 10, gap: 12, shadowColor: Palette.shadow, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 8 }, elevation: 1 }}>
-      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={cardSentence(item, context, language, t, now)} style={{ gap: 12 }}>
+      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${cardSentence(item, context, language, t, now)}${toRegularize ? `. ${t('flotte.regularize.badge')}` : ''}`} style={{ gap: 12 }}>
         <View style={{ flexDirection: 'row', gap: 12 }} importantForAccessibility="no-hide-descendants">
           <VehicleImage vehicle={vehicle} width={PHOTO_WIDTH} height={96} radius={18}>
             <View style={{ position: 'absolute', start: 6, bottom: 6, flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 8, paddingVertical: 3, paddingHorizontal: 7, backgroundColor: badge.background }}>
@@ -82,10 +85,19 @@ export function FleetVehicleCard({
                 {name}
               </HText>
               {/* Plaque marocaine : numéro | lettre | région, toujours dans cet ordre, même en arabe. */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
               <View style={{ alignSelf: 'flex-start', borderWidth: 1.5, borderColor: Brand.graphite, borderRadius: 6, paddingVertical: 2, paddingHorizontal: 7, backgroundColor: Palette.card, direction: 'ltr' }}>
                 <HText weight="bold" size={11} track={0.04} style={{ writingDirection: 'ltr', lineHeight: 14 }}>
                   {plate}
                 </HText>
+              </View>
+              {toRegularize ? (
+                <View style={{ flexShrink: 0, backgroundColor: Palette.error, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 }}>
+                  <HText weight="bold" size={10} color={Brand.white} numberOfLines={1} style={{ lineHeight: 14 }}>
+                    {t('flotte.regularize.badge')}
+                  </HText>
+                </View>
+              ) : null}
               </View>
             </View>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>

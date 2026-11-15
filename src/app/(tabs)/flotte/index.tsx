@@ -42,6 +42,8 @@ import type { MaintenanceItem } from '@/features/maintenance/types';
 import type { Rental } from '@/features/rentals/types';
 import type { Vehicle } from '@/features/vehicles/types';
 import { Palette } from '@/constants/theme';
+import { useAllCompliance } from '@/features/compliance/hooks';
+import { regularizationByVehicle } from '@/features/compliance/logic';
 
 const EMPTY_VEHICLES: Vehicle[] = [];
 const EMPTY_RENTALS: Rental[] = [];
@@ -57,7 +59,10 @@ export default function FlotteScreen() {
   const rentalsQuery = useRentals();
   const maintenanceQuery = useMaintenanceItems();
   const customersQuery = useCustomers();
-  const { statut: initialStatut } = useLocalSearchParams<{ statut?: string }>();
+  const complianceQuery = useAllCompliance();
+  const { statut: initialStatut, regulariser } = useLocalSearchParams<{ statut?: string; regulariser?: string }>();
+  // Lien de l'accueil (?regulariser=1) : on ne montre que les véhicules « À régulariser » (assurance ou visite technique expirée).
+  const [onlyRegularize, setOnlyRegularize] = useState(regulariser === '1');
   const [filters, setFilters] = useState<VehicleFilters>(DEFAULT_VEHICLE_FILTERS);
   // Groupe actif (tuiles de l'en-tête) : un lien de l'accueil (?statut=…) ouvre le groupe correspondant.
   const [group, setGroup] = useState<FleetGroup | null>(() => groupFromStatusParam(initialStatut));
@@ -83,10 +88,13 @@ export default function FlotteScreen() {
   const counts = useMemo(() => groupCounts(items), [items]);
   const itemById = useMemo(() => new Map(items.map((item) => [item.vehicle.id, item])), [items]);
   const options = useMemo(() => filterOptions(activeVehicles), [activeVehicles]);
+  // Véhicules « À régulariser » : indicateur rouge sur la carte ; ne change JAMAIS le statut opérationnel du véhicule.
+  const toRegularize = useMemo(() => regularizationByVehicle(complianceQuery.data ?? [], vehicles, new Date()), [complianceQuery.data, vehicles]);
   const filtered = useMemo(() => {
-    const base = sortFleet(filterVehicles(vehicles, filters), sort);
+    const sorted = sortFleet(filterVehicles(vehicles, filters), sort);
+    const base = onlyRegularize ? sorted.filter((v) => toRegularize.has(v.id)) : sorted;
     return filters.includeArchived || group === null ? base : base.filter((v) => itemById.get(v.id)?.group === group);
-  }, [vehicles, filters, sort, group, itemById]);
+  }, [vehicles, filters, sort, group, itemById, onlyRegularize, toRegularize]);
   const pagination = usePagination(filtered, `${JSON.stringify(filters)}${sort}${group}`);
 
   // Liste groupée par statut : mêmes filtres (recherche, catégorie, marque) et tuile active ; l'ordre dans une section suit le tri choisi,
@@ -190,6 +198,19 @@ export default function FlotteScreen() {
       ) : null}
     </FleetHeader>
   );
+
+  const regularizeFilter = onlyRegularize ? (
+    <View accessibilityRole="alert" style={{ marginHorizontal: 20, marginBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, borderRadius: 16, borderWidth: 1.5, borderColor: Palette.error, backgroundColor: Palette.errorSoft, paddingHorizontal: 14, paddingVertical: 10 }}>
+      <ThemedText type="smallBold" style={{ color: Palette.error, flex: 1 }}>
+        {t('flotte.regularize.filter', { count: toRegularize.size })}
+      </ThemedText>
+      <Pressable onPress={() => setOnlyRegularize(false)} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }}>
+        <ThemedText type="smallBold" style={{ color: Palette.error }}>
+          {t('flotte.regularize.showAll')}
+        </ThemedText>
+      </Pressable>
+    </View>
+  ) : null;
 
   const watch = <FleetWatchSection items={watchItems} onOpen={(item) => router.push({ pathname: '/flotte/[id]', params: { id: item.vehicleId, section: item.target } })} />;
 
@@ -302,7 +323,7 @@ export default function FlotteScreen() {
               </View>
             }
             renderItem={({ item: cell }) =>
-              cell ? <GalleryCard item={cell} showPrice={showPrice} onOpen={() => router.push(`/flotte/${cell.vehicle.id}`)} /> : <View style={{ flex: 1 }} />
+              cell ? <GalleryCard item={cell} showPrice={showPrice} toRegularize={toRegularize.has(cell.vehicle.id)} onOpen={() => router.push(`/flotte/${cell.vehicle.id}`)} /> : <View style={{ flex: 1 }} />
             }
             ListEmptyComponent={
               noVehicle ? (
@@ -323,6 +344,7 @@ export default function FlotteScreen() {
             ListHeaderComponent={
               <View>
                 {header}
+                {regularizeFilter}
                 {watch}
                 {controls}
               </View>
@@ -337,6 +359,7 @@ export default function FlotteScreen() {
                   now={now}
                   showPrice={showPrice}
                   canAddPhoto={canAddVehiclePhoto(role)}
+                  toRegularize={toRegularize.has(item.vehicle.id)}
                   onOpen={() => router.push(`/flotte/${item.vehicle.id}`)}
                   onAction={runAction}
                   onAddPhoto={() => router.push({ pathname: '/flotte/[id]/modifier', params: { id: item.vehicle.id, section: 'photos' } })}

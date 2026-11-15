@@ -92,7 +92,7 @@ export function GalleryHeader({
 }
 
 /** Carte de la galerie : image, pastille de statut, nom, immatriculation et prix (propriétaire seulement). */
-export function GalleryCard({ item, showPrice, onOpen }: { item: FleetItem; showPrice: boolean; onOpen: () => void }) {
+export function GalleryCard({ item, showPrice, onOpen, toRegularize = false }: { item: FleetItem; showPrice: boolean; onOpen: () => void; /** Assurance ou visite technique expirée : badge rouge « À régulariser » (statut opérationnel inchangé). */ toRegularize?: boolean }) {
   const { t } = useLanguage();
   const { vehicle, group } = item;
   const name = fleetName(vehicle);
@@ -105,7 +105,7 @@ export function GalleryCard({ item, showPrice, onOpen }: { item: FleetItem; show
     <Pressable
       onPress={onOpen}
       accessibilityRole="button"
-      accessibilityLabel={t('flotte.gallery.cardA11y', { name, status, plate: plateSpoken(vehicle.immatriculation) })}
+      accessibilityLabel={`${t('flotte.gallery.cardA11y', { name, status, plate: plateSpoken(vehicle.immatriculation) })}${toRegularize ? `. ${t('flotte.regularize.badge')}` : ''}`}
       style={{ flex: 1, minWidth: 0, gap: 10 }}
     >
       <VehicleImage vehicle={vehicle} height={118} radius={18}>
@@ -128,6 +128,13 @@ export function GalleryCard({ item, showPrice, onOpen }: { item: FleetItem; show
             {status}
           </HText>
         </View>
+        {toRegularize ? (
+          <View style={{ position: 'absolute', start: 8, bottom: 8, backgroundColor: Palette.error, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
+            <HText weight="bold" size={10} color={Brand.white} numberOfLines={1} style={{ lineHeight: 13 }}>
+              {t('flotte.regularize.badge')}
+            </HText>
+          </View>
+        ) : null}
       </VehicleImage>
       <View style={{ gap: 5, paddingHorizontal: 2 }}>
         <HText font="display" weight="bold" size={14} numberOfLines={1}>

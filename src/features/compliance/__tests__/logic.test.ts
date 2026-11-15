@@ -1,5 +1,5 @@
 import type { ComplianceRecord } from '../types';
-import { regularizationIssues, periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
+import { regularizationByVehicle, regularizationIssues, periodOf, renewalEnd, addMonths, allStatuses, complianceStatus, currentRecord, daysUntil, historyOf, rentalWarnings, renewalDraft, renewalInput, suggestRenewal, validateRenewal } from '../logic';
 
 const NOW = new Date(2026, 10, 15, 12); // 15 nov. 2026
 const rec = (kind: ComplianceRecord['kind'], validUntil: string, extra: Partial<ComplianceRecord> = {}): ComplianceRecord => ({ id: `${kind}-${validUntil}`, agencyId: 'a', vehicleId: 'v', kind, validFrom: null, validUntil, reference: null, provider: null, amount: null, documentPath: null, notes: null, periodMonths: null, createdBy: null, createdAt: '2026-01-01T00:00:00Z', ...extra });
@@ -195,5 +195,24 @@ describe('« À régulariser » : assurance ou visite technique expirée', () =>
   it('renouvelée : plus à régulariser ; la vignette n’est jamais critique', () => {
     expect(regularizationIssues([rec('assurance', '2026-11-05'), rec('assurance', '2027-11-04')], vehicle, NOW)).toEqual([]);
     expect(regularizationIssues([rec('vignette', '2025-12-31')], vehicle, NOW)).toEqual([]);
+  });
+});
+
+describe('véhicules « À régulariser » d’une flotte', () => {
+  const car = (id: string, extra: Record<string, unknown> = {}) => ({ id, archivedAt: null, dateMiseEnCirculation: null, ...extra });
+  const forVehicle = (vehicleId: string, kind: ComplianceRecord['kind'], validUntil: string) => rec(kind, validUntil, { vehicleId });
+
+  it('liste seulement les véhicules concernés, avec leurs obligations expirées', () => {
+    const map = regularizationByVehicle(
+      [forVehicle('a', 'assurance', '2026-11-05'), forVehicle('b', 'assurance', '2027-06-01'), forVehicle('c', 'visite_technique', '2026-10-01'), forVehicle('c', 'assurance', '2026-11-01')],
+      [car('a'), car('b'), car('c'), car('d')],
+      NOW
+    );
+    expect([...map.keys()].sort()).toEqual(['a', 'c']);
+    expect(map.get('c')?.map((issue) => issue.kind)).toEqual(['assurance', 'visite_technique']);
+  });
+  it('un véhicule archivé ou sans période enregistrée n’est jamais « à régulariser »', () => {
+    const map = regularizationByVehicle([forVehicle('a', 'assurance', '2026-11-05')], [car('a', { archivedAt: '2026-01-01' }), car('z')], NOW);
+    expect(map.size).toBe(0);
   });
 });

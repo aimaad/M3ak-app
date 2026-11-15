@@ -47,4 +47,17 @@ describe('priorités de l’accueil', () => {
     expect(priorityHref({ kind: 'conflict', count: 2, rentalId: 'r9' })).toBe('/locations/r9');
     expect(priorityHref({ kind: 'late', count: 1 })).toBe('/accueil/retards');
   });
+
+  it('véhicules « À régulariser » : après les retards et conflits, avant les impayés ; avec le nombre de véhicules', () => {
+    const list = buildPriorities({ ...base, lateReturns: 1, conflicts: { count: 1, firstRentalId: 'r9' }, unpaid: { count: 2, total: 10 }, toRegularize: 3 });
+    expect(list.map((p) => p.kind)).toEqual(['late', 'conflict', 'regularize', 'unpaid']);
+    expect(list[2]).toEqual({ kind: 'regularize', count: 3 });
+  });
+  it('aucun véhicule à régulariser (ou valeur absente) : pas de carte', () => {
+    expect(buildPriorities({ ...base, toRegularize: 0 })).toEqual([]);
+    expect(buildPriorities(base)).toEqual([]);
+  });
+  it('la carte ouvre Ma Flotte filtrée sur les véhicules à régulariser', () => {
+    expect(priorityHref({ kind: 'regularize', count: 3 })).toBe('/flotte?regulariser=1');
+  });
 });

@@ -609,6 +609,11 @@
     },
     "listTitle": {
       "filterA11y": "التصفية والترتيب: {{sort}}"
+    },
+    "regularize": {
+      "badge": "للتسوية",
+      "filter": "{{count}} سيارة للتسوية (تأمين أو فحص تقني منتهٍ)",
+      "showAll": "عرض الكل"
     }
   },
   "vehicle": {
@@ -2182,6 +2187,11 @@
           "desc_many": "حجوزات مهدَّدة",
           "desc_other": "حجوزات مهدَّدة",
           "action": "أعِد تعيين سيارة"
+        },
+        "regularize": {
+          "label": "للتسوية",
+          "desc": "سيارة انتهى تأمينها أو فحصها التقني",
+          "action": "تسوية"
         }
       },
       "parc": {
@@ -2835,6 +2845,10 @@
       "departure_late": {
         "title": "الزبون متأخر عن الاستلام",
         "body": "لم يأت {{customer}} لأخذ {{vehicle}} ({{plate}}). الهاتف: {{phone}}"
+      },
+      "noncompliant_handover": {
+        "title": "تسليم سيارة غير مطابقة",
+        "body": "تم تسليم {{vehicle}} ({{plate}}) إلى {{customer}}: يجب تسوية الوضعية — منتهي الصلاحية: {{issues}}."
       },
       "maintenance_due": {
         "title": "صيانة مطلوبة",

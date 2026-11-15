@@ -230,3 +230,19 @@ export function regularizationIssues(records: ComplianceRecord[], vehicle: { dat
   }
   return issues;
 }
+
+/**
+ * Véhicules « À régulariser » d'une liste : pour chacun, ses obligations critiques expirées. Les véhicules archivés sont ignorés.
+ * Même règle partout (fiche, accueil, Ma Flotte) ; ne change JAMAIS le statut opérationnel du véhicule.
+ */
+export function regularizationByVehicle(records: ComplianceRecord[], vehicles: { id: string; archivedAt?: string | null; dateMiseEnCirculation?: string | null }[], now: Date): Map<string, RegularizationIssue[]> {
+  const byVehicle = new Map<string, ComplianceRecord[]>();
+  for (const record of records) byVehicle.set(record.vehicleId, [...(byVehicle.get(record.vehicleId) ?? []), record]);
+  const result = new Map<string, RegularizationIssue[]>();
+  for (const vehicle of vehicles) {
+    if (vehicle.archivedAt) continue;
+    const issues = regularizationIssues(byVehicle.get(vehicle.id) ?? [], vehicle, now);
+    if (issues.length > 0) result.set(vehicle.id, issues);
+  }
+  return result;
+}

@@ -14,6 +14,8 @@ const NOW = new Date();
 const at = (delta: number, hour = 9) => new Date(NOW.getFullYear(), NOW.getMonth(), NOW.getDate() + delta, hour).toISOString();
 const base = { agencyId: 'a1', branchId: null, kilometrage: 1000, prixJour: 400, photos: [], documents: [], archivedAt: null, createdAt: at(-100), updatedAt: at(-100), categorie: 'economique' };
 const mockState = {
+  compliance: [] as unknown[],
+  params: {} as Record<string, string>,
   role: 'owner' as 'owner' | 'manager' | 'employee',
   late: false, // ajoute une Logan en retard (retour prévu il y a 3 jours) loué à FOUAD BENNANI
   lateVehicles: [{ ...base, id: 'retard', marque: 'Dacia', modele: 'Logan', immatriculation: '8921-ب-14', statut: 'en_location' }],
@@ -38,6 +40,7 @@ jest.mock('@/features/agency/hooks', () => ({ useMyAgency: () => mockQuery({ age
 jest.mock('@/features/vehicles/hooks', () => ({ useVehicles: () => mockQuery(mockState.late ? [...mockState.vehicles, ...mockState.lateVehicles] : mockState.vehicles) }));
 jest.mock('@/features/rentals/hooks', () => ({ useRentals: () => mockQuery(mockState.late ? [...mockState.rentals, ...mockState.lateRentals] : mockState.rentals) }));
 jest.mock('@/features/maintenance/hooks', () => ({ useMaintenanceItems: () => mockQuery(mockState.maintenance) }));
+jest.mock('@/features/compliance/hooks', () => ({ useAllCompliance: () => mockQuery(mockState.compliance) }));
 jest.mock('@/features/customers/hooks', () => ({ useCustomers: () => mockQuery(mockState.customers) }));
 jest.mock('@/features/storage/hooks', () => ({ useSignedUrl: () => ({ data: undefined }) }));
 jest.mock('@/features/vehicles/api', () => ({ VEHICLE_PHOTOS_BUCKET: 'vehicle-photos' }));
@@ -48,7 +51,7 @@ jest.mock('expo-router', () => ({
     return mockRouter;
   },
   Redirect: () => null,
-  useLocalSearchParams: () => ({}),
+  useLocalSearchParams: () => mockState.params,
 }));
 jest.mock('@/i18n/use-language', () => ({ useLanguage: () => ({ language: 'fr', t: (key: string, o?: Record<string, unknown>) => mockTranslate(key, o) }) }));
 const mockStorage = { view: null as string | null, saved: [] as string[][] };
@@ -76,8 +79,57 @@ describe('écran Ma Flotte (données simulées)', () => {
     jest.clearAllMocks();
     mockState.role = 'owner';
     mockState.late = false;
+    mockState.compliance = [];
+    mockState.params = {};
     mockStorage.view = null;
     mockStorage.saved = [];
+  });
+
+  describe('« À régulariser » (assurance ou visite technique expirée)', () => {
+    const hid = { includeHiddenElements: true };
+    const expired = (vehicleId: string, kind = 'assurance') => ({ id: `${vehicleId}-${kind}`, vehicleId, kind, validFrom: null, validUntil: at(-10).slice(0, 10), createdAt: '2026-01-01T00:00:00Z' });
+
+    it('liste : indicateur rouge sur la carte du véhicule concerné seulement ; son statut opérationnel reste « En location »', async () => {
+      mockStorage.view = 'list';
+      mockState.compliance = [expired('louee')];
+      await render(<FlotteScreen />);
+      expect(screen.getAllByText('À RÉGULARISER', hid)).toHaveLength(1); // une seule carte sur les trois affichées
+      expect(screen.getByLabelText(/Sandero.*À RÉGULARISER$/)).toBeTruthy(); // lu aussi par le lecteur d'écran
+      // Le statut n'a pas changé : le véhicule reste « En location » avec ses actions habituelles.
+      expect(screen.getAllByText('En location', hid).length).toBeGreaterThan(0);
+    });
+
+    it('galerie (vue par défaut sur téléphone) : le même badge rouge', async () => {
+      mockStorage.view = 'gallery';
+      mockState.compliance = [expired('libre')];
+      await render(<FlotteScreen />);
+      expect(screen.getAllByText('À RÉGULARISER', hid)).toHaveLength(1);
+      expect(screen.getByLabelText(/Dacia Troc.*À RÉGULARISER$/)).toBeTruthy();
+    });
+
+    it('rien d’expiré (ou aucune période enregistrée) : aucun indicateur', async () => {
+      await render(<FlotteScreen />);
+      expect(screen.queryByText('À RÉGULARISER', hid)).toBeNull();
+    });
+
+    it('visible aussi pour l’employé', async () => {
+      mockStorage.view = 'list';
+      mockState.role = 'employee';
+      mockState.compliance = [expired('louee', 'visite_technique')];
+      await render(<FlotteScreen />);
+      expect(screen.getAllByText('À RÉGULARISER', hid)).toHaveLength(1);
+    });
+
+    it('lien de l’accueil (?regulariser=1) : seulement ces véhicules, avec « Tout voir »', async () => {
+      mockStorage.view = 'list';
+      mockState.params = { regulariser: '1' };
+      mockState.compliance = [expired('libre'), expired('louee')];
+      await render(<FlotteScreen />);
+      expect(screen.getByText('2 véhicule(s) à régulariser (assurance ou visite technique expirée)')).toBeTruthy();
+      expect(screen.queryByText('Renault Symbol', hid)).toBeNull();
+      await fireEvent.press(screen.getByText('Tout voir'));
+      expect(screen.getByText('Renault Symbol', hid)).toBeTruthy();
+    });
   });
 
   it('liste groupée : À inspecter, Entretien, En location, Disponibles (sections vides masquées)', async () => {

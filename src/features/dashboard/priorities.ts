@@ -1,9 +1,9 @@
 /**
  * Priorités de l'accueil : seulement ce qui est ANORMAL aujourd'hui. Ordre de tri fixe (le plus urgent d'abord) :
- * retards et conflits (même rang) > impayés > documents expirés > entretiens en retard > véhicules à l'arrêt. Les impayés (« trésorerie ») ne sont
+ * retards et conflits (même rang) > véhicules « À régulariser » (assurance ou visite expirée) > impayés > documents expirés > entretiens en retard > véhicules à l'arrêt. Les impayés (« trésorerie ») ne sont
  * proposés qu'au propriétaire. L'écran n'affiche que les 3 premières ; le compteur donne le total.
  */
-export type PriorityKind = 'late' | 'conflict' | 'unpaid' | 'documents' | 'maintenance' | 'stopped';
+export type PriorityKind = 'late' | 'conflict' | 'regularize' | 'unpaid' | 'documents' | 'maintenance' | 'stopped';
 
 export type Priority = {
   kind: PriorityKind;
@@ -24,6 +24,8 @@ export type PriorityInput = {
   /** Réservations menacées par un retard (voir `conflicts` dans availability.ts). */
   conflicts: { count: number; firstRentalId: string | null };
   unpaid: { count: number; total: number };
+  /** Véhicules dont l'assurance ou la visite technique est expirée (« À régulariser »). */
+  toRegularize?: number;
   expiredDocuments: number;
   overdueMaintenance: number;
   stoppedVehicles: number;
@@ -34,6 +36,7 @@ export function buildPriorities(input: PriorityInput): Priority[] {
   if (input.lateReturns > 0) all.push({ kind: 'late', count: input.lateReturns });
   if (input.conflicts.count > 0)
     all.push({ kind: 'conflict', count: input.conflicts.count, ...(input.conflicts.firstRentalId ? { rentalId: input.conflicts.firstRentalId } : {}) });
+  if ((input.toRegularize ?? 0) > 0) all.push({ kind: 'regularize', count: input.toRegularize as number });
   if (input.showMoney && input.unpaid.count > 0)
     all.push({ kind: 'unpaid', count: input.unpaid.count, amount: input.unpaid.total });
   if (input.expiredDocuments > 0) all.push({ kind: 'documents', count: input.expiredDocuments });
@@ -55,6 +58,8 @@ export function priorityHref(priority: Priority): string {
       return '/accueil/retards';
     case 'conflict':
       return priority.rentalId ? `/locations/${priority.rentalId}` : '/accueil/retards';
+    case 'regularize':
+      return '/flotte?regulariser=1';
     case 'unpaid':
       return '/accueil/impayes';
     case 'documents':

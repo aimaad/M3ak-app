@@ -148,4 +148,16 @@ describe('carte véhicule', () => {
     await renderCard('b', 'owner');
     expect(screen.getByLabelText('7 prochains jours : libre toute la semaine', hidden)).toBeTruthy();
   });
+
+  it('« À régulariser » : badge rouge à côté de la plaque, lu aussi par le lecteur d’écran ; le statut du véhicule ne change pas', async () => {
+    await renderCard('b', 'owner', { toRegularize: true });
+    expect(screen.getByText('À RÉGULARISER', hidden)).toBeTruthy();
+    expect(screen.getByLabelText(/À RÉGULARISER$/)).toBeTruthy();
+    expect(screen.getByText('Disponible', hidden)).toBeTruthy(); // statut opérationnel inchangé
+  });
+
+  it('sans « à régulariser » : pas de badge', async () => {
+    await renderCard('b', 'owner');
+    expect(screen.queryByText('À RÉGULARISER', hidden)).toBeNull();
+  });
 });

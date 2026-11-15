@@ -32,6 +32,8 @@ import { buildGettingStarted, dismissKey, progressOf, shouldShowGettingStarted }
 import { useStoredFlag } from '@/features/onboarding/use-stored-flag';
 import { shouldAutoOpenWelcome, welcomeSeenKey } from '@/features/onboarding/welcome-flow';
 import { useOcrSettings } from '@/features/ocr/hooks';
+import { useAllCompliance } from '@/features/compliance/hooks';
+import { regularizationByVehicle } from '@/features/compliance/logic';
 import { useRentals } from '@/features/rentals/hooks';
 import { vehicleDocumentAlerts } from '@/features/vehicles/document-alerts';
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
@@ -64,7 +66,10 @@ export default function AccueilScreen() {
     metrics: insightsMetrics,
   });
   const rentalsQuery = useRentals();
+  const complianceQuery = useAllCompliance();
   const { session } = useSession();
+  // Véhicules « À régulariser » (assurance ou visite technique expirée) : alerte rouge, sans rien bloquer.
+  const toRegularize = useMemo(() => regularizationByVehicle(complianceQuery.data ?? [], vehicles, new Date()).size, [complianceQuery.data, vehicles]);
 
   // Documents expirés (clients et véhicules) : un document « à renouveler bientôt » n'est pas une priorité.
   const expiredDocuments = useMemo(
@@ -85,11 +90,12 @@ export default function AccueilScreen() {
         lateReturns: metrics.activity.lateReturns,
         conflicts: conflictSummary,
         unpaid: metrics.outstanding,
+        toRegularize,
         expiredDocuments,
         overdueMaintenance: metrics.maintenance.overdue,
         stoppedVehicles: metrics.stopped.length,
       }),
-    [showMoney, metrics, expiredDocuments, conflictSummary]
+    [showMoney, metrics, expiredDocuments, toRegularize, conflictSummary]
   );
 
   // Briefing du jour : phrase construite par des modèles à partir des mêmes chiffres que les blocs ci-dessous (aucune IA).

@@ -14,6 +14,7 @@ const GAP = 12;
 const COLOR: Record<PriorityKind, string> = {
   late: Brand.errorOnDark,
   conflict: Brand.errorOnDark,
+  regularize: Brand.errorOnDark,
   unpaid: Brand.warningOnDark,
   documents: Brand.warningOnDark,
   maintenance: Brand.warningOnDark,
