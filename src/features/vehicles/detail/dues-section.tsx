@@ -285,11 +285,6 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
         <HText font="display" weight="bold" size={17} accessibilityRole="header">
           {t('vehicleDetail.dues.title')}
         </HText>
-        <Pressable onPress={() => setOpen(open === 'new' ? null : 'new')} accessibilityRole="button" accessibilityLabel={t('vehicleDetail.dues.add')} hitSlop={10} style={{ minHeight: 44, justifyContent: 'center' }}>
-          <HText weight="semibold" size={12} color={Brand.orangeUrgentText}>
-            {t('vehicleDetail.dues.add')}
-          </HText>
-        </Pressable>
       </View>
 
       <ComplianceBlock vehicle={vehicle} now={now} openKind={openKind} />
@@ -297,8 +292,6 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
       <HText weight="semibold" size={11} track={0.14} color={Palette.textSecondary} style={{ marginTop: 12, marginBottom: 2 }}>
         {t('vehicleDetail.compliance.maintenance').toLocaleUpperCase()}
       </HText>
-
-      {open === 'new' ? <AddDue vehicle={vehicle} now={now} onClose={() => setOpen(null)} /> : null}
 
       {rows.length === 0 && open !== 'new' ? (
         <HText size={13} color={Palette.textSecondary}>
@@ -348,6 +341,13 @@ export function DuesSection({ vehicle, rows: allRows, now, openKind = null }: { 
           </View>
         );
       })}
+
+      {/* Bouton en bas de la liste ; au clic, le formulaire s'affiche à cette même place. */}
+      {open === 'new' ? (
+        <AddDue vehicle={vehicle} now={now} onClose={() => setOpen(null)} />
+      ) : (
+        <Button variant="secondary" icon="add" label={t('vehicleDetail.dues.add')} onPress={() => setOpen('new')} style={{ marginTop: 12 }} />
+      )}
     </View>
   );
 }
