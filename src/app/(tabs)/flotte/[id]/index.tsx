@@ -327,7 +327,16 @@ export default function VehicleDetailScreen() {
               <DocumentsRow vehicle={vehicle} onAdd={goDocuments} />
             </View>
             <View onLayout={onSectionLayout('entretien')}>
-              <MaintenanceSection vehicle={vehicle} items={maintenanceItems} now={now} showCost={showPrice} />
+              <MaintenanceSection
+                vehicle={vehicle}
+                items={maintenanceItems}
+                now={now}
+                showCost={showPrice}
+                onRenewLegal={(kind) => {
+                  setOpenKind(kind);
+                  scrollRef.current?.scrollTo({ y: Math.max(0, duesY - 12), animated: true });
+                }}
+              />
             </View>
 
             {isManager && !vehicle.archivedAt ? <ArchiveSection block={block} now={now} onArchive={handleArchive} /> : null}

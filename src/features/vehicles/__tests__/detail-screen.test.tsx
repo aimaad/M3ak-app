@@ -1072,6 +1072,18 @@ describe('fiche véhicule', () => {
       expect(screen.getByText(/le véhicule est à régulariser/)).toBeTruthy();
     });
 
+    it('« ✓ Fait » sur l’assurance : ouvre son renouvellement dans « Échéances » (une seule source de vérité), pas un entretien à part', async () => {
+      mockState.compliance = [record({ validUntil: day(0), periodMonths: 12 })];
+      mockState.maintenance = [{ id: 'ma', vehicleId: 'v1', type: 'assurance', statut: 'a_venir', echeanceDate: day(0), echeanceKm: null }];
+      await render(<VehicleDetailScreen />);
+      await fireEvent.press(screen.getByLabelText('Marquer comme fait : Assurance'));
+      expect(screen.getByLabelText('Enregistrer cette période')).toBeTruthy();
+      expect(screen.queryByLabelText('Confirmer')).toBeNull();
+      await fireEvent.press(screen.getByLabelText('Enregistrer cette période'));
+      expect(mockState.renewCalls).toHaveLength(1);
+      expect(mockState.dueCalls.quick).toEqual([]);
+    });
+
     it('« Avec détails » ouvre le formulaire complet (papier, montant…)', async () => {
       mockState.compliance = [record({})];
       await render(<VehicleDetailScreen />);

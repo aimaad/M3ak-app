@@ -27,7 +27,11 @@ const dayText = (iso: string, language: string) => new Date(`${iso.slice(0, 10)}
  * Section « Entretien » de la fiche : c'est ICI qu'on fait les entretiens (« ✓ Fait » en un geste), pas dans « Échéances » qui sert à les
  * créer. À faire (les plus urgents d'abord) puis historique des entretiens effectués ; les coûts sont réservés au propriétaire et au responsable.
  */
-export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle: Vehicle; items: MaintenanceItem[]; now: Date; showCost: boolean }) {
+const LEGAL_TYPES = ['assurance', 'visite_technique', 'vignette'] as const;
+type LegalType = (typeof LEGAL_TYPES)[number];
+const isLegalType = (type: string): type is LegalType => (LEGAL_TYPES as readonly string[]).includes(type);
+
+export function MaintenanceSection({ vehicle, items, now, showCost, onRenewLegal }: { vehicle: Vehicle; items: MaintenanceItem[]; now: Date; showCost: boolean; /** « Fait » sur une assurance, visite ou vignette : on ouvre son renouvellement dans « Échéances » (une seule source de vérité). */ onRenewLegal?: (kind: LegalType) => void }) {
   const { t, language } = useLanguage();
   const [openId, setOpenId] = useState<string | null>(null);
   const [planId, setPlanId] = useState<string | null>(null);
@@ -98,6 +102,10 @@ export function MaintenanceSection({ vehicle, items, now, showCost }: { vehicle:
                   </Pressable>
                   <Pressable
                     onPress={() => {
+                      if (onRenewLegal && isLegalType(item.type)) {
+                        onRenewLegal(item.type);
+                        return;
+                      }
                       setPlanId(null);
                       setOpenId(openId === item.id ? null : item.id);
                     }}
